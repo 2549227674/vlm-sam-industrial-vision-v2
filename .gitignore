@@ -1,0 +1,12 @@
+.venv/
+.idea/
+simulator/mvtec/
+backend/vision.db
+backend/static/defects/
+*.pyc
+__pycache__/
+node_modules/
+frontend/out/
+build/
+models/
+*:Zone.Identifier

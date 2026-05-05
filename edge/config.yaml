@@ -1,0 +1,48 @@
+# ── 设备标识 ──────────────────────────────────────
+device_id: rk3588-line-A-cam01
+line_id: "L1"                    # 上报到后端的 line_id 字段，max 32 字符
+
+# ── 后端连接 ──────────────────────────────────────
+backend_url: http://192.168.1.100:8000
+upload_timeout_s: 30
+upload_max_retries: 5            # 指数退避最多 5 次（500ms × 2ⁿ + jitter）
+
+# ── AB 测试 ───────────────────────────────────────
+vlm_variant: "A"                 # "A"=Base+Prompt工程 / "B"=LoRA+极简Prompt
+
+# ── 取帧模式 ──────────────────────────────────────
+capture_mode: image_loop         # "v4l2" | "image_loop"
+
+# V4L2 模式（板子接摄像头时用）
+camera_device: /dev/video0
+camera_width: 1920
+camera_height: 1080
+
+# Image Loop 模式（静态图片集循环测试用）
+image_loop_dir: /home/ubuntu/datasets/MVTec
+image_loop_categories:           # T1 循环读取的类别列表
+  - metal_nut
+  - screw
+  - pill
+image_loop_beat_ms: 1500         # 每帧间隔，毫秒
+image_loop_jitter_ms: 200        # ± 抖动
+
+# ── Stage 1：EfficientAD-S ───────────────────────
+efficientad_model_dir: /TBD/models/efficientad_models
+efficientad_threshold: 0.5       # 异常分数超过此值触发 Stage 2/3
+efficientad_input_size: 256      # 固定 256×256，不要改
+
+# ── Stage 2：FastSAM ──────────────────────────────
+fastsam_model_path: /TBD/models/fastsam_models/fastsam_s.rknn
+fastsam_input_size: 640          # 固定 640，见 ARCHITECTURE.md §3.2
+fastsam_conf: 0.5
+
+# ── Stage 3：Qwen3-VL-2B ─────────────────────────
+vlm_model_path: /TBD/models/qwen3vl_models/qwen3vl_2b_w8a8.rkllm
+vlm_vision_model_path: /TBD/models/qwen3vl_models/qwen3vl_vision.rknn
+vlm_max_new_tokens: 200
+vlm_max_context: 3072            # 8GB 板硬约束，禁止改为 4096
+vlm_npu_core_num: 3              # 三核并行
+
+# ── 图片落盘 ──────────────────────────────────────
+jpeg_quality: 85                 # 上报图片压缩质量
