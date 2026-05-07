@@ -5,9 +5,9 @@ Input:  models/fastsam_models/FastSAM-s.pt
 Output: models/fastsam_models/fastsam_s.onnx  (640×640, static shape, opset 12)
 
 Usage:
-    python scripts/convert_fastsam.py
-    python scripts/convert_fastsam.py --weights path/to/FastSAM-s.pt
-    python scripts/convert_fastsam.py --imgsz 640 --opset 12
+    python scripts/convert_fastsam_onnx.py
+    python scripts/convert_fastsam_onnx.py --weights path/to/FastSAM-s.pt
+    python scripts/convert_fastsam_onnx.py --imgsz 640 --opset 12
 """
 
 import argparse

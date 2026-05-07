@@ -41,7 +41,7 @@ license: Internal-CourseProject
 - **必须** Cache line 对齐 metrics（`alignas(64)`）。
 - 错误处理用 `std::expected<T, ErrorCode>`（GCC 13+）或 `tl::expected`（GCC 11/12 fallback）。
 
-## 始终遵守的硬约束（不分场景，10 条）
+## 始终遵守的硬约束（不分场景，12 条）
 
 1. C++ 标准 ≥ C++20；GCC ≥ 11；`#pragma once`；成员变量 trailing underscore（`member_`），struct 公有字段不加。
 2. 线程模型固定 4 个：T1 Capture / T2 Pipeline / T3 VLM Worker / T4 Upload，不要新增线程。
@@ -53,6 +53,8 @@ license: Internal-CourseProject
 8. VLM JSON 输出必须经五级 bbox 净化（参考 `edge/src/vlm_bbox_ref.py`）：归一化裁剪 → 面积过滤 → 长宽比过滤 → IoU 去重 → 置信度阈值。此外 `category` 字段值必须做白名单校验 `{"metal_nut", "screw", "pill"}`，非法值丢弃或重置为 `"other"`。
 9. 严禁 Base64 传图；严禁在边缘端起 WebSocket 服务；严禁跑 FastAPI / Flask 等 Python Web 框架（8GB 内存压力大）；严禁生成检测报告；严禁 PaDiM 残留。
 10. 所有可量化指标（解析失败、上传重试、丢帧、TTFT、tokens/s）写入 `PipelineMetrics` 并通过 `vlm_metrics` 字段上报后端；字段 `alignas(64)` 防 false sharing。
+11. EfficientAD-S RKNN 模型输入输出均为 INT8（非 float32），读取 anomaly_map/pred_score 后必须用 `rknn_query(RKNN_QUERY_OUTPUT_ATTR)` 获取量化参数做反量化，禁止直接将 INT8 原始值与浮点阈值比较。
+12. FastSAM-s output0（det）和 output1（proto masks）的反量化参数独立，必须分别查询 `RKNN_QUERY_OUTPUT_ATTR` 获取各自的 scale/zero_point，禁止用同一组量化参数处理两路输出。
 
 ## 8GB 板特殊约束
 

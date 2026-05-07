@@ -89,6 +89,25 @@
 - T3 异步：异常分数高才触发；FastSAM 与 Qwen3-VL 串行（共享 NPU 资源）。
 - T4 libcurl 复用 easy handle，只 `curl_easy_reset` 不 `cleanup`，TLS 连接池命中率接近 100%。
 
+**EfficientAD-S INT8 量化实测发现（阶段 6.2，rknn-toolkit2 v2.3.2）**：
+
+build 阶段确认 dtype 变更：
+- 输入 `input`：float32 → int8
+- 输出 `anomaly_map`：float32 → int8
+- 输出 `pred_score`：float32 → int8
+
+T2 Pipeline Worker C++ 实现必须注意：
+1. 喂入 RKNN 的输入张量类型为 INT8，RGA 输出后需做类型转换
+2. 读出的 anomaly_map 和 pred_score 为 INT8，必须用 `rknn_query(RKNN_QUERY_OUTPUT_ATTR)` 获取 scale/zero_point，再做反量化：`real_val = (int8_val - zero_point) * scale`
+3. 反量化后的 pred_score 再与 `config.yaml` 中的阈值比较决定是否触发 FastSAM
+
+**FastSAM-s INT8 量化实测发现（阶段 6.3，rknn-toolkit2 v2.3.2）**：
+
+- 输入 `images` / 输出 `output0`（det）/ 输出 `output1`（proto）均为 INT8
+- 两路输出的 scale/zero_point **独立**，必须分别用 `rknn_query(RKNN_QUERY_OUTPUT_ATTR)` 获取，禁止共用同一组量化参数
+- `output1`（prototype masks）entire cosine = **0.966**，低于 0.99 阈值，需上板实测确认分割质量是否可接受
+- 无 CPU fallback 算子，整图跑在 NPU 上
+
 代码模板（BoundedQueue、UniqueFd、libcurl HTTP client、Worker）见本文档 §11 代码生成规范。
 
 ## 4. 数据流时序
