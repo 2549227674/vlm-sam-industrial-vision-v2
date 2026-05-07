@@ -50,7 +50,7 @@ license: Internal-CourseProject
 5. dma_buf fd 单一所有权（`UniqueFd`）；跨线程用 `std::move`；需要共享时用 `dup(fd)`。
 6. 队列必须有界 + drop-oldest，必须导出 `dropped_count` 指标，禁止无界队列。
 7. libcurl：`curl_global_init` 只在 `main()` 最开头调用一次（所有线程启动前），`HttpClient` 构造函数中**不调用**；每个上传线程独占一个 easy handle，`curl_easy_reset` 复用，禁止每次 init/cleanup。
-8. VLM JSON 输出必须经五级 bbox 净化（参考 `edge/src/vlm_bbox_ref.py`）：归一化裁剪 → 面积过滤 → 长宽比过滤 → IoU 去重 → 置信度阈值。
+8. VLM JSON 输出必须经五级 bbox 净化（参考 `edge/src/vlm_bbox_ref.py`）：归一化裁剪 → 面积过滤 → 长宽比过滤 → IoU 去重 → 置信度阈值。此外 `category` 字段值必须做白名单校验 `{"metal_nut", "screw", "pill"}`，非法值丢弃或重置为 `"other"`。
 9. 严禁 Base64 传图；严禁在边缘端起 WebSocket 服务；严禁跑 FastAPI / Flask 等 Python Web 框架（8GB 内存压力大）；严禁生成检测报告；严禁 PaDiM 残留。
 10. 所有可量化指标（解析失败、上传重试、丢帧、TTFT、tokens/s）写入 `PipelineMetrics` 并通过 `vlm_metrics` 字段上报后端；字段 `alignas(64)` 防 false sharing。
 

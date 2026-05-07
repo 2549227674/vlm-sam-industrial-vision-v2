@@ -1,0 +1,45 @@
+# ==========================================
+# LLaMA-Factory: Qwen3-VL-2B-Instruct LoRA 微调
+# 目标硬件: RTX 4060 8GB（本地评估）/ AutoDL vGPU-32GB（云端训练）
+# 训练数据: datasets/industrial_vision_train.json (240 条)
+# ==========================================
+
+### 模型 (Model)
+model_name_or_path: models/qwen3vl_models/base/
+trust_remote_code: true
+
+### 数据集 (Dataset)
+dataset_dir: datasets/
+dataset: industrial_vision
+template: qwen3_vl
+cutoff_len: 4096               # 实测单样本 156 tokens，4096 足够
+max_samples: 1000
+overwrite_cache: true
+preprocessing_num_workers: 4
+
+### 微调策略 (LoRA)
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: q_proj,v_proj
+lora_rank: 16
+lora_alpha: 16
+lora_dropout: 0.05
+
+### 训练超参数 (Hyperparameters)
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 4
+learning_rate: 5.0e-5
+num_train_epochs: 5.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+gradient_checkpointing: true   # 本地 8GB 显存必开
+bf16: true
+fp16: false
+
+### 输出 (Output)
+output_dir: models/qwen3vl_lora_adapter/  # 本地路径，云端训练时需改为绝对路径
+logging_steps: 5
+save_steps: 50
+plot_loss: true
+overwrite_output_dir: true

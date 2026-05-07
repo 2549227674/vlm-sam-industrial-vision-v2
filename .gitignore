@@ -9,4 +9,8 @@ node_modules/
 frontend/out/
 build/
 models/
+datasets/
+results/
+lightning_logs/
+*.ckpt
 *:Zone.Identifier
