@@ -69,3 +69,11 @@ class DefectRead(DefectCreate):
     id: int
     image_url: str
     server_ts: datetime
+
+
+class DefectCreatedResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    image_url: str
+    server_ts: datetime
