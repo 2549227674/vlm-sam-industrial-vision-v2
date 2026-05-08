@@ -146,6 +146,10 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 
 **完成标志**：`python -c "from backend.app.schemas.defect import DefectCreate; print('OK')"` 无报错。
 
+> **⚠️ 实践注意事项**
+> - Pydantic v2 子类 `model_config` 不继承父类，`DefectRead` 必须显式写 `ConfigDict(from_attributes=True, extra="forbid")`
+> - §12 的字段规则（时区、三键校验）须在 Schema 层通过 `field_validator` 强制，不能只靠路由层
+
 ### 1.3 SQLAlchemy 2.0 数据库模型
 
 **执行人**：Claude Code
@@ -157,6 +161,12 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 - `variant` 字段为 `Literal["A", "B"]`（API_CONTRACT.md §2）
 
 **完成标志**：`alembic` 或启动时自动建表成功，`vision.db` 文件生成。
+
+> **⚠️ 实践注意事项**
+> - `DATABASE_URL` 用 `Path(__file__)` 动态解析，避免 uvicorn 启动目录影响路径
+> - `get_db()` 需包含 try/commit/except rollback/raise 完整模式
+> - 必须加 `UniqueConstraint("line_id","edge_ts")` 和 `CheckConstraint("variant IN ('A','B')")`
+> - SQLite 不保留 timezone，须用 `TZDateTime` TypeDecorator 自动恢复 UTC
 
 ### 1.4 POST `/api/edge/report` 路由
 
@@ -179,6 +189,11 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 
 **完成标志**：`curl -X POST` 手动测试返回 200 + 正确 JSON。
 
+> **⚠️ 实践注意事项**
+> - `response_model` 必须用 `DefectCreatedResponse`，不得用 `DefectRead`（否则泄露全量字段）
+> - `schema_version` 检查顺序：`json.loads` → 检查 `schema_version` → `model_validate`（否则 422 逻辑永远触发不到）
+> - 图片写入用 `aiofiles`（async），同步 `open()` 会阻塞 event loop
+
 ### 1.5 GET 查询路由
 
 **执行人**：Claude Code
@@ -192,6 +207,12 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 | `GET /api/health` | status/version/uptime_s/db/ws_clients |
 
 **完成标志**：每个路由 curl 能返回正确格式的 JSON。
+
+> **⚠️ 实践注意事项**
+> - `sort` 参数需白名单校验，防止任意属性注入
+> - `until` 过滤为严格小于（`edge_ts < until`），不含边界值
+> - 404 响应用 `JSONResponse` 返统一格式，不用 `HTTPException`
+> - `stats.py` 必须实现 `since`/`until`/`bucket` query params 和 `timeline` 字段
 
 ### 1.6 WebSocket `/ws/dashboard`
 
@@ -210,6 +231,12 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 - 心跳：30s ping，60s 无 pong 关闭连接
 
 **完成标志**：`websocat ws://localhost:8000/ws/dashboard` 能收到 `hello` 消息。
+
+> **⚠️ 实践注意事项**
+> - WebSocket 路由不能用 `Request` 参数，访问 `app.state` 用 `websocket.app.state`
+> - `ConnectionManager` 内部结构：`dict[str, set[WebSocket]]` rooms
+> - 心跳双间隔：`metrics_tick` 每 5s，`ping` 每 30s（一个 loop，计数器区分）
+> - 路由固定为 `/ws/dashboard`（不要 `/{room}` 开放任意房间）
 
 ### 1.7 CORS + StaticFiles + Lifespan
 

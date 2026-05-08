@@ -6,9 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 5-6 已完成，Phase 1-4（轨道A）尚未开始**
+**Phase 1 后端骨架完成，Phase 2-4（轨道A）尚未开始，Phase 5-6 已完成**
 
 已完成：
+- Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
+- Phase 1.2：Pydantic v2 Schema（DefectCreate/DefectRead/DefectCreatedResponse + field_validators）
+- Phase 1.3：SQLAlchemy 2.0 Defect 模型（WAL 模式 + UniqueConstraint + TZDateTime）
+- Phase 1.4：POST `/api/edge/report` 路由（multipart 落盘 + 全量错误码）
+- Phase 1.5：GET 查询路由（defects 分页 + stats 聚合 + health 探针）
+- Phase 1.6：WebSocket `/ws/dashboard`（ConnectionManager + 心跳 metrics_tick/ping）
 - Phase 5.1：EfficientAD-S 训练 + ONNX 导出（三类别全部完成）
 - Phase 5.2：FastSAM-s ONNX 导出（fastsam_s.onnx 46MB）
 - Phase 5.3：LoRA 数据划分（240 train / 113 eval）
@@ -18,8 +24,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 6：全部模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
 
 尚未开始（下一步）：
-- Phase 1-4：轨道A——后端 FastAPI + 模拟器 + 前端 Next.js + 契约测试全绿
-  见 `docs/PROJECT_TIMELINE.md` 阶段 1-4
+- Phase 2：模拟器 + 契约测试全绿
+- Phase 3：前端 Next.js 仪表盘
+- Phase 4：轨道A 联调验收
+  见 `docs/PROJECT_TIMELINE.md` 阶段 2-4
 
 ## 一句话定义
 
@@ -136,6 +144,7 @@ vlm-sam-industrial-vision-v2/
 ├── backend/                        # 轨道 A：FastAPI
 │   ├── app/
 │   │   ├── main.py                 # lifespan + ConnectionManager 注入
+│   │   ├── db.py                   # SQLAlchemy async engine + session + TZDateTime
 │   │   ├── routers/{edge,defects,stats,health,ws}.py
 │   │   ├── models/                 # SQLAlchemy 2.0
 │   │   ├── schemas/                # Pydantic v2
