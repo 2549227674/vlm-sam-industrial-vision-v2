@@ -18,8 +18,8 @@ node_modules/
 frontend/.next/
 frontend/out/
 build/
-models/
-datasets/
+/models/
+/datasets/
 results/
 lightning_logs/
 *.ckpt

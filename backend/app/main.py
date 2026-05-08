@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.app.db import Base, engine
+import backend.app.models  # noqa: F401 — ensure Defect is registered with Base.metadata
 from backend.app.ws.manager import ConnectionManager
 
 _STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
