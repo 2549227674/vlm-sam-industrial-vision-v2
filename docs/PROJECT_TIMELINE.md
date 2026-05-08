@@ -470,26 +470,28 @@ random.seed(42)，不移动原文件。
 
 **完成标志**：`datasets/lora_split/` 下有 train/ 和 eval/ 子目录，图片数量比约 70:30。
 
-### 5.4 手动标注 JSON
+### 5.4 自动生成标注 JSON + 数据格式转换
 
-**执行人**：你手动（无法自动化）
+**执行方式**：自动化脚本（非手动标注）
 
-对 `datasets/lora_split/{category}/train/` 中的每张缺陷图，写一个对应的 JSON：
+**脚本**：`scripts/mvtec_mask_to_json.py`
 
-```json
-{
-  "category": "metal_nut",
-  "defect_type": "scratch",
-  "severity": "high",
-  "confidence": 0.92,
-  "bboxes": [{"x": 0.31, "y": 0.42, "w": 0.18, "h": 0.12}],
-  "description": "长条划痕，从左上延伸至右下"
-}
-```
+**逻辑**：读取 MVTec 官方 Ground Truth Mask（PNG 二值图），
+用 OpenCV `connectedComponentsWithStats` 提取连通域，
+转换为归一化 bbox 坐标，自动生成 DefectCreate 格式 JSON。
 
-**工作量估算**：三个类别各取 70% 缺陷图，大约 50-150 张，每张写一个 JSON。这是整个项目中**最耗人工时间**的一步。
+**三处关键改进（相比参考版）**：
+- `confidence` 改为面积反推（`min(0.99, 0.60+(rel_area/0.05)*0.39)`），非随机值
+- `description` 统一全中文（`DEFECT_CN` 映射表）
+- `bboxes` 加 `[:16]` 截断，符合 API_CONTRACT.md `max_length=16` 约束
 
-**完成标志**：每张训练图都有对应的 JSON 标注文件。
+**数据格式转换**：`scripts/format_llama_factory_data.py`
+将图片+JSON 转为 LLaMA-Factory ShareGPT 多模态格式，
+system/user/assistant 三条消息，images 字段用相对路径。
+
+**产出**：240 条训练样本，113 条 eval 样本
+
+**完成标志**：`datasets/lora_split/` 下 ShareGPT 格式 JSONL 文件存在，条数正确。
 
 ### 5.5 LLaMA-Factory LoRA 微调
 
@@ -503,6 +505,14 @@ random.seed(42)，不移动原文件。
 - Epoch: 5
 - 数据格式：ShareGPT（多模态图文对话）
 - GPU：RTX 4060 8GB（2B 模型 LoRA 完全够用）
+
+**实际训练平台**：AutoDL vGPU-32GB（RTX 4080 32GB），非本地 RTX 4060
+
+**关键发现**：`dataset_info.json` 的 tags 必须声明 `system_tag: "system"`，
+否则 LLaMA-Factory 无法识别 system 角色消息，
+240 条样本全部被丢弃（`Cannot find valid samples`）
+
+**实际训练结果**：train_loss=1.073，耗时 4 分 44 秒，5 epoch，150 steps
 
 **产出**：`models/qwen3vl_lora_adapter/`（LoRA adapter 权重）
 
@@ -529,6 +539,16 @@ random.seed(42)，不移动原文件。
 
 **产出**：方案 A vs B 在 metal_nut / screw / pill 上的 JSON 解析成功率对比表
 
+**关键发现**：
+1. Qwen3 系列内置思维链，推理输出带 `</think>` 前缀，
+   `check_json_compliance` 不能直接 `json.loads` 全文，
+   必须用 `text.find('{') + text.rfind('}')` 提取纯 JSON 后再解析
+2. 实测结果：方案 A = 100%，方案 B = 100%（两者持平）
+   解读：Qwen3-VL-2B 底座指令遵循能力强，PC 端 JSON 格式成功率
+   不是区分 AB 的维度；LoRA 真正优势在于 prompt 长度
+   （方案 A ~300 tokens，方案 B ~50 tokens），
+   TTFT 差距在 RK3588 NPU 上才会显现（预估 5-8 s vs 1 s 以内）
+
 **完成标志**：对比表完成，决定方案 A 或 B 哪个 JSON 成功率更高。
 
 ---
@@ -543,9 +563,21 @@ random.seed(42)，不移动原文件。
 
 **执行人**：你手动
 
-- Python 3.8-3.11（rknn-toolkit2 对 Python 版本有严格要求）
-- 建议用独立 conda/venv 环境
-- 安装 rknn-toolkit2（从 Rockchip 官方 GitHub 下载 wheel）
+- **实际使用系统**：Ubuntu 24.04（WSL2）
+- **Python 版本**：必须用 3.11（非 3.12）。Ubuntu 24.04 默认 Python 3.12 不兼容，需通过 deadsnakes PPA 安装：
+  ```bash
+  sudo add-apt-repository ppa:deadsnakes/ppa
+  sudo apt install python3.11 python3.11-venv python3.11-dev
+  ```
+- **环境名称**：`.venv_rknn`（项目内虚拟环境，已加入 .gitignore）
+- **仓库地址**：`https://github.com/airockchip/rknn-toolkit2`（原 rockchip-linux/ 已迁移）
+- **onnx 版本陷阱**：rknn-toolkit2 v2.3.2 内部调用 `onnx.mapping`（已在 onnx>=1.16.0 删除），
+  安装后必须强制降级：
+  ```bash
+  pip install onnx==1.15.0
+  ```
+- **rknn-llm 工具链**（6.4 用）是独立环境 `.venv_rkllm`，与 `.venv_rknn` 完全隔离：
+  `https://github.com/airockchip/rknn-llm`
 
 ### 6.2 EfficientAD-S ONNX → RKNN INT8
 
@@ -555,19 +587,34 @@ random.seed(42)，不移动原文件。
 
 **关键约束**（SKILL.md）：
 - 量化后必须跑 `accuracy_analysis` 验证 cosine sim > 0.99
-- 三核 NPU 并行（`rknn_core_num=3`）
+- `rknn_core_num=3` **不是** `config()` 参数，是板子上运行时的 C++ 参数（`rknn_set_core_mask`），转换脚本中不要出现
+- accuracy_analysis 报告路径：rknn-toolkit2 v2.3.2 改为 `{analysis_dir}/error_analysis.txt`（旧版路径 `simulator_error/simulator_error.txt` 已失效）
+- 校准集：从 `simulator/mvtec/{category}/train/good/` 取，**至少 50 张**（默认 100 张）
+- 10 个算子 fallback 到 CPU（`Unknown op target: 0`），属正常现象，不影响转换
 
 **产出**：
 ```
 models/efficientad_models/
 ├── metal_nut/model.rknn
+├── metal_nut/accuracy_analysis/error_analysis.txt
 ├── screw/model.rknn
-└── pill/model.rknn
+├── screw/accuracy_analysis/error_analysis.txt
+├── pill/model.rknn
+└── pill/accuracy_analysis/error_analysis.txt
 ```
 
 ### 6.3 FastSAM-s ONNX → RKNN INT8
 
 **脚本**：类似，输入 640×640
+
+**关键约束**：
+- **归一化**：YOLOv8 风格（`mean=[0,0,0], std=[255,255,255]`），不是 ImageNet 参数
+- **校准集**：三个类别各取约 33 张**混合**（`random.seed(42)` 打乱），共 100 张
+  （FastSAM 是通用模型，单类别校准会导致其他类别量化偏差）
+- **输入尺寸**：`load_onnx` 时必须指定 `input_size_list=[[1, 3, 640, 640]]`
+- 无 CPU fallback 算子（整图跑在 NPU 上）
+- **精度提示**：output1（prototype masks）整体 cosine = 0.966，低于 0.99 阈值，
+  但 single cosine = 0.99989，属深层误差累积，需上板实测确认分割质量
 
 **产出**：`models/fastsam_models/fastsam_s.rknn`
 
@@ -575,23 +622,67 @@ models/efficientad_models/
 
 **执行人**：你操作
 
-**两条路**（来源：历史对话01）：
-
-| 方式 | 步骤 | 推荐度 |
-|---|---|---|
-| 自己转 | HF 下载原始权重 → rknn-llm 工具链转 W8A8 | 可选 |
-| 用现成的 | 下载 airockchip/Qengineering 社区预转换的 .rkllm | ✅ 推荐 |
-
 **关键约束**（SKILL.md）：
 - W8A8 是 RK3588 LLM 路径**唯一**支持的量化
 - W4A16 仅 RK3576 支持，**禁止使用**
 
+#### 方案 A（Base + 长 Prompt）
+
+**直接下载社区预转换的 .rkllm** ✅ 推荐
+
+- 来源：airockchip 或 Qengineering 社区
+- 无需自行转换，下载即用
+
+#### 方案 B（LoRA + 极简 Prompt）
+
+**必须自己转**，步骤如下：
+
+**Step 1**：用 LLaMA-Factory `export_model` 将 LoRA adapter 合并回 base 权重
+- 输入：`models/qwen3vl_models/base/` + `models/qwen3vl_lora_adapter/`
+- 输出：`models/qwen3vl_models/merged/`
+
+**Step 2**：搭 airockchip/rknn-llm 工具链环境（独立于 `.venv_rknn`）
+
+**transformers 版本冲突处理**：
+- `rkllm-toolkit 1.2.3` 锁定 `transformers==4.55.2`
+- 生成校准数据需要 `transformers==4.57.0`（支持 Qwen3-VL）
+- 操作顺序：生成校准数据前临时升级，转换前降回
+  ```bash
+  # 生成校准数据前
+  pip install "transformers==4.57.0"
+
+  # 运行 export_rkllm.py 前降回
+  pip install "transformers==4.55.2" "tokenizers==0.21.4"
+  ```
+
+**make_input_embeds_for_quantize.py 需要四处补丁**（Qwen2-VL → Qwen3-VL 迁移）：
+1. 模型类：`Qwen2VLForConditionalGeneration` → `Qwen3VLForConditionalGeneration`
+2. embed_tokens 路径：`model.model.embed_tokens` → `model.model.language_model.embed_tokens`
+3. dtype 获取：`model.visual.get_dtype()` → `next(model.visual.parameters()).dtype`
+4. visual 输出：`model.visual(...).to(...)` → `model.visual(...)[0].to(...)`（返回 tuple）
+
+**merged/config.json 需手动补充两个字段**（LLaMA-Factory 合并时丢失）：
+- `rope_scaling`（顶层 + `text_config` 子节点）：`{"rope_type": "default", "mrope_section": [24, 20, 20]}`
+- `tokenizer_config.json` 中 `extra_special_tokens` 格式：list → dict
+
+**export_rkllm.py 已知 bug**：`--savepath` 参数不生效，
+文件实际保存到 `./rkllm/merged_w8a8_rk3588.rkllm`，需手动移动到项目目录。
+
+**Vision encoder 分辨率**：448×448（来自 Qengineering 社区预转换，两方案共用）
+
+**Step 3**：运行 `scripts/convert_qwen3vl.py` 转 W8A8
+- 输入：`models/qwen3vl_models/merged/`
+- 输出：`models/qwen3vl_models/qwen3vl_2b_w8a8_lora.rkllm`
+
 **产出**：
 ```
 models/qwen3vl_models/
-├── qwen3vl_2b_w8a8.rkllm
-└── qwen3vl_vision.rknn    （Vision encoder 单独文件，FP16）
+├── qwen3vl_2b_w8a8_base.rkllm   （方案A，社区下载）
+├── qwen3vl_2b_w8a8_lora.rkllm   （方案B，自己转）
+└── qwen3vl_vision.rknn           （Vision encoder，两方案共用，FP16）
 ```
+
+**完成标志**：三个模型文件均存在，`config.yaml` 中 `vlm_variant` 可切换 A/B 路径。
 
 ### 6.5 将模型文件传到板子
 
@@ -664,7 +755,7 @@ scp -r models/ ubuntu@<rk3588-ip>:/home/ubuntu/models/
 - 五级 bbox 净化（参考 `edge/src/vlm_bbox_ref.py`，C++ 重写）
 - Qwen3-VL-2B 生成 JSON
 - KV cache preload（`rkllm_load_prompt_cache`）
-- `max_context=3072`（8GB 板硬约束）
+- `max_context=4096`（16GB 板约束）
 
 ### 7.6 T4 Upload Worker
 

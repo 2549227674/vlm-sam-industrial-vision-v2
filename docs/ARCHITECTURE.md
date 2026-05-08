@@ -6,7 +6,7 @@
 
 ```
 ┌──────────────────────────┐         ┌────────────────────────┐         ┌────────────────────────┐
-│   RK3588 8GB Edge        │         │  Backend (FastAPI)     │         │  Frontend (Next.js 15) │
+│   RK3588 16GB Edge       │         │  Backend (FastAPI)     │         │  Frontend (Next.js 15) │
 │                          │         │                        │         │                        │
 │  ┌────────────────────┐  │  HTTPS  │  POST /api/edge/report │  WS     │  Dashboard             │
 │  │ T1 Capture         │  │ ───────►│  multipart/form-data   │ ───────►│  - DataTable (defects) │
@@ -27,7 +27,7 @@
 
 ## 2. 三组件职责
 
-### 2.1 边缘端（RK3588 8GB）
+### 2.1 边缘端（RK3588 16GB）
 
 - 取帧（V4L2 真机模式 / 图片集循环测试模式），经 RGA resize/colorspace 转换，输入 EfficientAD-S 计算异常分数。
 - 异常分数高于阈值时，触发 FastSAM 分割 + Qwen3-VL-2B 生成 JSON 描述。
@@ -183,7 +183,7 @@ RK3588 C++ pipeline                              backend                  fronte
 | JSON 解析成功率 | % | **核心指标**（精度上界，base vs LoRA） | 量化损失下的实际成功率 |
 | TTFT（首 token 延迟） | ms | 不记录（PC GPU 速度与 RK3588 不可比） | **核心指标**，影响产线节拍 |
 | Decode tokens/s | tokens/s | 不记录 | **核心指标**，影响 JSON 长度上限 |
-| 运行时 RAM | GB | 不记录 | **核心指标**，8GB 板上分给 VLM ≤ 3.5 GB |
+| 运行时 RAM | GB | 不记录 | **核心指标**，16GB 板上 VLM 占 ~3.1 GB，余量充裕 |
 
 ### 7.2 PC 阶段重点
 
@@ -194,11 +194,11 @@ RK3588 C++ pipeline                              backend                  fronte
 
 ### 7.3 RK3588 阶段重点
 
-- 量化后 W8A8 .rkllm 文件大小 ~1.9 GB；运行时总 RAM ~3.1 GB（含 KV cache，`max_context=3072`）。
-- TTFT 用 `rkllm_load_prompt_cache()` 复用方案 A 的长 system prompt 后，预期可降至 1 s 以内（**TBD-上板实测**）。
+- 量化后 W8A8 .rkllm 文件大小 ~1.9 GB；运行时总 RAM ~3.1 GB（含 KV cache，`max_context=4096`）。
+- TTFT 用 `rkllm_load_prompt_cache()` 复用方案 A 的长 system prompt 后，预期可降至 1 s 以内。
 - 对比落库于 `defects` 表的 `variant ∈ {"A","B"}` 字段，前端聚合卡片直接读 `/api/stats`。
 
-## 8. 性能预算（RK3588 8GB）
+## 8. 性能预算（RK3588 16GB）
 
 ### 8.1 延迟预算
 
@@ -213,24 +213,25 @@ RK3588 C++ pipeline                              backend                  fronte
 | HTTP 上传 | < 200 ms（局域网） | libcurl HTTP/2 |
 | **端到端（异常帧）** | **2.5–4 s（首帧）** | 节拍以 EfficientAD 为准（~10 ms），VLM 异步 |
 
-### 8.2 内存预算（8GB 板，关键约束）
+### 8.2 内存预算（16GB 板）
 
 | 项目 | 占用 | 备注 |
 |---|---|---|
 | OS + 系统服务 | ~1.5 GB | Ubuntu 22.04 minimal |
 | EfficientAD-S RKNN | ~50 MB | 模型 + 工作内存 |
 | FastSAM RKNN | ~80 MB | |
-| Qwen3-VL-2B RKLLM + Vision | ~3.1 GB | LLM 1.9 GB + Vision 0.4 GB + KV (max_context=3072) |
+| Qwen3-VL-2B RKLLM + Vision | ~3.1 GB | LLM 1.9 GB + Vision 0.4 GB + KV (max_context=4096) |
 | C++ 进程其他 | ~250 MB | 队列、线程栈、libcurl、JPEG buffer |
 | 缓冲帧（Q1/Q2/Q3） | ~50 MB | 4+2+4 帧 × ~5 MB |
-| **总计** | **~5.0 GB / 8 GB** | 余量 ~3 GB，紧张但可用 |
+| **总计** | **~5.0 GB / 16 GB** | 余量 ~11 GB，充裕 |
 
-**8GB 板的硬约束**：
+> **备注**：实际硬件为 16GB 版香橙派 5，总余量约 11 GB，`max_context` 可放开至 4096，无需配置 zram swap。
 
-- `max_context` **上限 3072**（不是 4096），KV cache 加大会触顶。
+**16GB 板约束**：
+
+- `max_context` 上限 **4096**。
 - **不能在边缘端跑任何 Python 服务**（FastAPI / rkllama / Flask）——这些至少各占 0.5–1 GB。
 - 单进程共享同一套模型实例；T1 可多类别循环，内存占用不变；**禁止**多进程各自加载 VLM。
-- 编译时建议配 4 GB zram swap 防 OOM；运行时基本不用到 swap。
 
 ### 8.3 带宽预算
 

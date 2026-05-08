@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-端云分离架构的工业视觉 AI 检测项目：边缘端 RK3588 8GB 跑三段式异步推理流水线（EfficientAD-S → FastSAM → Qwen3-VL-2B），后端 FastAPI 收单与广播，前端 Next.js 仪表盘做可视化。本文档是 Claude Code 在本仓库的总入口，定义全局约束与导航。
+端云分离架构的工业视觉 AI 检测项目：边缘端 RK3588 16GB 跑三段式异步推理流水线（EfficientAD-S → FastSAM → Qwen3-VL-2B），后端 FastAPI 收单与广播，前端 Next.js 仪表盘做可视化。本文档是 Claude Code 在本仓库的总入口，定义全局约束与导航。
 
 ## 当前实现状态
 
@@ -10,13 +10,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 一句话定义
 
-**RK3588 8GB 边缘端做异常检测 + 分割 + VLM 结构化描述，HTTP 上报到云端 FastAPI，WebSocket 实时推送给 Next.js 仪表盘**；面向本科课程设计 / 求职作品集，方向是端侧 AI 部署推理优化。
+**RK3588 16GB 边缘端做异常检测 + 分割 + VLM 结构化描述，HTTP 上报到云端 FastAPI，WebSocket 实时推送给 Next.js 仪表盘**；面向本科课程设计 / 求职作品集，方向是端侧 AI 部署推理优化。
 
 ## 技术栈一览
 
 | 分层 | 关键技术 | 版本/备注 |
 |---|---|---|
-| 边缘端硬件 | **RK3588 8GB**（如 Orange Pi 5 Plus 8GB / Rock 5B 8GB） | 6 TOPS NPU，三核并行 |
+| 边缘端硬件 | **RK3588 16GB**（Orange Pi 5 Plus 16GB） | 6 TOPS NPU，三核并行 |
 | 边缘端运行时 | C++17/20、librknnrt、librkllmrt、librga、libcurl、V4L2 | rknn-llm v1.2.3+、rknn-toolkit2 v2.2+、GCC ≥ 11 |
 | Stage 1 异常检测 | EfficientAD-S（PDN, 256×256, INT8） | Anomalib 2.x → 单一 ONNX → 单个 RKNN |
 | Stage 2 分割 | FastSAM-s（640×640, INT8） | YOLOv8-seg 衍生 |
@@ -169,7 +169,7 @@ vlm-sam-industrial-vision-v2/
 3. **不引入 Streamlit / Gradio** 或任何旧 UI 残留。
 4. **不使用视频流模拟产线**，不用 iPad 投影 / OBS 虚拟摄像头（引入光学退化干扰算法验证）。
 5. **不复制旧仓库的 `configs/`、`datasets/`、`padim_ref.py`、`feature_extractor_ref.py`**。
-6. **不在 RK3588 端起 WebSocket 服务**或 Web 服务器（FastAPI/Flask 等）；**8GB 内存压力大，边缘端只跑 C++ 推理引擎**。
+6. **不在 RK3588 端起 WebSocket 服务**或 Web 服务器（FastAPI/Flask 等）；**边缘端只跑 C++ 推理引擎**。
 7. **不在边缘端做 PaDiM/PatchCore 类位置敏感方法**（已被 EfficientAD-S 替代）。
 8. **不混用 Pydantic v1 写法**（`orm_mode` / `parse_obj` / `dict()` 全部禁用）。
 9. **不使用 Tailwind v3 配置**（`tailwind.config.ts` 不再使用，全部走 CSS `@theme`）。
@@ -183,14 +183,11 @@ vlm-sam-industrial-vision-v2/
 - **轨道 B（C++：RK3588 推理流水线）**：
   板子到货后直接按**性能版**开发，无原型阶段。C++ 代码从一开始就按零拷贝、INT8/W8A8 量化、三核 NPU 并行的标准写。具体约束见 `.claude/skills/rk3588-deployment/SKILL.md`。
 
-## 8GB 内存压力下的硬约束
+## 16GB 板约束（实际硬件：香橙派 5 16GB）
 
-边缘端 8GB 相比 16GB 多出以下约束：
-
-- **`max_context` 上限 3072**（不是常见的 4096），KV cache 超过此值会触顶 OOM。
+- **`max_context` 上限 4096**。
 - **不在 RK3588 上同时跑模拟器**：模拟器只在 PC 端运行；上板后真机直接跑 C++ 推理引擎。
-- **单进程共享同一套模型实例**：T1 线程可循环读取 metal_nut / screw / pill 多个类别的图片集模拟多产线节拍，内存占用不变；**禁止**开多个独立进程各自加载 VLM（每个 Qwen3-VL-2B 实例 ~3.1 GB，两个即 OOM）。
-- **swap 配置 4GB zram**（编译时建议开启，运行时基本不触及），防止 RKLLM 加载瞬间 OOM。
+- **单进程共享同一套模型实例**：T1 线程可循环读取 metal_nut / screw / pill 多个类别的图片集模拟多产线节拍，内存占用不变；**禁止**开多个独立进程各自加载 VLM（每个 Qwen3-VL-2B 实例 ~3.1 GB）。
 
 ## AB 测试方案概要
 

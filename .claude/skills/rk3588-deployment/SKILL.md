@@ -2,7 +2,7 @@
 name: rk3588-deployment
 description: |
   Generates and reviews C++20 edge inference code for the vlm-sam-industrial-vision-v2
-  project targeting RK3588 8GB. Use this skill whenever the user mentions RK3588,
+  project targeting RK3588 16GB. Use this skill whenever the user mentions RK3588,
   Rockchip NPU, rknn, rkllm, librga, V4L2, dma_buf, EfficientAD-S, FastSAM,
   Qwen3-VL deployment, W8A8 quantization, jthread pipeline, BoundedQueue,
   libcurl multipart upload, or zero-copy inference — even without the word "deployment".
@@ -51,16 +51,16 @@ license: Internal-CourseProject
 6. 队列必须有界 + drop-oldest，必须导出 `dropped_count` 指标，禁止无界队列。
 7. libcurl：`curl_global_init` 只在 `main()` 最开头调用一次（所有线程启动前），`HttpClient` 构造函数中**不调用**；每个上传线程独占一个 easy handle，`curl_easy_reset` 复用，禁止每次 init/cleanup。
 8. VLM JSON 输出必须经五级 bbox 净化（参考 `edge/src/vlm_bbox_ref.py`）：归一化裁剪 → 面积过滤 → 长宽比过滤 → IoU 去重 → 置信度阈值。此外 `category` 字段值必须做白名单校验 `{"metal_nut", "screw", "pill"}`，非法值丢弃或重置为 `"other"`。
-9. 严禁 Base64 传图；严禁在边缘端起 WebSocket 服务；严禁跑 FastAPI / Flask 等 Python Web 框架（8GB 内存压力大）；严禁生成检测报告；严禁 PaDiM 残留。
+9. 严禁 Base64 传图；严禁在边缘端起 WebSocket 服务；严禁跑 FastAPI / Flask 等 Python Web 框架；严禁生成检测报告；严禁 PaDiM 残留。
 10. 所有可量化指标（解析失败、上传重试、丢帧、TTFT、tokens/s）写入 `PipelineMetrics` 并通过 `vlm_metrics` 字段上报后端；字段 `alignas(64)` 防 false sharing。
 11. EfficientAD-S RKNN 模型输入输出均为 INT8（非 float32），读取 anomaly_map/pred_score 后必须用 `rknn_query(RKNN_QUERY_OUTPUT_ATTR)` 获取量化参数做反量化，禁止直接将 INT8 原始值与浮点阈值比较。
 12. FastSAM-s output0（det）和 output1（proto masks）的反量化参数独立，必须分别查询 `RKNN_QUERY_OUTPUT_ATTR` 获取各自的 scale/zero_point，禁止用同一组量化参数处理两路输出。
 
-## 8GB 板特殊约束
+## 16GB 板约束（实际硬件）
 
-- `max_context` 上限 **3072**（不是 4096），否则 KV cache 触顶。
+- `max_context` 上限 **4096**。
 - 单进程共享同一套模型实例（EfficientAD-S + FastSAM + Qwen3-VL-2B）；T1 线程可循环读取 metal_nut / screw / pill 多个类别的图片集模拟多产线节拍，内存占用不变。
-- **禁止**开多个独立进程各自加载 VLM——每个 Qwen3-VL-2B 实例占 ~3.1 GB，两个实例直接 OOM。
+- **禁止**开多个独立进程各自加载 VLM——每个 Qwen3-VL-2B 实例占 ~3.1 GB，多个实例会快速消耗内存。
 - 模拟器（Python 多线程多产线）只在 PC 端运行，不在 RK3588 上跑。
 
 ## 模型路径
