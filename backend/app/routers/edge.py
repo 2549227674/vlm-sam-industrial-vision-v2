@@ -124,30 +124,17 @@ async def report_defect(
             filepath.unlink()
         return _error(409, "DUPLICATE_REPORT", "Same line_id + edge_ts already exists")
 
-    # --- build 3-field response (avoid ORM→Pydantic round-trip; SQLite loses tzinfo) ---
-    resp = DefectCreatedResponse(
-        id=db_defect.id,
-        image_url=db_defect.image_url,
-        server_ts=db_defect.server_ts,
-    )
+    # --- build 3-field response ---
+    resp = DefectCreatedResponse.model_validate(db_defect)
 
     # --- WebSocket broadcast ---
     ws_manager = getattr(request.app.state, "ws_manager", None)
     if ws_manager:
+        from backend.app.schemas.defect import DefectRead
+        read_data = DefectRead.model_validate(db_defect)
         await ws_manager.broadcast(
             "dashboard",
-            {
-                "type": "defect_created",
-                "data": {
-                    "id": db_defect.id,
-                    "image_url": db_defect.image_url,
-                    "server_ts": db_defect.server_ts.isoformat(),
-                    "line_id": meta_data.line_id,
-                    "category": meta_data.category,
-                    "severity": meta_data.severity,
-                    "variant": meta_data.variant,
-                },
-            },
+            {"type": "defect_created", "data": read_data.model_dump(mode="json")},
         )
 
     return resp

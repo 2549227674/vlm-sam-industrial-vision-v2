@@ -47,13 +47,13 @@ app.add_middleware(
 # Static files
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
-# Routers — uncomment as each phase is implemented
-from backend.app.routers import edge  # noqa: E402
+# Routers
+from backend.app.routers import defects, edge, health, stats  # noqa: E402
 
 app.include_router(edge.router)
+app.include_router(defects.router)
+app.include_router(stats.router)
+app.include_router(health.router)
 
-# from backend.app.routers import defects, stats, health, ws
-# app.include_router(defects.router)
-# app.include_router(stats.router)
-# app.include_router(health.router)
+# from backend.app.routers import ws
 # app.include_router(ws.router)

@@ -77,3 +77,10 @@ class DefectCreatedResponse(BaseModel):
     id: int
     image_url: str
     server_ts: datetime
+
+
+class PaginatedDefectsResponse(BaseModel):
+    items: list[DefectRead]
+    total: int
+    page: int
+    page_size: int

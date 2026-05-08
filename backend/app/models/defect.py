@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import CheckConstraint, DateTime, Float, Integer, JSON, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, Float, Integer, JSON, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from backend.app.db import Base
+from backend.app.db import Base, TZDateTime
 
 
 class Defect(Base):
@@ -16,7 +16,7 @@ class Defect(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     image_url: Mapped[str] = mapped_column(String(255))
     server_ts: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        TZDateTime(),
         default=lambda: datetime.now(timezone.utc),
         index=True,
     )
@@ -32,7 +32,7 @@ class Defect(Base):
     description: Mapped[str] = mapped_column(String(1024), default="")
 
     variant: Mapped[str] = mapped_column(String(2), index=True)
-    edge_ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    edge_ts: Mapped[datetime] = mapped_column(TZDateTime(), index=True)
 
     pipeline_ms: Mapped[dict] = mapped_column(JSON)
     vlm_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
