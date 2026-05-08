@@ -6,7 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 0（准备阶段）**——文档齐全，代码尚未开始。已有：四件套文档（CLAUDE.md / ARCHITECTURE.md / API_CONTRACT.md / SKILL.md）、PROJECT_TIMELINE.md、edge/config.yaml、edge/src/vlm_bbox_ref.py（参考文件）、MVTec AD 三类数据集。尚无：pyproject.toml、package.json、backend/app/*、frontend/*、simulator/line_runner.py、所有 C++ 源码。下一步见 `docs/PROJECT_TIMELINE.md` 阶段 1。
+**Phase 5-6 已完成，Phase 1-4（轨道A）尚未开始**
+
+已完成：
+- Phase 5.1：EfficientAD-S 训练 + ONNX 导出（三类别全部完成）
+- Phase 5.2：FastSAM-s ONNX 导出（fastsam_s.onnx 46MB）
+- Phase 5.3：LoRA 数据划分（240 train / 113 eval）
+- Phase 5.4：MVTec GT Mask 自动标注（mvtec_mask_to_json.py）
+- Phase 5.5：Qwen3-VL-2B LoRA 微调（AutoDL，train_loss=1.073）
+- Phase 5.6：PC 端 AB 评估（方案A=100%，方案B=100%）
+- Phase 6：全部模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
+
+尚未开始（下一步）：
+- Phase 1-4：轨道A——后端 FastAPI + 模拟器 + 前端 Next.js + 契约测试全绿
+  见 `docs/PROJECT_TIMELINE.md` 阶段 1-4
 
 ## 一句话定义
 

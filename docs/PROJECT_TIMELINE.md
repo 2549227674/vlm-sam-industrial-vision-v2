@@ -439,6 +439,20 @@ models/efficientad_models/
 **精度验证**（ARCHITECTURE.md §3.2）：
 - MVTec AD image-AUROC 参考值：metal_nut 0.979 / pill 0.987 / screw 0.960
 
+**实测结果**（RTX 4060 Laptop GPU，seed=42，20 epochs）：
+- metal_nut: AUROC=0.9721  ref=0.979  训练时间 388s
+- screw:     AUROC=0.9102  ref=0.960  训练时间 571s
+- pill:      AUROC=0.9558  ref=0.987  训练时间 498s
+- 总时长：约 24 分钟
+
+**ONNX 实际输出 4 个张量**（非原计划 2 个）：
+- `pred_score`, `pred_label`, `anomaly_map`, `pred_mask`
+- RKNN 转换只需 `pred_score` + `anomaly_map`，其余两路忽略
+
+**两个实操陷阱**：
+1. imagenette 路径必须是 `datasets/imagenette/imagenette2-320/`（不是 `datasets/imagenette2-320/`，Anomalib 期望多一层目录）
+2. ONNX 保存路径是 `weights/onnx/model.onnx`（不是直接在 export_root 下，已在脚本中修正）
+
 ### 5.2 FastSAM-s 权重下载
 
 **执行人**：你手动
@@ -448,6 +462,21 @@ models/efficientad_models/
 - 存放：`models/fastsam_models/fastsam_s.onnx`
 
 **完成标志**：ONNX 文件存在。
+
+**脚本**：`scripts/convert_fastsam.py`（已完成）
+
+**三处工程改进**：
+1. export 后 `shutil.move` 重命名为 `fastsam_s.onnx`
+2. `check_onnxsim()` 探测是否安装，未装则 `simplify=False`
+3. shape 硬断言：`output0=(1,37,8400)`, `output1=(1,32,160,160)`
+
+**实测结果**：
+- `fastsam_s.onnx` 46MB
+- input: `images` [1, 3, 640, 640]
+- output0: [1, 37, 8400] — 4+1+32（bbox+cls+mask 系数）
+- output1: [1, 32, 160, 160] — mask prototypes（1/4 分辨率）
+- CPU 推理：~108ms
+- 关键：Ultralytics ONNX export 默认不含 NMS，输出为原始张量，C++ T3 需自行实现 NMS + mask 合并
 
 ### 5.3 LoRA 数据划分
 
@@ -469,6 +498,11 @@ random.seed(42)，不移动原文件。
 > "训练集与评估集不得有任何重叠。划分脚本见 `scripts/split_lora_data.py`（固定 `random.seed(42)` 保证可复现）"
 
 **完成标志**：`datasets/lora_split/` 下有 train/ 和 eval/ 子目录，图片数量比约 70:30。
+
+**实际产出**：240 条训练样本，113 条 eval 样本
+
+**文件命名**：加缺陷类型前缀（如 `scratch_000.png`）
+原因：MVTec 各缺陷子目录图片均命名为 `000.png`-`015.png`，拍平复制会互相覆盖，前缀可规避冲突
 
 ### 5.4 自动生成标注 JSON + 数据格式转换
 
