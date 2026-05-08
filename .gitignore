@@ -14,4 +14,8 @@ datasets/
 results/
 lightning_logs/
 *.ckpt
+imagenette/
+logs/
+debug/
+temp_docs/
 *:Zone.Identifier

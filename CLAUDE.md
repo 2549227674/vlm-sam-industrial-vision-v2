@@ -96,7 +96,7 @@ cd frontend && npm install
 
 ## 仓库目录总览
 
-> **注意**：需要创建 `.gitignore`（当前缺失）。至少应忽略：`.venv/`、`.idea/`、`simulator/mvtec/`（大数据集）、`backend/vision.db`、`backend/static/defects/`、`*.pyc`、`__pycache__/`、`node_modules/`、`frontend/out/`、`build/`、`imagenette/`、`datasets/lora_split/`（保留 `dataset_info.json`）、`logs/`、`debug/`、`temp_docs/`、`*.rknn`、`*.rkllm`、`*.onnx`、`*.pt`、`*.safetensors`、`*:Zone.Identifier`。
+> **注意**：`.gitignore` 已配置（见仓库根目录），忽略大文件模型权重（`models/`、`datasets/`）、构建产物和临时目录。本地开发需自行下载数据集和模型文件。
 
 ```
 vlm-sam-industrial-vision-v2/
