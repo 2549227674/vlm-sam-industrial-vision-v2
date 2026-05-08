@@ -96,9 +96,7 @@ cd frontend && npm install
 
 ## 仓库目录总览
 
-> **注意**：需要创建 `.gitignore`（当前缺失）。至少应忽略：`.venv/`、`.idea/`、`simulator/mvtec/`（大数据集）、`backend/vision.db`、`backend/static/defects/`、`*.pyc`、`__pycache__/`、`node_modules/`、`frontend/out/`、`build/`。
-
-
+> **注意**：需要创建 `.gitignore`（当前缺失）。至少应忽略：`.venv/`、`.idea/`、`simulator/mvtec/`（大数据集）、`backend/vision.db`、`backend/static/defects/`、`*.pyc`、`__pycache__/`、`node_modules/`、`frontend/out/`、`build/`、`imagenette/`、`datasets/lora_split/`（保留 `dataset_info.json`）、`logs/`、`debug/`、`temp_docs/`、`*.rknn`、`*.rkllm`、`*.onnx`、`*.pt`、`*.safetensors`、`*:Zone.Identifier`。
 
 ```
 vlm-sam-industrial-vision-v2/
@@ -128,7 +126,13 @@ vlm-sam-industrial-vision-v2/
 │   │   ├── screw/
 │   │   └── pill/
 │   ├── fastsam_models/
-│   └── qwen3vl_models/             # *.rkllm + vision *.rknn
+│   ├── qwen3vl_models/             # *.rkllm + vision *.rknn
+│   └── qwen3vl_lora_adapter/       # Qwen3-VL-2B LoRA adapter 权重
+│       ├── adapter_config.json
+│       ├── adapter_model.safetensors
+│       ├── checkpoint-50/           # 训练中间检查点
+│       ├── checkpoint-100/
+│       └── checkpoint-150/
 ├── backend/                        # 轨道 A：FastAPI
 │   ├── app/
 │   │   ├── main.py                 # lifespan + ConnectionManager 注入
@@ -148,10 +152,21 @@ vlm-sam-industrial-vision-v2/
 │   ├── line_runner.py              # 多线程模拟多产线 + 静态图片集循环
 │   └── mvtec/                      # MVTec AD 解压目录（gitignore）
 ├── scripts/
-│   ├── convert_efficientad.py      # ONNX → RKNN INT8
-│   ├── convert_qwen3vl.py          # HF → RKLLM W8A8
-│   ├── mvtec_mask_to_yolo.py       # MVTec ground_truth/ 像素掩码 → YOLO bbox
-│   └── split_lora_data.py          # MVTec test 集 70/30 分层划分（LoRA 训练/评估隔离）
+│   ├── train_efficientad.py         # EfficientAD-S 训练（Anomalib 2.x）
+│   ├── convert_efficientad_rknn.py  # EfficientAD ONNX → RKNN INT8（原 convert_efficientad.py）
+│   ├── convert_fastsam_onnx.py      # FastSAM PyTorch → ONNX
+│   ├── convert_fastsam_rknn.py      # FastSAM ONNX → RKNN INT8
+│   ├── mvtec_mask_to_json.py        # MVTec GT Mask → DefectCreate JSON 标注
+│   ├── format_llama_factory_data.py # JSON 标注 → LLaMA-Factory ShareGPT 格式
+│   ├── split_lora_data.py           # MVTec test 集 70/30 分层划分（LoRA 训练/评估隔离）
+│   └── eval_ab_test.py              # PC 端 AB 方案评估（JSON 成功率对比）
+├── datasets/                        # LoRA 数据集（dataset_info.json + lora_split/）
+├── debug/                           # 临时调试脚本，如 debug_lora.py（gitignore）
+├── imagenette/                      # EfficientAD-S 训练用辅助数据集（gitignore，~1.5GB）
+├── logs/                            # 训练/转换日志输出（gitignore）
+├── results/                         # AB 评估结果（ab_eval_report.json）
+├── temp_docs/                       # 过程文档与脚本修改意见草稿（gitignore）
+├── qwen3vl_lora.yaml               # LLaMA-Factory LoRA 训练配置
 ├── .claude/
 │   └── skills/
 │       └── rk3588-deployment/SKILL.md
