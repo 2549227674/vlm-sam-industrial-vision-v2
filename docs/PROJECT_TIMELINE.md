@@ -96,6 +96,14 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 - pyright-lsp、typescript-lsp（推荐现在装）
 - clangd-lsp（阶段7再装）
 
+需额外配置（阶段 3 前完成）：
+- **playwright 插件**：从插件列表安装，用于前端视觉验证
+- **shadcn MCP**：在项目根 `.mcp.json` 添加：
+  ```json
+  {"mcpServers": {"shadcn": {"command": "npx", "args": ["-y", "shadcn@latest", "mcp"]}}}
+  ```
+  启动 Claude Code 后运行 `/mcp` 验证 Connected
+
 ---
 
 ## 阶段 1：轨道A — 后端 FastAPI
@@ -307,6 +315,40 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 **前置依赖**：阶段 1 后端 API 可用
 **文档依据**：ARCHITECTURE.md §2.3、CLAUDE.md 技术栈表
 
+### 3.0 Claude Design 视觉设计（已完成）
+
+**执行人**：Claude Design（已迭代两轮，定稿 V2）
+
+**产出目录**：`design-reference/`（不在 frontend/ 内，避免 Next.js 构建扫描）
+```
+design-reference/
+├── Industrial_Vision_Dashboard_v2.html   ← 整体结构参考
+└── src/
+    ├── v2-primitives.jsx    ← 颜色变量与语义（最重要）
+    ├── v2-waterfall.jsx     ← 瀑布图组件逻辑
+    ├── v2-ab.jsx            ← AB 对比面板
+    ├── v2-charts.jsx        ← 其他图表
+    ├── v2-stream.jsx        ← Live Stream 表格
+    ├── v2-detail.jsx        ← 单帧详情
+    └── v2-app.jsx           ← 页面组织
+    └── data.jsx
+    └── tweaks-panel.jsx
+```
+
+**V2 定稿设计规格（Claude Code 必须遵守）**：
+- 字体：JetBrains Mono（数字/ID/代码） + Inter（标签/文案）
+- 背景色系：`--bg-0:#0a0c10` → `--bg-4:#262c39`（5 级深色阶）
+- 信号色（来自 v2-primitives.jsx）：
+  - `--sig-cyan:#5ad6ff`（主色调，参照 Nsight）
+  - `--sev-low:#4ade80` / `--sev-med:#fbbf24` / `--sev-high:#f87171`
+  - `--stage-1:#4ade80`（EfficientAD，快）/ `--stage-2:#fbbf24`（FastSAM，中）
+    / `--stage-3:#f87171`（Qwen3-VL，瓶颈），这套颜色有叙事含义，不可修改
+  - `--sig-violet:#a78bfa`（方案 A）/ `--sig-teal:#2dd4bf`（方案 B）
+
+**所有 CSS 变量映射到 Tailwind v4 `@theme` 块，不使用 tailwind.config.ts**
+
+**完成标志**：`design-reference/` 目录存在，`v2-primitives.jsx` 可读取。
+
 ### 3.1 Next.js 15 项目初始化
 
 **执行人**：Claude Code
@@ -329,6 +371,8 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 **数据源**：`GET /api/defects`（初始加载）+ WebSocket `defect_created`（实时追加）
 **列**：id / category / defect_type / severity / confidence / variant / edge_ts / image 缩略图
 
+**V2 新增**：表格为 8 列 profiler 风格（列含 NPU Core 负载色块），点击行侧边弹出 DetailDrawer（而非跳转新页），可并行浏览流水。
+
 **完成标志**：启动模拟器后，DataTable 实时出现新行。
 
 ### 3.3 统计聚合图 — ECharts AB 对比
@@ -336,11 +380,20 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 **执行人**：Claude Code
 
 **数据源**：`GET /api/stats`
-**图表**：
-- 缺陷类别分布饼图（by_category）
-- 严重度分布柱状图（by_severity）
-- 时间线折线图（timeline）
-- AB 对比卡片（JSON 解析成功率 / avg_ttft_ms / avg_decode_tps / avg_rss_mb）
+
+**V2 定稿图表清单**：
+- 顶部 6 联 KPI 条：24h 缺陷数 / 平均流水线延迟 / NPU Core2 负载 /
+  JSON OK 率 / TTFT / 稳态 RSS（数据来自 GET /api/stats 扩展字段）
+- Hero 瀑布图：三段流水线延迟（EfficientAD→FastSAM→Qwen3-VL），
+  用 ECharts custom 系列实现，参考 `design-reference/src/v2-waterfall.jsx`
+  右上角 callout 写 "→ opportunity: LoRA short-prompt → -45% TTFT"
+- Category × Severity 热力矩阵（替代原计划的饼图+柱图）
+- AB 对比 5 轴面板：TTFT / JSON Parse / Decode tps / RSS / Prompt tokens，
+  每行带方向箭头 ↓/↑ + Δ%，底部一句 "→ DECISION: ship variant B"
+  参考 `design-reference/src/v2-ab.jsx`
+
+**注意**：`design-reference/` 里的代码是原生 React + Babel CDN，不可直接使用，
+只作视觉规格参考，用 Next.js App Router + Tailwind v4 + ECharts 5.6 重新实现。
 
 **完成标志**：`/api/stats` 有数据后，图表正确渲染。
 

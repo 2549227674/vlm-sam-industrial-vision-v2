@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1 后端骨架完成，Phase 2-4（轨道A）尚未开始，Phase 5-6 已完成**
+**Phase 1 后端骨架完成，Phase 2 模拟器+契约测试完成，Phase 3-4（轨道A）尚未开始，Phase 5-6 已完成**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 1.4：POST `/api/edge/report` 路由（multipart 落盘 + 全量错误码）
 - Phase 1.5：GET 查询路由（defects 分页 + stats 聚合 + health 探针）
 - Phase 1.6：WebSocket `/ws/dashboard`（ConnectionManager + 心跳 metrics_tick/ping）
+- Phase 2.1：模拟器 `simulator/line_runner.py`（PNG→JPEG 内存转换 + 指数退避重试 + Session 复用 + 路径绝对化）
+- Phase 2.2：6 个契约测试，31 passed（`pytest backend/tests/contract/ -v`），同步修复后端两处潜在 bug：`edge.py` `_error()` 对 Pydantic `errors()` 做 `json.dumps(default=str)` 防序列化崩溃；`main.py` 注册 `RequestValidationError` 全局 handler 返回契约规定的 `{"error": {"code": ..., "message": ...}}` 格式
 - Phase 5.1：EfficientAD-S 训练 + ONNX 导出（三类别全部完成）
 - Phase 5.2：FastSAM-s ONNX 导出（fastsam_s.onnx 46MB）
 - Phase 5.3：LoRA 数据划分（240 train / 113 eval）
@@ -24,10 +26,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 6：全部模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
 
 尚未开始（下一步）：
-- Phase 2：模拟器 + 契约测试全绿
-- Phase 3：前端 Next.js 仪表盘
+- Phase 3：前端 Next.js 仪表盘（含 Claude Design 设计规格）
 - Phase 4：轨道A 联调验收
-  见 `docs/PROJECT_TIMELINE.md` 阶段 2-4
+  见 `docs/PROJECT_TIMELINE.md` 阶段 3-4
 
 ## 一句话定义
 
