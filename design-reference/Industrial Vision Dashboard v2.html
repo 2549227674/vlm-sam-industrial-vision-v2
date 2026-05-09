@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Edge Profiler · RK3588</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:      #0a0c10;
+  --bg-1:      #0f1218;
+  --bg-2:      #161a23;
+  --bg-3:      #1d222d;
+  --bg-4:      #262c39;
+  --line:      #2a3142;
+  --line-soft: #1f2533;
+  --line-hot:  #3a4258;
+  --fg:        #e6ebf5;
+  --fg-1:      #b6becf;
+  --fg-2:      #7d869c;
+  --fg-3:      #555d72;
+  --fg-4:      #3d4458;
+
+  /* signal colors — chosen for profilers */
+  --sig-cyan:   #5ad6ff;     /* primary, like NVIDIA Nsight CUDA */
+  --sig-green:  #4ade80;     /* good / pass */
+  --sig-amber:  #fbbf24;     /* warn */
+  --sig-red:    #f87171;     /* hot / bottleneck */
+  --sig-violet: #a78bfa;     /* variant A */
+  --sig-teal:   #2dd4bf;     /* variant B */
+  --sig-mag:    #f472b6;     /* highlight */
+
+  /* pipeline stage colors */
+  --stage-1: #4ade80;  /* EfficientAD - fast, green */
+  --stage-2: #fbbf24;  /* FastSAM - mid, amber */
+  --stage-3: #f87171;  /* Qwen3-VL - slow, red (the bottleneck) */
+
+  /* severity */
+  --sev-low: #4ade80;
+  --sev-med: #fbbf24;
+  --sev-high: #f87171;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+*{ box-sizing: border-box; }
+
+html, body{
+  margin: 0; padding: 0;
+  background: var(--bg-0);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
+}
+
+button{ font-family: inherit; color: inherit; }
+
+::selection{ background: var(--sig-cyan); color: var(--bg-0); }
+
+::-webkit-scrollbar{ width: 10px; height: 10px; }
+::-webkit-scrollbar-track{ background: var(--bg-0); }
+::-webkit-scrollbar-thumb{ background: var(--bg-3); border: 2px solid var(--bg-0); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover{ background: var(--line-hot); }
+
+.mono{ font-family: var(--font-mono); font-feature-settings: "zero", "ss02"; }
+
+.eyebrow{
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 500;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.label-tag{
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 2px 7px;
+  border: 1px solid currentColor;
+  display: inline-flex; align-items: center; gap: 5px;
+  line-height: 1.4;
+}
+
+@keyframes pulse-dot{
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.85); }
+}
+@keyframes flash{
+  0%   { opacity: 0.32; }
+  100% { opacity: 0; }
+}
+@keyframes scan-x{
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes blink{
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.2; }
+}
+@keyframes slide-in-toast{
+  from { transform: translateX(20px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes ticker{
+  0% { transform: translateY(0); }
+  20% { transform: translateY(-100%); }
+  100% { transform: translateY(-100%); }
+}
+
+.scan-bg{
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0, transparent 19px, rgba(90, 214, 255, 0.04) 19px, rgba(90, 214, 255, 0.04) 20px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 19px, rgba(90, 214, 255, 0.04) 19px, rgba(90, 214, 255, 0.04) 20px);
+}
+
+.stripe-bg{
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--bg-1) 0,
+    var(--bg-1) 8px,
+    var(--bg-2) 8px,
+    var(--bg-2) 16px
+  );
+}
+
+#root{ min-height: 100vh; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="src/tweaks-panel.jsx"></script>
+  <script type="text/babel" src="src/data.jsx"></script>
+  <script type="text/babel" src="src/v2-primitives.jsx"></script>
+  <script type="text/babel" src="src/v2-waterfall.jsx"></script>
+  <script type="text/babel" src="src/v2-ab.jsx"></script>
+  <script type="text/babel" src="src/v2-charts.jsx"></script>
+  <script type="text/babel" src="src/v2-stream.jsx"></script>
+  <script type="text/babel" src="src/v2-detail.jsx"></script>
+  <script type="text/babel" src="src/v2-app.jsx"></script>
+
+  <script>
+    window.__TWEAK_DEFAULTS__V2 = /*EDITMODE-BEGIN*/{
+      "bottleneckHero": "waterfall",
+      "abFocus": "ttft",
+      "live": true,
+      "showCpu": true
+    }/*EDITMODE-END*/;
+  </script>
+</body>
+</html>

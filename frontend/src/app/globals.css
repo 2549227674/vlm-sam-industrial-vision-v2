@@ -184,3 +184,24 @@ a {
     @apply font-sans;
   }
 }
+
+/* V2 animations */
+@keyframes flash {
+  0% { opacity: 0.18; }
+  100% { opacity: 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+@keyframes slide-in-toast {
+  0% { opacity: 0; transform: translateX(-12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scan-line {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
