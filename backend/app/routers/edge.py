@@ -23,6 +23,14 @@ MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2 MB
 def _error(status_code: int, code: str, message: str, details=None):
     content: dict = {"error": {"code": code, "message": message}}
     if details is not None:
+        # Pydantic e.errors() may contain non-serializable objects (e.g. ValueError in ctx).
+        # Use e.json() to get a JSON-safe string, then parse back.
+        if isinstance(details, list):
+            try:
+                import json as _json
+                details = _json.loads(_json.dumps(details, default=str))
+            except Exception:
+                details = str(details)
         content["error"]["details"] = details
     return JSONResponse(status_code=status_code, content=content)
 
