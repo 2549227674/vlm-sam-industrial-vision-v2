@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardStats from '@/components/DashboardStats';
 import { TopBar, BottomStatus } from '@/components/v2';
 import { buildStats, seedDefects, type MockStats } from '@/lib/mock-data';

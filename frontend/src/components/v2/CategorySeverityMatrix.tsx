@@ -1,29 +1,49 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SeverityChip, CategoryChip } from './primitives';
 import type { MockStats } from '@/lib/mock-data';
 
 const CATS = ['metal_nut', 'screw', 'pill'];
 const SEVS = ['low', 'medium', 'high'];
 
-export function CategorySeverityMatrix({ stats }: { stats: MockStats }) {
+// Deterministic initial grid (all zeros — matches SSR)
+function emptyGrid(): Record<string, Record<string, number>> {
+  const g: Record<string, Record<string, number>> = {};
+  for (const c of CATS) {
+    g[c] = {};
+    for (const s of SEVS) g[c][s] = 0;
+  }
+  return g;
+}
 
-  const { grid, total, max } = useMemo(() => {
-    const g: Record<string, Record<string, number>> = {};
-    let t = 0;
-    for (const c of CATS) {
-      g[c] = {};
-      for (const s of SEVS) {
-        const base = (stats.by_category[c] ?? 0) / 3;
-        const weight = s === 'high' ? 0.18 : s === 'medium' ? 0.30 : 0.52;
-        const v = Math.floor(base * weight + Math.random() * 6);
-        g[c][s] = v;
-        t += v;
-      }
+function buildGrid(stats: MockStats): { grid: Record<string, Record<string, number>>; total: number; max: number } {
+  const g: Record<string, Record<string, number>> = {};
+  let t = 0;
+  for (const c of CATS) {
+    g[c] = {};
+    for (const s of SEVS) {
+      const base = (stats.by_category[c] ?? 0) / 3;
+      const weight = s === 'high' ? 0.18 : s === 'medium' ? 0.30 : 0.52;
+      const v = Math.floor(base * weight + Math.random() * 6);
+      g[c][s] = v;
+      t += v;
     }
-    const m = Math.max(...CATS.flatMap(c => SEVS.map(s => g[c][s])), 1);
-    return { grid: g, total: t, max: m };
+  }
+  const m = Math.max(...CATS.flatMap(c => SEVS.map(s => g[c][s])), 1);
+  return { grid: g, total: t, max: m };
+}
+
+export function CategorySeverityMatrix({ stats }: { stats: MockStats }) {
+  const [grid, setGrid] = useState(emptyGrid);
+  const [total, setTotal] = useState(0);
+  const [max, setMax] = useState(1);
+
+  useEffect(() => {
+    const { grid: g, total: t, max: m } = buildGrid(stats);
+    setGrid(g);
+    setTotal(t);
+    setMax(m);
   }, [stats]);
 
   return (
@@ -43,7 +63,7 @@ export function CategorySeverityMatrix({ stats }: { stats: MockStats }) {
             </div>
             {SEVS.map(s => {
               const v = grid[c][s];
-              const intensity = v / max;
+              const intensity = max > 0 ? v / max : 0;
               const color = s === 'high' ? 'var(--color-sev-high)' : s === 'medium' ? 'var(--color-sev-med)' : 'var(--color-sev-low)';
               return (
                 <div
@@ -67,7 +87,7 @@ export function CategorySeverityMatrix({ stats }: { stats: MockStats }) {
       </div>
       <div className="mt-3 flex justify-between items-center">
         <span className="font-mono text-[10px] text-fg-3">category × severity · last 24h</span>
-        <span className="font-mono text-[10px] text-fg">Σ = {total}</span>
+        <span className="font-mono text-[10px] text-fg" suppressHydrationWarning>Σ = {total}</span>
       </div>
     </div>
   );

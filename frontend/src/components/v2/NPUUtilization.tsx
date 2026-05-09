@@ -1,13 +1,40 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
+interface CoreData {
+  id: number;
+  name: string;
+  load: number;
+  task: string;
+  color: string;
+}
+
+const INITIAL_CORES: CoreData[] = [
+  { id: 0, name: 'NPU CORE 0', load: 18, task: 'EfficientAD-S', color: 'var(--color-stage-1)' },
+  { id: 1, name: 'NPU CORE 1', load: 42, task: 'FastSAM-s', color: 'var(--color-stage-2)' },
+  { id: 2, name: 'NPU CORE 2', load: 78, task: 'Qwen3-VL-2B', color: 'var(--color-stage-3)' },
+];
+
+function computeLoads(): number[] {
+  const now = Date.now();
+  return [
+    18 + (Math.sin(now / 800) * 8 + 8),
+    42 + (Math.sin(now / 600) * 12 + 8),
+    78 + (Math.sin(now / 1100) * 8 + 8),
+  ];
+}
 
 export function NPUUtilization() {
-  const cores = [
-    { id: 0, name: 'NPU CORE 0', load: 18 + (Math.sin(Date.now() / 800) * 8 + 8), task: 'EfficientAD-S', color: 'var(--color-stage-1)' },
-    { id: 1, name: 'NPU CORE 1', load: 42 + (Math.sin(Date.now() / 600) * 12 + 8), task: 'FastSAM-s', color: 'var(--color-stage-2)' },
-    { id: 2, name: 'NPU CORE 2', load: 78 + (Math.sin(Date.now() / 1100) * 8 + 8), task: 'Qwen3-VL-2B', color: 'var(--color-stage-3)' },
-  ];
+  const [loads, setLoads] = useState<number[]>(INITIAL_CORES.map(c => c.load));
+
+  useEffect(() => {
+    setLoads(computeLoads());
+    const id = setInterval(() => setLoads(computeLoads()), 500);
+    return () => clearInterval(id);
+  }, []);
+
+  const cores = INITIAL_CORES.map((c, i) => ({ ...c, load: loads[i] ?? c.load }));
 
   return (
     <div className="flex flex-col gap-2.5">
