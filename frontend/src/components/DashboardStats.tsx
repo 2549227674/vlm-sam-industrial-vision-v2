@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { toast } from 'sonner';
 import type { DefectRead } from '@/types/defect';
 import { API_BASE } from '@/lib/api';
 import { useDefectWebSocket } from '@/lib/ws';
@@ -69,6 +70,9 @@ export default function DashboardStats() {
   const handleNewDefect = useCallback((defect: DefectRead) => {
     setDefects(prev => [defect, ...prev].slice(0, 240));
     setTick(t => t + 1);
+    toast(`缺陷检测 ${defect.category} - ${defect.defect_type}`, {
+      description: `严重程度: ${defect.severity} | 变体: ${defect.variant}`,
+    });
   }, []);
 
   useDefectWebSocket(handleNewDefect);

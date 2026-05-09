@@ -141,6 +141,47 @@ export function DetailDrawer({
         </div>
       </div>
 
+      {/* NPU/CPU/RGA Trace placeholder */}
+      {defect.trace_events && defect.trace_events.length > 0 ? (
+        <div className="px-3.5 py-3 border-t border-line bg-bg-1">
+          <span className="font-mono text-[9px] font-medium tracking-[0.14em] uppercase text-fg-3 block mb-2">
+            NPU / CPU / RGA TRACE
+          </span>
+          <div className="h-20 border border-dashed border-line rounded flex items-center justify-center">
+            <span className="font-mono text-xs text-fg-3">
+              [TRACE CHART PLACEHOLDER &mdash; {defect.trace_events.length} events]
+            </span>
+          </div>
+          <span className="font-mono text-[9px] text-fg-4 block mt-1">
+            Phase 7: ECharts gantt chart from trace_events
+          </span>
+        </div>
+      ) : (
+        <div className="px-3.5 py-3 border-t border-line">
+          <span className="font-mono text-[9px] font-medium tracking-[0.14em] uppercase text-fg-3 block mb-1.5">
+            NPU / CPU / RGA TRACE
+          </span>
+          <div className="border border-dashed border-line rounded p-3 text-center">
+            <span className="font-mono text-[10px] text-fg-3 tracking-wider block mb-1">
+              Awaiting C++ edge instrumentation (Phase 7)
+            </span>
+            <span className="font-mono text-[9px] text-fg-4">
+              trace_events: null → will render Chrome-trace style gantt chart
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Raw VLM Metrics JSON */}
+      <div className="px-3.5 py-3 border-t border-line bg-bg-1">
+        <span className="font-mono text-[9px] font-medium tracking-[0.14em] uppercase text-fg-3 block mb-2">
+          QWEN3-VL RAW JSON
+        </span>
+        <pre className="font-mono text-xs text-sig-cyan overflow-x-auto whitespace-pre-wrap break-all m-0">
+          {JSON.stringify(defect.vlm_metrics ?? { message: 'No metrics available' }, null, 2)}
+        </pre>
+      </div>
+
       {/* Provenance footer */}
       <div className="px-3.5 py-2.5 bg-bg-2 border-t border-line grid grid-cols-2 gap-1.5 font-mono text-[10px] text-fg-3">
         <div>line_id <span className="text-fg">{defect.line_id}</span></div>
@@ -221,6 +262,25 @@ function DefectFrame({ defect }: { defect: DefectRead }) {
           );
         })}
       </svg>
+
+      {/* Bbox defect_type labels */}
+      {defect.bboxes.map((b, i) => {
+        const lx = b.x * 100, ly = b.y * 100;
+        return (
+          <span
+            key={`lbl-${i}`}
+            className="absolute font-mono text-[8px] font-bold text-bg-0 whitespace-nowrap pointer-events-none px-0.5"
+            style={{
+              left: `${lx}%`,
+              top: `${ly}%`,
+              transform: 'translate(0, -100%)',
+              background: sevColor,
+            }}
+          >
+            {defect.defect_type.toUpperCase()}
+          </span>
+        );
+      })}
     </div>
   );
 }
