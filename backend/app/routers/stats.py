@@ -54,6 +54,32 @@ async def get_stats(
     )
     timeline = [{"ts": r[0], "count": r[1]} for r in tl_rows]
 
+    # avg_pipeline_ms (json_extract on pipeline_ms JSON column)
+    avg_eff = await db.scalar(
+        select(func.avg(func.json_extract(Defect.pipeline_ms, "$.efficientad"))).where(*base)
+    )
+    avg_fsam = await db.scalar(
+        select(func.avg(func.json_extract(Defect.pipeline_ms, "$.fastsam"))).where(*base)
+    )
+    avg_qwen = await db.scalar(
+        select(func.avg(func.json_extract(Defect.pipeline_ms, "$.qwen3vl"))).where(*base)
+    )
+    avg_pipeline_ms = {
+        "efficientad": round(float(avg_eff or 0), 2),
+        "fastsam": round(float(avg_fsam or 0), 2),
+        "qwen3vl": round(float(avg_qwen or 0), 2),
+    }
+
+    # category_severity_matrix
+    matrix_rows = await db.execute(
+        select(Defect.category, Defect.severity, func.count())
+        .where(*base)
+        .group_by(Defect.category, Defect.severity)
+    )
+    category_severity_matrix: dict[str, dict[str, int]] = {}
+    for cat, sev, cnt in matrix_rows:
+        category_severity_matrix.setdefault(cat, {})[sev] = cnt
+
     # ab_compare (json_extract on vlm_metrics JSON column)
     ab_rows = await db.execute(
         select(
@@ -71,6 +97,9 @@ async def get_stats(
             func.avg(
                 func.json_extract(Defect.vlm_metrics, "$.rss_mb")
             ).label("avg_rss_mb"),
+            func.avg(
+                func.json_extract(Defect.vlm_metrics, "$.prompt_tokens")
+            ).label("avg_prompt_tokens"),
         )
         .where(*base)
         .group_by(Defect.variant)
@@ -82,6 +111,7 @@ async def get_stats(
             "avg_ttft_ms": round(float(r.avg_ttft_ms or 0), 2),
             "avg_decode_tps": round(float(r.avg_decode_tps or 0), 2),
             "avg_rss_mb": round(float(r.avg_rss_mb or 0), 1),
+            "avg_prompt_tokens": round(float(r.avg_prompt_tokens or 0), 0),
         }
         for r in ab_rows
     }
@@ -92,4 +122,6 @@ async def get_stats(
         "by_severity": by_severity,
         "timeline": timeline,
         "ab_compare": ab_compare,
+        "avg_pipeline_ms": avg_pipeline_ms,
+        "category_severity_matrix": category_severity_matrix,
     }

@@ -34,7 +34,8 @@ a {
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -73,6 +74,34 @@ a {
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* V2 design tokens — from design-reference/Industrial Vision Dashboard v2.html */
+  --color-bg-0: #0a0c10;
+  --color-bg-1: #0f1218;
+  --color-bg-2: #161a23;
+  --color-bg-3: #1d222d;
+  --color-bg-4: #262c39;
+  --color-line: #2a3142;
+  --color-line-soft: #1f2533;
+  --color-line-hot: #3a4258;
+  --color-fg: #e6ebf5;
+  --color-fg-1: #b6becf;
+  --color-fg-2: #7d869c;
+  --color-fg-3: #555d72;
+  --color-fg-4: #3d4458;
+  --color-sig-cyan: #5ad6ff;
+  --color-sig-green: #4ade80;
+  --color-sig-amber: #fbbf24;
+  --color-sig-red: #f87171;
+  --color-sig-violet: #a78bfa;
+  --color-sig-teal: #2dd4bf;
+  --color-sig-mag: #f472b6;
+  --color-stage-1: #4ade80;
+  --color-stage-2: #fbbf24;
+  --color-stage-3: #f87171;
+  --color-sev-low: #4ade80;
+  --color-sev-med: #fbbf24;
+  --color-sev-high: #f87171;
 }
 
 :root {
@@ -149,7 +178,7 @@ a {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-bg-0 text-fg;
   }
   html {
     @apply font-sans;

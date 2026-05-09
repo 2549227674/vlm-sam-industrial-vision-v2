@@ -121,6 +121,40 @@ def fabricate_metadata(
     }
 
 
+def generate_trace_events(pipeline_ms: dict, vlm_metrics: dict) -> list[dict]:
+    """Phase 7 预留：模拟 C++ 四线程打点数据。
+
+    真实数据由 C++ std::chrono 生成；此处用随机值做前端联调。
+    注意：后端 DefectCreate 有 extra="forbid"，此字段暂不上报。
+    """
+    t_rga  = round(random.uniform(0.8, 2.0), 2)
+    t_ead  = pipeline_ms["efficientad"]
+    t_fsam = pipeline_ms["fastsam"]
+    t_qwen = pipeline_ms["qwen3vl"]
+
+    return [
+        {"name": "RGA_resize",        "ts": 0,
+         "dur": int(t_rga * 1000),    "tid": "T2_Pipeline", "ph": "X"},
+        {"name": "EfficientAD_infer", "ts": int(t_rga * 1000),
+         "dur": int(t_ead * 1000),    "tid": "T2_Pipeline", "ph": "X"},
+        {"name": "FastSAM_infer",
+         "ts": int((t_rga + t_ead) * 1000),
+         "dur": int(t_fsam * 1000),   "tid": "T2_Pipeline", "ph": "X"},
+        {"name": "VLM_prompt_build",
+         "ts": int((t_rga + t_ead + t_fsam) * 1000),
+         "dur": int(random.uniform(0.05, 0.15) * 1000),
+         "tid": "T3_VLM", "ph": "X"},
+        {"name": "VLM_TTFT",
+         "ts": int((t_rga + t_ead + t_fsam + 0.1) * 1000),
+         "dur": int(vlm_metrics["ttft_ms"] * 1000),
+         "tid": "T3_VLM", "ph": "X"},
+        {"name": "VLM_decode",
+         "ts": int((t_rga + t_ead + t_fsam + 0.1 + vlm_metrics["ttft_ms"]) * 1000),
+         "dur": int((t_qwen - vlm_metrics["ttft_ms"]) * 1000),
+         "tid": "T3_VLM", "ph": "X"},
+    ]
+
+
 # ─── 辅助：带指数退避的 POST ─────────────────────────────────────────────────
 def post_with_retry(
     session: requests.Session,
