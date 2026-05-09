@@ -107,6 +107,7 @@ export function MetricCell({
         <span
           className="font-mono text-2xl font-medium leading-none tabular-nums"
           style={{ color, letterSpacing: '-0.01em' }}
+          suppressHydrationWarning
         >
           {value}
         </span>
@@ -227,7 +228,7 @@ export function NavMetric({ label, value, color }: { label: string; value: strin
   return (
     <div className="flex items-baseline gap-1.5">
       <span className="font-mono text-[9px] text-fg-3 tracking-[0.14em]">{label}</span>
-      <span className="font-mono text-sm tabular-nums font-semibold" style={{ color }}>{value}</span>
+      <span className="font-mono text-sm tabular-nums font-semibold" style={{ color }} suppressHydrationWarning>{value}</span>
     </div>
   );
 }

@@ -237,7 +237,7 @@ export default function DashboardStats() {
             right={
               <>
                 <span className="font-mono text-[10px] text-fg-3">
-                  QPS <span className="text-sig-cyan">{qps}</span>
+                  QPS <span className="text-sig-cyan" suppressHydrationWarning>{qps}</span>
                 </span>
                 <StatusDot state={live ? 'online' : 'stale'} />
               </>

@@ -18,7 +18,7 @@ export function NPUUtilization() {
               <span className="font-mono text-[9px] text-fg-3 tracking-[0.12em]">{c.name}</span>
               <span className="font-mono text-[11px] text-fg">{c.task}</span>
             </span>
-            <span className="font-mono text-[13px] font-semibold tabular-nums" style={{ color: c.color }}>
+            <span className="font-mono text-[13px] font-semibold tabular-nums" style={{ color: c.color }} suppressHydrationWarning>
               {Math.round(c.load)}<span className="text-fg-3 text-[10px]">%</span>
             </span>
           </div>
