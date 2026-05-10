@@ -100,12 +100,12 @@ export default function DashboardStats() {
     <>
       {/* Main grid */}
       <div
-        className="flex-1 grid gap-6"
+        className="flex-1 grid gap-px bg-line"
         style={{
           gridTemplateColumns: selected ? 'minmax(0,1fr) 460px' : '1fr',
         }}
       >
-        <div className="flex flex-col gap-6 min-w-0">
+        <div className="flex flex-col gap-px bg-line min-w-0">
           {/* KPI strip */}
           <KPIStrip stats={mockStats} avgTotal={avgTotal} fps={fps} tick={tick} />
 
@@ -139,7 +139,7 @@ export default function DashboardStats() {
           </Panel>
 
           {/* Two column: NPU + Severity matrix */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-px bg-line">
             <Panel
               id="P-002"
               eyebrow="HARDWARE"

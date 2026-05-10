@@ -39,12 +39,12 @@ export function TopBar({
       </div>
 
       {/* Nav tabs */}
-      <nav className="flex items-stretch gap-1">
+      <nav className="flex items-stretch">
         {NAV_ITEMS.map((t, i) => (
           <a
             key={t}
             href="#"
-            className="px-[18px] flex items-center font-mono text-[11px] tracking-[0.12em] no-underline"
+            className="px-[18px] flex items-center border-r border-line font-mono text-[11px] tracking-[0.12em] no-underline"
             style={{
               color: i === 0 ? 'var(--color-fg)' : 'var(--color-fg-2)',
               fontWeight: i === 0 ? 700 : 500,
