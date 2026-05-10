@@ -19,7 +19,7 @@ export function KPIStrip({
   const B = stats.ab_compare.B;
 
   return (
-    <div className="grid grid-cols-6 bg-line gap-px">
+    <div className="grid grid-cols-6 gap-2">
       <MetricCell
         label="DEFECTS · 24h"
         value={stats.total}

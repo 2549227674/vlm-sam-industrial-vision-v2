@@ -49,7 +49,9 @@ export default function Dashboard() {
     <div className="min-h-screen bg-bg-0 flex flex-col">
       <TopBar now={now} live={live} qps={qps} fps={fps} todayHigh={stats.today_high} />
 
-      <DashboardStats />
+      <div className="flex-1 px-8 lg:px-12 py-6 flex flex-col">
+        <DashboardStats />
+      </div>
 
       <BottomStatus now={now} qps={qps} live={live} tick={tick} />
     </div>

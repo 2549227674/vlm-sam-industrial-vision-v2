@@ -48,7 +48,7 @@ export function Panel({
           {right && <div className="flex items-center gap-2">{right}</div>}
         </header>
       )}
-      <div className={padded ? 'p-4 flex-1' : 'flex-1'}>{children}</div>
+      <div className={padded ? 'p-5 lg:p-6 flex-1' : 'flex-1'}>{children}</div>
       {footer && (
         <footer className="px-3.5 py-2 border-t border-line bg-bg-2 font-mono text-[10px] text-fg-3 flex justify-between">
           {footer}
