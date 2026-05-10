@@ -375,6 +375,11 @@ design-reference/
 
 **完成标志**：启动模拟器后，DataTable 实时出现新行。
 
+> **⚠️ 实践变更**
+> - WebSocket 逻辑抽离到 `frontend/src/lib/ws.ts`，组件通过 hook 调用
+> - useRef 持有最新回调，deps=[] 保证 WS 只建立一次
+> - 消息解析：ws.ts 负责解包 `msg.data`，业务层只处理 `DefectRead` 对象
+
 ### 3.3 统计聚合图 — ECharts AB 对比
 
 **执行人**：Claude Code
@@ -397,6 +402,12 @@ design-reference/
 
 **完成标志**：`/api/stats` 有数据后，图表正确渲染。
 
+> **⚠️ 后端扩展（Phase 3.3 执行时发现）**
+> `/api/stats` 原始实现缺少前端所需字段，实际执行时补充了：
+> - `avg_pipeline_ms`：SQLite json_extract 聚合三段均值
+> - `category_severity_matrix`：笛卡尔积 group by(category, severity)
+> - `ab_compare.avg_prompt_tokens`：vlm_metrics JSON 字段聚合
+
 ### 3.4 单帧详情页
 
 **执行人**：Claude Code
@@ -407,7 +418,9 @@ design-reference/
 - bbox overlay（canvas 或 SVG 叠加，坐标从归一化 [0,1] 转像素）
 - JSON metadata 完整展示
 
-**完成标志**：点击某条缺陷记录，能看到图片 + bbox 框 + 完整 JSON。
+**完成标志**：点击 DataTable 行，右侧弹出 **DetailDrawer（Sheet 侧滑）**，包含：
+图片 + BBox Overlay / Metadata 8 格 / Pipeline Profiler 色条 /
+NPU Trace 占位区（Phase 7 填充）/ VLM Raw JSON
 
 ### 3.5 WebSocket 实时推送 + Sonner Toast
 
@@ -434,6 +447,41 @@ npx serve out    # 本地预览静态产物
 **注意**（ARCHITECTURE.md §9.2）：Next.js 14+ 已移除 `next export` 命令，`next build` + `output: 'export'` 自动完成。
 
 **完成标志**：`out/` 目录存在，静态服务可访问。
+
+### 3.7 视觉精修 — 对齐 V2 设计稿
+
+**执行人**：Claude Code（非原计划，Phase 3.6 后发现视觉差距，补加）
+
+**触发原因**：Phase 3.1-3.6 的组件实现参考 Gemini 回答，
+未直接读取 design-reference/src/*.jsx，导致视觉效果与 V2 设计稿差距较大。
+
+**产出**：
+- `frontend/src/components/v2/`（12 个新组件）：
+  TopBar / BottomStatus / KPIStrip / PipelineWaterfall（SVG甘特）/
+  NPUUtilization / CategorySeverityMatrix / ABCompare /
+  LiveStream / DetailDrawer / ThroughputChart / primitives / index
+- `frontend/src/lib/mock-data.ts`（API 离线时 fallback，与 data.jsx 量级一致）
+- `.claude/agents/visual-verify.md`（haiku 子 agent，playwright 截图对比）
+
+**工作流**：通读所有 design-reference/src/*.jsx → 逐组件翻译 → visual-verify agent 截图对比 → 迭代
+
+**完成标志**：npm run build 通过，visual-verify 报告 10/11 视觉匹配。
+
+---
+
+### 3.8 功能完整性验证 + 旧组件清理
+
+**执行人**：Claude Code
+
+**触发原因**：3.7 视觉精修创建了新的 v2/ 组件体系，但旧组件系统（DefectStream / WaterfallChart / KpiCards 等）未同步清理，存在两套并行实现。
+
+**执行内容**：
+- 确认 v2/ 组件继承了 Phase 3.2-3.4 的全部功能（BBox/Trace/Toast/API_BASE/断线重连）
+- 删除 5 个旧组件文件（-800 行）
+- 修复 Hydration 错误（NPUUtilization / CategorySeverityMatrix 的 Math.random()
+  移入 useEffect，useState(EMPTY_STATS) + mounted 模式）
+
+**完成标志**：npm run build 通过 + 浏览器控制台无 Hydration 错误。
 
 ---
 
@@ -895,6 +943,29 @@ int main() {
     curl_global_cleanup();
 }
 ```
+
+### 7.x 前端 — 系统拓扑视图（与 C++ 同步实现）
+
+**执行人**：Claude Code（待 C++ metrics_tick 有真实数据后）
+
+**触发条件**：C++ 流水线稳定运行，`metrics_tick` 能推送以下字段：
+- `npu_core_0_pct`、`npu_core_1_pct`、`npu_core_2_pct`（当前帧各核占用率）
+- `current_stage`：`"efficientad" | "fastsam" | "qwen3vl" | "idle"`（当前正在处理的 Stage）
+
+**组件**：`frontend/src/components/v2/SystemTopology.tsx`
+
+**视觉规格**：
+- 放置位置：DashboardStats 顶部，KPIStrip 下方，PipelineWaterfall 上方，作为 Hero 入口
+- 呈现：RK3588 Edge Device 框体内，左侧摄像头图标 → 三个 NPU Core 卡片 → 右侧上传图标
+- 三个 Core 卡片：模型名 + INT8 badge + 实时利用率条 + 当前帧延迟（来自 metrics_tick）
+- 数据流动画：当 current_stage 变化时，对应 Core 卡片高亮脉动，
+  左→右方向有粒子流动效果（CSS animation，纯前端，不依赖后端帧率）
+- mock fallback：C++ 未运行时，显示静态占位版本（沿用 NPUUtilization 的 mock 数据）
+
+**注意**：
+- 不需要新增后端路由，metrics_tick 已通过 WebSocket 推送（CLAUDE.md §1.6）
+- 仅需在 lib/ws.ts 中解析 `msg.type === "metrics_tick"` 分支并分发给组件
+- Phase 3 的 v2/NPUUtilization.tsx 可作为该组件的子组件复用
 
 ### 7.8 交叉编译 + 上板测试
 

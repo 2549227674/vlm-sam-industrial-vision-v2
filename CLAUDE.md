@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1 后端骨架完成，Phase 2 模拟器+契约测试完成，Phase 3-4（轨道A）尚未开始，Phase 5-6 已完成**
+**Phase 1-3 完成，Phase 4（轨道A 联调验收）为下一步，Phase 5-6 已完成**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -17,6 +17,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 1.6：WebSocket `/ws/dashboard`（ConnectionManager + 心跳 metrics_tick/ping）
 - Phase 2.1：模拟器 `simulator/line_runner.py`（PNG→JPEG 内存转换 + 指数退避重试 + Session 复用 + 路径绝对化）
 - Phase 2.2：6 个契约测试，31 passed（`pytest backend/tests/contract/ -v`），同步修复后端两处潜在 bug：`edge.py` `_error()` 对 Pydantic `errors()` 做 `json.dumps(default=str)` 防序列化崩溃；`main.py` 注册 `RequestValidationError` 全局 handler 返回契约规定的 `{"error": {"code": ..., "message": ...}}` 格式
+- Phase 3.1：Next.js 15 骨架（App Router + shadcn/ui + Tailwind v4 @theme + output:'export'）
+- Phase 3.2：实时缺陷流水 DataTable（TanStack Table v8 + 9 列 + 指数退避 WebSocket）
+  - 网络层抽离为 frontend/src/lib/ws.ts（useRef 模式防重连）
+  - 环境变量抽离为 frontend/src/lib/api.ts（API_BASE）
+- Phase 3.3：统计聚合图（KPI 6 联 / 瀑布图 / Category×Severity 矩阵 / AB 5 轴对比）
+  - 后端同步扩展 stats.py：avg_pipeline_ms / category_severity_matrix / avg_prompt_tokens
+- Phase 3.4：DetailDrawer（Sheet 侧滑，非跳转新页）+ CSS 百分比 BBox Overlay + NPU Trace 占位区
+  - 新增 frontend/src/types/defect.ts 中的 TraceEvent 接口（Phase 7 预留）
+  - 模拟器新增 generate_trace_events() 函数（暂不上报，供前端联调）
+- Phase 3.5：WebSocket Toast（Sonner，已随 3.2/3.4 完成）
+- Phase 3.6：静态导出验证（npm run build 通过，out/ 目录存在）
+- Phase 3.7：视觉精修 — 对齐 V2 设计稿（新增 12 个 v2/ 组件，mock-data.ts fallback，visual-verify subagent 截图对比，10/11 视觉匹配）
+- Phase 3.8：功能完整性验证 + 旧组件清理（5 个旧组件删除，约 -800 行，BBox/Trace/Toast/API_BASE 全部迁移到 v2/ 组件，Hydration 错误修复）
 - Phase 5.1：EfficientAD-S 训练 + ONNX 导出（三类别全部完成）
 - Phase 5.2：FastSAM-s ONNX 导出（fastsam_s.onnx 46MB）
 - Phase 5.3：LoRA 数据划分（240 train / 113 eval）
@@ -26,9 +39,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 6：全部模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
 
 尚未开始（下一步）：
-- Phase 3：前端 Next.js 仪表盘（含 Claude Design 设计规格）
-- Phase 4：轨道A 联调验收
-  见 `docs/PROJECT_TIMELINE.md` 阶段 3-4
+- Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
+  见 `docs/PROJECT_TIMELINE.md` 阶段 4
 
 ## 一句话定义
 
@@ -44,7 +56,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Stage 2 分割 | FastSAM-s（640×640, INT8） | YOLOv8-seg 衍生 |
 | Stage 3 VLM | Qwen3-VL-2B-Instruct W8A8 | airockchip 官方 + Qengineering 镜像 |
 | 后端 | Python 3.12、FastAPI 0.115+、SQLAlchemy 2.0 async、aiosqlite、Pydantic v2 | 生产单 worker（ConnectionManager 进程内单例）|
-| 前端 | Next.js 15 App Router（`output: 'export'` 纯静态导出）、React 19、Tailwind v4、shadcn/ui、ECharts 5.6 | sonner / TanStack Table v8 |
+| 前端 | Next.js 15 App Router（`output: 'export'` 纯静态导出）、React 19、Tailwind v4、shadcn/ui | sonner / TanStack Table v8 / v2/ 原生 SVG 组件 |
 | 模拟器 | Python 多线程 + 静态图片集循环 | 充当 RK3588 替身做契约测试 |
 | 数据集 | MVTec AD：metal_nut / screw / pill | CC BY-NC-SA 4.0 |
 | 通信 | HTTP `multipart/form-data`（边缘→后端）、WebSocket（后端↔前端） | 严禁 Base64 |
@@ -155,8 +167,9 @@ vlm-sam-industrial-vision-v2/
 │   └── tests/contract/             # pytest 契约测试
 ├── frontend/                       # 轨道 A：Next.js 15 App Router
 │   ├── app/
-│   ├── components/{ui,charts,layout,data-table}/
-│   ├── lib/{echarts,ws,api}.ts
+│   ├── components/{ui,v2}/         # ui=shadcn 基础组件，v2=Phase 3.7 V2 设计稿组件
+│   ├── lib/{mock-data,ws,api,utils}.ts
+│   ├── types/{defect,stats}.ts
 │   └── tailwind / postcss config
 ├── simulator/                      # 轨道 A：Python 模拟器（契约测试客户端）
 │   ├── line_runner.py              # 多线程模拟多产线 + 静态图片集循环
