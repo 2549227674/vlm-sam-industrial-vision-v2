@@ -50,23 +50,31 @@ license: Internal-CourseProject
 5. dma_buf fd 单一所有权（`UniqueFd`）；跨线程用 `std::move`；需要共享时用 `dup(fd)`。
 6. 队列必须有界 + drop-oldest，必须导出 `dropped_count` 指标，禁止无界队列。
 7. libcurl：`curl_global_init` 只在 `main()` 最开头调用一次（所有线程启动前），`HttpClient` 构造函数中**不调用**；每个上传线程独占一个 easy handle，`curl_easy_reset` 复用，禁止每次 init/cleanup。
-8. VLM JSON 输出必须经五级 bbox 净化（参考 `edge/src/vlm_bbox_ref.py`）：归一化裁剪 → 面积过滤 → 长宽比过滤 → IoU 去重 → 置信度阈值。此外 `category` 字段值必须做白名单校验 `{"metal_nut", "screw", "pill"}`，非法值丢弃或重置为 `"other"`。
+8. VLM JSON 输出必须经五级 bbox 净化（参考 `edge/src/vlm_bbox_ref.py`）：归一化裁剪 → 面积过滤 → 长宽比过滤 → IoU 去重 → 置信度阈值。此外 `category` 字段值必须做白名单校验 `{"bottle","cable","capsule","carpet","grid","hazelnut","leather","metal_nut","pill","screw","tile","toothbrush","transistor","wood","zipper"}`（全 15 类，执行前先 `ls simulator/mvtec/` 确认实际目录名），非法值丢弃或重置为 `"other"`。
 9. 严禁 Base64 传图；严禁在边缘端起 WebSocket 服务；严禁跑 FastAPI / Flask 等 Python Web 框架；严禁生成检测报告；严禁 PaDiM 残留。
 10. 所有可量化指标（解析失败、上传重试、丢帧、TTFT、tokens/s）写入 `PipelineMetrics` 并通过 `vlm_metrics` 字段上报后端；字段 `alignas(64)` 防 false sharing。
 11. EfficientAD-S RKNN 模型输入输出均为 INT8（非 float32），读取 anomaly_map/pred_score 后必须用 `rknn_query(RKNN_QUERY_OUTPUT_ATTR)` 获取量化参数做反量化，禁止直接将 INT8 原始值与浮点阈值比较。
 12. FastSAM-s output0（det）和 output1（proto masks）的反量化参数独立，必须分别查询 `RKNN_QUERY_OUTPUT_ATTR` 获取各自的 scale/zero_point，禁止用同一组量化参数处理两路输出。
+13. Qwen3-VL-4B 视觉 encoder 版本选择：优先使用 v1.2.2 视觉 .rknn（~670 MB），混搭 v1.2.3 runtime。v1.2.3 视觉文件（~827 MB）存在精度回退（Issue #421），仅作备用。
+14. Qwen3-VL-4B 内存约束：运行时 RAM ~8.7 GB（含 KV cache ctx=4096），Pipeline 总峰值 ~11.4 GB，16GB 板裕度 ~3.1 GB。**禁止**同时加载 2B 和 4B 实例。
+15. **Qwen3.5 系列已确认排除**：rknn-llm Issue #472，Gated DeltaNet 架构不被 rknn-llm v1.2.3 支持。任何文档和代码中不得将 Qwen3.5 作为候选项。
 
 ## 16GB 板约束（实际硬件）
 
 - `max_context` 上限 **4096**。
-- 单进程共享同一套模型实例（EfficientAD-S + FastSAM + Qwen3-VL-2B）；T1 线程可循环读取 metal_nut / screw / pill 多个类别的图片集模拟多产线节拍，内存占用不变。
-- **禁止**开多个独立进程各自加载 VLM——每个 Qwen3-VL-2B 实例占 ~3.1 GB，多个实例会快速消耗内存。
+- 单进程共享同一套模型实例（EfficientAD-S + FastSAM + Qwen3-VL-2B/4B）；T1 线程可循环读取多个类别的图片集模拟多产线节拍，内存占用不变。
+- **禁止**开多个独立进程各自加载 VLM——每个 Qwen3-VL-2B 实例占 ~3.1 GB（4B ~8.7 GB），多个实例会快速消耗内存。含 4B 时 Pipeline 总峰值约 11.4 GB，裕度 ~3.1 GB；**禁止**同时加载 2B 和 4B。
 - 模拟器（Python 多线程多产线）只在 PC 端运行，不在 RK3588 上跑。
 
 ## 模型路径
 
 - EfficientAD-S：Anomalib 2.x 训练 → **单一 ONNX** 导出（Teacher/Student/AE 三子网络封装在同一模型中）→ 单个 RKNN INT8 文件。
 - Qwen3-VL-2B：HuggingFace → RKLLM W8A8（LLM 路径不经 ONNX）；Vision encoder → RKNN FP16（单独文件）。
+- Qwen3-VL-4B：直接使用 Qengineering 预转换文件（**不自行转换 base 文件**，Issue #388 自转失败率高）。
+  - `.rkllm` 文件 ~4.51 GB，Vision `.rknn` ~670 MB（v1.2.2）/ ~827 MB（v1.2.3，精度有回退）
+  - 来源：`https://github.com/Qengineering/Qwen3-VL-4B-NPU`（Sync.com 镜像，总 5.4 GB）
+  - 推荐混搭：**v1.2.2 视觉 .rknn + v1.2.3 runtime**（Issue #421 社区共识）
 - W8A8 是 RK3588 LLM 路径**唯一**支持的量化；W4A16 仅 RK3576 支持，禁止使用。
+- **Qwen3.5 系列已确认排除**：rknn-llm Issue #472，Gated DeltaNet 架构不被 rknn-llm v1.2.3 支持。
 
-Qwen3-VL-2B 部署失败时的备选降级顺序与性能数据见 `docs/ARCHITECTURE.md` §3.2，**只改 `edge/config.yaml`，不改 C++ 代码**。
+Qwen3-VL 部署失败时的备选降级顺序与性能数据见 `docs/ARCHITECTURE.md` §3.2，**只改 `edge/config.yaml`，不改 C++ 代码**。已排除 Qwen3.5（rknn-llm #472，Gated DeltaNet 不支持）。

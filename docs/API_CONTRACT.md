@@ -1,6 +1,12 @@
-# API 接口契约 v1
+# API 接口契约 v1.1
 
 本文档是 RK3588 边缘端、Python 模拟器、FastAPI 后端、Next.js 前端之间的**唯一权威接口定义**。任何字段或语义变更必须先改本文档（bump 版本），再改实现。模拟器是契约测试客户端，覆盖所有路径。
+
+> **v1.1 变更摘要**（2026-05-12）：
+> - `variant` 字段：`Literal["A", "B"]` → `str`，白名单 `{"2B_base", "2B_lora", "4B_base", "4B_lora"}`，保留 A/B 向下兼容
+> - `category` 字段：扩展到 MVTec AD 全 15 类
+> - `/api/stats` 的 `ab_compare`：支持按 variant 值动态分组（4 变体）
+> - 原因：VLM 实验方案从 2 变体扩展为 4 变体 2×2 矩阵（方案 Y）
 
 ## 1. URL 总览
 
@@ -25,7 +31,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Severity = Literal["low", "medium", "high"]
-Variant  = Literal["A", "B"]
+Variant  = Literal["2B_base", "2B_lora", "4B_base", "4B_lora", "A", "B"]  # v1.1: 新增 4 变体，保留 A/B 向下兼容
 Stage    = Literal["efficientad", "fastsam", "qwen3vl"]
 
 class BBox(BaseModel):
@@ -48,7 +54,9 @@ class DefectCreate(BaseModel):
     """随 multipart 一同提交的 JSON 字段（form 字段名 'meta'）"""
     model_config = ConfigDict(extra="forbid")
     line_id:        str           = Field(min_length=1, max_length=32)
-    category:       Literal["metal_nut", "screw", "pill"]
+    category:       Literal["bottle", "cable", "capsule", "carpet", "grid", "hazelnut",
+                            "leather", "metal_nut", "pill", "screw", "tile", "toothbrush",
+                            "transistor", "wood", "zipper"]  # v1.1: 扩展到 MVTec AD 全 15 类
     defect_type:    str           = Field(min_length=1, max_length=64)
     severity:       Severity
     confidence:     float         = Field(ge=0, le=1)
@@ -111,7 +119,7 @@ curl -X POST https://vision.example.com/api/edge/report \
             "severity":"high","confidence":0.92,"anomaly_score":3.41,
             "bboxes":[{"x":0.31,"y":0.42,"w":0.18,"h":0.12}],
             "description":"长条划痕",
-            "variant":"A","edge_ts":"2026-05-02T10:23:11Z",
+            "variant":"2B_base","edge_ts":"2026-05-02T10:23:11Z",
             "pipeline_ms":{"efficientad":4.2,"fastsam":48.1,"qwen3vl":2310.5},
             "vlm_metrics":{"ttft_ms":2100,"decode_tps":11.4,"prompt_tokens":820,
                            "output_tokens":48,"rss_mb":3120,"json_parse_ok":true},
@@ -146,9 +154,9 @@ curl -X POST https://vision.example.com/api/edge/report \
 |---|---|---|---|
 | `page` | int ≥ 1 | 1 | |
 | `page_size` | int ∈ [1, 100] | 20 | |
-| `category` | enum | — | metal_nut / screw / pill |
+| `category` | enum | — | MVTec AD 全 15 类（见 §2 DefectCreate.category） |
 | `severity` | enum | — | low / medium / high |
-| `variant` | enum | — | A / B |
+| `variant` | enum | — | 2B_base / 2B_lora / 4B_base / 4B_lora（兼容 A / B） |
 | `line_id` | string | — | |
 | `since` | ISO8601 | — | edge_ts ≥ since |
 | `until` | ISO8601 | — | edge_ts < until |
@@ -186,8 +194,10 @@ curl -X POST https://vision.example.com/api/edge/report \
   "by_severity": { "low": 800, "medium": 320, "high": 128 },
   "timeline":   [ { "ts": "2026-05-02T09:00:00Z", "count": 23 } ],
   "ab_compare": {
-    "A": { "count": 624, "json_ok_rate": 0.812, "avg_ttft_ms": 2240, "avg_decode_tps": 11.2, "avg_rss_mb": 3110 },
-    "B": { "count": 624, "json_ok_rate": 0.946, "avg_ttft_ms": 1180, "avg_decode_tps": 11.8, "avg_rss_mb": 3080 }
+    "2B_base": { "count": 312, "json_ok_rate": 0.812, "avg_ttft_ms": 2240, "avg_decode_tps": 11.2, "avg_rss_mb": 3110 },
+    "2B_lora": { "count": 312, "json_ok_rate": 0.946, "avg_ttft_ms": 1180, "avg_decode_tps": 11.8, "avg_rss_mb": 3080 },
+    "4B_base": { "count": 312, "json_ok_rate": 0.850, "avg_ttft_ms": 5500, "avg_decode_tps": 5.7, "avg_rss_mb": 8900 },
+    "4B_lora": { "count": 312, "json_ok_rate": 0.960, "avg_ttft_ms": 5200, "avg_decode_tps": 5.8, "avg_rss_mb": 8700 }
   }
 }
 ```
@@ -195,7 +205,7 @@ curl -X POST https://vision.example.com/api/edge/report \
 ## 7. GET `/api/health`
 
 ```json
-{ "status": "ok", "version": "v1", "uptime_s": 3601, "db": "ok", "ws_clients": 3 }
+{ "status": "ok", "version": "v1.1", "uptime_s": 3601, "db": "ok", "ws_clients": 3 }
 ```
 
 ## 8. WebSocket `/ws/dashboard`

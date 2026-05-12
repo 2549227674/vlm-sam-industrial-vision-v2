@@ -10,7 +10,7 @@ class Defect(Base):
     __tablename__ = "defects"
     __table_args__ = (
         UniqueConstraint("line_id", "edge_ts", name="uq_line_edge_ts"),
-        CheckConstraint("variant IN ('A', 'B')", name="ck_variant"),
+        CheckConstraint("variant IN ('2B_base', '2B_lora', '4B_base', '4B_lora', 'A', 'B')", name="ck_variant"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -31,7 +31,7 @@ class Defect(Base):
     bboxes: Mapped[list] = mapped_column(JSON, default=list)
     description: Mapped[str] = mapped_column(String(1024), default="")
 
-    variant: Mapped[str] = mapped_column(String(2), index=True)
+    variant: Mapped[str] = mapped_column(String(16), index=True)
     edge_ts: Mapped[datetime] = mapped_column(TZDateTime(), index=True)
 
     pipeline_ms: Mapped[dict] = mapped_column(JSON)

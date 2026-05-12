@@ -8,7 +8,8 @@ upload_timeout_s: 30
 upload_max_retries: 5            # 指数退避最多 5 次（500ms × 2ⁿ + jitter）
 
 # ── AB 测试 ───────────────────────────────────────
-vlm_variant: "A"                 # "A"=Base+Prompt工程 / "B"=LoRA+极简Prompt
+vlm_variant: "base"              # "base"=Base+Prompt工程 / "lora"=LoRA+极简Prompt
+vlm_model_size: "4B"             # "2B" | "4B"，切换后需重启进程
 
 # ── 取帧模式 ──────────────────────────────────────
 capture_mode: image_loop         # "v4l2" | "image_loop"
@@ -37,11 +38,16 @@ fastsam_model_path: /TBD/models/fastsam_models/fastsam_s.rknn
 fastsam_input_size: 640          # 固定 640，见 ARCHITECTURE.md §3.2
 fastsam_conf: 0.5
 
-# ── Stage 3：Qwen3-VL-2B ─────────────────────────
+# ── Stage 3：Qwen3-VL-2B/4B ──────────────────────
 vlm_model_path: /TBD/models/qwen3vl_models/qwen3vl_2b_w8a8.rkllm
 vlm_vision_model_path: /TBD/models/qwen3vl_models/qwen3vl_vision.rknn
+vlm_4b_model_path: /TBD/models/qwen3vl_models/qwen3vl_4b_w8a8_base.rkllm
+vlm_4b_vision_model_path: /TBD/models/qwen3vl_models/qwen3vl_4b_vision_v122.rknn
+# 4B 运行时 RAM ~8.7 GB，Pipeline 总峰值 ~11.4 GB（16GB 板裕度 ~3.1 GB）
+# 4B 文件来源：Qengineering Sync.com（不自行转换 base 文件）
+# 视觉文件：使用 v1.2.2 版本（v1.2.3 精度存在回退，见 Issue #421）
 vlm_max_new_tokens: 200
-vlm_max_context: 3072            # 8GB 板硬约束，禁止改为 4096
+vlm_max_context: 4096            # 16GB 板约束，上限 4096
 vlm_npu_core_num: 3              # 三核并行
 
 # ── 图片落盘 ──────────────────────────────────────

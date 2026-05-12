@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-端云分离架构的工业视觉 AI 检测项目：边缘端 RK3588 16GB 跑三段式异步推理流水线（EfficientAD-S → FastSAM → Qwen3-VL-2B），后端 FastAPI 收单与广播，前端 Next.js 仪表盘做可视化。本文档是 Claude Code 在本仓库的总入口，定义全局约束与导航。
+端云分离架构的工业视觉 AI 检测项目：边缘端 RK3588 16GB 跑三段式异步推理流水线（EfficientAD-S → FastSAM → Qwen3-VL-2B/4B），后端 FastAPI 收单与广播，前端 Next.js 仪表盘做可视化。本文档是 Claude Code 在本仓库的总入口，定义全局约束与导航。
 
 ## 当前实现状态
 
@@ -30,17 +30,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 3.6：静态导出验证（npm run build 通过，out/ 目录存在）
 - Phase 3.7：视觉精修 — 对齐 V2 设计稿（新增 12 个 v2/ 组件，mock-data.ts fallback，visual-verify subagent 截图对比，10/11 视觉匹配）
 - Phase 3.8：功能完整性验证 + 旧组件清理（5 个旧组件删除，约 -800 行，BBox/Trace/Toast/API_BASE 全部迁移到 v2/ 组件，Hydration 错误修复）
-- Phase 5.1：EfficientAD-S 训练 + ONNX 导出（三类别全部完成）
+- Phase 5.1：EfficientAD-S 训练 + ONNX 导出（三类别全部完成）（3 类 v1 初版，Phase 5 重做进行中）
 - Phase 5.2：FastSAM-s ONNX 导出（fastsam_s.onnx 46MB）
-- Phase 5.3：LoRA 数据划分（240 train / 113 eval）
-- Phase 5.4：MVTec GT Mask 自动标注（mvtec_mask_to_json.py）
-- Phase 5.5：Qwen3-VL-2B LoRA 微调（AutoDL，train_loss=1.073）
-- Phase 5.6：PC 端 AB 评估（方案A=100%，方案B=100%）
-- Phase 6：全部模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
+- Phase 5.3：LoRA 数据划分（240 train / 113 eval）（3 类 v1 初版，Phase 5 重做进行中）
+- Phase 5.4：MVTec GT Mask 自动标注（mvtec_mask_to_json.py）（3 类 v1 初版，Phase 5 重做进行中）
+- Phase 5.5：Qwen3-VL-2B LoRA 微调（AutoDL，train_loss=1.073）（3 类 v1 初版，Phase 5 重做进行中）
+- Phase 5.6：PC 端 AB 评估（方案A=100%，方案B=100%）（3 类 v1 初版，Phase 5 重做进行中）
+- Phase 6：全部模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）（3 类 v1 初版，Phase 6 重做进行中）
 
 尚未开始（下一步）：
 - Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
   见 `docs/PROJECT_TIMELINE.md` 阶段 4
+- Phase 5 重做：MVTec AD 全 15 类 + 4 变体 2×2 AB 实验矩阵
+- Phase 6 重做：Qwen3-VL-4B 模型转换（方案 C/D）+ 2B 重做
 
 ## 一句话定义
 
@@ -54,11 +56,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 边缘端运行时 | C++17/20、librknnrt、librkllmrt、librga、libcurl、V4L2 | rknn-llm v1.2.3+、rknn-toolkit2 v2.2+、GCC ≥ 11 |
 | Stage 1 异常检测 | EfficientAD-S（PDN, 256×256, INT8） | Anomalib 2.x → 单一 ONNX → 单个 RKNN |
 | Stage 2 分割 | FastSAM-s（640×640, INT8） | YOLOv8-seg 衍生 |
-| Stage 3 VLM | Qwen3-VL-2B-Instruct W8A8 | airockchip 官方 + Qengineering 镜像 |
+| Stage 3 VLM | Qwen3-VL-2B/4B-Instruct W8A8 | airockchip 官方 + Qengineering 镜像 |
 | 后端 | Python 3.12、FastAPI 0.115+、SQLAlchemy 2.0 async、aiosqlite、Pydantic v2 | 生产单 worker（ConnectionManager 进程内单例）|
 | 前端 | Next.js 15 App Router（`output: 'export'` 纯静态导出）、React 19、Tailwind v4、shadcn/ui | sonner / TanStack Table v8 / v2/ 原生 SVG 组件 |
 | 模拟器 | Python 多线程 + 静态图片集循环 | 充当 RK3588 替身做契约测试 |
-| 数据集 | MVTec AD：metal_nut / screw / pill | CC BY-NC-SA 4.0 |
+| 数据集 | MVTec AD：全 15 类（Phase 5 重做目标） | CC BY-NC-SA 4.0 |
 | 通信 | HTTP `multipart/form-data`（边缘→后端）、WebSocket（后端↔前端） | 严禁 Base64 |
 
 ## Development Commands
@@ -136,24 +138,25 @@ vlm-sam-industrial-vision-v2/
 │   │   ├── main.cpp
 │   │   ├── capture/                # T1 线程：V4L2 / 图片集循环
 │   │   ├── pipeline/               # T2 线程：RGA + EfficientAD-S
-│   │   ├── vlm_worker/             # T3 线程：FastSAM + Qwen3-VL-2B
+│   │   ├── vlm_worker/             # T3 线程：FastSAM + Qwen3-VL-2B/4B
 │   │   ├── upload/                 # T4 线程：libcurl multipart
 │   │   ├── common/                 # BoundedQueue / UniqueFd / metrics
 │   │   └── vlm_bbox_ref.py         # 五级 bbox 净化逻辑参考（仅迁移此一个 _ref 文件）
 │   └── third_party/                # rknn-llm-runtime、librga 头文件
 ├── models/
-│   ├── efficientad_models/         # EfficientAD-S 三类模型 ONNX/RKNN
+│   ├── efficientad_models/         # EfficientAD-S 模型 ONNX/RKNN（15 类重做目标）
 │   │   ├── metal_nut/
 │   │   ├── screw/
-│   │   └── pill/
+│   │   └── pill/  …（共 15 类）
 │   ├── fastsam_models/
 │   ├── qwen3vl_models/             # *.rkllm + vision *.rknn
-│   └── qwen3vl_lora_adapter/       # Qwen3-VL-2B LoRA adapter 权重
-│       ├── adapter_config.json
-│       ├── adapter_model.safetensors
-│       ├── checkpoint-50/           # 训练中间检查点
-│       ├── checkpoint-100/
-│       └── checkpoint-150/
+│   ├── qwen3vl_lora_adapter/       # Qwen3-VL-2B LoRA adapter 权重（v1 初版 3 类）
+│   │   ├── adapter_config.json
+│   │   ├── adapter_model.safetensors
+│   │   ├── checkpoint-50/           # 训练中间检查点
+│   │   ├── checkpoint-100/
+│   │   └── checkpoint-150/
+│   └── qwen3vl_lora_4b_adapter/    # Qwen3-VL-4B LoRA adapter 权重（Phase 5.5b 产出）
 ├── backend/                        # 轨道 A：FastAPI
 │   ├── app/
 │   │   ├── main.py                 # lifespan + ConnectionManager 注入
@@ -187,9 +190,10 @@ vlm-sam-industrial-vision-v2/
 ├── debug/                           # 临时调试脚本，如 debug_lora.py（gitignore）
 ├── imagenette/                      # EfficientAD-S 训练用辅助数据集（gitignore，~1.5GB）
 ├── logs/                            # 训练/转换日志输出（gitignore）
-├── results/                         # AB 评估结果（ab_eval_report.json）
+├── results/                         # AB 评估结果（ab_eval_report.json + ab_eval_report_v2.json）
 ├── temp_docs/                       # 过程文档与脚本修改意见草稿（gitignore）
-├── qwen3vl_lora.yaml               # LLaMA-Factory LoRA 训练配置
+├── qwen3vl_lora.yaml               # LLaMA-Factory LoRA 训练配置（2B）
+├── qwen3vl_lora_4b.yaml            # LLaMA-Factory LoRA 训练配置（4B，Phase 5.5b）
 ├── .claude/
 │   └── skills/
 │       └── rk3588-deployment/SKILL.md
@@ -202,15 +206,15 @@ vlm-sam-industrial-vision-v2/
 
 ### MUST（必须遵守）
 
-1. **三段式流水线顺序固定**：Stage 1 EfficientAD-S → Stage 2 FastSAM → Stage 3 Qwen3-VL-2B。
-2. **数据集**：MVTec AD 三类（metal_nut / screw / pill）；扩展类别需经评审。
+1. **三段式流水线顺序固定**：Stage 1 EfficientAD-S → Stage 2 FastSAM → Stage 3 Qwen3-VL-2B/4B。Stage 3 通过 `edge/config.yaml` 的 `vlm_model_size` 切换 2B/4B。
+2. **数据集**：MVTec AD 全 15 类（Phase 5 重做目标）；扩展类别需经评审。
 3. **图片传输**：所有边缘→后端图片走 `multipart/form-data`；后端落盘到 `static/defects/{YYYYMMDD}/{uuid}.jpg`，前端用 `<img src>` 直接引用。
 4. **WebSocket 范围**：仅存在于「后端 ↔ 前端」一段；RK3588 端只做 HTTP POST 客户端。
 5. **配置分离**：边缘端配置写在 `edge/config.yaml`，后端配置写在 `backend/.env`，不复用。
 6. **C++ 异步模型**：固定 4 线程（Capture / Pipeline / VLM Worker / Upload），线程间用 `BoundedQueue<T>` + drop-oldest 解耦。
 7. **现代 C++**：使用 `std::jthread` + `std::stop_token` + `std::condition_variable_any` 协作式取消；GCC ≥ 11；`#pragma once`；成员变量 trailing underscore。
 8. **VLM 输出契约**：Qwen3-VL-2B 必须输出可解析 JSON（含 `bbox` / `category` / `severity` / `confidence`）；解析失败计入 metrics 并丢弃。
-9. **AB 测试两轴评估**：每条样本同时记录方案 A（Base + Prompt 工程）与方案 B（LoRA + 极简 Prompt）的 JSON 解析成功率、TTFT、tokens/s、内存占用，落库 `defects.variant` 字段。
+9. **AB 测试 4 变体 2×2 矩阵**：4 个变体（`2B_base` / `2B_lora` / `4B_base` / `4B_lora`）按模型尺寸 × 微调模式组合评估，每条样本记录 JSON 解析成功率、TTFT、tokens/s、内存占用，落库 `defects.variant` 字段。
 10. **接口契约优先**：任何 RK3588 端字段变化必须先改 `docs/API_CONTRACT.md` 并同步模拟器，再改 C++ 代码。
 
 ### MUST NOT（必须避免）
@@ -238,16 +242,18 @@ vlm-sam-industrial-vision-v2/
 
 - **`max_context` 上限 4096**。
 - **不在 RK3588 上同时跑模拟器**：模拟器只在 PC 端运行；上板后真机直接跑 C++ 推理引擎。
-- **单进程共享同一套模型实例**：T1 线程可循环读取 metal_nut / screw / pill 多个类别的图片集模拟多产线节拍，内存占用不变；**禁止**开多个独立进程各自加载 VLM（每个 Qwen3-VL-2B 实例 ~3.1 GB）。
+- **单进程共享同一套模型实例**：T1 线程可循环读取多个类别的图片集模拟多产线节拍，内存占用不变；**禁止**开多个独立进程各自加载 VLM（每个 Qwen3-VL-2B 实例 ~3.1 GB）。含 4B 时 Pipeline 总峰值约 11.4 GB，裕度 ~3.1 GB；**禁止**同时加载 2B 和 4B。
 
-## AB 测试方案概要
+## AB 测试方案概要（4 变体 2×2 矩阵）
 
-两个变体并行评估，同一组测试图分别走两条路径：
+| 变体 ID | 模型 | 模式 | Prompt 策略 |
+|---|---|---|---|
+| `2B_base` | Qwen3-VL-2B | 基座 W8A8 | 工程化 Prompt (~300 tokens) |
+| `2B_lora` | Qwen3-VL-2B | LoRA W8A8 | 极简 Prompt (~50 tokens) |
+| `4B_base` | Qwen3-VL-4B | 基座 W8A8 | 工程化 Prompt (~300 tokens) |
+| `4B_lora` | Qwen3-VL-4B | LoRA W8A8 | 极简 Prompt (~50 tokens) |
 
-- **方案 A**：Qwen3-VL-2B-Instruct **base 模型** + 工程化 Prompt（含 few-shot 示例、JSON schema、严格指令），prompt 长度约 800–1500 tokens。
-- **方案 B**：Qwen3-VL-2B-Instruct **LoRA 微调**（rank 16，MVTec AD 工业 JSON 标注数据集）+ 极简 Prompt（≤ 100 tokens）。
-
-四维评估：JSON 解析成功率（%）、TTFT（首 token 延迟，ms）、decode tokens/s、运行时 RAM 占用（GB）。后端 `/api/stats` 直接聚合两变体对比。PC 阶段先用 transformers 测精度上界（仅比较 JSON 解析成功率，GPU 延迟不作为指标），RK3588 阶段实测全部四维指标。
+四维评估：JSON 解析成功率（%）、TTFT（首 token 延迟，ms）、decode tokens/s、运行时 RAM 占用（GB）。后端 `/api/stats` 直接聚合四变体对比。PC 阶段先用 transformers 测精度上界（仅比较 JSON 解析成功率，GPU 延迟不作为指标），RK3588 阶段实测全部四维指标。
 
 ## 两轨道并行开发
 

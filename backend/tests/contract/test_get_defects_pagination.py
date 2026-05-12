@@ -63,14 +63,14 @@ async def test_filter_by_severity(async_client, dummy_jpeg, valid_meta):
 async def test_filter_by_variant(async_client, dummy_jpeg, valid_meta):
     base = datetime.now(timezone.utc) - timedelta(hours=1)
     await _post_defect(async_client, dummy_jpeg, valid_meta,
-                       variant="A", edge_ts=base.isoformat())
+                       variant="2B_base", edge_ts=base.isoformat())
     await _post_defect(async_client, dummy_jpeg, valid_meta,
-                       variant="B", edge_ts=(base + timedelta(seconds=1)).isoformat())
+                       variant="2B_lora", edge_ts=(base + timedelta(seconds=1)).isoformat())
 
-    resp = await async_client.get("/api/defects", params={"variant": "B"})
+    resp = await async_client.get("/api/defects", params={"variant": "2B_lora"})
     body = resp.json()
     assert body["total"] == 1
-    assert body["items"][0]["variant"] == "B"
+    assert body["items"][0]["variant"] == "2B_lora"
 
 
 async def test_sort_desc_default(async_client, dummy_jpeg, valid_meta):

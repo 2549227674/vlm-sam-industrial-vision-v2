@@ -88,7 +88,7 @@ def valid_meta() -> dict:
         "anomaly_score": 12.5,
         "bboxes": [{"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.2}],
         "description": "test scratch",
-        "variant": "A",
+        "variant": "2B_base",
         "edge_ts": datetime.now(timezone.utc).isoformat(),
         "pipeline_ms": {
             "efficientad": 12.0,

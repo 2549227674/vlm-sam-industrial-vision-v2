@@ -4,7 +4,8 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Severity = Literal["low", "medium", "high"]
-Variant = Literal["A", "B"]
+# v1.1: 新增 4 变体，保留 A/B 向下兼容
+VALID_VARIANTS = {"2B_base", "2B_lora", "4B_base", "4B_lora", "A", "B"}
 Stage = Literal["efficientad", "fastsam", "qwen3vl"]
 
 
@@ -32,14 +33,18 @@ class DefectCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     line_id: str = Field(min_length=1, max_length=32)
-    category: Literal["metal_nut", "screw", "pill"]
+    category: Literal[
+        "bottle", "cable", "capsule", "carpet", "grid", "hazelnut",
+        "leather", "metal_nut", "pill", "screw", "tile", "toothbrush",
+        "transistor", "wood", "zipper",
+    ]
     defect_type: str = Field(min_length=1, max_length=64)
     severity: Severity
     confidence: float = Field(ge=0, le=1)
     anomaly_score: float = Field(ge=0)
     bboxes: list[BBox] = Field(default_factory=list, max_length=16)
     description: str = Field(default="", max_length=1024)
-    variant: Variant
+    variant: str
     edge_ts: datetime
     pipeline_ms: dict[Stage, float]
     vlm_metrics: Optional[VlmMetrics] = None
@@ -52,6 +57,13 @@ class DefectCreate(BaseModel):
             raise ValueError(
                 "edge_ts must be timezone-aware (ISO 8601 with offset)"
             )
+        return v
+
+    @field_validator("variant")
+    @classmethod
+    def validate_variant(cls, v: str) -> str:
+        if v not in VALID_VARIANTS:
+            raise ValueError(f"variant must be one of {VALID_VARIANTS}, got '{v}'")
         return v
 
     @field_validator("pipeline_ms")

@@ -72,17 +72,36 @@
 | 1 | EfficientAD-S | 256×256 RGB | anomaly_map + score | 6–12 ms（单核）/ 3–5 ms（三核）TBD-上板实测 | Anomalib 将 Teacher/Student/AE 三子网络封装为**单一 ONNX**，转**单个 RKNN**文件 |
 | 2 | FastSAM-s | **640×640** | mask + bbox | ~30–60 ms | 仅 Stage 1 触发后跑；分辨率固定 640（MVTec 900×900 降采样对厘米级缺陷无影响；如需检测微米级特征可调至 1024，延迟约增 2–3 倍） |
 | 3 | Qwen3-VL-2B | 448×448 + prompt | JSON 文本 | TTFT 2–3 s（短 prompt）/ 5–10 s（长 prompt），decode 11.5 tokens/s，RAM 3.1 GB | 异步 worker，drop-oldest |
+| 3 | Qwen3-VL-4B | 448×448 + prompt | JSON 文本 | TTFT 热 ~5–6 s，decode 5.7 tokens/s，RAM 8.7 GB，Pipeline 总峰值 ~11.4 GB | 异步 worker，drop-oldest；rknn-llm v1.2.3 支持 |
 
 **EfficientAD-S 选型理由**：替代 PaDiM 解决位置敏感性问题（PaDiM 对像素位置敏感，工业件轻微平移即误报）；PDN 全卷积、平移等变；MVTec AD image-AUROC 平均 98.8%（论文 5 次平均），三类基准 metal_nut 0.979 / pill 0.987 / screw 0.960（Anomalib benchmark）。
 
-**Qwen3-VL-2B 备选降级顺序**（部署失败时按此顺序，**只改 `edge/config.yaml`，不改 C++ 代码**）：
+**Qwen3-VL 降级备选**（部署失败时按此顺序，**只改 `edge/config.yaml`，不改 C++ 代码**）：
 
-1. Qwen2.5-VL-3B（~7 tps，社区资料最丰富）
-2. InternVL3.5-2B（~11 tps，rknn-llm v1.2.3 官方支持）
-3. InternVL3-1B（~30 tps，质量略弱但延迟极低）
-4. Qwen2-VL-2B（~12 tps，最老牌稳定）
+| 优先级 | 模型 | 推荐场景 | 预期 tps | RAM | 备注 |
+|---|---|---|---|---|---|
+| 主选 | **Qwen3-VL-4B** | 精度优先，内存充足 | 5.7 | 8.7 GB | rknn-llm v1.2.3 官方支持，Qengineering 有预转换 |
+| 备选1 | **Qwen3-VL-2B** | 低延迟，内存紧张 | 11.5 | 3.1 GB | 已完成转换，开箱即用 |
+| 备选2 | Qwen2.5-VL-3B | 4B 部署失败时 | ~7 | ~4.8 GB | 社区资料最丰富，happyme531 有预转换 |
+| 备选3 | InternVL3.5-2B | 超低延迟需求 | ~11 | ~3 GB | rknn-llm v1.2.3 官方支持 |
+| 备选4 | Qwen2-VL-2B | 最稳定保底 | ~12 | ~3 GB | 最老牌稳定 |
+| **排除** | ~~Qwen3.5 系列~~ | 不可用 | — | — | rknn-llm #472：Gated DeltaNet 架构不支持 |
 
-### 3.3 关键算子与零拷贝
+### 3.3 Qwen3-VL-4B 已知部署问题
+
+**rknn-llm Issue #421（视觉精度回退）**：
+- v1.2.3 视觉 encoder（827 MB）在 OCR/描述任务精度不如 v1.2.2（670 MB）
+- 推荐混搭：**v1.2.2 视觉 .rknn + v1.2.3 runtime**（社区验证可行）
+
+**rknn-llm Issue #388（自转换不稳定）**：
+- `image_enc.cc` 行 80-81 存在段错误，需应用 wangjl1993 社区 patch
+- 自行从 HuggingFace 转换 4B 成功率低，推荐直接使用 Qengineering 预转换文件
+
+**多图输入不支持**：本项目单图输入，不受影响。
+
+**视觉 encoder 分辨率编译时固定为 448×448**：MVTec crop 做 letterbox 上采样。
+
+### 3.4 关键算子与零拷贝
 
 - T1 拿到 V4L2 dma_buf fd → 包装 `UniqueFd` → 入 Q1。
 - T2 用 `importbuffer_fd` 导入 RGA → `imresize` → 输出张量直接 `rknn_create_mem_from_fd` 喂入 NPU，避免一次 memcpy。
@@ -187,16 +206,17 @@ RK3588 C++ pipeline                              backend                  fronte
 
 ### 7.2 PC 阶段重点
 
-- 用 HuggingFace transformers 跑 fp16 Qwen3-VL-2B，验证两个变体的 JSON 解析成功率上界。
-- **LoRA 训练数据划分**：MVTec AD `test/` 中的缺陷图（`train/` 只有正常图无法用于标注）按缺陷类型分层抽样，**70% 用于人工标注 JSON + LoRA 训练，30% 严格隔离只用于最终评估，训练集与评估集不得有任何重叠**。划分脚本见 `scripts/split_lora_data.py`（固定 `random.seed(42)` 保证可复现）。LoRA 超参：rank 16，5 epoch。
-- 输出：方案 A/B 在 metal_nut / screw / pill 上的 JSON 解析成功率对比表。
+- 用 HuggingFace transformers 跑 fp16 Qwen3-VL-2B/4B，验证四个变体（`2B_base` / `2B_lora` / `4B_base` / `4B_lora`）的 JSON 解析成功率上界。
+- **LoRA 训练数据划分**：MVTec AD `test/` 中的缺陷图（`train/` 只有正常图无法用于标注）按缺陷类型分层抽样，**70% 用于人工标注 JSON + LoRA 训练，30% 严格隔离只用于最终评估，训练集与评估集不得有任何重叠**。划分脚本见 `scripts/split_lora_data.py`（固定 `random.seed(42)` 保证可复现）。LoRA 超参：rank 16，5 epoch。15 类预估 ~1200 train / ~540 eval。
+- 输出：4 变体在全 15 类上的 JSON 解析成功率对比表。
 - **PC 阶段实测发现**：方案 B（LoRA）的 `category` 字段出现幻觉（输出 `"industrial"` 而非有效类别）。评估脚本仅校验字段存在性，不校验字段值；实际部署时需在 C++ 侧对 `category` 值做白名单过滤 `{"metal_nut", "screw", "pill"}`，非法值丢弃或归为 `"other"`。
 
 ### 7.3 RK3588 阶段重点
 
-- 量化后 W8A8 .rkllm 文件大小 ~1.9 GB；运行时总 RAM ~3.1 GB（含 KV cache，`max_context=4096`）。
-- TTFT 用 `rkllm_load_prompt_cache()` 复用方案 A 的长 system prompt 后，预期可降至 1 s 以内。
-- 对比落库于 `defects` 表的 `variant ∈ {"A","B"}` 字段，前端聚合卡片直接读 `/api/stats`。
+- 2B 量化后 W8A8 .rkllm 文件大小 ~1.9 GB；运行时总 RAM ~3.1 GB（含 KV cache，`max_context=4096`）。
+- 4B 量化后 W8A8 .rkllm 文件大小 ~4.51 GB；运行时总 RAM ~8.7 GB（含 KV cache，`max_context=4096`）；Pipeline 总峰值 ~11.4 GB，裕度 ~3.1 GB。
+- TTFT 用 `rkllm_load_prompt_cache()` 复用工程化 Prompt 的长 system prompt 后，预期可降至 1 s 以内（2B）/ 5–6 s（4B）。
+- 对比落库于 `defects` 表的 `variant ∈ {"2B_base","2B_lora","4B_base","4B_lora"}` 字段，前端聚合卡片直接读 `/api/stats`。
 
 ## 8. 性能预算（RK3588 16GB）
 
@@ -223,9 +243,10 @@ RK3588 C++ pipeline                              backend                  fronte
 | Qwen3-VL-2B RKLLM + Vision | ~3.1 GB | LLM 1.9 GB + Vision 0.4 GB + KV (max_context=4096) |
 | C++ 进程其他 | ~250 MB | 队列、线程栈、libcurl、JPEG buffer |
 | 缓冲帧（Q1/Q2/Q3） | ~50 MB | 4+2+4 帧 × ~5 MB |
-| **总计** | **~5.0 GB / 16 GB** | 余量 ~11 GB，充裕 |
+| **总计（2B）** | **~5.0 GB / 16 GB** | 余量 ~11 GB，充裕 |
+| **总计（含 4B）** | **~11.4 GB / 16 GB** | 余量 ~3.1 GB，Qwen3-VL-4B 替换 2B 后；**禁止**同时加载 2B 和 4B |
 
-> **备注**：实际硬件为 16GB 版香橙派 5，总余量约 11 GB，`max_context` 可放开至 4096，无需配置 zram swap。
+> **备注**：实际硬件为 16GB 版香橙派 5。2B 方案余量 ~11 GB，`max_context` 可放开至 4096，无需配置 zram swap。4B 方案余量 ~3.1 GB，`max_context` 固定 4096，需严格控制其他内存占用。
 
 **16GB 板约束**：
 

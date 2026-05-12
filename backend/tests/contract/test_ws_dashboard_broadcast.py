@@ -26,7 +26,7 @@ def test_ws_hello_and_broadcast(sync_client, dummy_jpeg, valid_meta):
             "anomaly_score": 12.5,
             "bboxes": [{"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.2}],
             "description": "ws test",
-            "variant": "A",
+            "variant": "2B_base",
             "edge_ts": "2026-05-09T08:00:00+00:00",
             "pipeline_ms": {"efficientad": 12.0, "fastsam": 45.0, "qwen3vl": 850.0},
             "vlm_metrics": {

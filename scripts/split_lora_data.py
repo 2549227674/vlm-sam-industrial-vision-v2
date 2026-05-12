@@ -19,7 +19,13 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SRC_BASE = PROJECT_ROOT / "simulator" / "mvtec"
 DST_BASE = PROJECT_ROOT / "datasets" / "lora_split"
-CATEGORIES = ["metal_nut", "screw", "pill"]
+# v1 初版 3 类：["metal_nut", "screw", "pill"]
+# v2 重做 15 类
+CATEGORIES = [
+    "bottle", "cable", "capsule", "carpet", "grid", "hazelnut", "leather",
+    "metal_nut", "pill", "screw", "tile", "toothbrush", "transistor",
+    "wood", "zipper",
+]
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}
 SPLIT_RATIO = 0.7
 
@@ -74,7 +80,34 @@ def split_category(category: str) -> tuple[int, int]:
     return cat_train, cat_eval
 
 
+def dry_run_category(category: str) -> tuple[int, int]:
+    """Count images without copying (for preview)."""
+    cat_src = SRC_BASE / category / "test"
+    if not cat_src.exists():
+        return 0, 0
+    cat_train = 0
+    cat_eval = 0
+    defect_types = sorted(
+        d.name for d in cat_src.iterdir()
+        if d.is_dir() and d.name != "good"
+    )
+    for defect in defect_types:
+        images = [
+            f for f in (cat_src / defect).iterdir()
+            if f.is_file() and f.suffix.lower() in IMAGE_SUFFIXES
+        ]
+        split_idx = int(len(images) * SPLIT_RATIO)
+        cat_train += split_idx
+        cat_eval += len(images) - split_idx
+    return cat_train, cat_eval
+
+
 def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(description="Split MVTec AD defect images into train/eval")
+    parser.add_argument("--dry-run", action="store_true", help="Preview counts without copying files")
+    args = parser.parse_args()
+
     random.seed(42)
 
     print(f"Source: {SRC_BASE}")
@@ -85,7 +118,10 @@ def main() -> None:
     total_eval = 0
 
     for category in CATEGORIES:
-        n_train, n_eval = split_category(category)
+        if args.dry_run:
+            n_train, n_eval = dry_run_category(category)
+        else:
+            n_train, n_eval = split_category(category)
         total_train += n_train
         total_eval += n_eval
         total = n_train + n_eval
@@ -95,7 +131,10 @@ def main() -> None:
     grand_total = total_train + total_eval
     print(f"\n{'─' * 50}")
     print(f"  Total  train={total_train}  eval={total_eval}  ({grand_total} images)")
-    print("Done. No overlap detected.")
+    if not args.dry_run:
+        print("Done. No overlap detected.")
+    else:
+        print("Dry run complete. No files copied.")
 
 
 if __name__ == "__main__":

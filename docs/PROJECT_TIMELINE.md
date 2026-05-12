@@ -279,7 +279,7 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 **多产线模拟**（ARCHITECTURE.md §5）：
 - 开 N=3 个 `threading.Thread`，三个类别各一条线
 - 每条线独立 `line_id`（L1/L2/L3）+ 独立图片队列
-- 同时发 variant="A" 和 variant="B" 的数据（模拟 AB 测试）
+- 同时发 variant="2B_base" 和 variant="2B_lora" 的数据（模拟 2B 双变体；4B 变体在 eval_ab_test.py 中按顺序评估，不并发发送）
 
 **关键约束**（CLAUDE.md MUST-NOT#1/4）：
 - **不使用 Base64 传图**，只用 multipart
@@ -531,7 +531,12 @@ pytest backend/tests/contract/ -v
 
 ## 阶段 5：PC 端模型训练与 AB 评估
 
-**时间预估**：3-7 天（训练快，手动标注慢）
+> **⚠️ 重做说明（2026-05-11 决策）**：
+> 本阶段已完成「v1 初版」（3 类别：metal_nut/screw/pill，240 train/113 eval，2 变体 A/B）。
+> 当前执行「v2 重做」，目标：全 15 类别 + 4 变体 2×2 矩阵（2B_base/2B_lora/4B_base/4B_lora）。
+> v1 实测数据保留在各子节末尾，标注为「v1 初版结果」。
+
+**时间预估**：v1 已完成；v2 重做估计 5-10 天（15 类训练 ~2-3h + 4B LoRA 云端 ~2h + 评估）
 **前置依赖**：MVTec AD 数据集已下载（阶段 0.2）
 **可与阶段 1-4 并行**：训练不依赖后端/前端
 **文档依据**：ARCHITECTURE.md §3.2/§7.2、CLAUDE.md AB 测试方案
@@ -545,8 +550,8 @@ pytest backend/tests/contract/ -v
 ```
 给 Claude Code 的指令：
 帮我写 scripts/train_efficientad.py，
-用 Anomalib 2.x 对 MVTec AD 的 metal_nut、screw、pill
-三个类别分别训练 EfficientAD-S 模型（model_size="s"），
+用 Anomalib 2.x 对 MVTec AD 全 15 个类别（见上方列表）
+分别训练 EfficientAD-S 模型（model_size="s"），
 数据集路径 simulator/mvtec/，
 训练完后每个类别导出一个 ONNX 文件到
 models/efficientad_models/{category}/model.onnx
@@ -572,6 +577,19 @@ models/efficientad_models/
 - screw:     AUROC=0.9102  ref=0.960  训练时间 571s
 - pill:      AUROC=0.9558  ref=0.987  训练时间 498s
 - 总时长：约 24 分钟
+
+> **v1 初版结果**（3 类，seed=42，20 epochs，RTX 4060 Laptop）：
+> metal_nut AUROC=0.9721 / screw AUROC=0.9102 / pill AUROC=0.9558 / 总训练时长约 24 分钟
+
+**v2 重做目标（15 类全量）**：
+将上方脚本 `categories` 列表扩展为全部 15 类：
+`["bottle", "cable", "capsule", "carpet", "grid", "hazelnut", "leather",
+  "metal_nut", "pill", "screw", "tile", "toothbrush", "transistor",
+  "wood", "zipper"]`
+（执行前运行 `ls simulator/mvtec/` 确认实际目录名，以磁盘上目录名为准）
+
+预计总训练时间：~2-3 小时（15 类 × 每类约 8-12 分钟，RTX 4060 Laptop）
+产出目录：`models/efficientad_models/{15个类别}/model.onnx`
 
 **ONNX 实际输出 4 个张量**（非原计划 2 个）：
 - `pred_score`, `pred_label`, `anomaly_map`, `pred_mask`
@@ -629,6 +647,12 @@ random.seed(42)，不移动原文件。
 
 **实际产出**：240 条训练样本，113 条 eval 样本
 
+> **v1 初版**（3 类）：240 train / 113 eval
+
+**v2 重做目标（15 类）**：
+脚本扩展到 15 类后，预计产出：~1200 train / ~540 eval（15 类 × 约 80/36 样本）
+实际数量以脚本输出为准（各类别图片数量不均匀）。
+
 **文件命名**：加缺陷类型前缀（如 `scratch_000.png`）
 原因：MVTec 各缺陷子目录图片均命名为 `000.png`-`015.png`，拍平复制会互相覆盖，前缀可规避冲突
 
@@ -655,6 +679,9 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **完成标志**：`datasets/lora_split/` 下 ShareGPT 格式 JSONL 文件存在，条数正确。
 
+**v2 重做**：脚本同步扩展到 15 类，`DEFECT_CN` 映射表需补充新类别的中文描述。
+执行前确认每个类别的 defect 子目录名（各类别 defect 类型名称各不相同）。
+
 ### 5.5 LLaMA-Factory LoRA 微调
 
 **执行人**：Claude Code 写脚本/配置 → 你在 PC 上跑
@@ -680,6 +707,29 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **完成标志**：adapter 文件存在，可以合并回 base 模型。
 
+### 5.5b Qwen3-VL-4B LoRA 微调（v2 新增）
+
+**执行时机**：Qwen3-VL-2B v2 重做完成后执行
+**训练平台**：AutoDL vGPU-32GB（1.66 元/时）——本地 RTX 4060 8GB 不可行（4B bf16 LoRA 峰值约 16-18 GB）
+**配置文件**：`qwen3vl_lora_4b.yaml`（见 Task 8 新建文件）
+
+**与 2B 的关键差异**：
+- `per_device_train_batch_size: 1`（4B 显存压力更大）
+- `gradient_accumulation_steps: 8`（维持等效 batch=8）
+- 其余超参与 2B 保持一致（控制变量原则）
+- `freeze_vision_tower: true`（1200 样本不足以微调 ViT，同 2B 策略）
+
+**预计成本**：~2 小时训练，3.32 元；含评估和 buffer 约 6.6 元
+
+**已知注意事项**（继承自 2B 经验，无需重复踩坑）：
+- `dataset_info.json` 必须声明 `system_tag: "system"`（否则 240/1200 条全被丢弃）
+- `template: qwen3_vl`（不是 `qwen2_vl`）
+- 不加 liger-kernel（对 Qwen3-VL 已知有问题）
+
+**产出**：`models/qwen3vl_lora_4b_adapter/`
+
+**完成标志**：adapter 文件存在，合并后可送入 RKLLM 转换链路。
+
 ### 5.6 PC 端 AB 评估
 
 **执行人**：Claude Code 写评估脚本 → 你跑
@@ -688,10 +738,12 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **评估内容**（ARCHITECTURE.md §7.1-7.2）：
 
-| 变体 | 配置 | 评估集 |
-|---|---|---|
-| 方案 A | Base Qwen3-VL-2B + 长 Prompt（800-1500 tokens） | datasets/lora_split/*/eval/ （30%） |
-| 方案 B | LoRA 合并后 + 极简 Prompt（≤100 tokens） | 同上 |
+| 变体 | 模型 | 配置 | 评估集 |
+|---|---|---|---|
+| `2B_base` | Qwen3-VL-2B | Base + 工程化 Prompt (~300 tokens) | datasets/lora_split/*/eval/ (30%) |
+| `2B_lora` | Qwen3-VL-2B | LoRA 合并后 + 极简 Prompt (~50 tokens) | 同上 |
+| `4B_base` | Qwen3-VL-4B | Base + 工程化 Prompt (~300 tokens) | 同上 |
+| `4B_lora` | Qwen3-VL-4B | LoRA 合并后 + 极简 Prompt (~50 tokens) | 同上 |
 
 **PC 阶段只比较一个指标**（ARCHITECTURE.md §7.1）：
 - ✅ JSON 解析成功率（%）——核心
@@ -699,7 +751,7 @@ system/user/assistant 三条消息，images 字段用相对路径。
 - ❌ decode tps——不记录
 - ❌ RAM——不记录
 
-**产出**：方案 A vs B 在 metal_nut / screw / pill 上的 JSON 解析成功率对比表
+**产出**：4 变体在全 15 类上的 JSON 解析成功率对比表
 
 **关键发现**：
 1. Qwen3 系列内置思维链，推理输出带 `</think>` 前缀，
@@ -711,7 +763,12 @@ system/user/assistant 三条消息，images 字段用相对路径。
    （方案 A ~300 tokens，方案 B ~50 tokens），
    TTFT 差距在 RK3588 NPU 上才会显现（预估 5-8 s vs 1 s 以内）
 
-**完成标志**：对比表完成，决定方案 A 或 B 哪个 JSON 成功率更高。
+> **v1 初版结果**（3 类，2 变体）：方案A JSON OK=100%，方案B JSON OK=100%
+> 说明：3 类小样本 + 高质量标注下，2B 两变体均达满分，无法区分优劣——这正是扩展到 15 类 + 4 变体的动机
+
+**v2 重做产出**：`results/ab_eval_report_v2.json`（包含 4 变体 × 15 类的 JSON 解析成功率矩阵）
+
+**完成标志**：4 变体在所有 15 类的 JSON 解析成功率对比表完成。
 
 ---
 
@@ -780,7 +837,7 @@ models/efficientad_models/
 
 **产出**：`models/fastsam_models/fastsam_s.rknn`
 
-### 6.4 Qwen3-VL-2B → RKLLM W8A8
+### 6.4 Qwen3-VL → RKLLM W8A8
 
 **执行人**：你操作
 
@@ -788,14 +845,14 @@ models/efficientad_models/
 - W8A8 是 RK3588 LLM 路径**唯一**支持的量化
 - W4A16 仅 RK3576 支持，**禁止使用**
 
-#### 方案 A（Base + 长 Prompt）
+#### 方案 A（2B Base + 长 Prompt）**[2B 路径]**
 
 **直接下载社区预转换的 .rkllm** ✅ 推荐
 
 - 来源：airockchip 或 Qengineering 社区
 - 无需自行转换，下载即用
 
-#### 方案 B（LoRA + 极简 Prompt）
+#### 方案 B（2B LoRA + 极简 Prompt）**[2B 路径]**
 
 **必须自己转**，步骤如下：
 
@@ -836,15 +893,43 @@ models/efficientad_models/
 - 输入：`models/qwen3vl_models/merged/`
 - 输出：`models/qwen3vl_models/qwen3vl_2b_w8a8_lora.rkllm`
 
+#### 方案 C/D（4B Base + 4B LoRA）—— Qwen3-VL-4B
+
+**4B Base（方案C）**：直接使用 Qengineering 预转换文件 ✅ 强烈推荐，不自转换
+
+来源：`https://github.com/Qengineering/Qwen3-VL-4B-NPU`（Sync.com 镜像，总 5.4 GB）
+
+文件清单：
+- `qwen3-vl-4b-instruct_w8a8_rk3588.rkllm`（~4.51 GB，来自 rknn-llm v1.2.3 model zoo）
+- `qwen3-vl-4b_vision_fp16_rk3588_v1.2.2.rknn`（~670 MB，**优先使用 v1.2.2**，见下方说明）
+
+⚠️ **视觉 encoder 版本选择（Issue #421）**：
+- v1.2.3 视觉文件（827 MB）在 OCR/描述任务精度不如 v1.2.2（670 MB）
+- 推荐混搭：**v1.2.2 视觉 .rknn + v1.2.3 runtime**（社区验证可行）
+- v1.2.2 文件同样在 rkllm_model_zoo/1.2.2 目录可找到
+
+⚠️ **已知坑（Issue #388）**：
+- 自行从 HuggingFace 转换 4B 成功率低（报错 "Catch exception when loading model: 'qwen3'"）
+- `image_enc.cc` 行 80-81 存在段错误，需应用 wangjl1993 社区 patch
+- 多图输入不支持（本项目单图输入，不受影响）
+
+**4B LoRA（方案D）**：
+- 前置：§5.5b 的 4B LoRA adapter 完成
+- 合并流程与 2B 方案B 相同（LLaMA-Factory export_model）
+- 转换命令与 2B 相同，输入换为 `models/qwen3vl_models/4b_merged/`
+- 输出：`models/qwen3vl_models/qwen3vl_4b_w8a8_lora.rkllm`
+
 **产出**：
 ```
 models/qwen3vl_models/
-├── qwen3vl_2b_w8a8_base.rkllm   （方案A，社区下载）
-├── qwen3vl_2b_w8a8_lora.rkllm   （方案B，自己转）
-└── qwen3vl_vision.rknn           （Vision encoder，两方案共用，FP16）
+├── qwen3vl_2b_w8a8_base.rkllm       （方案A：2B 基座，社区下载）
+├── qwen3vl_2b_w8a8_lora.rkllm       （方案B：2B LoRA，自转换）
+├── qwen3vl_4b_w8a8_base.rkllm       （方案C：4B 基座，Qengineering 预转换）
+├── qwen3vl_4b_w8a8_lora.rkllm       （方案D：4B LoRA，自转换）
+├── qwen3vl_vision_2b.rknn            （2B Vision encoder，FP16，两个 2B 方案共用）
+└── qwen3vl_vision_4b_v122.rknn       （4B Vision encoder，v1.2.2，两个 4B 方案共用）
 ```
-
-**完成标志**：三个模型文件均存在，`config.yaml` 中 `vlm_variant` 可切换 A/B 路径。
+**完成标志**：六个模型文件均存在（或至少 2B 全部 + 4B base），`config.yaml` 中路径按 `vlm_model_size` 字段分支填写完毕。
 
 ### 6.5 将模型文件传到板子
 
@@ -1011,24 +1096,32 @@ pytest backend/tests/contract/ -v
 
 在 RK3588 上跑完整流水线，收集 `PipelineMetrics` + `VlmMetrics` 数据：
 
-| 指标 | 方案 A 值 | 方案 B 值 | 来源 |
-|---|---|---|---|
-| JSON 解析成功率 | X'% | Y'% | `vlm_metrics.json_parse_ok` |
-| TTFT（首 token 延迟） | ms | ms | `vlm_metrics.ttft_ms` |
-| Decode tokens/s | tps | tps | `vlm_metrics.decode_tps` |
-| 运行时 RAM | GB | GB | `vlm_metrics.rss_mb` |
+| 指标 | 2B_base | 2B_lora | 4B_base | 4B_lora | 来源 |
+|---|---|---|---|---|---|
+| JSON 解析成功率 | X'% | Y'% | P'% | Q'% | `vlm_metrics.json_parse_ok` |
+| TTFT（首 token 延迟） | ms | ms | ms | ms | `vlm_metrics.ttft_ms` |
+| Decode tokens/s | tps | tps | tps | tps | `vlm_metrics.decode_tps` |
+| 运行时 RAM | GB | GB | GB | GB | `vlm_metrics.rss_mb` |
+
+**参考基线**（Qengineering 实测，RK3588 16GB，ctx=4096）：
+- 2B：11.5 tps / 3.1 GB RAM / TTFT 热 ~2-3s
+- 4B：5.7 tps / 8.7 GB RAM / TTFT 热 ~5-6s（Pipeline 总峰值 ~11.4 GB，余 ~3.1 GB）
 
 ### 8.2 量化前后对比
 
-| 对比组 | JSON 成功率 | 结论 |
-|---|---|---|
-| PC fp16 方案 A → RK3588 W8A8 方案 A | X% → X'% | 量化损失幅度 |
-| PC fp16 方案 B → RK3588 W8A8 方案 B | Y% → Y'% | 量化损失幅度 |
+| 对比组 | PC fp16 JSON 成功率 | RK3588 W8A8 JSON 成功率 | 量化损失 |
+|---|---|---|---|
+| 2B_base | X% | X'% | Δ pp |
+| 2B_lora | Y% | Y'% | Δ pp |
+| 4B_base | P% | P'% | Δ pp |
+| 4B_lora | Q% | Q'% | Δ pp |
 
 ### 8.3 最终方案选择
 
-综合四维指标，决定生产部署用方案 A 还是方案 B。
-决策写入 `edge/config.yaml` 的 `vlm_variant` 字段。
+综合四维指标在 4 个变体上的 Pareto 前沿，选定最终部署变体。
+决策维度：精度（JSON 解析成功率）× 吞吐（tps）× 内存（GB）。
+决策写入 `edge/config.yaml` 的 `vlm_model_size`（"2B" 或 "4B"）和 `vlm_variant`（"base" 或 "lora"）两个字段组合。
+综合判断维度：精度提升是否值得 2.8× 内存代价（8.7GB vs 3.1GB）和 2× 延迟代价（5.7 vs 11.5 tps）。
 
 ### 8.4 前端仪表盘展示 AB 对比
 
@@ -1042,11 +1135,13 @@ pytest backend/tests/contract/ -v
 
 如果 Qwen3-VL-2B 在 RK3588 上部署失败，按以下顺序降级（ARCHITECTURE.md §3.2）：
 
-| 优先级 | 模型 | 预期 tps | 备注 |
-|---|---|---|---|
-| 1 | Qwen2.5-VL-3B | ~7 | 社区资料最丰富 |
-| 2 | InternVL3.5-2B | ~11 | rknn-llm v1.2.3 官方支持 |
-| 3 | InternVL3-1B | ~30 | 质量略弱但延迟极低 |
-| 4 | Qwen2-VL-2B | ~12 | 最老牌稳定 |
+| 优先级 | 模型 | 推荐场景 | 预期 tps | RAM | 备注 |
+|---|---|---|---|---|---|
+| 主选 | **Qwen3-VL-4B** | 精度优先，内存充足 | 5.7 | 8.7 GB | rknn-llm v1.2.3 官方支持，Qengineering 有预转换 |
+| 备选1 | **Qwen3-VL-2B** | 低延迟，内存紧张 | 11.5 | 3.1 GB | 已完成转换，开箱即用 |
+| 备选2 | Qwen2.5-VL-3B | 4B 部署失败时 | ~7 | ~4.8 GB | 社区资料最丰富，happyme531 有预转换 |
+| 备选3 | InternVL3.5-2B | 超低延迟需求 | ~11 | ~3 GB | rknn-llm v1.2.3 官方支持 |
+| 备选4 | Qwen2-VL-2B | 最稳定保底 | ~12 | ~3 GB | 最老牌稳定 |
+| **排除** | ~~Qwen3.5 系列~~ | 不可用 | — | — | rknn-llm #472：Gated DeltaNet 架构不支持 |
 
 **只改 `edge/config.yaml`，不改 C++ 代码**。

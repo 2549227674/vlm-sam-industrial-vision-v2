@@ -1,6 +1,8 @@
 """simulator/line_runner.py
 
-多产线缺陷模拟器 — 符合 API_CONTRACT.md v1 规范。
+多产线缺陷模拟器 — 符合 API_CONTRACT.md v1.1 规范。
+
+v1.1 变更：variant 体系从 "A"/"B" 改为 "2B_base"/"2B_lora"（4B 变体在 eval_ab_test.py 中按顺序评估，不并发发送）。
 
 修正项（对照 Gemini 初版）：
   1. PNG→JPEG 内存转换，杜绝 MIME 欺骗 / 400 INVALID_IMAGE
@@ -8,7 +10,7 @@
   3. 路径用 Path(__file__).parent 解析，从任意目录均可运行
   4. 指数退避重试：500ms × 2ⁿ + jitter，覆盖 408/429/5xx（API_CONTRACT.md §11）
   5. 每线程独享 requests.Session，复用 TCP 连接
-  6. edge_ts：A 用 t0，B 用 t0+1ms，绝对杜绝 409 DUPLICATE_REPORT
+  6. edge_ts：2B_base 用 t0，2B_lora 用 t0+1ms，绝对杜绝 409 DUPLICATE_REPORT
   7. 传实际文件名（basename），便于后端日志定位
 """
 
@@ -92,8 +94,8 @@ def fabricate_metadata(
         "qwen3vl":     round(random.uniform(400.0, 1300.0), 1),
     }
 
-    # ── vlm_metrics：A 模拟长 Prompt，B 模拟短 Prompt ──
-    prompt_tokens = random.randint(800, 1500) if variant == "A" else random.randint(40, 100)
+    # ── vlm_metrics：base 模拟长 Prompt，lora 模拟短 Prompt ──
+    prompt_tokens = random.randint(800, 1500) if "base" in variant else random.randint(40, 100)
     vlm_metrics = {
         "ttft_ms":       round(random.uniform(250.0, 900.0), 1),
         "decode_tps":    round(random.uniform(8.0, 22.0), 1),
@@ -225,14 +227,14 @@ def run_line(category: str, line_id: str) -> None:
             t_b = t0 + timedelta(milliseconds=1)
 
             post_with_retry(
-                session, line_id, "A",
+                session, line_id, "2B_base",
                 jpeg_bytes, filename,
-                fabricate_metadata(category, line_id, defect_type, "A", t0),
+                fabricate_metadata(category, line_id, defect_type, "2B_base", t0),
             )
             post_with_retry(
-                session, line_id, "B",
+                session, line_id, "2B_lora",
                 jpeg_bytes, filename,
-                fabricate_metadata(category, line_id, defect_type, "B", t_b),
+                fabricate_metadata(category, line_id, defect_type, "2B_lora", t_b),
             )
 
             # 产线节拍：1500ms ± 200ms

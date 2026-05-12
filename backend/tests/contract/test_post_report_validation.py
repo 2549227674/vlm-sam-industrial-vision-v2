@@ -116,3 +116,37 @@ async def test_error_format_is_not_detail(async_client, dummy_jpeg, valid_meta):
     assert "code" in body["error"]
     assert "message" in body["error"]
     assert "detail" not in body
+
+
+async def test_variant_new_valid(async_client, dummy_jpeg, valid_meta):
+    """New variant values (2B_base etc.) should be accepted."""
+    valid_meta["variant"] = "2B_base"
+    resp = await async_client.post(
+        "/api/edge/report",
+        files={"image": ("test.jpg", dummy_jpeg, "image/jpeg")},
+        data={"meta": json.dumps(valid_meta)},
+    )
+    assert resp.status_code == 200
+
+
+async def test_variant_legacy_a(async_client, dummy_jpeg, valid_meta):
+    """Legacy variant "A" should still be accepted (backward compat)."""
+    valid_meta["variant"] = "A"
+    resp = await async_client.post(
+        "/api/edge/report",
+        files={"image": ("test.jpg", dummy_jpeg, "image/jpeg")},
+        data={"meta": json.dumps(valid_meta)},
+    )
+    assert resp.status_code == 200
+
+
+async def test_variant_invalid(async_client, dummy_jpeg, valid_meta):
+    """Invalid variant should return 400 VALIDATION_ERROR."""
+    valid_meta["variant"] = "invalid"
+    resp = await async_client.post(
+        "/api/edge/report",
+        files={"image": ("test.jpg", dummy_jpeg, "image/jpeg")},
+        data={"meta": json.dumps(valid_meta)},
+    )
+    assert resp.status_code == 400
+    assert resp.json()["error"]["code"] == "VALIDATION_ERROR"

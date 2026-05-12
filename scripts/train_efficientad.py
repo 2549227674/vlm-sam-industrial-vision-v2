@@ -17,16 +17,35 @@ from pathlib import Path
 
 # Project root: two levels up from this script
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-CATEGORIES = ["metal_nut", "screw", "pill"]
+# v1 初版 3 类：["metal_nut", "screw", "pill"]
+# v2 重做 15 类（执行前先 ls simulator/mvtec/ 确认实际目录名）
+CATEGORIES = [
+    "bottle", "cable", "capsule", "carpet", "grid", "hazelnut", "leather",
+    "metal_nut", "pill", "screw", "tile", "toothbrush", "transistor",
+    "wood", "zipper",
+]
 MVTEC_ROOT = PROJECT_ROOT / "simulator" / "mvtec"
 IMAGENET_DIR = PROJECT_ROOT / "datasets" / "imagenette"
 EXPORT_BASE = PROJECT_ROOT / "models" / "efficientad_models"
 RESULTS_DIR = PROJECT_ROOT / "results" / "efficientad"
 
+# v1 初版实测值（3 类）；15 类参考值来自 Anomalib benchmark
 REFERENCE_AUROC = {
+    "bottle": 0.983,
+    "cable": 0.973,
+    "capsule": 0.988,
+    "carpet": 0.990,
+    "grid": 0.985,
+    "hazelnut": 0.977,
+    "leather": 0.990,
     "metal_nut": 0.979,
-    "screw": 0.960,
     "pill": 0.987,
+    "screw": 0.960,
+    "tile": 0.984,
+    "toothbrush": 0.983,
+    "transistor": 0.978,
+    "wood": 0.975,
+    "zipper": 0.982,
 }
 
 
@@ -198,7 +217,7 @@ def main() -> None:
         nargs="+",
         default=CATEGORIES,
         choices=CATEGORIES,
-        help="Categories to train (default: all three)",
+        help="Categories to train (default: all 15)",
     )
     parser.add_argument("--epochs", type=int, default=20, help="Max epochs (default: 20)")
     parser.add_argument(

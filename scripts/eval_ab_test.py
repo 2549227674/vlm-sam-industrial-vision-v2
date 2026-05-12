@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""Stage 5.6: PC-side A/B evaluation.
+"""Stage 5.6: PC-side 4-variant evaluation (v2).
 
-Variant A: base model + engineered prompt
-Variant B: base + LoRA + minimal prompt (matches ShareGPT training format)
+Variants:
+  2B_base: Qwen3-VL-2B base + engineered prompt (~300 tokens)
+  2B_lora: Qwen3-VL-2B LoRA + minimal prompt (~50 tokens)
+  4B_base: Qwen3-VL-4B base + engineered prompt (~300 tokens)
+  4B_lora: Qwen3-VL-4B LoRA + minimal prompt (~50 tokens)
 
 Metric: JSON parse success rate (all required fields present).
 
 Usage:
-    python scripts/eval_ab_test.py
+    python scripts/eval_ab_test.py --model-size 2B
+    python scripts/eval_ab_test.py --model-size 4B
     python scripts/eval_ab_test.py --max-tokens 300
 """
 
@@ -23,10 +27,24 @@ from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EVAL_DIR = PROJECT_ROOT / "datasets" / "lora_split"
-BASE_MODEL = PROJECT_ROOT / "models" / "qwen3vl_models" / "base"
-LORA_PATH = PROJECT_ROOT / "models" / "qwen3vl_lora_adapter"
-REPORT_PATH = PROJECT_ROOT / "results" / "ab_eval_report.json"
-CATEGORIES = ["metal_nut", "screw", "pill"]
+REPORT_PATH = PROJECT_ROOT / "results" / "ab_eval_report_v2.json"
+CATEGORIES = [
+    "bottle", "cable", "capsule", "carpet", "grid", "hazelnut", "leather",
+    "metal_nut", "pill", "screw", "tile", "toothbrush", "transistor",
+    "wood", "zipper",
+]
+
+# Model paths per size
+MODEL_PATHS = {
+    "2B": {
+        "base": PROJECT_ROOT / "models" / "qwen3vl_models" / "base",
+        "lora": PROJECT_ROOT / "models" / "qwen3vl_lora_adapter",
+    },
+    "4B": {
+        "base": PROJECT_ROOT / "models" / "qwen3vl_models" / "4b" / "base",
+        "lora": PROJECT_ROOT / "models" / "qwen3vl_lora_4b_adapter",
+    },
+}
 
 # Variant A: base model needs detailed instruction (no system message)
 PROMPT_A = (
@@ -104,7 +122,7 @@ def evaluate_variant(model, processor, samples: list[dict],
         cat = sample["category"]
         counts[cat]["total"] += 1
 
-        if variant == "A":
+        if "base" in variant:
             messages = [{"role": "user", "content": [
                 {"type": "image", "image": str(sample["path"])},
                 {"type": "text", "text": PROMPT_A},
@@ -126,12 +144,15 @@ def evaluate_variant(model, processor, samples: list[dict],
     return counts
 
 
-def print_report(counts_a: dict, counts_b: dict) -> dict:
+def print_report(counts_a: dict, counts_b: dict,
+                 variant_a: str = "base", variant_b: str = "lora") -> dict:
     """Print markdown table and return structured report dict."""
-    print(f"\n{'=' * 60}")
-    print("  Stage 5.6: A/B Evaluation Report (JSON Parse Success Rate)")
-    print("=" * 60)
-    header = f"| {'Category':10s} | {'A (Base+Prompt)':18s} | {'B (LoRA+Minimal)':18s} | {'Delta':7s} |"
+    print(f"\n{'=' * 70}")
+    print(f"  Stage 5.6: Evaluation Report (JSON Parse Success Rate)")
+    print("=" * 70)
+    va_short = variant_a.replace("_", " ").title()
+    vb_short = variant_b.replace("_", " ").title()
+    header = f"| {'Category':10s} | {va_short:18s} | {vb_short:18s} | {'Delta':7s} |"
     print(header)
     print(f"|{'-' * 11}|{'-' * 20}|{'-' * 20}|{'-' * 9}|")
 
@@ -149,51 +170,61 @@ def print_report(counts_a: dict, counts_b: dict) -> dict:
         ra, rb = a / n * 100, b / n * 100
         print(f"| {cat:10s} | {a:3d}/{n:3d} ({ra:5.1f}%)    | "
               f"{b:3d}/{n:3d} ({rb:5.1f}%)    | {rb - ra:+5.1f}% |")
-        report["categories"][cat] = {"A": f"{a}/{n}", "B": f"{b}/{n}",
-                                     "rate_A": round(ra, 1), "rate_B": round(rb, 1)}
+        report["categories"][cat] = {variant_a: f"{a}/{n}", variant_b: f"{b}/{n}",
+                                     f"rate_{variant_a}": round(ra, 1),
+                                     f"rate_{variant_b}": round(rb, 1)}
 
     ra_t = tot_a / tot_n * 100 if tot_n else 0
     rb_t = tot_b / tot_n * 100 if tot_n else 0
     print(f"| {'TOTAL':10s} | {tot_a:3d}/{tot_n:3d} ({ra_t:5.1f}%) | "
           f"{tot_b:3d}/{tot_n:3d} ({rb_t:5.1f}%) | {rb_t - ra_t:+5.1f}% |")
-    print("=" * 60)
+    print("=" * 70)
 
-    report["total"] = {"A": f"{tot_a}/{tot_n}", "B": f"{tot_b}/{tot_n}",
-                       "rate_A": round(ra_t, 1), "rate_B": round(rb_t, 1)}
+    report["total"] = {variant_a: f"{tot_a}/{tot_n}", variant_b: f"{tot_b}/{tot_n}",
+                       f"rate_{variant_a}": round(ra_t, 1),
+                       f"rate_{variant_b}": round(rb_t, 1)}
     return report
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="A/B evaluation for Qwen3-VL")
+    parser = argparse.ArgumentParser(description="4-variant evaluation for Qwen3-VL")
+    parser.add_argument("--model-size", choices=["2B", "4B"], required=True,
+                        help="Model size to evaluate (2B or 4B)")
     parser.add_argument("--max-tokens", type=int, default=200)
     args = parser.parse_args()
 
+    size = args.model_size
+    paths = MODEL_PATHS[size]
+    base_variant = f"{size}_base"
+    lora_variant = f"{size}_lora"
+
     samples = collect_eval_samples()
     print(f"Eval samples: {len(samples)}")
+    print(f"Model size: {size}")
 
-    # Load base model once
-    print(f"\nLoading base model: {BASE_MODEL}")
-    processor = AutoProcessor.from_pretrained(str(BASE_MODEL))
+    # Load base model
+    print(f"\nLoading base model: {paths['base']}")
+    processor = AutoProcessor.from_pretrained(str(paths["base"]))
     model = Qwen3VLForConditionalGeneration.from_pretrained(
-        str(BASE_MODEL), dtype=torch.bfloat16,
+        str(paths["base"]), dtype=torch.bfloat16,
         device_map="auto",
     )
     model.eval()
 
-    # Variant A: base model + engineered prompt
-    print("\n--- Variant A: Base + engineered prompt ---")
-    counts_a = evaluate_variant(model, processor, samples, "A", args.max_tokens)
+    # Variant: base model + engineered prompt
+    print(f"\n--- Variant {base_variant}: Base + engineered prompt ---")
+    counts_base = evaluate_variant(model, processor, samples, base_variant, args.max_tokens)
 
-    # Variant B: attach LoRA adapter
-    print(f"\nLoading LoRA adapter: {LORA_PATH}")
-    model = PeftModel.from_pretrained(model, str(LORA_PATH))
+    # Variant: attach LoRA adapter
+    print(f"\nLoading LoRA adapter: {paths['lora']}")
+    model = PeftModel.from_pretrained(model, str(paths["lora"]))
     model.eval()
 
-    print("--- Variant B: LoRA + minimal prompt ---")
-    counts_b = evaluate_variant(model, processor, samples, "B", args.max_tokens)
+    print(f"--- Variant {lora_variant}: LoRA + minimal prompt ---")
+    counts_lora = evaluate_variant(model, processor, samples, lora_variant, args.max_tokens)
 
     # Report
-    report = print_report(counts_a, counts_b)
+    report = print_report(counts_base, counts_lora, base_variant, lora_variant)
 
     # Save report
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)

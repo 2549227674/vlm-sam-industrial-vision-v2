@@ -1,0 +1,50 @@
+# ==========================================
+# LLaMA-Factory: Qwen3-VL-4B-Instruct LoRA 微调
+# 目标硬件: AutoDL vGPU-32GB（1.66 元/时）——本地 RTX 4060 8GB 不可行（峰值 ~16-18 GB）
+# 训练数据: datasets/industrial_vision_train.json (15 类，~1200 条)
+# 预计训练时长: ~2 小时
+# 预计成本: ~3.32 元（含评估和 buffer 约 6.6 元）
+# 不要添加 liger-kernel（对 Qwen3-VL 有已知问题）
+# 不要使用 QLoRA 4bit + vision 训练组合（易崩溃）
+# ==========================================
+
+### 模型 (Model)
+model_name_or_path: models/qwen3vl_models/4b/base/
+trust_remote_code: true
+
+### 数据集 (Dataset)
+dataset_dir: datasets/
+dataset: industrial_vision
+template: qwen3_vl
+cutoff_len: 4096
+max_samples: 2000
+overwrite_cache: true
+preprocessing_num_workers: 4
+
+### 微调策略 (LoRA)
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: q_proj,v_proj
+lora_rank: 16
+lora_alpha: 16
+lora_dropout: 0.05
+
+### 训练超参数 (Hyperparameters)
+per_device_train_batch_size: 1      # 4B 显存敏感，比 2B 的 batch_size=2 减半
+gradient_accumulation_steps: 8      # 维持等效 batch=8（1×8=8，与 2B 的 2×4=8 一致）
+learning_rate: 5.0e-5
+num_train_epochs: 5.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+gradient_checkpointing: true
+bf16: true
+fp16: false
+freeze_vision_tower: true           # 1200 样本不足以微调 ViT，同 2B 策略
+
+### 输出 (Output)
+output_dir: models/qwen3vl_lora_4b_adapter/
+logging_steps: 5
+save_steps: 50
+plot_loss: true
+overwrite_output_dir: true

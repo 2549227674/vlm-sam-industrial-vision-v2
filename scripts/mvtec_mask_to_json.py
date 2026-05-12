@@ -20,18 +20,103 @@ import cv2
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SPLIT_DIR = PROJECT_ROOT / "datasets" / "lora_split"
 MVTEC_DIR = PROJECT_ROOT / "simulator" / "mvtec"
-CATEGORIES = ["metal_nut", "screw", "pill"]
+# v1 初版 3 类：["metal_nut", "screw", "pill"]
+# v2 重做 15 类
+CATEGORIES = [
+    "bottle", "cable", "capsule", "carpet", "grid", "hazelnut", "leather",
+    "metal_nut", "pill", "screw", "tile", "toothbrush", "transistor",
+    "wood", "zipper",
+]
 
+# 全 15 类缺陷类型中文映射（约 65-70 种）
 DEFECT_CN = {
+    # bottle
+    "broken_large": "大面积破损",
+    "broken_small": "小面积破损",
+    "contamination": "污染",
+    # cable
+    "bent_wire": "弯曲导线",
+    "cable_swap": "电缆错位",
+    "combined": "复合缺陷",
+    "cut_inner_insulation": "内部绝缘层切割",
+    "cut_outer_insulation": "外部绝缘层切割",
+    "missing_cable": "缺少电缆",
+    "missing_wire": "缺少导线",
+    "poke_insulation": "绝缘层刺穿",
+    # capsule
+    "crack": "裂纹",
+    "faulty_imprint": "印刷缺陷",
+    "scratch": "划痕",
+    "squeeze": "挤压变形",
+    # carpet
+    "color": "色差",
+    "cut": "切割缺陷",
+    "hole": "孔洞",
+    "metal_contamination": "金属污染",
+    "thread": "线头缺陷",
+    # grid
     "bent": "弯曲",
+    "broken": "破损",
+    "glue": "胶水残留",
+    "metal_contamination": "金属污染",
+    "thread": "线头缺陷",
+    # hazelnut
+    "crack": "裂纹",
+    "hole": "孔洞",
+    "cut": "切割缺陷",
+    "print": "印刷缺陷",
+    # leather
+    "color": "色差",
+    "cut": "切割缺陷",
+    "fold": "折叠缺陷",
+    "glue": "胶水残留",
+    "poke": "刺穿缺陷",
+    # metal_nut
+    "bent": "弯曲",
+    "color": "色差",
+    "flip": "翻转",
+    "scratch": "划痕",
+    # pill
     "color": "色差",
     "combined": "复合缺陷",
     "contamination": "污染",
     "crack": "裂纹",
-    "damage": "破损",
-    "flip": "翻转",
-    "missing_hole": "缺孔",
+    "faulty_imprint": "印刷缺陷",
+    "pill_type": "药片类型错误",
     "scratch": "划痕",
+    # screw
+    "manipulated_front": "前端异常",
+    "scratch_head": "头部划痕",
+    "scratch_neck": "颈部划痕",
+    "thread_side": "侧面螺纹缺陷",
+    "thread_top": "顶部螺纹缺陷",
+    # tile
+    "crack": "裂纹",
+    "glue_strip": "胶带残留",
+    "gray_stroke": "灰色笔触",
+    "oil": "油污",
+    "rough": "粗糙缺陷",
+    # toothbrush
+    "defective": "缺陷",
+    # transistor
+    "bent_lead": "引脚弯曲",
+    "cut_lead": "引脚切割",
+    "damaged_case": "外壳破损",
+    "misplaced": "错位",
+    # wood
+    "color": "色差",
+    "combined": "复合缺陷",
+    "hole": "孔洞",
+    "liquid": "液体残留",
+    "scratch": "划痕",
+    # zipper
+    "broken_teeth": "齿断裂",
+    "combined": "复合缺陷",
+    "fabric_border": "织物边缘缺陷",
+    "fabric_interior": "织物内部缺陷",
+    "rough": "粗糙缺陷",
+    "split_teeth": "齿分离",
+    "squeezed_teeth": "齿挤压",
 }
 
 MIN_CONTOUR_AREA = 5

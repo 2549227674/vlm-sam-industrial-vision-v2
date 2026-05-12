@@ -18,7 +18,7 @@ def _make_meta():
         "anomaly_score": 12.5,
         "bboxes": [],
         "description": "test",
-        "variant": "A",
+        "variant": "2B_base",
         "edge_ts": "2026-05-09T00:00:00+00:00",
         "pipeline_ms": {"efficientad": 10.0, "fastsam": 40.0, "qwen3vl": 500.0},
         "vlm_metrics": {
@@ -38,7 +38,7 @@ def test_exhausts_retries_on_persistent_503(mock_sleep):
     session = MagicMock()
     session.post.return_value = MagicMock(status_code=503)
 
-    post_with_retry(session, "L1", "A", b"img", "f.jpg", _make_meta())
+    post_with_retry(session, "L1", "2B_base", b"img", "f.jpg", _make_meta())
     assert session.post.call_count == MAX_RETRIES + 1
 
 
@@ -51,7 +51,7 @@ def test_retries_then_succeeds_on_200(mock_sleep):
         MagicMock(status_code=200, json=lambda: {"id": 1}),
     ]
 
-    post_with_retry(session, "L1", "A", b"img", "f.jpg", _make_meta())
+    post_with_retry(session, "L1", "2B_base", b"img", "f.jpg", _make_meta())
     assert session.post.call_count == 3
 
 
@@ -60,7 +60,7 @@ def test_no_retry_on_400(mock_sleep):
     session = MagicMock()
     session.post.return_value = MagicMock(status_code=400, text="bad request")
 
-    post_with_retry(session, "L1", "A", b"img", "f.jpg", _make_meta())
+    post_with_retry(session, "L1", "2B_base", b"img", "f.jpg", _make_meta())
     assert session.post.call_count == 1
 
 
@@ -69,7 +69,7 @@ def test_exponential_backoff_sleep_called(mock_sleep):
     session = MagicMock()
     session.post.return_value = MagicMock(status_code=503)
 
-    post_with_retry(session, "L1", "A", b"img", "f.jpg", _make_meta())
+    post_with_retry(session, "L1", "2B_base", b"img", "f.jpg", _make_meta())
 
     sleep_values = [call.args[0] for call in mock_sleep.call_args_list]
     assert len(sleep_values) == MAX_RETRIES
@@ -89,5 +89,5 @@ def test_network_exception_retries(mock_sleep):
         MagicMock(status_code=200, json=lambda: {"id": 1}),
     ]
 
-    post_with_retry(session, "L1", "A", b"img", "f.jpg", _make_meta())
+    post_with_retry(session, "L1", "2B_base", b"img", "f.jpg", _make_meta())
     assert session.post.call_count == 2
