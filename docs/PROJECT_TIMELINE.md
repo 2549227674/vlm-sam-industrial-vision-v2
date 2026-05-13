@@ -665,6 +665,8 @@ random.seed(42)，不移动原文件。
 **逻辑**：读取 MVTec 官方 Ground Truth Mask（PNG 二值图），
 用 OpenCV `connectedComponentsWithStats` 提取连通域，
 转换为归一化 bbox 坐标，自动生成 DefectCreate 格式 JSON。
+**必须同时处理 train 和 eval 两个 split**，eval JSON 是 method_control 评估
+（category_exact / defect_type_exact / bbox_iou）的前提。
 
 **三处关键改进（相比参考版）**：
 - `confidence` 改为面积反推（`min(0.99, 0.60+(rel_area/0.05)*0.39)`），非随机值
@@ -674,12 +676,14 @@ random.seed(42)，不移动原文件。
 **数据格式转换**：`scripts/format_llama_factory_data.py`
 将图片+JSON 转为 LLaMA-Factory ShareGPT 多模态格式，
 system/user/assistant 三条消息，images 字段用相对路径。
+含 dry-run 模式，若 train 或 eval 任一为 0 则报错退出（可用 `--allow-empty-eval` 调试例外）。
 
 **产出**：240 条训练样本，113 条 eval 样本
 
 **完成标志**：`datasets/lora_split/` 下 ShareGPT 格式 JSONL 文件存在，条数正确。
 
 **v2 重做**：脚本已同步扩展到 15 类，`DEFECT_CN` 映射表已补充全部类别中文描述。
+脚本同时处理 train 和 eval 两个 split，支持 `--dry-run` 预览计数。
 
 **v2 修复要求**（已完成）：
 - 从 3 类硬编码扩展到 15 类自动发现（扫描 `datasets/lora_split/` 目录）

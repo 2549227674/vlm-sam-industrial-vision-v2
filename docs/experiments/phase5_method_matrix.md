@@ -47,6 +47,9 @@ Phase 5 分成两条独立的评估线路，目标不同，产出不同：
 **评估脚本**：`scripts/eval_ab_test.py --mode method_control`
 **产出文件**：`results/ab_eval_report_v2_method_control.json`
 
+> **前提条件**：method_control 评估依赖 eval split 的 JSON 标注文件（`datasets/lora_split/*/eval/*.json`），
+> 这些文件由 `scripts/mvtec_mask_to_json.py` 生成。运行评估前务必确认 eval JSON 存在。
+
 ## 2. 纳入主线的方法
 
 以下方法是项目的正式组成部分，训练产出直接用于 RK3588 部署：
@@ -136,8 +139,8 @@ Phase 5 评估
 | 脚本 | 用途 | 运行环境 |
 |---|---|---|
 | `scripts/split_lora_data.py` | 数据划分（70/30 train/eval） | PC，一次性 |
-| `scripts/mvtec_mask_to_json.py` | GT mask → JSON 标注 | PC，一次性 |
-| `scripts/format_llama_factory_data.py` | JSON → ShareGPT 格式 | PC，一次性 |
+| `scripts/mvtec_mask_to_json.py` | GT mask → JSON 标注（train + eval 双 split） | PC，一次性 |
+| `scripts/format_llama_factory_data.py` | JSON → ShareGPT 格式（含 dry-run 校验） | PC，一次性 |
 | `scripts/eval_ab_test.py` | Deployment + Method Control 评估 | PC（GPU） |
 | `scripts/optimize_prompt_opro.py` | OPRO prompt-only baseline | PC（GPU） |
 | `qwen3vl_lora.yaml` | 2B LoRA 训练配置 | AutoDL / PC |

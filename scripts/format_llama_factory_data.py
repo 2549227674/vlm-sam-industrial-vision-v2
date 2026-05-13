@@ -218,6 +218,8 @@ def main() -> None:
     )
     parser.add_argument("--dry-run", action="store_true",
                         help="Preview without writing output files")
+    parser.add_argument("--allow-empty-eval", action="store_true",
+                        help="Allow eval split to have 0 samples (debug only)")
     args = parser.parse_args()
 
     categories = discover_categories()
@@ -235,6 +237,20 @@ def main() -> None:
     print(f"\n  Eval total: {len(eval_data)} valid samples\n")
 
     if args.dry_run:
+        print("\n--- Dry-run summary ---")
+        print(f"  Train: {len(train_data)} samples")
+        print(f"  Eval:  {len(eval_data)} samples")
+        if len(train_data) == 0:
+            print("  [ERROR] Train split has 0 samples! Run mvtec_mask_to_json.py first.")
+        if len(eval_data) == 0:
+            msg = "  [ERROR] Eval split has 0 samples! Run mvtec_mask_to_json.py first."
+            if not args.allow_empty_eval:
+                print(msg)
+                print("  Aborting. Use --allow-empty-eval to override (debug only).")
+                sys.exit(1)
+            else:
+                print(msg)
+                print("  [WARN] --allow-empty-eval specified, continuing anyway.")
         print("Dry run complete. No files written.")
         return
 

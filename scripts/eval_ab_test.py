@@ -60,7 +60,7 @@ VALID_SEVERITIES = {"low", "medium", "high"}
 MODEL_PATHS = {
     "2B": {
         "base": PROJECT_ROOT / "models" / "qwen3vl_models" / "base",
-        "lora": PROJECT_ROOT / "models" / "qwen3vl_lora_adapter",
+        "lora": PROJECT_ROOT / "models" / "qwen3vl_lora_adapter_15cls",
     },
     "4B": {
         "base": PROJECT_ROOT / "models" / "qwen3vl_models" / "4b" / "base",
@@ -412,10 +412,14 @@ def main() -> None:
     parser.add_argument("--mode", choices=["deployment", "method_control", "both"],
                         default="both", help="Benchmark mode")
     parser.add_argument("--max-tokens", type=int, default=200)
+    parser.add_argument("--lora-adapter-path", type=str, default=None,
+                        help="Override LoRA adapter path (default: models/qwen3vl_lora_adapter_15cls for 2B)")
     args = parser.parse_args()
 
     size = args.model_size
-    paths = MODEL_PATHS[size]
+    paths = MODEL_PATHS[size].copy()
+    if args.lora_adapter_path:
+        paths["lora"] = Path(args.lora_adapter_path)
 
     samples = collect_eval_samples()
     print(f"Eval samples: {len(samples)}")

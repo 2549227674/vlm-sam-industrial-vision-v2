@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """Generate LoRA training JSON annotations from MVTec ground-truth masks.
 
-Reads:  datasets/lora_split/{category}/train/*.png  (output of split_lora_data.py)
+Reads:  datasets/lora_split/{category}/{train,eval}/*.png  (output of split_lora_data.py)
         simulator/mvtec/{category}/ground_truth/{defect_type}/{id}_mask.png
-Writes: datasets/lora_split/{category}/train/*.json  (one per image, same dir)
+Writes: datasets/lora_split/{category}/{train,eval}/*.json  (one per image, same dir)
 
 Each JSON follows DefectCreate schema (API_CONTRACT.md §2):
   - category, defect_type, severity, confidence, bboxes (≤16), description (中文)
 
 Usage:
     python scripts/mvtec_mask_to_json.py
+    python scripts/mvtec_mask_to_json.py --dry-run   # preview counts without writing
 """
 
+import argparse
 import json
 from pathlib import Path
 
@@ -212,33 +214,58 @@ def process_image(img_path: Path, mvtec_gt: Path) -> dict | None:
 
 
 def main() -> None:
-    total = 0
+    parser = argparse.ArgumentParser(
+        description="Generate LoRA JSON annotations from MVTec GT masks"
+    )
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Preview counts without writing JSON files")
+    args = parser.parse_args()
+
+    splits = ["train", "eval"]
+    grand_total = 0
+    grand_skipped = 0
+
+    print(f"{'Category':12s}  {'Split':5s}  {'Generated':>9s}  {'Skipped':>7s}")
+    print(f"{'-'*12}  {'-'*5}  {'-'*9}  {'-'*7}")
 
     for category in CATEGORIES:
-        train_dir = SPLIT_DIR / category / "train"
-        if not train_dir.exists():
-            print(f"[SKIP] {train_dir}")
-            continue
-
         mvtec_gt = MVTEC_DIR / category / "ground_truth"
-        cat_count = 0
 
-        for img_path in sorted(train_dir.glob("*.png")):
-            data = process_image(img_path, mvtec_gt)
-            if data is None:
+        for split in splits:
+            split_dir = SPLIT_DIR / category / split
+            if not split_dir.exists():
+                print(f"  [SKIP] {split_dir}")
                 continue
 
-            data["category"] = category
-            json_path = img_path.with_suffix(".json")
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            cat_count = 0
+            skip_count = 0
 
-            cat_count += 1
+            for img_path in sorted(split_dir.glob("*.png")):
+                data = process_image(img_path, mvtec_gt)
+                if data is None:
+                    skip_count += 1
+                    continue
 
-        print(f"  {category:12s}  {cat_count:3d} JSONs generated")
-        total += cat_count
+                data["category"] = category
+                json_path = img_path.with_suffix(".json")
 
-    print(f"\nDone. {total} annotations saved to {SPLIT_DIR}")
+                if not args.dry_run:
+                    with open(json_path, "w", encoding="utf-8") as f:
+                        json.dump(data, f, ensure_ascii=False, indent=2)
+
+                cat_count += 1
+
+            if skip_count > 0:
+                print(f"  [WARN] {category}/{split}: {skip_count} images skipped (mask missing)")
+
+            print(f"  {category:12s}  {split:5s}  {cat_count:9d}  {skip_count:7d}")
+            grand_total += cat_count
+            grand_skipped += skip_count
+
+    mode = "DRY-RUN" if args.dry_run else "Done"
+    print(f"\n{mode}. {grand_total} annotations, {grand_skipped} skipped.")
+    if args.dry_run:
+        print("  (No files were written)")
 
 
 if __name__ == "__main__":
