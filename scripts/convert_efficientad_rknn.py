@@ -8,14 +8,19 @@ Input:  models/efficientad_models/{category}/weights/onnx/model.onnx
 Output: models/efficientad_models/{category}/model.rknn
         models/efficientad_models/{category}/accuracy_analysis/
 
+Old v1 3-class archives in models/efficientad_models_v1_3cls/ are NOT touched.
+
 Normalization: ImageNet defaults used by Anomalib
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375]
 
 Usage:
     source .venv_rknn/bin/activate
-    python scripts/convert_efficientad_rknn.py
+    python scripts/convert_efficientad_rknn.py                     # all 15 classes
     python scripts/convert_efficientad_rknn.py --categories metal_nut
+    python scripts/convert_efficientad_rknn.py --categories bottle cable zipper
     python scripts/convert_efficientad_rknn.py --calib-samples 100
+    python scripts/convert_efficientad_rknn.py --dry-run            # pre-check only
+    python scripts/convert_efficientad_rknn.py --dry-run --categories metal_nut
 """
 
 from __future__ import annotations
@@ -28,7 +33,14 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODELS_DIR = PROJECT_ROOT / "models" / "efficientad_models"
 MVTEC_DIR = PROJECT_ROOT / "simulator" / "mvtec"
-CATEGORIES = ["metal_nut", "screw", "pill"]
+
+# MVTec AD full 15 classes
+CATEGORIES = [
+    "bottle", "cable", "capsule", "carpet", "grid",
+    "hazelnut", "leather", "metal_nut", "pill", "screw",
+    "tile", "toothbrush", "transistor", "wood", "zipper",
+]
+CATEGORY_SET = frozenset(CATEGORIES)
 MIN_CALIB_SAMPLES = 50
 COSINE_THRESHOLD = 0.99
 
@@ -85,6 +97,54 @@ def parse_accuracy_report(analysis_dir: Path) -> tuple[float, bool]:
 
     all_pass = min_cosine >= COSINE_THRESHOLD
     return min_cosine, all_pass
+
+
+def dry_run_check(categories: list[str], calib_samples: int) -> None:
+    """Pre-check: verify ONNX and calibration images exist without running RKNN."""
+    print(f"\n{'=' * 50}")
+    print("  DRY-RUN: Pre-check")
+    print(f"{'=' * 50}")
+    print(f"  Calib samples threshold: {MIN_CALIB_SAMPLES}")
+    print()
+
+    onnx_ok: list[str] = []
+    onnx_missing: list[str] = []
+    calib_warn: list[str] = []
+
+    for cat in categories:
+        onnx_path = MODELS_DIR / cat / "weights" / "onnx" / "model.onnx"
+        rknn_path = MODELS_DIR / cat / "model.rknn"
+        good_dir = MVTEC_DIR / cat / "train" / "good"
+
+        has_onnx = onnx_path.exists()
+        n_images = len(list(good_dir.glob("*.png"))) if good_dir.exists() else 0
+
+        onnx_status = "OK" if has_onnx else "MISSING"
+        calib_status = f"{n_images} images"
+        if n_images < MIN_CALIB_SAMPLES:
+            calib_status += " (WARN: < {})".format(MIN_CALIB_SAMPLES)
+            calib_warn.append(cat)
+
+        if has_onnx:
+            onnx_ok.append(cat)
+        else:
+            onnx_missing.append(cat)
+
+        print(f"  {cat:14s}  ONNX={onnx_status:7s}  calib={calib_status:20s}  -> {rknn_path}")
+
+    print(f"\n  {'=' * 50}")
+    print(f"  Dry-run Summary")
+    print(f"  {'=' * 50}")
+    print(f"  ONNX existing:  {len(onnx_ok)}/{len(categories)}")
+    print(f"  ONNX missing:   {len(onnx_missing)}/{len(categories)}")
+    if onnx_missing:
+        print(f"    missing: {', '.join(onnx_missing)}")
+    if calib_warn:
+        print(f"  Calib warning (< {MIN_CALIB_SAMPLES}): {', '.join(calib_warn)}")
+    if onnx_ok:
+        print(f"  Convertible:    {', '.join(onnx_ok)}")
+    else:
+        print(f"  Convertible:    (none — run Phase 5.1 training first)")
 
 
 def convert_category(category: str, calib_samples: int) -> bool:
@@ -166,36 +226,59 @@ def convert_category(category: str, calib_samples: int) -> bool:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="EfficientAD-S ONNX -> RKNN INT8")
-    parser.add_argument("--categories", nargs="+", default=CATEGORIES)
+    parser = argparse.ArgumentParser(description="EfficientAD-S ONNX -> RKNN INT8 (15 classes)")
+    parser.add_argument("--categories", nargs="+", default=CATEGORIES,
+                        help="Categories to convert (default: all 15 MVTec classes)")
     parser.add_argument("--calib-samples", type=int, default=100,
                         help="Number of good/ images for INT8 calibration")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Pre-check only: verify ONNX and calib images without RKNN conversion")
     args = parser.parse_args()
 
-    results: dict[str, bool] = {}
+    # Validate categories against whitelist
+    invalid = [c for c in args.categories if c not in CATEGORY_SET]
+    if invalid:
+        print(f"ERROR: invalid categories: {invalid}")
+        print(f"Allowed: {sorted(CATEGORY_SET)}")
+        sys.exit(1)
+
+    if args.dry_run:
+        dry_run_check(args.categories, args.calib_samples)
+        return
+
+    results: dict[str, bool | str] = {}
 
     for cat in args.categories:
         try:
-            results[cat] = convert_category(cat, args.calib_samples)
+            ok = convert_category(cat, args.calib_samples)
+            results[cat] = ok
         except Exception as e:
             print(f"  ERROR ({cat}): {e}")
-            results[cat] = False
+            results[cat] = "ERROR"
 
     # Summary
     print(f"\n{'=' * 50}")
     print("  Summary")
     print(f"{'=' * 50}")
-    ok_count = 0
-    for cat, ok in results.items():
-        status = "PASS" if ok else "FAIL"
-        print(f"  {cat:12s}  {status}")
-        if ok:
-            ok_count += 1
+    pass_count = 0
+    fail_count = 0
+    skip_count = 0
+    for cat, val in results.items():
+        if val is True:
+            print(f"  {cat:14s}  PASS")
+            pass_count += 1
+        elif val is False:
+            print(f"  {cat:14s}  FAIL")
+            fail_count += 1
+        else:
+            print(f"  {cat:14s}  {val}")
+            skip_count += 1
 
     total = len(results)
-    print(f"\n  {ok_count}/{total} categories passed (cosine >= {COSINE_THRESHOLD})")
+    print(f"\n  PASS={pass_count}  FAIL={fail_count}  SKIP/ERROR={skip_count}  total={total}")
+    print(f"  Threshold: cosine >= {COSINE_THRESHOLD}")
 
-    if ok_count < total:
+    if fail_count > 0 or skip_count > 0:
         sys.exit(1)
 
 

@@ -869,7 +869,7 @@ python scripts/optimize_prompt_opro.py --model-size 2B --num-iterations 5 --num-
 
 **执行人**：Claude Code 写脚本 → 你跑
 
-**脚本**：`scripts/convert_efficientad.py`（CLAUDE.md 目录已规划）
+**脚本**：`scripts/convert_efficientad_rknn.py`（已扩展到 MVTec 全 15 类）
 
 **关键约束**（SKILL.md）：
 - 量化后必须跑 `accuracy_analysis` 验证 cosine sim > 0.99
@@ -877,16 +877,15 @@ python scripts/optimize_prompt_opro.py --model-size 2B --num-iterations 5 --num-
 - accuracy_analysis 报告路径：rknn-toolkit2 v2.3.2 改为 `{analysis_dir}/error_analysis.txt`（旧版路径 `simulator_error/simulator_error.txt` 已失效）
 - 校准集：从 `simulator/mvtec/{category}/train/good/` 取，**至少 50 张**（默认 100 张）
 - 10 个算子 fallback 到 CPU（`Unknown op target: 0`），属正常现象，不影响转换
+- 输入目录：`models/efficientad_models/{category}/weights/onnx/model.onnx`
+- 旧 v1 归档 `models/efficientad_models_v1_3cls/` 不参与 v2 转换
+- 支持 `--dry-run` 做前置检查（不调用 RKNN）
 
 **产出**：
 ```
 models/efficientad_models/
-├── metal_nut/model.rknn
-├── metal_nut/accuracy_analysis/error_analysis.txt
-├── screw/model.rknn
-├── screw/accuracy_analysis/error_analysis.txt
-├── pill/model.rknn
-└── pill/accuracy_analysis/error_analysis.txt
+├── {category}/model.rknn              # 15 类，每类一个
+└── {category}/accuracy_analysis/error_analysis.txt
 ```
 
 ### 6.3 FastSAM-s ONNX → RKNN INT8
