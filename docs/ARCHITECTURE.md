@@ -211,6 +211,27 @@ RK3588 C++ pipeline                              backend                  fronte
 - 输出：4 变体在全 15 类上的 JSON 解析成功率对比表。
 - **PC 阶段实测发现**：方案 B（LoRA）的 `category` 字段出现幻觉（输出 `"industrial"` 而非有效类别）。评估脚本仅校验字段存在性，不校验字段值；实际部署时需在 C++ 侧对 `category` 值做白名单过滤 `{"metal_nut", "screw", "pill"}`，非法值丢弃或归为 `"other"`。
 
+### 7.4 双轨评估设计（v2 新增）
+
+Phase 5 v2 重做采用双轨评估，两条线路目标不同、产出不同：
+
+**Deployment Benchmark**（部署基准）：回答「最终 ship 哪个组合？」
+- 4 变体使用各自最优 prompt（base + 工程化长 prompt，LoRA + 极简短 prompt）
+- 评估指标：JSON 解析成功率 + RK3588 四维指标
+- 产出：`results/ab_eval_report_v2_deployment.json`
+
+**Method Control Benchmark**（方法控制基准）：回答「LoRA 的真实收益？」
+- base 与 LoRA 使用完全相同的极简 prompt，消除 prompt 差异干扰
+- 评估指标：json_parse_ok / schema_ok / category_exact / defect_type_exact / severity_valid / bbox_iou_at_0_5 / prompt_tokens / output_tokens（8 项）
+- 产出：`results/ab_eval_report_v2_method_control.json`
+
+**OPRO Prompt-only Baseline**（可选）：量化 prompt engineering 的单独贡献
+- 不修改模型参数，用 LLM 搜索更优 prompt
+- 产出：`results/prompt_opro_best.json`
+- 不进入 RK3588 部署链路，仅作 PC 阶段方法学对照
+
+详细方法学矩阵见 `docs/experiments/phase5_method_matrix.md`。
+
 ### 7.3 RK3588 阶段重点
 
 - 2B 量化后 W8A8 .rkllm 文件大小 ~1.9 GB；运行时总 RAM ~3.1 GB（含 KV cache，`max_context=4096`）。

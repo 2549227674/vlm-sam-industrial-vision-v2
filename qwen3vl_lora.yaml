@@ -1,7 +1,7 @@
 # ==========================================
-# LLaMA-Factory: Qwen3-VL-2B-Instruct LoRA 微调
+# LLaMA-Factory: Qwen3-VL-2B-Instruct LoRA 微调 (v2: 15 类)
 # 目标硬件: RTX 4060 8GB（本地评估）/ AutoDL vGPU-32GB（云端训练）
-# 训练数据: datasets/industrial_vision_train.json (240 条)
+# 训练数据: datasets/industrial_vision_train.json (15 类，~1200 条)
 # ==========================================
 
 ### 模型 (Model)
@@ -10,10 +10,10 @@ trust_remote_code: true
 
 ### 数据集 (Dataset)
 dataset_dir: datasets/
-dataset: industrial_vision
+dataset: industrial_vision_train
 template: qwen3_vl
-cutoff_len: 4096               # 实测单样本 156 tokens，4096 足够
-max_samples: 1000
+cutoff_len: 4096               # 实测单样本 ~156 tokens，4096 足够
+max_samples: 2000              # v2: 15 类 ~1200 条，留余量
 overwrite_cache: true
 preprocessing_num_workers: 4
 
@@ -25,6 +25,8 @@ lora_target: q_proj,v_proj
 lora_rank: 16
 lora_alpha: 16
 lora_dropout: 0.05
+freeze_vision_tower: true           # 1200 样本不足以微调 ViT
+freeze_multi_modal_projector: true  # 同上，只训练 LoRA adapter
 
 ### 训练超参数 (Hyperparameters)
 per_device_train_batch_size: 2
@@ -38,7 +40,7 @@ bf16: true
 fp16: false
 
 ### 输出 (Output)
-output_dir: models/qwen3vl_lora_adapter/  # 本地路径，云端训练时需改为绝对路径
+output_dir: models/qwen3vl_lora_adapter_15cls/  # v2: 15 类 adapter，不覆盖 v1
 logging_steps: 5
 save_steps: 50
 plot_loss: true

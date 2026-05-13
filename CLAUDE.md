@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-3 完成，Phase 4（轨道A 联调验收）为下一步，Phase 5-6 已完成**
+**Phase 1-3 完成，Phase 4（轨道A 联调验收）为下一步，Phase 5/6 v1 初版已完成，v2 重做准备中**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -30,19 +30,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 3.6：静态导出验证（npm run build 通过，out/ 目录存在）
 - Phase 3.7：视觉精修 — 对齐 V2 设计稿（新增 12 个 v2/ 组件，mock-data.ts fallback，visual-verify subagent 截图对比，10/11 视觉匹配）
 - Phase 3.8：功能完整性验证 + 旧组件清理（5 个旧组件删除，约 -800 行，BBox/Trace/Toast/API_BASE 全部迁移到 v2/ 组件，Hydration 错误修复）
-- Phase 5.1：EfficientAD-S 训练 + ONNX 导出（三类别全部完成）（3 类 v1 初版，Phase 5 重做进行中）
-- Phase 5.2：FastSAM-s ONNX 导出（fastsam_s.onnx 46MB）
-- Phase 5.3：LoRA 数据划分（240 train / 113 eval）（3 类 v1 初版，Phase 5 重做进行中）
-- Phase 5.4：MVTec GT Mask 自动标注（mvtec_mask_to_json.py）（3 类 v1 初版，Phase 5 重做进行中）
-- Phase 5.5：Qwen3-VL-2B LoRA 微调（AutoDL，train_loss=1.073）（3 类 v1 初版，Phase 5 重做进行中）
-- Phase 5.6：PC 端 AB 评估（方案A=100%，方案B=100%）（3 类 v1 初版，Phase 5 重做进行中）
-- Phase 6：全部模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）（3 类 v1 初版，Phase 6 重做进行中）
+- Phase 5.1-5.6 v1 初版：3 类（metal_nut/screw/pill）EfficientAD-S 训练 + FastSAM ONNX + LoRA 数据划分 + GT Mask 标注 + Qwen3-VL-2B LoRA 微调 + PC 端 AB 评估（方案A=100%，方案B=100%）
+- Phase 6 v1 初版：3 类模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
+
+Phase 5 v2 重做准备中（阻塞项已修复，待启动训练）：
+- `scripts/format_llama_factory_data.py`：已扩展到 15 类自动发现 + train/eval 双输出 + 基础校验
+- `scripts/eval_ab_test.py`：已扩展 deployment + method_control 双基准 + 8 项评估指标
+- `scripts/optimize_prompt_opro.py`：新增 OPRO prompt-only baseline（PC 阶段方法学对照）
+- `qwen3vl_lora.yaml`：已更新为 15 类 v2 配置（output_dir 隔离，freeze_vision_tower + freeze_multi_modal_projector）
+- `qwen3vl_lora_4b.yaml`：已与 2B 保持控制变量一致
+- `docs/experiments/phase5_method_matrix.md`：双轨评估设计（deployment benchmark vs method_control benchmark）
 
 尚未开始（下一步）：
 - Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
   见 `docs/PROJECT_TIMELINE.md` 阶段 4
-- Phase 5 重做：MVTec AD 全 15 类 + 4 变体 2×2 AB 实验矩阵
-- Phase 6 重做：Qwen3-VL-4B 模型转换（方案 C/D）+ 2B 重做
+- Phase 5 v2 重做：MVTec AD 全 15 类 + 4 变体 2×2 AB 实验矩阵（数据划分 → 标注 → 训练 → 评估）
+- Phase 6 v2 重做：Qwen3-VL-4B 模型转换（方案 C/D）+ 2B 重做
 
 ## 一句话定义
 

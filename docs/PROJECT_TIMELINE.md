@@ -679,8 +679,15 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **完成标志**：`datasets/lora_split/` 下 ShareGPT 格式 JSONL 文件存在，条数正确。
 
-**v2 重做**：脚本同步扩展到 15 类，`DEFECT_CN` 映射表需补充新类别的中文描述。
-执行前确认每个类别的 defect 子目录名（各类别 defect 类型名称各不相同）。
+**v2 重做**：脚本已同步扩展到 15 类，`DEFECT_CN` 映射表已补充全部类别中文描述。
+
+**v2 修复要求**（已完成）：
+- 从 3 类硬编码扩展到 15 类自动发现（扫描 `datasets/lora_split/` 目录）
+- 同时输出 `datasets/industrial_vision_train.json` 和 `datasets/industrial_vision_eval.json`
+- `dataset_info.json` 注册两个数据集（train + eval），均包含 `system_tag: "system"`
+- README 模板改为 `qwen3_vl`（不再出现 `qwen2_vl`）
+- 增加基础校验：样本数统计、图片是否存在、JSON 是否可解析、category 是否在 15 类白名单内
+- `--dry-run` 模式支持预览不写文件
 
 ### 5.5 LLaMA-Factory LoRA 微调
 
@@ -766,7 +773,63 @@ system/user/assistant 三条消息，images 字段用相对路径。
 > **v1 初版结果**（3 类，2 变体）：方案A JSON OK=100%，方案B JSON OK=100%
 > 说明：3 类小样本 + 高质量标注下，2B 两变体均达满分，无法区分优劣——这正是扩展到 15 类 + 4 变体的动机
 
-**v2 重做产出**：`results/ab_eval_report_v2.json`（包含 4 变体 × 15 类的 JSON 解析成功率矩阵）
+**v2 重做产出**：`results/ab_eval_report_v2_deployment.json`（包含 4 变体 × 15 类的 JSON 解析成功率矩阵 + 8 项评估指标）
+
+### 5.7 Method Control Benchmark（v2 新增）
+
+**目标**：消除 prompt 差异，隔离 LoRA 微调的真实收益。
+
+**与 Deployment Benchmark 的区别**：
+- Deployment：base + 工程化长 prompt vs LoRA + 极简短 prompt（混合了 prompt 效应和 LoRA 效应）
+- Method Control：base + 极简短 prompt vs LoRA + 极简短 prompt（仅 LoRA 效应）
+
+**变体**：
+
+| 变体 | 模型 | Prompt |
+|---|---|---|
+| `2B_base_same_prompt` | Qwen3-VL-2B base | 极简 Prompt (~50 tokens) |
+| `2B_lora_same_prompt` | Qwen3-VL-2B LoRA | 极简 Prompt (~50 tokens) |
+| `4B_base_same_prompt` | Qwen3-VL-4B base | 极简 Prompt (~50 tokens)（可选） |
+| `4B_lora_same_prompt` | Qwen3-VL-4B LoRA | 极简 Prompt (~50 tokens)（可选） |
+
+**评估指标**（8 项，比 Deployment 更细）：
+- json_parse_ok / schema_ok / category_exact / defect_type_exact
+- severity_valid / bbox_iou_at_0_5
+- prompt_tokens / output_tokens
+
+**运行命令**：
+```bash
+python scripts/eval_ab_test.py --model-size 2B --mode method_control
+python scripts/eval_ab_test.py --model-size 2B --mode both  # 同时跑 deployment + method_control
+```
+
+**产出**：`results/ab_eval_report_v2_method_control.json`
+
+### 5.8 OPRO Prompt-only Baseline（v2 新增，可选）
+
+**目标**：量化 prompt engineering 的单独贡献，作为 LoRA 的方法学对照。
+
+**原理**：用 LLM 自身搜索更优 prompt（OPRO 风格），不修改模型参数。
+- 用少量 train 子集（~30 samples/category）迭代搜索 prompt
+- eval 集严格隔离，不参与搜索过程
+- 输出 best prompt + 评估分数
+
+**运行命令**：
+```bash
+python scripts/optimize_prompt_opro.py --model-size 2B
+python scripts/optimize_prompt_opro.py --model-size 2B --num-iterations 5 --num-candidates 8
+```
+
+**产出**：`results/prompt_opro_best.json`
+
+**价值**：与 LoRA 形成三方对照：
+1. base + 长 prompt（Deployment Benchmark）
+2. LoRA + 短 prompt（Deployment Benchmark）
+3. base + OPRO 最优 prompt（本实验）
+
+如果 (2) 和 (3) 接近，说明 LoRA 的收益主要来自 prompt 优化而非参数适应。
+
+**注意**：OPRO 结果不进入 RK3588 部署链路，仅作为 PC 阶段方法学分析。
 
 **完成标志**：4 变体在所有 15 类的 JSON 解析成功率对比表完成。
 

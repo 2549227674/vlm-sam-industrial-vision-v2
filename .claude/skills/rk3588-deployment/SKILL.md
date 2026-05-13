@@ -78,3 +78,14 @@ license: Internal-CourseProject
 - **Qwen3.5 系列已确认排除**：rknn-llm Issue #472，Gated DeltaNet 架构不被 rknn-llm v1.2.3 支持。
 
 Qwen3-VL 部署失败时的备选降级顺序与性能数据见 `docs/ARCHITECTURE.md` §3.2，**只改 `edge/config.yaml`，不改 C++ 代码**。已排除 Qwen3.5（rknn-llm #472，Gated DeltaNet 不支持）。
+
+## Prompt-only / OPRO 与 RKLLM 部署链路的关系
+
+**Prompt-only baseline 和 OPRO 优化不进入 RKLLM 模型转换链路**。这些方法仅作为 PC 阶段的方法学对照实验，用于量化 prompt engineering 的单独贡献和 LoRA 微调的真实收益。
+
+RKLLM 部署链路只处理以下产出：
+- `models/qwen3vl_lora_adapter_15cls/` → LLaMA-Factory export → RKLLM W8A8（2B LoRA）
+- `models/qwen3vl_lora_4b_adapter/` → LLaMA-Factory export → RKLLM W8A8（4B LoRA）
+- 社区预转换的 base .rkllm 文件
+
+OPRO 搜索出的最优 prompt 可以在 C++ 代码中硬编码为 system prompt，但 prompt 优化过程本身（迭代搜索、LLM 评估）只在 PC 端完成。
