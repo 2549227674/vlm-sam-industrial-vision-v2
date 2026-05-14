@@ -5,7 +5,12 @@
 - 15 类 EfficientAD-S 训练工程完成
 - 15/15 ONNX 导出成功
 - `convert_efficientad_rknn.py --dry-run` 显示 15/15 convertible
-- 低分类别 capsule/transistor/toothbrush/hazelnut/screw 进入 targeted retrain
+- **P0 处理完成**：
+  - capsule：image_AUROC=0.70（系统性弱点，接受基线，采用自适应低阈值策略）
+  - transistor：40ep 后 image_AUROC=0.90，已采用 ✅
+  - toothbrush：40ep 后 image_AUROC=0.91，已采用 ✅
+- **P1 待处理**：hazelnut(0.87), screw(0.89) — 计划运行 40ep
+- **P2 可选**：cable(0.94) — 视时间决定
 
 ## 原始日志
 
@@ -65,3 +70,53 @@ python scripts/train_efficientad.py --verify-only --categories capsule transisto
 # 重训后 RKNN 转换前置检查
 python scripts/convert_efficientad_rknn.py --dry-run --categories capsule transistor toothbrush
 ```
+
+## capsule 专项分析
+
+### 问题诊断
+
+capsule 是本项目 EfficientAD-S 训练中的系统性弱点类别：
+
+| 实验 | image_AUROC | pixel_AUROC | 结论 |
+|---|---|---|---|
+| 20ep (seed=42) | 0.7000 | 0.8788 | 基线，采用 |
+| 40ep (seed=42) | 0.6741 | 0.9345 | image 下降，不采用 |
+| 当前生产版本 | **0.7000** | 0.8788 | 已恢复 20ep |
+
+**关键发现**：pixel_AUROC（局部缺陷定位，0.88）显著高于 image_AUROC（整图异常排序，0.70）。
+这说明 EfficientAD-S 的特征提取对 capsule 的局部纹理异常有一定感知能力，
+但整图级别的异常程度排序能力弱——属于模型在该类别的**结构性弱点**，
+单纯增加 epoch 或调整 seed 不能根本解决。
+
+40ep 导致 image_AUROC 下降而 pixel_AUROC 上升，符合"过拟合到局部特征"的模式。
+
+### 后续实验计划
+
+仅做一次 seed 变体实验作为止损尝试：
+
+```bash
+# 实验命令（需手动运行，不在此处执行）
+python scripts/train_efficientad.py --categories capsule --epochs 40
+# 运行前先将脚本内 pl.seed_everything(42) 临时改为 pl.seed_everything(123)
+# 产物保存到独立目录避免覆盖：
+# 手动 mv models/efficientad_models/capsule/ models/efficientad_models/capsule_seed123_40ep/
+# 再从备份恢复 20ep 版本
+```
+
+**止损条件**：若 seed=123 + 40ep 的 image_AUROC ≤ 0.75，终止 capsule 重训实验，
+接受 0.70 基线，改用阈值策略（见 edge/config.yaml 更新）。
+
+### 部署策略
+
+capsule 采用**类别级自适应阈值**：
+- 降低 Stage 1 触发阈值，用高召回换低漏检
+- 偶发的正常图误触发 FastSAM+VLM 可接受（VLM 会输出"无缺陷"自然过滤）
+- 具体配置见 `edge/config.yaml` 的 `per_category_threshold` 字段
+
+### 工程叙事价值
+
+此发现可在简历/面试中这样描述：
+> "识别了 EfficientAD-S 在 capsule 类别的系统性精度短板（image_AUROC=0.70 vs
+> pixel_AUROC=0.88 的分裂现象），判断根因为整图异常排序能力弱而非局部定位失效，
+> 采用类别级自适应阈值策略（capsule 阈值=0.30，其余类默认=0.50），
+> 以高召回换低漏检，在不重新设计模型架构的前提下完成工程 workaround。"

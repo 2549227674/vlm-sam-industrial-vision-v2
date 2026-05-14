@@ -30,8 +30,22 @@ image_loop_jitter_ms: 200        # ± 抖动
 
 # ── Stage 1：EfficientAD-S ───────────────────────
 efficientad_model_dir: /TBD/models/efficientad_models
-efficientad_threshold: 0.5       # 异常分数超过此值触发 Stage 2/3
+efficientad_threshold: 0.5       # 异常分数超过此值触发 Stage 2/3（等同 efficientad_threshold_default）
 efficientad_input_size: 256      # 固定 256×256，不要改
+
+# ── Stage 1：类别级自适应阈值 ─────────────────────
+# 默认阈值：anomaly_score > 0.50 时触发 FastSAM + VLM
+efficientad_threshold_default: 0.50
+# 类别级自适应阈值（覆盖默认值）
+# capsule: image_AUROC=0.70，定位能力尚可但整图排序弱，降低阈值提高召回
+# 其余类别未配置则使用 default
+per_category_threshold:
+  capsule: 0.30      # 系统性弱点类别，高召回策略
+  # transistor: 0.50  # 40ep 后 AUROC=0.90，使用默认值
+  # toothbrush: 0.50  # 40ep 后 AUROC=0.91，使用默认值
+# TODO(Phase 7)：C++ T2 Pipeline 需要读取 per_category_threshold，
+# 按当前帧 category 查表，找不到则 fallback 到 efficientad_threshold_default。
+# 当前 edge/config.yaml 已预置配置，等 C++ 实现后直接读取即可。
 
 # ── Stage 2：FastSAM ──────────────────────────────
 fastsam_model_path: /TBD/models/fastsam_models/fastsam_s.rknn
