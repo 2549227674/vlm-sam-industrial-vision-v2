@@ -41,8 +41,11 @@ efficientad_threshold_default: 0.50
 # 其余类别未配置则使用 default
 per_category_threshold:
   capsule: 0.30      # 系统性弱点类别，高召回策略
+  screw: 0.35        # 40ep 退化，采用 20ep(0.89)，略降阈值提高召回
   # transistor: 0.50  # 40ep 后 AUROC=0.90，使用默认值
   # toothbrush: 0.50  # 40ep 后 AUROC=0.91，使用默认值
+  # hazelnut: 0.50    # 40ep 后 AUROC=0.93，使用默认值
+  # cable: 0.50       # 40ep 后 AUROC=0.94，使用默认值
 # TODO(Phase 7)：C++ T2 Pipeline 需要读取 per_category_threshold，
 # 按当前帧 category 查表，找不到则 fallback 到 efficientad_threshold_default。
 # 当前 edge/config.yaml 已预置配置，等 C++ 实现后直接读取即可。
