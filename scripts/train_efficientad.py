@@ -2,10 +2,11 @@
 """Train EfficientAD-S on MVTec AD categories and export to ONNX.
 
 Usage:
-    python scripts/train_efficientad.py                        # all 3 categories
+    python scripts/train_efficientad.py                        # all 15 categories
     python scripts/train_efficientad.py --categories metal_nut # single category
     python scripts/train_efficientad.py --epochs 20            # custom epochs (default)
     python scripts/train_efficientad.py --verify-only          # just check ONNX files
+    python scripts/train_efficientad.py --dry-run              # preflight check only
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ CATEGORIES = [
     "wood", "zipper",
 ]
 MVTEC_ROOT = PROJECT_ROOT / "simulator" / "mvtec"
-IMAGENET_DIR = PROJECT_ROOT / "datasets" / "imagenette"
+IMAGENET_DIR = PROJECT_ROOT / "imagenette" / "imagenette2-320"
 EXPORT_BASE = PROJECT_ROOT / "models" / "efficientad_models"
 RESULTS_DIR = PROJECT_ROOT / "results" / "efficientad"
 
@@ -208,9 +209,80 @@ def verify_onnx(categories: list[str]) -> bool:
     return all_ok
 
 
+def dry_run_check(categories: list[str]) -> None:
+    """Preflight: verify dataset structure without training or writing models."""
+    print(f"\n{'=' * 60}")
+    print("  DRY-RUN: Preflight Check")
+    print(f"{'=' * 60}\n")
+
+    # 1. Imagenette
+    has_imagenet = IMAGENET_DIR.exists()
+    imagenet_status = f"OK ({IMAGENET_DIR})" if has_imagenet else f"MISSING ({IMAGENET_DIR})"
+    print(f"  Imagenette:     {imagenet_status}")
+
+    # 2. MVTec root
+    has_mvtec = MVTEC_ROOT.exists()
+    print(f"  MVTec root:     {'OK' if has_mvtec else 'MISSING'} ({MVTEC_ROOT})")
+    if not has_mvtec:
+        print("\n  ABORT: MVTec dataset not found. Cannot check categories.")
+        return
+
+    # 3. Per-category checks
+    print()
+    missing_train: list[str] = []
+    missing_test: list[str] = []
+    for cat in categories:
+        train_good = MVTEC_ROOT / cat / "train" / "good"
+        test_dir = MVTEC_ROOT / cat / "test"
+        onnx_path = EXPORT_BASE / cat / "weights" / "onnx" / "model.onnx"
+
+        # train/good
+        n_train = len(list(train_good.glob("*.png"))) if train_good.exists() else 0
+        train_ok = train_good.exists() and n_train > 0
+        if not train_ok:
+            missing_train.append(cat)
+
+        # test defect types
+        defect_types = 0
+        defect_images = 0
+        if test_dir.exists():
+            for sub in sorted(test_dir.iterdir()):
+                if sub.is_dir() and sub.name != "good":
+                    defect_types += 1
+                    defect_images += len(list(sub.glob("*.png")))
+
+        test_ok = test_dir.exists() and defect_types > 0
+        if not test_ok:
+            missing_test.append(cat)
+
+        # ONNX (expected output)
+        onnx_exists = onnx_path.exists()
+
+        train_str = f"{n_train} imgs" if train_ok else "MISSING"
+        test_str = f"{defect_types} types, {defect_images} imgs" if test_ok else "MISSING"
+        onnx_str = "EXISTS" if onnx_exists else "not yet"
+
+        print(f"  {cat:14s}  train/good={train_str:12s}  test={test_str:24s}  onnx={onnx_str}")
+
+    # Summary
+    print(f"\n  {'=' * 60}")
+    print(f"  Preflight Summary")
+    print(f"  {'=' * 60}")
+    print(f"  Categories checked: {len(categories)}")
+    if missing_train:
+        print(f"  Missing train/good: {', '.join(missing_train)}")
+    else:
+        print(f"  Missing train/good: (none)")
+    if missing_test:
+        print(f"  Missing test:       {', '.join(missing_test)}")
+    else:
+        print(f"  Missing test:       (none)")
+    print(f"  Export base:        {EXPORT_BASE}")
+    if not has_imagenet:
+        print(f"  WARNING: Imagenette missing — EfficientAD teacher pre-training will auto-download (~1.4 GB)")
+
+
 def main() -> None:
-    import pytorch_lightning as pl
-    pl.seed_everything(42, workers=True)
     parser = argparse.ArgumentParser(description="Train EfficientAD-S on MVTec AD")
     parser.add_argument(
         "--categories",
@@ -225,12 +297,25 @@ def main() -> None:
         action="store_true",
         help="Only verify existing ONNX files, skip training",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preflight check: verify dataset structure without training",
+    )
     args = parser.parse_args()
+
+    if args.dry_run:
+        dry_run_check(args.categories)
+        return
 
     if args.verify_only:
         print("Verifying ONNX files...\n")
         ok = verify_onnx(args.categories)
         sys.exit(0 if ok else 1)
+
+    # pytorch_lightning only needed for actual training
+    import pytorch_lightning as pl
+    pl.seed_everything(42, workers=True)
 
     print(f"EfficientAD-S training: {len(args.categories)} category(ies), {args.epochs} epochs")
     print(f"MVTec dataset: {MVTEC_ROOT}")

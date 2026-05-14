@@ -588,6 +588,13 @@ models/efficientad_models/
   "wood", "zipper"]`
 （执行前运行 `ls simulator/mvtec/` 确认实际目录名，以磁盘上目录名为准）
 
+**v2 实测结果**（15 类，RTX 4060 Laptop GPU，seed=42，20 epochs）：
+- 15/15 ONNX 导出成功
+- `convert_efficientad_rknn.py --dry-run` 显示 15/15 convertible
+- 低分类别 capsule(0.70)/transistor(0.78)/toothbrush(0.84)/hazelnut(0.87)/screw(0.89) 进入 targeted retrain
+- 详细结果见 `docs/experiments/phase5_efficientad_15cls_results.md`
+- 低分类别 run1 备份在 `models/efficientad_models_v2_run1_20ep_low_auroc_backup/`
+
 预计总训练时间：~2-3 小时（15 类 × 每类约 8-12 分钟，RTX 4060 Laptop）
 产出目录：`models/efficientad_models/{15个类别}/model.onnx`
 
