@@ -17,14 +17,31 @@ Phase 5 分成两条独立的评估线路，目标不同，产出不同：
 | `4B_base` | Qwen3-VL-4B | 基座 W8A8 | 工程化 Prompt (~300 tokens) |
 | `4B_lora` | Qwen3-VL-4B | LoRA W8A8 | 极简 Prompt (~50 tokens) |
 
-**评估维度**（四维）：
-- JSON 解析成功率（%）——PC 阶段核心指标
-- TTFT（首 token 延迟，ms）——RK3588 阶段核心指标
-- decode tokens/s——RK3588 阶段核心指标
-- 运行时 RAM 占用（GB）——RK3588 阶段核心指标
+**评估维度**（PC 阶段 8 项指标 + RK3588 四维指标）：
+
+PC 阶段指标（max_tokens=200 主实验口径）：
+- json_parse_ok：有效 JSON 且包含全部 required keys
+- schema_ok：JSON 通过 DefectCreate schema 约束
+- category_exact：预测 category 精确匹配 GT
+- defect_type_exact：预测 defect_type 精确匹配 GT
+- severity_valid：severity ∈ {low, medium, high}
+- bbox_iou_at_0_5：至少一个预测 bbox 与 GT bbox 的 IoU ≥ 0.5
+- prompt_tokens / output_tokens：token 消耗
+
+RK3588 阶段指标（板子到货后补充）：
+- TTFT（首 token 延迟，ms）
+- decode tokens/s
+- 运行时 RAM 占用（GB）
+
+**辅助分析指标**（不替代 strict 指标）：
+- `defect_group_exact`：按 alias 分组的粗粒度精确率（如 screw_thread/wire_defect/teeth_defect 等），用于分析模型是否学会"大类方向"
+- `max_iou`：image-level any-hit 最大 IoU，不是 multi-ROI recall
 
 **评估脚本**：`scripts/eval_ab_test.py --mode deployment`
-**产出文件**：`results/ab_eval_report_v2_deployment.json`
+**产出文件**：`results/ab_eval_report_v2_deployment.json` + per-sample JSONL dumps
+
+> **截断敏感性补测**：`--max-tokens 300` 仅用于截断敏感性分析，不替代 `max_tokens=200` 主实验。
+> 主实验口径固定为 `max_tokens=200`，所有论文/报告数据以此为准。
 
 ### 1.2 Method Control Benchmark（方法控制基准）
 
@@ -61,7 +78,7 @@ Phase 5 分成两条独立的评估线路，目标不同，产出不同：
 
 **超参固定**：
 - LoRA rank: 32, alpha: 32, dropout: 0.05
-- target: q_proj, v_proj, k_proj, o_proj
+- target: q_proj, k_proj, v_proj, o_proj
 - freeze_vision_tower: true
 - freeze_multi_modal_projector: true
 - 5 epochs, cosine scheduler, warmup 0.1

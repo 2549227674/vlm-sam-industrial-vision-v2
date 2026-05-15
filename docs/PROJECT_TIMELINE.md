@@ -700,7 +700,7 @@ system/user/assistant 三条消息，images 字段用相对路径。
 - 增加基础校验：样本数统计、图片是否存在、JSON 是否可解析、category 是否在 15 类白名单内
 - `--dry-run` 模式支持预览不写文件
 
-### 5.5 LLaMA-Factory LoRA 微调
+### 5.5 LLaMA-Factory LoRA 微调 ✅ 已完成
 
 **执行人**：Claude Code 写脚本/配置 → 你在 PC 上跑
 
@@ -708,7 +708,7 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **关键参数**（ARCHITECTURE.md §7.2）：
 - 模型：Qwen3-VL-2B-Instruct
-- LoRA rank: 32, alpha: 32, target: q_proj,v_proj,k_proj,o_proj
+- LoRA rank: 32, alpha: 32, target: q_proj,k_proj,v_proj,o_proj
 - Epoch: 5
 - 数据格式：ShareGPT（多模态图文对话）
 - GPU：RTX 4060 8GB（2B 模型 LoRA 完全够用）
@@ -726,12 +726,12 @@ system/user/assistant 三条消息，images 字段用相对路径。
 **完成标志**：adapter 文件存在，可以合并回 base 模型。
 
 **v2 实测结果**（15 类，RTX 4090 48GB，AutoDL）：
-- 训练配置：rank=32, alpha=32, target=q_proj/v_proj/k_proj/o_proj, gradient_checkpointing=false
+- 训练配置：rank=32, alpha=32, target=q_proj/k_proj/v_proj/o_proj, gradient_checkpointing=false
 - train_loss：0.5233（含前期高值平均），收敛值约 0.33
 - 训练时长：11 分 37 秒，535 步，5 epoch
 - 产出：models/qwen3vl_lora_adapter_15cls/
 
-### 5.5b Qwen3-VL-4B LoRA 微调（v2 新增）
+### 5.5b Qwen3-VL-4B LoRA 微调（v2 新增）✅ 已完成
 
 **执行时机**：Qwen3-VL-2B v2 重做完成后执行
 **训练平台**：AutoDL RTX 4090 48GB（实测）
@@ -761,7 +761,7 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **完成标志**：adapter 文件存在，合并后可送入 RKLLM 转换链路。
 
-### 5.6 PC 端 AB 评估
+### 5.6 PC 端 AB 评估 ✅ Deployment Benchmark 已完成
 
 **执行人**：Claude Code 写评估脚本 → 你跑
 
@@ -776,30 +776,45 @@ system/user/assistant 三条消息，images 字段用相对路径。
 | `4B_base` | Qwen3-VL-4B | Base + 工程化 Prompt (~300 tokens) | 同上 |
 | `4B_lora` | Qwen3-VL-4B | LoRA 合并后 + 极简 Prompt (~50 tokens) | 同上 |
 
-**PC 阶段只比较一个指标**（ARCHITECTURE.md §7.1）：
-- ✅ JSON 解析成功率（%）——核心
-- ❌ TTFT——PC GPU 速度与 RK3588 不可比，不记录
-- ❌ decode tps——不记录
-- ❌ RAM——不记录
+**PC 阶段 8 项指标**（max_tokens=200 主实验口径）：
+- json_parse_ok / schema_ok / category_exact / defect_type_exact
+- severity_valid / bbox_iou_at_0_5
+- prompt_tokens / output_tokens
 
-**产出**：4 变体在全 15 类上的 JSON 解析成功率对比表
+> ⚠️ `max_tokens=200` 是主实验口径，所有论文/报告数据以此为准。
+> `max_tokens=300` 仅用于截断敏感性补测，不替代主实验。
+
+**Deployment Benchmark 主结果**（409 eval samples, max_tokens=200）：
+
+| 变体 | JSON OK | Schema OK | Cat Exact | DefType Exact | Sev Valid | BBox IoU≥0.5 |
+|---|---|---|---|---|---|---|
+| 2B_base | 96.1% | 96.1% | 53.1% | 11.2% | 96.1% | 1.5% |
+| 2B_lora | 95.6% | 95.6% | 94.4% | 53.1% | 95.6% | 48.9% |
+| 4B_base | 98.0% | 98.0% | 59.2% | 10.5% | 98.0% | 0.0% |
+| 4B_lora | 95.8% | 95.8% | 95.8% | 64.8% | 95.8% | 64.5% |
 
 **关键发现**：
-1. Qwen3 系列内置思维链，推理输出带 `</think>` 前缀，
-   `check_json_compliance` 不能直接 `json.loads` 全文，
+1. Qwen3 系列内置思维链，推理输出带 `<think>` 前缀，
    必须用 `text.find('{') + text.rfind('}')` 提取纯 JSON 后再解析
-2. 实测结果：方案 A = 100%，方案 B = 100%（两者持平）
-   解读：Qwen3-VL-2B 底座指令遵循能力强，PC 端 JSON 格式成功率
-   不是区分 AB 的维度；LoRA 真正优势在于 prompt 长度
-   （方案 A ~300 tokens，方案 B ~50 tokens），
-   TTFT 差距在 RK3588 NPU 上才会显现（预估 5-8 s vs 1 s 以内）
+2. JSON 解析成功率四变体均 >95%，不是区分维度
+3. LoRA 微调带来 category_exact 大幅提升（53%→94% / 59%→96%）
+4. defect_type_exact 是主要区分维度：2B_lora 53.1% vs 2B_base 11.2%
+5. 4B_lora 在所有指标上优于 2B_lora（DefType 64.8% vs 53.1%, BBox 64.5% vs 48.9%）
+
+**辅助分析**：
+- `defect_group_exact`（alias 分组粗粒度）：4B_lora 77.3%, 2B_lora 67.4%
+  → 模型已学会大类方向，精确子类型仍需提升
+- 截断样本（output_tokens≥200）：2B_lora 18 个, 4B_lora 17 个
+  → `--image-filter scripts/truncated_2b_lora.txt` 可单独补测
+
+**产出文件**：
+- `results/ab_eval_report_v2_deployment.json`（聚合报告）
+- `results/ab_eval_predictions_{size}_{variant}_deployment.jsonl`（per-sample 详情）
 
 > **v1 初版结果**（3 类，2 变体）：方案A JSON OK=100%，方案B JSON OK=100%
 > 说明：3 类小样本 + 高质量标注下，2B 两变体均达满分，无法区分优劣——这正是扩展到 15 类 + 4 变体的动机
 
-**v2 重做产出**：`results/ab_eval_report_v2_deployment.json`（包含 4 变体 × 15 类的 JSON 解析成功率矩阵 + 8 项评估指标）
-
-### 5.7 Method Control Benchmark（v2 新增）
+### 5.7 Method Control Benchmark（v2 新增）⬅️ 下一步，尚未执行
 
 **目标**：消除 prompt 差异，隔离 LoRA 微调的真实收益。
 
