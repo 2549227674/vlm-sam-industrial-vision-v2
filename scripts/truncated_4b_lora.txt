@@ -1,0 +1,17 @@
+broken_008.png
+broken_009.png
+broken_010.png
+broken_teeth_009.png
+color_012.png
+combined_004.png
+combined_005.png
+combined_006.png
+defective_001.png
+defective_024.png
+faulty_imprint_005.png
+hole_002.png
+pill_type_003.png
+print_004.png
+scratch_015.png
+squeezed_teeth_012.png
+thread_002.png

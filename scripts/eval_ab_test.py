@@ -32,6 +32,7 @@ Usage:
     python scripts/eval_ab_test.py --model-size 2B --mode method_control
     python scripts/eval_ab_test.py --model-size 4B --mode deployment
     python scripts/eval_ab_test.py --max-tokens 300
+    python scripts/eval_ab_test.py --model-size 2B --mode deployment --image-filter scripts/truncated_2b_lora.txt
 """
 
 import argparse
@@ -485,6 +486,8 @@ def main() -> None:
     parser.add_argument("--max-tokens", type=int, default=200)
     parser.add_argument("--lora-adapter-path", type=str, default=None,
                         help="Override LoRA adapter path (default: models/qwen3vl_lora_adapter_15cls for 2B)")
+    parser.add_argument("--image-filter", type=str, default=None,
+                        help="Text file with one basename per line; only evaluate matching images")
     args = parser.parse_args()
 
     size = args.model_size
@@ -493,6 +496,11 @@ def main() -> None:
         paths["lora"] = Path(args.lora_adapter_path)
 
     samples = collect_eval_samples()
+    if args.image_filter:
+        filter_path = Path(args.image_filter)
+        allowed = {line.strip() for line in filter_path.read_text().splitlines() if line.strip()}
+        samples = [s for s in samples if s["path"].name in allowed]
+        print(f"Image filter: {filter_path.name} ({len(allowed)} basenames)")
     print(f"Eval samples: {len(samples)}")
     print(f"Model size: {size}")
     print(f"Mode: {args.mode}")
