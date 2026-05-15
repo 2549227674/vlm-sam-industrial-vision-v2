@@ -207,7 +207,7 @@ RK3588 C++ pipeline                              backend                  fronte
 ### 7.2 PC 阶段重点
 
 - 用 HuggingFace transformers 跑 fp16 Qwen3-VL-2B/4B，验证四个变体（`2B_base` / `2B_lora` / `4B_base` / `4B_lora`）的 JSON 解析成功率上界。
-- **LoRA 训练数据划分**：MVTec AD `test/` 中的缺陷图（`train/` 只有正常图无法用于标注）按缺陷类型分层抽样，**70% 用于人工标注 JSON + LoRA 训练，30% 严格隔离只用于最终评估，训练集与评估集不得有任何重叠**。划分脚本见 `scripts/split_lora_data.py`（固定 `random.seed(42)` 保证可复现）。LoRA 超参：rank 16，5 epoch。15 类预估 ~1200 train / ~540 eval。
+- **LoRA 训练数据划分**：MVTec AD `test/` 中的缺陷图（`train/` 只有正常图无法用于标注）按缺陷类型分层抽样，**70% 用于人工标注 JSON + LoRA 训练，30% 严格隔离只用于最终评估，训练集与评估集不得有任何重叠**。划分脚本见 `scripts/split_lora_data.py`（固定 `random.seed(42)` 保证可复现）。LoRA 超参：rank 32，alpha 32，target q/k/v/o，5 epoch。15 类预估 ~1200 train / ~540 eval（实际：train=849, eval=409）。
 - 输出：4 变体在全 15 类上的 JSON 解析成功率对比表。
 - **PC 阶段实测发现**：方案 B（LoRA）的 `category` 字段出现幻觉（输出 `"industrial"` 而非有效类别）。评估脚本仅校验字段存在性，不校验字段值；实际部署时需在 C++ 侧对 `category` 值做白名单过滤 `{"metal_nut", "screw", "pill"}`，非法值丢弃或归为 `"other"`。
 

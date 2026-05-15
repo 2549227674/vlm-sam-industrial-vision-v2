@@ -657,7 +657,7 @@ random.seed(42)，不移动原文件。
 > **v1 初版**（3 类）：240 train / 113 eval
 
 **v2 重做目标（15 类）**：
-脚本扩展到 15 类后，预计产出：~1200 train / ~540 eval（15 类 × 约 80/36 样本）
+脚本扩展到 15 类后，预计产出：~1200 train / ~540 eval（15 类 × 约 80/36 样本）（实际：train=849, eval=409）。
 实际数量以脚本输出为准（各类别图片数量不均匀）。
 
 **文件命名**：加缺陷类型前缀（如 `scratch_000.png`）
@@ -708,7 +708,7 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **关键参数**（ARCHITECTURE.md §7.2）：
 - 模型：Qwen3-VL-2B-Instruct
-- LoRA rank: 16
+- LoRA rank: 32, alpha: 32, target: q_proj,v_proj,k_proj,o_proj
 - Epoch: 5
 - 数据格式：ShareGPT（多模态图文对话）
 - GPU：RTX 4060 8GB（2B 模型 LoRA 完全够用）
@@ -725,11 +725,17 @@ system/user/assistant 三条消息，images 字段用相对路径。
 
 **完成标志**：adapter 文件存在，可以合并回 base 模型。
 
+**v2 实测结果**（15 类，RTX 4090 48GB，AutoDL）：
+- 训练配置：rank=32, alpha=32, target=q_proj/v_proj/k_proj/o_proj, gradient_checkpointing=false
+- train_loss：0.5233（含前期高值平均），收敛值约 0.33
+- 训练时长：11 分 37 秒，535 步，5 epoch
+- 产出：models/qwen3vl_lora_adapter_15cls/
+
 ### 5.5b Qwen3-VL-4B LoRA 微调（v2 新增）
 
 **执行时机**：Qwen3-VL-2B v2 重做完成后执行
-**训练平台**：AutoDL vGPU-32GB（1.66 元/时）——本地 RTX 4060 8GB 不可行（4B bf16 LoRA 峰值约 16-18 GB）
-**配置文件**：`qwen3vl_lora_4b.yaml`（见 Task 8 新建文件）
+**训练平台**：AutoDL RTX 4090 48GB（实测）
+**配置文件**：`qwen3vl_lora_4b.yaml`
 
 **与 2B 的关键差异**：
 - `per_device_train_batch_size: 1`（4B 显存压力更大）
@@ -738,6 +744,13 @@ system/user/assistant 三条消息，images 字段用相对路径。
 - `freeze_vision_tower: true`（1200 样本不足以微调 ViT，同 2B 策略）
 
 **预计成本**：~2 小时训练，3.32 元；含评估和 buffer 约 6.6 元
+
+**实测结果**（15 类，RTX 4090 48GB，AutoDL）：
+- 训练配置：与 2B 保持一致（控制变量），batch_size=1, grad_accum=8
+- train_loss：0.411，收敛值约 0.24（优于 2B 的 0.33）
+- 训练时长：20 分 32 秒，535 步，5 epoch
+- 实际成本：~1.04 元（含 4B 模型下载，hf-mirror 6.35MB/s）
+- 产出：models/qwen3vl_lora_4b_adapter/
 
 **已知注意事项**（继承自 2B 经验，无需重复踩坑）：
 - `dataset_info.json` 必须声明 `system_tag: "system"`（否则 240/1200 条全被丢弃）

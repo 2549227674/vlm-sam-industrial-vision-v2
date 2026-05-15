@@ -60,8 +60,8 @@ Phase 5 分成两条独立的评估线路，目标不同，产出不同：
 | LoRA-SFT (4B) | Qwen3-VL-4B | `models/qwen3vl_lora_4b_adapter/` | LLaMA-Factory export → RKLLM W8A8 |
 
 **超参固定**：
-- LoRA rank: 16, alpha: 16, dropout: 0.05
-- target: q_proj, v_proj
+- LoRA rank: 32, alpha: 32, dropout: 0.05
+- target: q_proj, v_proj, k_proj, o_proj
 - freeze_vision_tower: true
 - freeze_multi_modal_projector: true
 - 5 epochs, cosine scheduler, warmup 0.1
