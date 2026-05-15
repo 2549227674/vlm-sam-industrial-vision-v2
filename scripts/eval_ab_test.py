@@ -37,6 +37,7 @@ Usage:
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 import torch
 from peft import PeftModel
@@ -96,11 +97,20 @@ REQUIRED_KEYS = {"category", "defect_type", "severity", "confidence", "bboxes", 
 
 def compute_iou(box1: dict, box2: dict) -> float:
     """Compute IoU between two bboxes in {x, y, w, h} format (center coords)."""
+    try:
+        x1, y1, w1, h1 = float(box1["x"]), float(box1["y"]), float(box1["w"]), float(box1["h"])
+        x2, y2, w2, h2 = float(box2["x"]), float(box2["y"]), float(box2["w"]), float(box2["h"])
+    except (KeyError, TypeError, ValueError):
+        return 0.0
+
+    if w1 <= 0 or h1 <= 0 or w2 <= 0 or h2 <= 0:
+        return 0.0
+
     # Convert center to corner
-    x1_min, y1_min = box1["x"] - box1["w"] / 2, box1["y"] - box1["h"] / 2
-    x1_max, y1_max = box1["x"] + box1["w"] / 2, box1["y"] + box1["h"] / 2
-    x2_min, y2_min = box2["x"] - box2["w"] / 2, box2["y"] - box2["h"] / 2
-    x2_max, y2_max = box2["x"] + box2["w"] / 2, box2["y"] + box2["h"] / 2
+    x1_min, y1_min = x1 - w1 / 2, y1 - h1 / 2
+    x1_max, y1_max = x1 + w1 / 2, y1 + h1 / 2
+    x2_min, y2_min = x2 - w2 / 2, y2 - h2 / 2
+    x2_max, y2_max = x2 + w2 / 2, y2 + h2 / 2
 
     # Intersection
     xi_min = max(x1_min, x2_min)
@@ -110,10 +120,24 @@ def compute_iou(box1: dict, box2: dict) -> float:
     inter = max(0, xi_max - xi_min) * max(0, yi_max - yi_min)
 
     # Union
-    area1 = box1["w"] * box1["h"]
-    area2 = box2["w"] * box2["h"]
+    area1 = w1 * h1
+    area2 = w2 * h2
     union = area1 + area2 - inter
     return inter / union if union > 0 else 0.0
+
+
+def compute_max_iou(pred_bboxes: list[dict], gt_bboxes: list[dict]) -> float:
+    """Max IoU between any predicted bbox and any ground-truth bbox."""
+    best = 0.0
+    for pb in pred_bboxes:
+        for gb in gt_bboxes:
+            try:
+                iou = compute_iou(pb, gb)
+                if iou > best:
+                    best = iou
+            except (KeyError, ZeroDivisionError):
+                continue
+    return best
 
 
 def evaluate_metrics(text: str, gt_data: dict | None) -> dict:
@@ -213,20 +237,20 @@ def run_inference(model, processor, image_path: Path, messages: list,
     return output_text, prompt_tokens, output_tokens
 
 
-def load_gt_data(category: str, img_stem: str) -> dict | None:
-    """Load ground-truth JSON annotation for an eval image."""
-    # img_stem is like "scratch_000" -> look for scratch_000.json in train dir
-    # But eval images are in eval/, GT is from the original annotation
-    # We try to find the JSON in the eval dir first, then train dir
+def load_gt_data(category: str, img_stem: str) -> tuple[dict | None, str]:
+    """Load ground-truth JSON annotation for an eval image.
+
+    Returns (data, source) where source is "eval", "train", or "none".
+    """
     for split in ("eval", "train"):
         json_path = EVAL_DIR / category / split / f"{img_stem}.json"
         if json_path.exists():
             try:
                 with open(json_path, encoding="utf-8") as f:
-                    return json.load(f)
+                    return json.load(f), split
             except (json.JSONDecodeError, OSError):
-                return None
-    return None
+                return None, "none"
+    return None, "none"
 
 
 def collect_eval_samples() -> list[dict]:
@@ -236,20 +260,35 @@ def collect_eval_samples() -> list[dict]:
         if not eval_dir.exists():
             continue
         for img_path in sorted(eval_dir.glob("*.png")):
-            gt = load_gt_data(cat, img_path.stem)
-            samples.append({"category": cat, "path": img_path, "gt": gt})
+            gt, gt_source = load_gt_data(cat, img_path.stem)
+            samples.append({"category": cat, "path": img_path, "gt": gt,
+                            "gt_source": gt_source})
     return samples
+
+
+def _extract_prediction_json(text: str) -> tuple[dict | None, str | None]:
+    """Extract parsed JSON dict from model output. Returns (data, error)."""
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        return None, "no_json_braces"
+    try:
+        data = json.loads(text[start:end + 1])
+        return data, None
+    except (json.JSONDecodeError, AttributeError) as e:
+        return None, f"json_decode_error: {e}"
 
 
 def evaluate_variant(model, processor, samples: list[dict],
                      variant: str, max_new_tokens: int,
-                     use_engineered_prompt: bool) -> dict:
-    """Run one variant over all samples, return per-category metrics."""
-    cat_metrics = {cat: {
+                     use_engineered_prompt: bool) -> tuple[dict, list[dict]]:
+    """Run one variant over all samples, return (cat_metrics, sample_records)."""
+    cat_metrics: dict[str, dict[str, Any]] = {cat: {
         "json_parse_ok": 0, "schema_ok": 0, "category_exact": 0,
         "defect_type_exact": 0, "severity_valid": 0, "bbox_iou_at_0_5": 0,
         "total": 0, "prompt_tokens_sum": 0, "output_tokens_sum": 0,
     } for cat in CATEGORIES}
+    sample_records: list[dict] = []
 
     for sample in tqdm(samples, desc=f"Variant {variant}"):
         cat = sample["category"]
@@ -280,7 +319,29 @@ def evaluate_variant(model, processor, samples: list[dict],
             if metrics[k]:
                 cat_metrics[cat][k] += 1
 
-    return cat_metrics
+        # Per-sample record
+        pred_json, parse_error = _extract_prediction_json(out_text)
+        gt_data = sample["gt"]
+        pred_bboxes = pred_json.get("bboxes", []) if pred_json else []
+        gt_bboxes = gt_data.get("bboxes", []) if gt_data else []
+        max_iou = compute_max_iou(pred_bboxes, gt_bboxes)
+
+        sample_records.append({
+            "variant": variant,
+            "image": str(sample["path"]),
+            "category": cat,
+            "gt": gt_data,
+            "prediction_raw": out_text,
+            "prediction_json": pred_json,
+            "parse_error": parse_error,
+            "metrics": metrics,
+            "max_iou": round(max_iou, 6),
+            "gt_source": sample.get("gt_source", "none"),
+            "prompt_tokens": p_tokens,
+            "output_tokens": o_tokens,
+        })
+
+    return cat_metrics, sample_records
 
 
 def build_report(cat_metrics: dict, variant: str) -> dict:
@@ -356,53 +417,63 @@ def print_report(report: dict) -> None:
 
 
 def run_deployment_benchmark(model, processor, samples: list[dict],
-                             size: str, max_new_tokens: int) -> dict:
+                             size: str, max_new_tokens: int,
+                             paths: dict) -> tuple[dict, list[dict]]:
     """Deployment benchmark: base + engineered prompt vs LoRA + minimal prompt."""
     base_variant = f"{size}_base"
     lora_variant = f"{size}_lora"
 
     print(f"\n--- Deployment: {base_variant} (base + engineered prompt) ---")
-    counts_base = evaluate_variant(model, processor, samples, base_variant,
-                                   max_new_tokens, use_engineered_prompt=True)
+    counts_base, records_base = evaluate_variant(
+        model, processor, samples, base_variant,
+        max_new_tokens, use_engineered_prompt=True)
     report_base = build_report(counts_base, base_variant)
     print_report(report_base)
 
-    print(f"\nLoading LoRA adapter: {MODEL_PATHS[size]['lora']}")
-    lora_model = PeftModel.from_pretrained(model, str(MODEL_PATHS[size]["lora"]))
+    print(f"\nLoading LoRA adapter: {paths['lora']}")
+    lora_model = PeftModel.from_pretrained(model, str(paths["lora"]))
     lora_model.eval()
 
     print(f"\n--- Deployment: {lora_variant} (LoRA + minimal prompt) ---")
-    counts_lora = evaluate_variant(lora_model, processor, samples, lora_variant,
-                                   max_new_tokens, use_engineered_prompt=False)
+    counts_lora, records_lora = evaluate_variant(
+        lora_model, processor, samples, lora_variant,
+        max_new_tokens, use_engineered_prompt=False)
     report_lora = build_report(counts_lora, lora_variant)
     print_report(report_lora)
 
-    return {"benchmark": "deployment", "variants": [report_base, report_lora]}
+    report = {"benchmark": "deployment", "variants": [report_base, report_lora]}
+    all_records = records_base + records_lora
+    return report, all_records
 
 
 def run_method_control_benchmark(model, processor, samples: list[dict],
-                                 size: str, max_new_tokens: int) -> dict:
+                                 size: str, max_new_tokens: int,
+                                 paths: dict) -> tuple[dict, list[dict]]:
     """Method control: base vs LoRA with identical minimal prompt."""
     base_variant = f"{size}_base_same_prompt"
     lora_variant = f"{size}_lora_same_prompt"
 
     print(f"\n--- Method Control: {base_variant} (base + minimal prompt) ---")
-    counts_base = evaluate_variant(model, processor, samples, base_variant,
-                                   max_new_tokens, use_engineered_prompt=False)
+    counts_base, records_base = evaluate_variant(
+        model, processor, samples, base_variant,
+        max_new_tokens, use_engineered_prompt=False)
     report_base = build_report(counts_base, base_variant)
     print_report(report_base)
 
-    print(f"\nLoading LoRA adapter: {MODEL_PATHS[size]['lora']}")
-    lora_model = PeftModel.from_pretrained(model, str(MODEL_PATHS[size]["lora"]))
+    print(f"\nLoading LoRA adapter: {paths['lora']}")
+    lora_model = PeftModel.from_pretrained(model, str(paths["lora"]))
     lora_model.eval()
 
     print(f"\n--- Method Control: {lora_variant} (LoRA + minimal prompt) ---")
-    counts_lora = evaluate_variant(lora_model, processor, samples, lora_variant,
-                                   max_new_tokens, use_engineered_prompt=False)
+    counts_lora, records_lora = evaluate_variant(
+        lora_model, processor, samples, lora_variant,
+        max_new_tokens, use_engineered_prompt=False)
     report_lora = build_report(counts_lora, lora_variant)
     print_report(report_lora)
 
-    return {"benchmark": "method_control", "variants": [report_base, report_lora]}
+    report = {"benchmark": "method_control", "variants": [report_base, report_lora]}
+    all_records = records_base + records_lora
+    return report, all_records
 
 
 def main() -> None:
@@ -436,15 +507,25 @@ def main() -> None:
     model.eval()
 
     results = []
+    dump_dir = PROJECT_ROOT / "results"
+    dump_dir.mkdir(parents=True, exist_ok=True)
 
     if args.mode in ("deployment", "both"):
-        result = run_deployment_benchmark(model, processor, samples, size, args.max_tokens)
+        result, records = run_deployment_benchmark(
+            model, processor, samples, size, args.max_tokens, paths)
         results.append(result)
         # Save deployment report
-        DEPLOYMENT_REPORT.parent.mkdir(parents=True, exist_ok=True)
         with open(DEPLOYMENT_REPORT, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         print(f"\nDeployment report saved: {DEPLOYMENT_REPORT}")
+        # Write per-sample JSONL dumps
+        for variant_name in {r["variant"] for r in records}:
+            out_path = dump_dir / f"ab_eval_predictions_{size}_{variant_name}_deployment.jsonl"
+            with open(out_path, "w", encoding="utf-8") as f:
+                for rec in records:
+                    if rec["variant"] == variant_name:
+                        f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
+            print(f"  Per-sample dump: {out_path}")
 
     if args.mode in ("method_control", "both"):
         # Reload base model (LoRA was attached in deployment benchmark)
@@ -456,13 +537,21 @@ def main() -> None:
             )
             model.eval()
 
-        result = run_method_control_benchmark(model, processor, samples, size, args.max_tokens)
+        result, records = run_method_control_benchmark(
+            model, processor, samples, size, args.max_tokens, paths)
         results.append(result)
         # Save method control report
-        METHOD_CONTROL_REPORT.parent.mkdir(parents=True, exist_ok=True)
         with open(METHOD_CONTROL_REPORT, "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=2)
         print(f"\nMethod control report saved: {METHOD_CONTROL_REPORT}")
+        # Write per-sample JSONL dumps
+        for variant_name in {r["variant"] for r in records}:
+            out_path = dump_dir / f"ab_eval_predictions_{size}_{variant_name}_method_control.jsonl"
+            with open(out_path, "w", encoding="utf-8") as f:
+                for rec in records:
+                    if rec["variant"] == variant_name:
+                        f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
+            print(f"  Per-sample dump: {out_path}")
 
     print("\nAll evaluations complete.")
 
