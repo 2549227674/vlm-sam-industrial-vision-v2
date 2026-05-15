@@ -1,6 +1,6 @@
 # ==========================================
 # LLaMA-Factory: Qwen3-VL-2B-Instruct LoRA 微调 (v2: 15 类)
-# 目标硬件: RTX 4060 8GB（本地评估）/ AutoDL vGPU-32GB（云端训练）
+# 目标硬件: RTX 4060 8GB（本地评估）/ AutoDL RTX 4090 48GB（云端训练）
 # 训练数据: datasets/industrial_vision_train.json (15 类，~1200 条)
 # ==========================================
 
@@ -21,9 +21,9 @@ preprocessing_num_workers: 4
 stage: sft
 do_train: true
 finetuning_type: lora
-lora_target: q_proj,v_proj
-lora_rank: 16
-lora_alpha: 16
+lora_target: q_proj,v_proj,k_proj,o_proj
+lora_rank: 32
+lora_alpha: 32
 lora_dropout: 0.05
 freeze_vision_tower: true           # 1200 样本不足以微调 ViT
 freeze_multi_modal_projector: true  # 同上，只训练 LoRA adapter
@@ -35,7 +35,7 @@ learning_rate: 5.0e-5
 num_train_epochs: 5.0
 lr_scheduler_type: cosine
 warmup_ratio: 0.1
-gradient_checkpointing: true   # 本地 8GB 显存必开
+gradient_checkpointing: false  # 48GB 显存无需开启，关闭提升训练速度
 bf16: true
 fp16: false
 

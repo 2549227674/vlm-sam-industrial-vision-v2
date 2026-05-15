@@ -146,6 +146,10 @@ Phase 5 评估
 | `qwen3vl_lora.yaml` | 2B LoRA 训练配置 | AutoDL / PC |
 | `qwen3vl_lora_4b.yaml` | 4B LoRA 训练配置 | AutoDL |
 
+### 完成状态
+
+- **Phase 5.3 LoRA 数据划分已完成**：15 类 × 70/30 split（train=849, eval=409, total=1258），PNG/JSON 一一对应，train/eval 无重名，`industrial_vision_train.json` / `industrial_vision_eval.json` 路径全部可解析。后续不再重跑 `split_lora_data.py`，除非决定重新生成 train/eval 目录（重跑会 `shutil.rmtree` 清空再重建，已有的 JSON 标注需随之重新生成）。
+
 ## 7. 输出文件清单
 
 ```
