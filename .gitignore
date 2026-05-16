@@ -24,7 +24,7 @@ results/efficientad/
 lightning_logs/
 *.ckpt
 imagenette/
-logs/
+# logs/ tracked for training/evaluation reproducibility
 debug/
 temp_docs/
 *:Zone.Identifier

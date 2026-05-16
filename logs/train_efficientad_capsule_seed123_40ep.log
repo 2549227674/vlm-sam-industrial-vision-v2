@@ -1,0 +1,55 @@
+EfficientAD-S training: 1 category(ies), 40 epochs
+MVTec dataset: /home/qbz415/vlm-sam-industrial-vision-v2/simulator/mvtec
+Export base:   /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models
+
+============================================================
+  Training EfficientAD-S: capsule
+============================================================
+
+┏━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name           ┃ Type             ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ pre_processor  │ PreProcessor     │      0 │ train │     0 │
+│ 1 │ post_processor │ PostProcessor    │      0 │ train │     0 │
+│ 2 │ evaluator      │ Evaluator        │      0 │ train │     0 │
+│ 3 │ model          │ EfficientAdModel │  8.1 M │ train │     0 │
+└───┴────────────────┴──────────────────┴────────┴───────┴───────┘
+Trainable params: 8.1 M                                                                                                 
+Non-trainable params: 0                                                                                                 
+Total params: 8.1 M                                                                                                     
+Total estimated model params size (MB): 32                                                                              
+Modules in train mode: 48                                                                                               
+Modules in eval mode: 7                                                                                                 
+Total FLOPs: 0                                                                                                          
+Epoch 39/39 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 219/219 0:00:15 • 0:00:00 14.12it/s train_st_step: 1.344 train_ae_step: 
+                                                                                    0.070 train_stae_step: 0.016        
+                                                                                    train_loss_step: 1.431              
+                                                                                    train_st_epoch: 1.401               
+                                                                                    train_ae_epoch: 0.101               
+                                                                                    train_stae_epoch: 0.029             
+                                                                                    train_loss_epoch: 1.531             
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        image_AUROC        │    0.7008376717567444     │
+│       image_F1Score       │    0.9152542352676392     │
+│        pixel_AUROC        │    0.8740204572677612     │
+│       pixel_F1Score       │    0.4220874011516571     │
+└───────────────────────────┴───────────────────────────┘
+Testing ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5/5 0:00:13 • 0:00:00 0.32it/s  
+
+  image_AUROC = 0.7008  (reference: 0.988)
+  Training time: 788.1s
+  ONNX exported: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/capsule/weights/onnx/model.onnx
+
+============================================================
+  Summary
+============================================================
+  capsule       AUROC=0.7008  ref=0.988  ONNX=OK  (788s)
+
+  capsule/model.onnx  (30.8 MB)
+    inputs:  input['batch_size', 3, 256, 256]  (batch=dynamic)
+    outputs: pred_score['Clippred_score_dim_0', 'Clippred_score_dim_1'], pred_label['Clippred_score_dim_0', 'Clippred_score_dim_1'], anomaly_map['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3'], pred_mask['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3']  (4 tensors)
+    graph: 314 nodes  OK
+
+All ONNX files verified successfully.

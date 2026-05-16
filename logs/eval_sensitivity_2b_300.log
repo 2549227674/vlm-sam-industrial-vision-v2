@@ -1,0 +1,66 @@
+Image filter: truncated_2b_lora.txt (18 basenames)
+Eval samples: 26
+Model size: 2B
+Mode: deployment
+
+Loading base model: /root/autodl-tmp/models/qwen3vl_models/base
+Loading weights:   0%|          | 0/625 [00:00<?, ?it/s]Loading weights:   2%|▏         | 14/625 [00:00<00:04, 137.19it/s]Loading weights:   8%|▊         | 47/625 [00:00<00:02, 246.51it/s]Loading weights:  15%|█▍        | 91/625 [00:00<00:01, 330.50it/s]Loading weights:  21%|██▏       | 133/625 [00:00<00:01, 365.17it/s]Loading weights:  27%|██▋       | 170/625 [00:00<00:01, 358.75it/s]Loading weights:  34%|███▍      | 212/625 [00:00<00:01, 379.02it/s]Loading weights:  40%|████      | 250/625 [00:00<00:01, 363.49it/s]Loading weights:  46%|████▌     | 287/625 [00:00<00:00, 352.17it/s]Loading weights:  55%|█████▌    | 344/625 [00:00<00:00, 416.59it/s]Loading weights:  75%|███████▌  | 470/625 [00:01<00:00, 666.93it/s]Loading weights:  96%|█████████▌| 600/625 [00:01<00:00, 827.80it/s]Loading weights: 100%|██████████| 625/625 [00:01<00:00, 514.16it/s]
+
+--- Deployment: 2B_base (base + engineered prompt) ---
+Variant 2B_base:   0%|          | 0/26 [00:00<?, ?it/s][transformers] The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+Variant 2B_base:   4%|▍         | 1/26 [00:02<01:06,  2.67s/it]Variant 2B_base:   8%|▊         | 2/26 [00:05<01:05,  2.72s/it]Variant 2B_base:  12%|█▏        | 3/26 [00:07<00:51,  2.22s/it]Variant 2B_base:  15%|█▌        | 4/26 [00:09<00:48,  2.22s/it]Variant 2B_base:  19%|█▉        | 5/26 [00:12<00:50,  2.42s/it]Variant 2B_base:  23%|██▎       | 6/26 [00:16<01:01,  3.09s/it]Variant 2B_base:  27%|██▋       | 7/26 [00:18<00:50,  2.65s/it]Variant 2B_base:  31%|███       | 8/26 [00:19<00:42,  2.38s/it]Variant 2B_base:  35%|███▍      | 9/26 [00:24<00:50,  2.98s/it]Variant 2B_base:  38%|███▊      | 10/26 [00:25<00:40,  2.55s/it]Variant 2B_base:  42%|████▏     | 11/26 [00:27<00:33,  2.26s/it]Variant 2B_base:  46%|████▌     | 12/26 [00:29<00:28,  2.05s/it]Variant 2B_base:  50%|█████     | 13/26 [00:30<00:24,  1.90s/it]Variant 2B_base:  54%|█████▍    | 14/26 [00:32<00:21,  1.79s/it]Variant 2B_base:  58%|█████▊    | 15/26 [00:33<00:18,  1.70s/it]Variant 2B_base:  62%|██████▏   | 16/26 [00:35<00:16,  1.63s/it]Variant 2B_base:  65%|██████▌   | 17/26 [00:36<00:14,  1.63s/it]Variant 2B_base:  69%|██████▉   | 18/26 [00:38<00:13,  1.66s/it]Variant 2B_base:  73%|███████▎  | 19/26 [00:40<00:11,  1.69s/it]Variant 2B_base:  77%|███████▋  | 20/26 [00:41<00:09,  1.66s/it]Variant 2B_base:  81%|████████  | 21/26 [00:43<00:08,  1.61s/it]Variant 2B_base:  85%|████████▍ | 22/26 [00:47<00:09,  2.35s/it]Variant 2B_base:  88%|████████▊ | 23/26 [00:48<00:06,  2.12s/it]Variant 2B_base:  92%|█████████▏| 24/26 [00:52<00:05,  2.63s/it]Variant 2B_base:  96%|█████████▌| 25/26 [00:56<00:03,  3.08s/it]Variant 2B_base: 100%|██████████| 26/26 [01:00<00:00,  3.38s/it]Variant 2B_base: 100%|██████████| 26/26 [01:00<00:00,  2.34s/it]
+
+==========================================================================================
+  Variant: 2B_base
+==========================================================================================
+| Category     |    JSON OK |     Schema |   CatExact |    DefType |   SevValid |    BBoxIoU |
+|-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+| cable        |        1/1 |        1/1 |        1/1 |        0/1 |        1/1 |        0/1 |
+| carpet       |        2/2 |        2/2 |        0/2 |        0/2 |        2/2 |        0/2 |
+| grid         |        4/6 |        4/6 |        0/6 |        0/6 |        4/6 |        0/6 |
+| hazelnut     |        1/1 |        1/1 |        0/1 |        0/1 |        1/1 |        0/1 |
+| leather      |        1/1 |        1/1 |        1/1 |        0/1 |        1/1 |        0/1 |
+| metal_nut    |        2/2 |        2/2 |        2/2 |        2/2 |        2/2 |        0/2 |
+| pill         |        4/4 |        4/4 |        4/4 |        2/4 |        4/4 |        0/4 |
+| tile         |        1/1 |        1/1 |        0/1 |        0/1 |        1/1 |        0/1 |
+| toothbrush   |        3/3 |        3/3 |        0/3 |        0/3 |        3/3 |        0/3 |
+| wood         |        2/5 |        2/5 |        2/5 |        1/5 |        2/5 |        0/5 |
+|-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+| TOTAL        |      21/26 |      21/26 |      10/26 |       5/26 |      21/26 |       0/26 |
+
+  Avg prompt tokens: 1163.7
+  Avg output tokens: 163.8
+==========================================================================================
+
+Loading LoRA adapter: /root/autodl-tmp/models/qwen3vl_lora_adapter_15cls
+
+--- Deployment: 2B_lora (LoRA + minimal prompt) ---
+Variant 2B_lora:   0%|          | 0/26 [00:00<?, ?it/s]Variant 2B_lora:   4%|▍         | 1/26 [00:02<00:55,  2.24s/it]Variant 2B_lora:   8%|▊         | 2/26 [00:06<01:26,  3.60s/it]Variant 2B_lora:  12%|█▏        | 3/26 [00:08<01:07,  2.95s/it]Variant 2B_lora:  15%|█▌        | 4/26 [00:13<01:17,  3.54s/it]Variant 2B_lora:  19%|█▉        | 5/26 [00:18<01:24,  4.01s/it]Variant 2B_lora:  23%|██▎       | 6/26 [00:24<01:34,  4.72s/it]Variant 2B_lora:  27%|██▋       | 7/26 [00:30<01:38,  5.18s/it]Variant 2B_lora:  31%|███       | 8/26 [00:36<01:38,  5.47s/it]Variant 2B_lora:  35%|███▍      | 9/26 [00:41<01:27,  5.16s/it]Variant 2B_lora:  38%|███▊      | 10/26 [00:43<01:07,  4.20s/it]Variant 2B_lora:  42%|████▏     | 11/26 [00:48<01:08,  4.57s/it]Variant 2B_lora:  46%|████▌     | 12/26 [00:50<00:53,  3.83s/it]Variant 2B_lora:  50%|█████     | 13/26 [00:53<00:46,  3.54s/it]Variant 2B_lora:  54%|█████▍    | 14/26 [00:58<00:48,  4.04s/it]Variant 2B_lora:  58%|█████▊    | 15/26 [01:00<00:37,  3.43s/it]Variant 2B_lora:  62%|██████▏   | 16/26 [01:02<00:30,  3.01s/it]Variant 2B_lora:  65%|██████▌   | 17/26 [01:04<00:24,  2.72s/it]Variant 2B_lora:  69%|██████▉   | 18/26 [01:10<00:30,  3.75s/it]Variant 2B_lora:  73%|███████▎  | 19/26 [01:17<00:31,  4.48s/it]Variant 2B_lora:  77%|███████▋  | 20/26 [01:23<00:29,  5.00s/it]Variant 2B_lora:  81%|████████  | 21/26 [01:29<00:26,  5.35s/it]Variant 2B_lora:  85%|████████▍ | 22/26 [01:34<00:20,  5.16s/it]Variant 2B_lora:  88%|████████▊ | 23/26 [01:40<00:16,  5.49s/it]Variant 2B_lora:  92%|█████████▏| 24/26 [01:45<00:10,  5.45s/it]Variant 2B_lora:  96%|█████████▌| 25/26 [01:51<00:05,  5.49s/it]Variant 2B_lora: 100%|██████████| 26/26 [01:57<00:00,  5.68s/it]Variant 2B_lora: 100%|██████████| 26/26 [01:57<00:00,  4.52s/it]
+
+==========================================================================================
+  Variant: 2B_lora
+==========================================================================================
+| Category     |    JSON OK |     Schema |   CatExact |    DefType |   SevValid |    BBoxIoU |
+|-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+| cable        |        1/1 |        1/1 |        1/1 |        0/1 |        1/1 |        1/1 |
+| carpet       |        2/2 |        2/2 |        2/2 |        2/2 |        2/2 |        2/2 |
+| grid         |        3/6 |        3/6 |        3/6 |        0/6 |        3/6 |        2/6 |
+| hazelnut     |        1/1 |        1/1 |        1/1 |        1/1 |        1/1 |        0/1 |
+| leather      |        1/1 |        1/1 |        1/1 |        1/1 |        1/1 |        1/1 |
+| metal_nut    |        2/2 |        2/2 |        2/2 |        1/2 |        2/2 |        1/2 |
+| pill         |        4/4 |        4/4 |        4/4 |        2/4 |        4/4 |        3/4 |
+| tile         |        0/1 |        0/1 |        0/1 |        0/1 |        0/1 |        0/1 |
+| toothbrush   |        0/3 |        0/3 |        0/3 |        0/3 |        0/3 |        0/3 |
+| wood         |        3/5 |        3/5 |        3/5 |        2/5 |        3/5 |        3/5 |
+|-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+| TOTAL        |      17/26 |      17/26 |      17/26 |       9/26 |      17/26 |      13/26 |
+
+  Avg prompt tokens: 965.7
+  Avg output tokens: 218.6
+==========================================================================================
+
+Deployment report saved: /root/autodl-tmp/results/ab_eval_report_v2_deployment.json
+  Per-sample dump: /root/autodl-tmp/results/ab_eval_predictions_2B_2B_base_deployment.jsonl
+  Per-sample dump: /root/autodl-tmp/results/ab_eval_predictions_2B_2B_lora_deployment.jsonl
+
+All evaluations complete.

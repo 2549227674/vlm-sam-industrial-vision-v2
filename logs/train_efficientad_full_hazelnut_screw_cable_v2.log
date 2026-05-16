@@ -1,0 +1,145 @@
+EfficientAD-S training: 3 category(ies), 40 epochs
+MVTec dataset: /home/qbz415/vlm-sam-industrial-vision-v2/simulator/mvtec
+Export base:   /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models
+
+============================================================
+  Training EfficientAD-S: hazelnut
+============================================================
+
+┏━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name           ┃ Type             ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ pre_processor  │ PreProcessor     │      0 │ train │     0 │
+│ 1 │ post_processor │ PostProcessor    │      0 │ train │     0 │
+│ 2 │ evaluator      │ Evaluator        │      0 │ train │     0 │
+│ 3 │ model          │ EfficientAdModel │  8.1 M │ train │     0 │
+└───┴────────────────┴──────────────────┴────────┴───────┴───────┘
+Trainable params: 8.1 M                                                                                                 
+Non-trainable params: 0                                                                                                 
+Total params: 8.1 M                                                                                                     
+Total estimated model params size (MB): 32                                                                              
+Modules in train mode: 48                                                                                               
+Modules in eval mode: 7                                                                                                 
+Total FLOPs: 0                                                                                                          
+Epoch 39/39 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 391/391 0:00:27 • 0:00:00 14.31it/s train_st_step: 0.563 train_ae_step: 
+                                                                                    0.286 train_stae_step: 0.078        
+                                                                                    train_loss_step: 0.927              
+                                                                                    train_st_epoch: 0.495               
+                                                                                    train_ae_epoch: 0.121               
+                                                                                    train_stae_epoch: 0.041             
+                                                                                    train_loss_epoch: 0.656             
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        image_AUROC        │    0.9296428561210632     │
+│       image_F1Score       │    0.8857142925262451     │
+│        pixel_AUROC        │    0.9326502084732056     │
+│       pixel_F1Score       │    0.5911830067634583     │
+└───────────────────────────┴───────────────────────────┘
+Testing ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4/4 0:00:09 • 0:00:00 0.33it/s  
+
+  image_AUROC = 0.9296  (reference: 0.977)
+  Training time: 1269.9s
+  ONNX exported: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/hazelnut/weights/onnx/model.onnx
+
+============================================================
+  Training EfficientAD-S: screw
+============================================================
+
+┏━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name           ┃ Type             ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ pre_processor  │ PreProcessor     │      0 │ train │     0 │
+│ 1 │ post_processor │ PostProcessor    │      0 │ train │     0 │
+│ 2 │ evaluator      │ Evaluator        │      0 │ train │     0 │
+│ 3 │ model          │ EfficientAdModel │  8.1 M │ train │     0 │
+└───┴────────────────┴──────────────────┴────────┴───────┴───────┘
+Trainable params: 8.1 M                                                                                                 
+Non-trainable params: 0                                                                                                 
+Total params: 8.1 M                                                                                                     
+Total estimated model params size (MB): 32                                                                              
+Modules in train mode: 48                                                                                               
+Modules in eval mode: 7                                                                                                 
+Total FLOPs: 0                                                                                                          
+Epoch 39/39 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 320/320 0:00:23 • 0:00:00 13.79it/s train_st_step: 4.403 train_ae_step: 
+                                                                                    0.394 train_stae_step: 0.041        
+                                                                                    train_loss_step: 4.838              
+                                                                                    train_st_epoch: 4.211               
+                                                                                    train_ae_epoch: 0.463               
+                                                                                    train_stae_epoch: 0.044             
+                                                                                    train_loss_epoch: 4.718             
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        image_AUROC        │    0.8542734384536743     │
+│       image_F1Score       │    0.8888888955116272     │
+│        pixel_AUROC        │    0.9803043603897095     │
+│       pixel_F1Score       │    0.4431358575820923     │
+└───────────────────────────┴───────────────────────────┘
+Testing ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5/5 0:00:07 • 0:00:00 0.55it/s  
+
+  image_AUROC = 0.8543  (reference: 0.960)
+  Training time: 1084.1s
+  ONNX exported: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/screw/weights/onnx/model.onnx
+
+============================================================
+  Training EfficientAD-S: cable
+============================================================
+
+┏━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━┳━━━━━━━┓
+┃   ┃ Name           ┃ Type             ┃ Params ┃ Mode  ┃ FLOPs ┃
+┡━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━╇━━━━━━━┩
+│ 0 │ pre_processor  │ PreProcessor     │      0 │ train │     0 │
+│ 1 │ post_processor │ PostProcessor    │      0 │ train │     0 │
+│ 2 │ evaluator      │ Evaluator        │      0 │ train │     0 │
+│ 3 │ model          │ EfficientAdModel │  8.1 M │ train │     0 │
+└───┴────────────────┴──────────────────┴────────┴───────┴───────┘
+Trainable params: 8.1 M                                                                                                 
+Non-trainable params: 0                                                                                                 
+Total params: 8.1 M                                                                                                     
+Total estimated model params size (MB): 32                                                                              
+Modules in train mode: 48                                                                                               
+Modules in eval mode: 7                                                                                                 
+Total FLOPs: 0                                                                                                          
+Epoch 39/39 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 224/224 0:00:15 • 0:00:00 14.48it/s train_st_step: 1.514 train_ae_step: 
+                                                                                    0.467 train_stae_step: 0.064        
+                                                                                    train_loss_step: 2.044              
+                                                                                    train_st_epoch: 1.272               
+                                                                                    train_ae_epoch: 0.353               
+                                                                                    train_stae_epoch: 0.058             
+                                                                                    train_loss_epoch: 1.683             
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        Test metric        ┃       DataLoader 0        ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│        image_AUROC        │    0.9405922293663025     │
+│       image_F1Score       │    0.8854166865348816     │
+│        pixel_AUROC        │     0.975741982460022     │
+│       pixel_F1Score       │    0.6520201563835144     │
+└───────────────────────────┴───────────────────────────┘
+Testing ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5/5 0:00:12 • 0:00:00 0.34it/s  
+
+  image_AUROC = 0.9406  (reference: 0.973)
+  Training time: 846.5s
+  ONNX exported: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/cable/weights/onnx/model.onnx
+
+============================================================
+  Summary
+============================================================
+  hazelnut      AUROC=0.9296  ref=0.977  ONNX=OK  (1270s)
+  screw         AUROC=0.8543  ref=0.960  ONNX=OK  (1084s)
+  cable         AUROC=0.9406  ref=0.973  ONNX=OK  (847s)
+
+  hazelnut/model.onnx  (30.8 MB)
+    inputs:  input['batch_size', 3, 256, 256]  (batch=dynamic)
+    outputs: pred_score['Clippred_score_dim_0', 'Clippred_score_dim_1'], pred_label['Clippred_score_dim_0', 'Clippred_score_dim_1'], anomaly_map['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3'], pred_mask['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3']  (4 tensors)
+    graph: 314 nodes  OK
+  screw/model.onnx  (30.8 MB)
+    inputs:  input['batch_size', 3, 256, 256]  (batch=dynamic)
+    outputs: pred_score['Clippred_score_dim_0', 'Clippred_score_dim_1'], pred_label['Clippred_score_dim_0', 'Clippred_score_dim_1'], anomaly_map['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3'], pred_mask['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3']  (4 tensors)
+    graph: 314 nodes  OK
+  cable/model.onnx  (30.8 MB)
+    inputs:  input['batch_size', 3, 256, 256]  (batch=dynamic)
+    outputs: pred_score['Clippred_score_dim_0', 'Clippred_score_dim_1'], pred_label['Clippred_score_dim_0', 'Clippred_score_dim_1'], anomaly_map['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3'], pred_mask['Clippred_score_dim_0', 'Clippred_score_dim_1', 'Clipanomaly_map_dim_2', 'Clipanomaly_map_dim_3']  (4 tensors)
+    graph: 314 nodes  OK
+
+All ONNX files verified successfully.

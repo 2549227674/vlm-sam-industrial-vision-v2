@@ -1,0 +1,458 @@
+(.venv_rknn) qbz415@LAPTOP-OBAD8432:~/vlm-sam-industrial-vision-v2$ python scripts/convert_efficientad.py
+
+==================================================
+  Converting: metal_nut
+==================================================
+I rknn-toolkit2 version: 2.3.2
+  [1/5] Config (INT8, rk3588)...
+  [2/5] Load ONNX...
+W load_onnx: If you don't need to crop the model, don't set 'inputs'/'input_size_list'/'outputs'!
+I Loading : 100%|█████████████████████████████████████████████████| 54/54 [00:00<00:00, 4641.62it/s]
+  [3/5] Build INT8 (calib=100 samples)...
+  Calibration list: 100 images -> /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/metal_nut/calib_dataset.txt
+I OpFusing 0: 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 2401.96it/s]
+I OpFusing 1 : 100%|████████████████████████████████████████████| 100/100 [00:00<00:00, 1110.19it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 764.00it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 673.00it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 635.78it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 613.78it/s]
+I OpFusing 2 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 586.79it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 499.95it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 486.85it/s]
+I OpFusing 2 : 100%|██████████████████████████████████████████████| 100/100 [00:01<00:00, 99.33it/s]
+I GraphPreparing : 100%|█████████████████████████████████████████| 81/81 [00:00<00:00, 23472.34it/s]
+I Quantizating 1/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.08it/s]
+I Quantizating 2/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.55it/s]
+I Quantizating 3/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.75it/s]
+I Quantizating 4/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.11it/s]
+I Quantizating 5/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.46it/s]
+I Quantizating 6/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  5.94it/s]
+I Quantizating 7/7: 100%|███████████████████████████████████████████| 81/81 [00:03<00:00, 25.13it/s]
+W build: The default input dtype of 'input' is changed from 'float32' to 'int8' in rknn model for performance!
+                       Please take care of this change when deploy rknn model with Runtime API!
+W build: The default output dtype of 'pred_score' is changed from 'float32' to 'int8' in rknn model for performance!
+                      Please take care of this change when deploy rknn model with Runtime API!
+W build: The default output dtype of 'anomaly_map' is changed from 'float32' to 'int8' in rknn model for performance!
+                      Please take care of this change when deploy rknn model with Runtime API!
+I rknn building ...
+E RKNN: [20:50:10.639] Unkown op target: 0
+E RKNN: [20:50:10.641] Unkown op target: 0
+E RKNN: [20:50:10.642] Unkown op target: 0
+E RKNN: [20:50:10.642] Unkown op target: 0
+E RKNN: [20:50:10.642] Unkown op target: 0
+E RKNN: [20:50:10.643] Unkown op target: 0
+E RKNN: [20:50:10.645] Unkown op target: 0
+E RKNN: [20:50:10.645] Unkown op target: 0
+E RKNN: [20:50:10.645] Unkown op target: 0
+E RKNN: [20:50:10.645] Unkown op target: 0
+I rknn building done.
+  [4/5] Accuracy analysis...
+I GraphPreparing : 100%|█████████████████████████████████████████| 84/84 [00:00<00:00, 19291.55it/s]
+I AccuracyAnalysing : 100%|█████████████████████████████████████████| 84/84 [00:28<00:00,  2.92it/s]
+
+# simulator_error: calculate the output error of each layer of the simulator (compared to the 'golden' value).
+#              entire: output error of each layer between 'golden' and 'simulator', these errors will accumulate layer by layer.
+#              single: single-layer output error between 'golden' and 'simulator', can better reflect the single-layer accuracy of the simulator.
+
+layer_name                                                              simulator_error
+                                                                    entire              single
+                                                                 cos      euc        cos      euc
+-------------------------------------------------------------------------------------------------------
+[Input] input                                                  1.00000 | 0.0       1.00000 | 0.0
+[exDataConvert] input_int8                                     0.99999 | 1.7672    0.99999 | 1.7672
+[Add] /model/teacher/Sub_output_0                              0.99997 | 3.3216    0.99997 | 3.3216
+[Mul] /model/teacher/Div_output_0                              0.99998 | 21.233    1.00000 | 11.194
+[Conv] /model/teacher/conv1/Conv_output_0
+[Relu] /model/teacher/Relu_output_0                            0.99909 | 105.20    0.99927 | 91.273
+[AveragePool] /model/teacher/avgpool1/AveragePool_output_0     0.99891 | 59.182    0.99923 | 49.604
+[Conv] /model/teacher/conv2/Conv_output_0
+[Relu] /model/teacher/Relu_1_output_0                          0.99901 | 138.54    0.99944 | 102.52
+[AveragePool] /model/teacher/avgpool2/AveragePool_output_0     0.99887 | 68.234    0.99947 | 44.382
+[Conv] /model/teacher/conv3/Conv_output_0
+[Relu] /model/teacher/Relu_2_output_0                          0.99903 | 88.661    0.99981 | 37.987
+[Conv] /model/Div_output_0                                     0.99843 | 465.78    0.99963 | 224.76
+[Conv] /model/student/conv1/Conv_output_0
+[Relu] /model/student/Relu_output_0                            0.99997 | 88.369    0.99994 | 63.744
+[AveragePool] /model/student/avgpool1/AveragePool_output_0     0.99994 | 43.609    0.99997 | 26.951
+[Conv] /model/student/conv2/Conv_output_0
+[Relu] /model/student/Relu_1_output_0                          0.99955 | 181.87    0.99973 | 126.50
+[AveragePool] /model/student/avgpool2/AveragePool_output_0     0.99951 | 96.597    0.99972 | 70.180
+[Conv] /model/student/conv3/Conv_output_0
+[Relu] /model/student/Relu_2_output_0                          0.99941 | 90.695    0.99989 | 38.076
+[Conv] /model/student/conv4/Conv_output_0                      0.99949 | 230.82    1.00000 | 117.45
+[Split] /model/Slice_output_0                                  0.99894 | 179.70    0.99956 | 107.99
+[Split] /model/Slice_1_output_0                                0.99923 | 174.12    0.99969 | 106.12
+[Sub] /model/Sub_1_output_0                                    0.99827 | 512.12    0.99970 | 269.42
+[Pow] /model/Pow_output_0                                      0.99921 | 15222.    0.99953 | 12169.
+[Conv] /model/Pow_output_0_rs_sw                               0.99951 | 145.99    0.99958 | 153.89
+[Pad] /model/Pad_output_0                                      0.99951 | 145.99    1.00000 | 8.4463
+[Resize] /model/Resize_output_0                                0.99952 | 574.05    1.00000 | 40.876
+[Add] /model/Sub_3_output_0                                    0.99946 | 609.51    0.99999 | 55.059
+[Mul] /model/Div_1_output_0                                    0.99947 | 1166.1    1.00000 | 75.663
+[Conv] /model/ae/encoder/enconv1/Conv_output_0
+[Relu] /model/ae/encoder/Relu_output_0                         0.99998 | 21.880    0.99999 | 13.526
+[Conv] /model/ae/encoder/enconv2/Conv_output_0
+[Relu] /model/ae/encoder/Relu_1_output_0                       0.99998 | 9.2537    0.99999 | 3.3908
+[Conv] /model/ae/encoder/enconv3/Conv_output_0
+[Relu] /model/ae/encoder/Relu_2_output_0                       0.99998 | 5.7742    0.99999 | 2.2443
+[Conv] /model/ae/encoder/enconv4/Conv_output_0
+[Relu] /model/ae/encoder/Relu_3_output_0                       0.99998 | 3.8166    0.99999 | 1.7644
+[Conv] /model/ae/encoder/enconv5/Conv_output_0
+[Relu] /model/ae/encoder/Relu_4_output_0                       0.99998 | 1.5257    0.99998 | 0.7854
+[Conv] /model/ae/encoder/enconv6/Conv_output_0                 0.99998 | 1.0348    0.99998 | 0.5487
+[Resize] /model/ae/decoder/Resize_output_0                     0.99998 | 3.1045    0.99998 | 1.5798
+[Conv] /model/ae/decoder/deconv1/Conv_output_0
+[Relu] /model/ae/decoder/Relu_output_0                         0.99993 | 1.7660    0.99995 | 1.2264
+[Resize] /model/ae/decoder/Resize_1_output_0                   0.99994 | 2.9527    0.99996 | 1.8310
+[Conv] /model/ae/decoder/deconv2/Conv_output_0
+[Relu] /model/ae/decoder/Relu_1_output_0                       0.99997 | 1.2540    0.99998 | 0.6294
+[Resize] /model/ae/decoder/Resize_2_output_0                   0.99996 | 2.0144    0.99998 | 0.9389
+[Conv] /model/ae/decoder/deconv3/Conv_output_0
+[Relu] /model/ae/decoder/Relu_2_output_0                       0.99997 | 1.3160    0.99998 | 0.7258
+[Resize] /model/ae/decoder/Resize_3_output_0                   0.99997 | 2.6869    0.99998 | 1.5586
+[Conv] /model/ae/decoder/deconv4/Conv_output_0
+[Relu] /model/ae/decoder/Relu_3_output_0                       0.99997 | 2.8277    0.99998 | 1.5772
+[Resize] /model/ae/decoder/Resize_4_output_0                   0.99997 | 5.6787    0.99998 | 3.3012
+[Conv] /model/ae/decoder/deconv5/Conv_output_0
+[Relu] /model/ae/decoder/Relu_4_output_0                       0.99995 | 8.0031    0.99995 | 5.5838
+[Resize] /model/ae/decoder/Resize_5_output_0                   0.99993 | 17.456    0.99994 | 12.896
+[Conv] /model/ae/decoder/deconv6/Conv_output_0
+[Relu] /model/ae/decoder/Relu_5_output_0                       0.99995 | 20.767    0.99997 | 14.006
+[Resize] /model/ae/decoder/Resize_6_output_0                   0.99993 | 9.7055    0.99995 | 6.6973
+[Conv] /model/ae/decoder/deconv7/Conv_output_0
+[Relu] /model/ae/decoder/Relu_6_output_0                       0.99990 | 14.221    0.99991 | 11.544
+[Conv] /model/ae/decoder/deconv8/Conv_output_0                 0.99974 | 49.793    0.99976 | 45.701
+[Sub] /model/Sub_2_output_0                                    0.99842 | 186.37    0.99948 | 96.042
+[Pow] /model/Pow_1_output_0                                    0.99788 | 1346.2    0.99937 | 602.46
+[Conv] /model/Pow_1_output_0_rs_sw                             0.99965 | 22.374    0.99997 | 4.1260
+[Pad] /model/Pad_1_output_0                                    0.99965 | 22.374    0.99999 | 2.5648
+[Resize] /model/Resize_1_output_0                              0.99967 | 88.307    0.99998 | 12.392
+[Add] /model/Sub_4_output_0                                    0.99964 | 99.584    0.99997 | 19.170
+[Mul] /model/Div_2_output_0                                    0.99964 | 64.942    0.99998 | 8.3152
+[Add] /model/Add_output_0-mul                                  0.99954 | 1120.3    0.99999 | 98.781
+[Mul] /model/Add_output_0                                      0.99954 | 560.18    1.00000 | 37.120
+[Add] /post_processor/Sub_1_output_0                           0.99955 | 555.99    1.00000 | 36.410
+[BatchNormalization] /post_processor/Add_1_output_0
+[Clip] anomaly_map_int8                                        1.00000 | 1.0871    1.00000 | 1.0689
+[exDataConvert] anomaly_map                                    1.00000 | 1.0871    1.00000 | 0.1538
+[Greater] pred_mask                                            1.00000 | 0.0       1.00000 | 0.0
+[ReduceMax] /model/ReduceMax_output_0-rs                       1.00000 | 3.0753    1.00000 | 0.0701
+[Add] /post_processor/Sub_output_0-rs                          1.00000 | 3.0589    1.00000 | 0.0571
+[BatchNormalization] /post_processor/Add_output_0-rs
+[Clip] pred_score-rs                                           1.00000 | 0.0       1.00000 | 0.0
+[Reshape] pred_score_int8                                      1.00000 | 0.0       1.00000 | 0.0
+[exDataConvert] pred_score                                     1.00000 | 0.0       1.00000 | 0.0
+[Greater] pred_label-rs                                        1.00000 | 0.0       1.00000 | 0.0
+[Reshape] pred_label                                           1.00000 | 0.0       1.00000 | 0.0
+I The error analysis results save to: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/metal_nut/accuracy_analysis/error_analysis.txt
+W accuracy_analysis: The mapping of layer_name & file_name save to: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/metal_nut/accuracy_analysis/map_name_to_file.txt
+  WARNING: report not found at /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/metal_nut/accuracy_analysis/simulator_error/simulator_error.txt
+  Min cosine similarity: 0.0000
+  WARNING: below threshold 0.99!
+  [5/5] Export RKNN...
+  OK: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/metal_nut/model.rknn
+
+==================================================
+  Converting: screw
+==================================================
+I rknn-toolkit2 version: 2.3.2
+  [1/5] Config (INT8, rk3588)...
+  [2/5] Load ONNX...
+W load_onnx: If you don't need to crop the model, don't set 'inputs'/'input_size_list'/'outputs'!
+I Loading : 100%|█████████████████████████████████████████████████| 54/54 [00:00<00:00, 9092.79it/s]
+  [3/5] Build INT8 (calib=100 samples)...
+  Calibration list: 100 images -> /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/screw/calib_dataset.txt
+I OpFusing 0: 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 2948.44it/s]
+I OpFusing 1 : 100%|████████████████████████████████████████████| 100/100 [00:00<00:00, 1450.43it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 955.63it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 827.32it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 775.03it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 738.89it/s]
+I OpFusing 2 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 706.44it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 583.53it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 561.23it/s]
+I OpFusing 2 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 104.83it/s]
+I GraphPreparing : 100%|█████████████████████████████████████████| 81/81 [00:00<00:00, 22617.58it/s]
+I Quantizating 1/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.66it/s]
+I Quantizating 2/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.11it/s]
+I Quantizating 3/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.64it/s]
+I Quantizating 4/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  5.88it/s]
+I Quantizating 5/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.15it/s]
+I Quantizating 6/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.59it/s]
+I Quantizating 7/7: 100%|███████████████████████████████████████████| 81/81 [00:03<00:00, 26.20it/s]
+W build: The default input dtype of 'input' is changed from 'float32' to 'int8' in rknn model for performance!
+                       Please take care of this change when deploy rknn model with Runtime API!
+W build: The default output dtype of 'pred_score' is changed from 'float32' to 'int8' in rknn model for performance!
+                      Please take care of this change when deploy rknn model with Runtime API!
+W build: The default output dtype of 'anomaly_map' is changed from 'float32' to 'int8' in rknn model for performance!
+                      Please take care of this change when deploy rknn model with Runtime API!
+I rknn building ...
+E RKNN: [20:52:08.371] Unkown op target: 0
+E RKNN: [20:52:08.373] Unkown op target: 0
+E RKNN: [20:52:08.373] Unkown op target: 0
+E RKNN: [20:52:08.374] Unkown op target: 0
+E RKNN: [20:52:08.374] Unkown op target: 0
+E RKNN: [20:52:08.375] Unkown op target: 0
+E RKNN: [20:52:08.376] Unkown op target: 0
+E RKNN: [20:52:08.376] Unkown op target: 0
+E RKNN: [20:52:08.376] Unkown op target: 0
+E RKNN: [20:52:08.376] Unkown op target: 0
+I rknn building done.
+  [4/5] Accuracy analysis...
+I GraphPreparing : 100%|█████████████████████████████████████████| 84/84 [00:00<00:00, 19132.31it/s]
+I AccuracyAnalysing : 100%|█████████████████████████████████████████| 84/84 [00:27<00:00,  3.04it/s]
+
+# simulator_error: calculate the output error of each layer of the simulator (compared to the 'golden' value).
+#              entire: output error of each layer between 'golden' and 'simulator', these errors will accumulate layer by layer.
+#              single: single-layer output error between 'golden' and 'simulator', can better reflect the single-layer accuracy of the simulator.
+
+layer_name                                                              simulator_error
+                                                                    entire              single
+                                                                 cos      euc        cos      euc
+-------------------------------------------------------------------------------------------------------
+[Input] input                                                  1.00000 | 0.0       1.00000 | 0.0
+[exDataConvert] input_int8                                     1.00000 | 2.0568    1.00000 | 2.0568
+[Add] /model/teacher/Sub_output_0                              0.99998 | 2.9616    0.99998 | 2.9616
+[Mul] /model/teacher/Div_output_0                              0.99993 | 15.241    0.99993 | 13.720
+[Conv] /model/teacher/conv1/Conv_output_0
+[Relu] /model/teacher/Relu_output_0                            0.99865 | 70.950    0.99889 | 65.208
+[AveragePool] /model/teacher/avgpool1/AveragePool_output_0     0.99771 | 39.369    0.99816 | 35.159
+[Conv] /model/teacher/conv2/Conv_output_0
+[Relu] /model/teacher/Relu_1_output_0                          0.99892 | 93.738    0.99951 | 66.315
+[AveragePool] /model/teacher/avgpool2/AveragePool_output_0     0.99885 | 45.110    0.99960 | 26.318
+[Conv] /model/teacher/conv3/Conv_output_0
+[Relu] /model/teacher/Relu_2_output_0                          0.99867 | 66.062    0.99980 | 24.959
+[Conv] /model/Div_output_0                                     0.99861 | 605.03    0.99972 | 281.69
+[Conv] /model/student/conv1/Conv_output_0
+[Relu] /model/student/Relu_output_0                            0.99992 | 61.045    0.99992 | 49.935
+[AveragePool] /model/student/avgpool1/AveragePool_output_0     0.99997 | 30.359    1.00000 | 21.597
+[Conv] /model/student/conv2/Conv_output_0
+[Relu] /model/student/Relu_1_output_0                          0.99965 | 105.11    0.99976 | 80.341
+[AveragePool] /model/student/avgpool2/AveragePool_output_0     0.99964 | 56.067    0.99978 | 43.641
+[Conv] /model/student/conv3/Conv_output_0
+[Relu] /model/student/Relu_2_output_0                          0.99980 | 17.972    0.99993 | 10.572
+[Conv] /model/student/conv4/Conv_output_0                      0.99845 | 61.919    0.99868 | 56.006
+[Split] /model/Slice_output_0                                  0.99796 | 44.731    0.99840 | 38.482
+[Split] /model/Slice_1_output_0                                0.99826 | 49.042    0.99842 | 45.398
+[Sub] /model/Sub_1_output_0                                    0.99836 | 655.03    0.99959 | 334.36
+[Pow] /model/Pow_output_0                                      0.99834 | 32357.    0.99933 | 21397.
+[Conv] /model/Pow_output_0_rs_sw                               0.99957 | 268.01    0.99989 | 240.53
+[Pad] /model/Pad_output_0                                      0.99957 | 268.01    1.00000 | 11.522
+[Resize] /model/Resize_output_0                                0.99961 | 1051.2    1.00000 | 55.646
+[Add] /model/Sub_3_output_0                                    0.99959 | 1086.0    1.00000 | 65.672
+[Mul] /model/Div_1_output_0                                    0.99960 | 355.40    1.00000 | 16.775
+[Conv] /model/ae/encoder/enconv1/Conv_output_0
+[Relu] /model/ae/encoder/Relu_output_0                         0.99989 | 12.801    0.99992 | 10.630
+[Conv] /model/ae/encoder/enconv2/Conv_output_0
+[Relu] /model/ae/encoder/Relu_1_output_0                       0.99987 | 2.1906    0.99995 | 1.3352
+[Conv] /model/ae/encoder/enconv3/Conv_output_0
+[Relu] /model/ae/encoder/Relu_2_output_0                       0.99996 | 1.2011    0.99998 | 0.9650
+[Conv] /model/ae/encoder/enconv4/Conv_output_0
+[Relu] /model/ae/encoder/Relu_3_output_0                       0.99997 | 1.3860    0.99997 | 1.3097
+[Conv] /model/ae/encoder/enconv5/Conv_output_0
+[Relu] /model/ae/encoder/Relu_4_output_0                       0.99994 | 0.6564    0.99994 | 0.6430
+[Conv] /model/ae/encoder/enconv6/Conv_output_0                 0.99997 | 0.1768    0.99997 | 0.1751
+[Resize] /model/ae/decoder/Resize_output_0                     0.99997 | 0.5304    0.99997 | 0.5089
+[Conv] /model/ae/decoder/deconv1/Conv_output_0
+[Relu] /model/ae/decoder/Relu_output_0                         0.99998 | 0.3600    0.99998 | 0.3241
+[Resize] /model/ae/decoder/Resize_1_output_0                   0.99997 | 0.7841    0.99998 | 0.5936
+[Conv] /model/ae/decoder/deconv2/Conv_output_0
+[Relu] /model/ae/decoder/Relu_1_output_0                       0.99997 | 0.6384    0.99998 | 0.5319
+[Resize] /model/ae/decoder/Resize_2_output_0                   0.99996 | 1.1987    0.99997 | 1.0147
+[Conv] /model/ae/decoder/deconv3/Conv_output_0
+[Relu] /model/ae/decoder/Relu_2_output_0                       0.99995 | 1.3301    0.99996 | 1.2422
+[Resize] /model/ae/decoder/Resize_3_output_0                   0.99992 | 3.3042    0.99993 | 3.0955
+[Conv] /model/ae/decoder/deconv4/Conv_output_0
+[Relu] /model/ae/decoder/Relu_3_output_0                       0.99989 | 1.4985    0.99992 | 1.3115
+[Resize] /model/ae/decoder/Resize_4_output_0                   0.99988 | 3.0393    0.99993 | 2.3350
+[Conv] /model/ae/decoder/deconv5/Conv_output_0
+[Relu] /model/ae/decoder/Relu_4_output_0                       0.99989 | 2.4594    0.99994 | 1.7378
+[Resize] /model/ae/decoder/Resize_5_output_0                   0.99987 | 5.1903    0.99993 | 3.7911
+[Conv] /model/ae/decoder/deconv6/Conv_output_0
+[Relu] /model/ae/decoder/Relu_5_output_0                       0.99988 | 13.475    0.99993 | 10.666
+[Resize] /model/ae/decoder/Resize_6_output_0                   0.99983 | 6.3414    0.99988 | 5.1954
+[Conv] /model/ae/decoder/deconv7/Conv_output_0
+[Relu] /model/ae/decoder/Relu_6_output_0                       0.99984 | 8.1646    0.99990 | 6.2604
+[Conv] /model/ae/decoder/deconv8/Conv_output_0                 0.99950 | 41.682    0.99955 | 38.379
+[Sub] /model/Sub_2_output_0                                    0.99835 | 70.278    0.99903 | 54.061
+[Pow] /model/Pow_1_output_0                                    0.99817 | 247.52    0.99893 | 191.35
+[Conv] /model/Pow_1_output_0_rs_sw                             0.99978 | 3.0419    0.99976 | 2.8825
+[Pad] /model/Pad_1_output_0                                    0.99978 | 3.0419    0.99996 | 1.1861
+[Resize] /model/Resize_1_output_0                              0.99978 | 12.223    0.99995 | 5.5110
+[Add] /model/Sub_4_output_0                                    0.99968 | 15.169    0.99992 | 6.8523
+[Mul] /model/Div_2_output_0                                    0.99968 | 10.971    0.99996 | 4.0683
+[Add] /model/Add_output_0-mul                                  0.99961 | 362.68    0.99999 | 23.123
+[Mul] /model/Add_output_0                                      0.99961 | 181.34    0.99999 | 8.7053
+[Add] /post_processor/Sub_1_output_0                           0.99961 | 180.30    1.00000 | 8.6475
+[BatchNormalization] /post_processor/Add_1_output_0
+[Clip] anomaly_map_int8                                        0.99994 | 2.4349    0.99994 | 2.4349
+[exDataConvert] anomaly_map                                    0.99994 | 2.4349    0.99998 | 0.1499
+[Greater] pred_mask                                            0.99996 | 2.0       1.00000 | 0.0
+[ReduceMax] /model/ReduceMax_output_0-rs                       1.00000 | 0.4947    1.00000 | 0.0167
+[Add] /post_processor/Sub_output_0-rs                          1.00000 | 0.4674    1.00000 | 0.0421
+[BatchNormalization] /post_processor/Add_output_0-rs
+[Clip] pred_score-rs                                           1.00000 | 0.0       1.00000 | 0.0
+[Reshape] pred_score_int8                                      1.00000 | 0.0       1.00000 | 0.0
+[exDataConvert] pred_score                                     1.00000 | 0.0       1.00000 | 0.0
+[Greater] pred_label-rs                                        1.00000 | 0.0       1.00000 | 0.0
+[Reshape] pred_label                                           1.00000 | 0.0       1.00000 | 0.0
+I The error analysis results save to: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/screw/accuracy_analysis/error_analysis.txt
+W accuracy_analysis: The mapping of layer_name & file_name save to: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/screw/accuracy_analysis/map_name_to_file.txt
+  WARNING: report not found at /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/screw/accuracy_analysis/simulator_error/simulator_error.txt
+  Min cosine similarity: 0.0000
+  WARNING: below threshold 0.99!
+  [5/5] Export RKNN...
+  OK: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/screw/model.rknn
+
+==================================================
+  Converting: pill
+==================================================
+I rknn-toolkit2 version: 2.3.2
+  [1/5] Config (INT8, rk3588)...
+  [2/5] Load ONNX...
+W load_onnx: If you don't need to crop the model, don't set 'inputs'/'input_size_list'/'outputs'!
+I Loading : 100%|█████████████████████████████████████████████████| 54/54 [00:00<00:00, 3946.34it/s]
+  [3/5] Build INT8 (calib=100 samples)...
+  Calibration list: 100 images -> /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/pill/calib_dataset.txt
+I OpFusing 0: 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 3106.32it/s]
+I OpFusing 1 : 100%|████████████████████████████████████████████| 100/100 [00:00<00:00, 1523.03it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 970.33it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 839.03it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 784.01it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 749.93it/s]
+I OpFusing 2 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 714.98it/s]
+I OpFusing 0 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 591.90it/s]
+I OpFusing 1 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 571.62it/s]
+I OpFusing 2 : 100%|█████████████████████████████████████████████| 100/100 [00:00<00:00, 102.46it/s]
+I GraphPreparing : 100%|█████████████████████████████████████████| 81/81 [00:00<00:00, 11830.58it/s]
+I Quantizating 1/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.09it/s]
+I Quantizating 2/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.53it/s]
+I Quantizating 3/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.17it/s]
+I Quantizating 4/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.13it/s]
+I Quantizating 5/7: 100%|███████████████████████████████████████████| 81/81 [00:14<00:00,  5.66it/s]
+I Quantizating 6/7: 100%|███████████████████████████████████████████| 81/81 [00:13<00:00,  6.16it/s]
+I Quantizating 7/7: 100%|███████████████████████████████████████████| 81/81 [00:03<00:00, 25.73it/s]
+W build: The default input dtype of 'input' is changed from 'float32' to 'int8' in rknn model for performance!
+                       Please take care of this change when deploy rknn model with Runtime API!
+W build: The default output dtype of 'pred_score' is changed from 'float32' to 'int8' in rknn model for performance!
+                      Please take care of this change when deploy rknn model with Runtime API!
+W build: The default output dtype of 'anomaly_map' is changed from 'float32' to 'int8' in rknn model for performance!
+                      Please take care of this change when deploy rknn model with Runtime API!
+I rknn building ...
+E RKNN: [20:54:03.473] Unkown op target: 0
+E RKNN: [20:54:03.475] Unkown op target: 0
+E RKNN: [20:54:03.476] Unkown op target: 0
+E RKNN: [20:54:03.476] Unkown op target: 0
+E RKNN: [20:54:03.477] Unkown op target: 0
+E RKNN: [20:54:03.477] Unkown op target: 0
+E RKNN: [20:54:03.479] Unkown op target: 0
+E RKNN: [20:54:03.479] Unkown op target: 0
+E RKNN: [20:54:03.479] Unkown op target: 0
+E RKNN: [20:54:03.479] Unkown op target: 0
+I rknn building done.
+  [4/5] Accuracy analysis...
+I GraphPreparing : 100%|█████████████████████████████████████████| 84/84 [00:00<00:00, 19841.28it/s]
+I AccuracyAnalysing : 100%|█████████████████████████████████████████| 84/84 [00:32<00:00,  2.59it/s]
+
+# simulator_error: calculate the output error of each layer of the simulator (compared to the 'golden' value).
+#              entire: output error of each layer between 'golden' and 'simulator', these errors will accumulate layer by layer.
+#              single: single-layer output error between 'golden' and 'simulator', can better reflect the single-layer accuracy of the simulator.
+
+layer_name                                                              simulator_error
+                                                                    entire              single
+                                                                 cos      euc        cos      euc
+-------------------------------------------------------------------------------------------------------
+[Input] input                                                  1.00000 | 0.0       1.00000 | 0.0
+[exDataConvert] input_int8                                     1.00000 | 2.3989    1.00000 | 2.3989
+[Add] /model/teacher/Sub_output_0                              0.99999 | 3.1412    0.99999 | 3.1412
+[Mul] /model/teacher/Div_output_0                              0.99996 | 13.178    0.99995 | 14.146
+[Conv] /model/teacher/conv1/Conv_output_0
+[Relu] /model/teacher/Relu_output_0                            0.99923 | 82.031    0.99925 | 80.484
+[AveragePool] /model/teacher/avgpool1/AveragePool_output_0     0.99926 | 44.852    0.99948 | 38.274
+[Conv] /model/teacher/conv2/Conv_output_0
+[Relu] /model/teacher/Relu_1_output_0                          0.99910 | 114.82    0.99961 | 69.936
+[AveragePool] /model/teacher/avgpool2/AveragePool_output_0     0.99912 | 55.186    0.99981 | 24.310
+[Conv] /model/teacher/conv3/Conv_output_0
+[Relu] /model/teacher/Relu_2_output_0                          0.99900 | 98.461    0.99991 | 26.387
+[Conv] /model/Div_output_0                                     0.99800 | 818.36    0.99969 | 289.09
+[Conv] /model/student/conv1/Conv_output_0
+[Relu] /model/student/Relu_output_0                            0.99994 | 67.633    0.99994 | 65.133
+[AveragePool] /model/student/avgpool1/AveragePool_output_0     0.99993 | 34.978    0.99997 | 22.301
+[Conv] /model/student/conv2/Conv_output_0
+[Relu] /model/student/Relu_1_output_0                          0.99965 | 155.45    0.99989 | 90.459
+[AveragePool] /model/student/avgpool2/AveragePool_output_0     0.99959 | 79.179    0.99988 | 43.606
+[Conv] /model/student/conv3/Conv_output_0
+[Relu] /model/student/Relu_2_output_0                          0.99946 | 69.242    0.99994 | 22.081
+[Conv] /model/student/conv4/Conv_output_0                      0.99886 | 242.62    0.99916 | 202.61
+[Split] /model/Slice_output_0                                  0.99854 | 188.15    0.99914 | 142.73
+[Split] /model/Slice_1_output_0                                0.99914 | 158.60    0.99922 | 148.15
+[Sub] /model/Sub_1_output_0                                    0.99792 | 843.51    0.99960 | 349.24
+[Pow] /model/Pow_output_0                                      0.99914 | 76301.    0.99984 | 19375.
+[Conv] /model/Pow_output_0_rs_sw                               0.99912 | 440.57    0.99964 | 250.72
+[Pad] /model/Pad_output_0                                      0.99912 | 440.57    1.00000 | 13.723
+[Resize] /model/Resize_output_0                                0.99912 | 1734.9    1.00000 | 65.521
+[Add] /model/Sub_3_output_0                                    0.99918 | 1752.8    1.00000 | 96.996
+[Mul] /model/Div_1_output_0                                    0.99918 | 2243.3    1.00000 | 84.297
+[Conv] /model/ae/encoder/enconv1/Conv_output_0
+[Relu] /model/ae/encoder/Relu_output_0                         0.99993 | 14.924    0.99993 | 15.017
+[Conv] /model/ae/encoder/enconv2/Conv_output_0
+[Relu] /model/ae/encoder/Relu_1_output_0                       0.99988 | 4.8370    0.99998 | 1.5608
+[Conv] /model/ae/encoder/enconv3/Conv_output_0
+[Relu] /model/ae/encoder/Relu_2_output_0                       0.99991 | 2.1253    0.99999 | 0.4459
+[Conv] /model/ae/encoder/enconv4/Conv_output_0
+[Relu] /model/ae/encoder/Relu_3_output_0                       0.99994 | 0.8935    0.99999 | 0.1446
+[Conv] /model/ae/encoder/enconv5/Conv_output_0
+[Relu] /model/ae/encoder/Relu_4_output_0                       0.99995 | 0.4071    0.99999 | 0.0943
+[Conv] /model/ae/encoder/enconv6/Conv_output_0                 0.99999 | 0.3734    0.99999 | 0.1068
+[Resize] /model/ae/decoder/Resize_output_0                     0.99999 | 1.1204    0.99999 | 0.3198
+[Conv] /model/ae/decoder/deconv1/Conv_output_0
+[Relu] /model/ae/decoder/Relu_output_0                         0.99996 | 0.9514    0.99994 | 0.5340
+[Resize] /model/ae/decoder/Resize_1_output_0                   0.99997 | 1.6197    0.99996 | 0.7340
+[Conv] /model/ae/decoder/deconv2/Conv_output_0
+[Relu] /model/ae/decoder/Relu_1_output_0                       0.99998 | 1.1373    0.99999 | 0.3044
+[Resize] /model/ae/decoder/Resize_2_output_0                   0.99998 | 1.8080    0.99999 | 0.4906
+[Conv] /model/ae/decoder/deconv3/Conv_output_0
+[Relu] /model/ae/decoder/Relu_2_output_0                       0.99998 | 1.5084    0.99999 | 0.4507
+[Resize] /model/ae/decoder/Resize_3_output_0                   0.99998 | 2.9764    0.99998 | 0.8852
+[Conv] /model/ae/decoder/deconv4/Conv_output_0
+[Relu] /model/ae/decoder/Relu_3_output_0                       0.99998 | 3.1393    0.99999 | 0.8915
+[Resize] /model/ae/decoder/Resize_4_output_0                   0.99998 | 6.0177    0.99999 | 1.6379
+[Conv] /model/ae/decoder/deconv5/Conv_output_0
+[Relu] /model/ae/decoder/Relu_4_output_0                       0.99998 | 8.3685    0.99999 | 2.5007
+[Resize] /model/ae/decoder/Resize_5_output_0                   0.99998 | 16.830    0.99999 | 5.4940
+[Conv] /model/ae/decoder/deconv6/Conv_output_0
+[Relu] /model/ae/decoder/Relu_5_output_0                       0.99995 | 20.439    0.99995 | 10.995
+[Resize] /model/ae/decoder/Resize_6_output_0                   0.99994 | 9.3608    0.99995 | 5.3540
+[Conv] /model/ae/decoder/deconv7/Conv_output_0
+[Relu] /model/ae/decoder/Relu_6_output_0                       0.99995 | 11.869    0.99996 | 6.0682
+[Conv] /model/ae/decoder/deconv8/Conv_output_0                 0.99986 | 37.579    0.99987 | 29.052
+[Sub] /model/Sub_2_output_0                                    0.99781 | 162.02    0.99956 | 74.008
+[Pow] /model/Pow_1_output_0                                    0.99693 | 832.65    0.99949 | 358.87
+[Conv] /model/Pow_1_output_0_rs_sw                             0.99989 | 7.1038    0.99998 | 2.0988
+[Pad] /model/Pad_1_output_0                                    0.99989 | 7.1038    0.99999 | 1.3253
+[Resize] /model/Resize_1_output_0                              0.99990 | 27.442    0.99999 | 5.8322
+[Add] /model/Sub_4_output_0                                    0.99990 | 24.279    0.99999 | 7.6072
+[Mul] /model/Div_2_output_0                                    0.99991 | 69.738    0.99999 | 15.572
+[Add] /model/Add_output_0-mul                                  0.99926 | 2206.1    0.99999 | 117.31
+[Mul] /model/Add_output_0                                      0.99926 | 1103.0    1.00000 | 46.609
+[Add] /post_processor/Sub_1_output_0                           0.99928 | 1108.6    1.00000 | 57.130
+[BatchNormalization] /post_processor/Add_1_output_0
+[Clip] anomaly_map_int8                                        0.99961 | 6.6924    0.99999 | 1.2118
+[exDataConvert] anomaly_map                                    0.99961 | 6.6924    0.99999 | 0.1874
+[Greater] pred_mask                                            1.00000 | 0.0       1.00000 | 0.0
+[ReduceMax] /model/ReduceMax_output_0-rs                       1.00000 | 0.0       1.00000 | 0.0
+[Add] /post_processor/Sub_output_0-rs                          1.00000 | 0.0       1.00000 | 0.0
+[BatchNormalization] /post_processor/Add_output_0-rs
+[Clip] pred_score-rs                                           1.00000 | 0.0       1.00000 | 0.0
+[Reshape] pred_score_int8                                      1.00000 | 0.0       1.00000 | 0.0
+[exDataConvert] pred_score                                     1.00000 | 0.0       1.00000 | 0.0
+[Greater] pred_label-rs                                        1.00000 | 0.0       1.00000 | 0.0
+[Reshape] pred_label                                           1.00000 | 0.0       1.00000 | 0.0
+I The error analysis results save to: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/pill/accuracy_analysis/error_analysis.txt
+W accuracy_analysis: The mapping of layer_name & file_name save to: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/pill/accuracy_analysis/map_name_to_file.txt
+  WARNING: report not found at /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/pill/accuracy_analysis/simulator_error/simulator_error.txt
+  Min cosine similarity: 0.0000
+  WARNING: below threshold 0.99!
+  [5/5] Export RKNN...
+  OK: /home/qbz415/vlm-sam-industrial-vision-v2/models/efficientad_models/pill/model.rknn
+
