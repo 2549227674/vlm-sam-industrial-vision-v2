@@ -36,6 +36,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 5.5b：Qwen3-VL-4B LoRA 15 类微调完成（rank=32，train_loss=0.411，20m32s，RTX 4090 48GB）
 - Phase 5.6 Deployment Benchmark 已完成：4 变体 15 类评估，409 samples，max_tokens=200，详见 `docs/experiments/phase5_6_deployment_benchmark_report.md`
 - Phase 5.7 Method Control Benchmark 已完成：相同 minimal prompt 隔离 LoRA 净贡献，结论见 `docs/experiments/phase5_7_method_control_benchmark_report.md`
+- Phase 5.8 OPRO Prompt-only Baseline 已完成：OPRO 最优 prompt 在标准 409-sample eval set 上 JSON OK=97.1%，但 schema_ok/category_exact/defect_type_exact/severity_valid/bbox_iou_at_0_5 全部为 0.0%；结论：OPRO 优化了 JSON 可解析性，但未超越人工 engineered prompt，进一步证明 LoRA-SFT 对工业 schema / ontology / bbox 风格对齐是必要的
 
 Phase 5 v2 进行中：
 - `scripts/format_llama_factory_data.py`：已扩展到 15 类自动发现 + train/eval 双输出 + 基础校验

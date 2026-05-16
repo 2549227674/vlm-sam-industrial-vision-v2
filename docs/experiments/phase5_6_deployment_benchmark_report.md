@@ -147,17 +147,11 @@ base + 极简 prompt vs LoRA + 极简 prompt，消除 prompt 差异，隔离 LoR
 
 结论：LoRA-SFT 净贡献显著，Phase 5.6 中 LoRA 的优势不是 prompt 工程假象。详见：`docs/experiments/phase5_7_method_control_benchmark_report.md`
 
-**Phase 5.8 OPRO Prompt-only Baseline**（可选 / 进行中）
+**Phase 5.8 OPRO Prompt-only Baseline** ✅ 已完成
 
-量化 prompt engineering 的单独贡献上界。轻量版建议只跑 2B：
+量化 prompt-only 自动搜索的贡献上界。OPRO 在 2B_base 上将 JSON OK 提升到 97.1%，但 schema_ok、category_exact、defect_type_exact、severity_valid 和 bbox_iou_at_0_5 全部为 0.0%。
 
-```bash
-CUDA_VISIBLE_DEVICES=0 python scripts/optimize_prompt_opro.py \
-    --model-size 2B --num-iterations 3 --num-candidates 5 \
-    | tee logs/opro_2b.log
-```
-
-产出：`results/prompt_opro_best.json`。如执行完成，报告写入 `docs/experiments/phase5_8_opro_baseline_report.md`。
+结论：OPRO 未超越人工 engineered prompt，且在真实工业检测指标上失败。该结果进一步证明，prompt engineering 可以改善 JSON 可解析性，但不能替代 LoRA-SFT 的工业协议对齐能力。详见：`docs/experiments/phase5_8_opro_baseline_report.md`
 
 ## 附录：文件索引
 

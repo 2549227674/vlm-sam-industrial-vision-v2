@@ -1,0 +1,40 @@
+Eval samples: 409
+Model size: 2B
+Mode: opro
+
+Loading base model: /root/autodl-tmp/models/qwen3vl_models/base
+OPRO prompt loaded from: results/prompt_opro_best.json (124 chars)
+
+--- OPRO Baseline: 2B_base_opro_prompt (base + OPRO prompt) ---
+
+==========================================================================================
+  Variant: 2B_base_opro_prompt
+==========================================================================================
+| Category     |    JSON OK |     Schema |   CatExact |    DefType |   SevValid |    BBoxIoU |
+|-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+| bottle       |      20/20 |       0/20 |       0/20 |       0/20 |       0/20 |       0/20 |
+| cable        |      27/30 |       0/30 |       0/30 |       0/30 |       0/30 |       0/30 |
+| capsule      |      32/34 |       0/34 |       0/34 |       0/34 |       0/34 |       0/34 |
+| carpet       |      30/30 |       0/30 |       0/30 |       0/30 |       0/30 |       0/30 |
+| grid         |      18/20 |       0/20 |       0/20 |       0/20 |       0/20 |       0/20 |
+| hazelnut     |      24/24 |       0/24 |       0/24 |       0/24 |       0/24 |       0/24 |
+| leather      |      30/30 |       0/30 |       0/30 |       0/30 |       0/30 |       0/30 |
+| metal_nut    |      29/29 |       0/29 |       0/29 |       0/29 |       0/29 |       0/29 |
+| pill         |      43/46 |       0/46 |       0/46 |       0/46 |       0/46 |       0/46 |
+| screw        |      38/38 |       0/38 |       0/38 |       0/38 |       0/38 |       0/38 |
+| tile         |      28/28 |       0/28 |       0/28 |       0/28 |       0/28 |       0/28 |
+| toothbrush   |        9/9 |        0/9 |        0/9 |        0/9 |        0/9 |        0/9 |
+| transistor   |      12/12 |       0/12 |       0/12 |       0/12 |       0/12 |       0/12 |
+| wood         |      18/20 |       0/20 |       0/20 |       0/20 |       0/20 |       0/20 |
+| zipper       |      39/39 |       0/39 |       0/39 |       0/39 |       0/39 |       0/39 |
+|-------------|-----------|-----------|-----------|-----------|-----------|-----------|
+| TOTAL        |    397/409 |      0/409 |      0/409 |      0/409 |      0/409 |      0/409 |
+
+  Avg prompt tokens: 965.0
+  Avg output tokens: 113.8
+==========================================================================================
+
+OPRO report saved: /root/autodl-tmp/results/phase5_8_opro_baseline/reports/ab_eval_report_v2_opro_2B.json
+  Per-sample dump: /root/autodl-tmp/results/phase5_8_opro_baseline/predictions/ab_eval_predictions_2B_base_opro_prompt.jsonl
+
+All evaluations complete.
