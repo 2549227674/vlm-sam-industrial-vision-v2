@@ -32,8 +32,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 3.8：功能完整性验证 + 旧组件清理（5 个旧组件删除，约 -800 行，BBox/Trace/Toast/API_BASE 全部迁移到 v2/ 组件，Hydration 错误修复）
 - Phase 5.1-5.6 v1 初版：3 类（metal_nut/screw/pill）EfficientAD-S 训练 + FastSAM ONNX + LoRA 数据划分 + GT Mask 标注 + Qwen3-VL-2B LoRA 微调 + PC 端 AB 评估（方案A=100%，方案B=100%）
 - Phase 6 v1 初版：3 类模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
+- Phase 5.5 v2：Qwen3-VL-2B LoRA 15 类微调完成（rank=32，train_loss=0.5233，11m37s，RTX 4090 48GB）
+- Phase 5.5b：Qwen3-VL-4B LoRA 15 类微调完成（rank=32，train_loss=0.411，20m32s，RTX 4090 48GB）
 
-Phase 5 v2 重做准备中（阻塞项已修复，待启动训练）：
+Phase 5 v2 进行中：
 - `scripts/format_llama_factory_data.py`：已扩展到 15 类自动发现 + train/eval 双输出 + 基础校验
 - `scripts/eval_ab_test.py`：已扩展 deployment + method_control 双基准 + 8 项评估指标
 - `scripts/optimize_prompt_opro.py`：新增 OPRO prompt-only baseline（PC 阶段方法学对照）
@@ -44,7 +46,7 @@ Phase 5 v2 重做准备中（阻塞项已修复，待启动训练）：
 尚未开始（下一步）：
 - Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
   见 `docs/PROJECT_TIMELINE.md` 阶段 4
-- Phase 5 v2 重做：MVTec AD 全 15 类 + 4 变体 2×2 AB 实验矩阵（数据划分 → 标注 → 训练 → 评估）
+- Phase 5.6：PC 端 Deployment Benchmark（4 变体 JSON 解析成功率评估）
 - Phase 6 v2 重做：Qwen3-VL-4B 模型转换（方案 C/D）+ 2B 重做
 
 ## 一句话定义

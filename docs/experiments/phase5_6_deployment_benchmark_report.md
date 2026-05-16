@@ -134,16 +134,25 @@ GT 的 defect_type 直接取自 MVTec 目录名（如 `scratch_head`、`fabric_b
 4. **combined 类别有歧义**：`combined` 类别包含多种缺陷类型的组合，
    模型预测的单一 defect_type 无法完全匹配 GT 的复合语义
 
-## 8. 下一步
+## 8. 后续实验
 
-**Phase 5.7 Method Control Benchmark**：base + 极简 prompt vs LoRA + 极简 prompt，
-消除 prompt 差异，隔离 LoRA 微调的真实收益。
+**Phase 5.7 Method Control Benchmark** ✅ 已完成
 
-运行命令：
+base + 极简 prompt vs LoRA + 极简 prompt，消除 prompt 差异，隔离 LoRA 微调的真实收益。
+
+结论：LoRA-SFT 净贡献显著，Phase 5.6 中 LoRA 的优势不是 prompt 工程假象。详见：`docs/experiments/phase5_7_method_control_benchmark_report.md`
+
+**Phase 5.8 OPRO Prompt-only Baseline**（可选 / 进行中）
+
+量化 prompt engineering 的单独贡献上界。轻量版建议只跑 2B：
+
 ```bash
-python scripts/eval_ab_test.py --model-size 2B --mode method_control
-python scripts/eval_ab_test.py --model-size 4B --mode method_control
+CUDA_VISIBLE_DEVICES=0 python scripts/optimize_prompt_opro.py \
+    --model-size 2B --num-iterations 3 --num-candidates 5 \
+    | tee logs/opro_2b.log
 ```
+
+产出：`results/prompt_opro_best.json`。如执行完成，报告写入 `docs/experiments/phase5_8_opro_baseline_report.md`。
 
 ## 附录：文件索引
 

@@ -1,6 +1,6 @@
 # ==========================================
 # LLaMA-Factory: Qwen3-VL-2B-Instruct LoRA 微调 (v2: 15 类)
-# 目标硬件: RTX 4060 8GB（本地评估）/ AutoDL RTX 4090 48GB（云端训练）
+# 目标硬件: AutoDL RTX 4090 48GB（实测）/ vGPU-32GB（备选）
 # 训练数据: datasets/industrial_vision_train.json (15 类，~1200 条)
 # ==========================================
 
