@@ -20,7 +20,7 @@ frontend/out/
 build/
 /models/
 /datasets/
-results/
+results/efficientad/
 lightning_logs/
 *.ckpt
 imagenette/
