@@ -200,7 +200,7 @@ results/phase5_7_method_control/
 │   ├── ab_eval_predictions_4B_4B_base_same_prompt_method_control.jsonl
 │   └── ab_eval_predictions_4B_4B_lora_same_prompt_method_control.jsonl
 
-logs/
+logs/（local only，未纳入版本控制）
 ├── eval_ab_method_control_2b.log                   # 2B 评估日志
 └── eval_ab_method_control_4b.log                   # 4B 评估日志
 ```

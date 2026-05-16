@@ -21,6 +21,11 @@
 - **GT 来源**：`scripts/mvtec_mask_to_json.py` 自动生成（基于 MVTec 官方 GT mask）
 - **训练配置**：LoRA rank=32, alpha=32, target=q_proj/k_proj/v_proj/o_proj, 5 epochs, cosine scheduler
 
+> **Prompt token 口径说明**：表中 "工程化 (~300 tokens)" / "极简 (~50 tokens)" 指的是用户提示文本本身的 token 数。
+> Avg Prompt Tok 列（base=1156, lora=958）是 Qwen3-VL tokenizer 返回的 `prompt_tokens` 总量，包含 system prompt、
+> 用户提示文本、图片占位符 token（每张图 ~600-800 tokens，取决于分辨率）以及特殊标记开销。
+> 两套数字口径不同，不可直接对比。
+
 ## 3. 四变体主结果（max_tokens=200）
 
 | 变体 | JSON OK | Cat Exact | DefType Exact | BBox IoU≥0.5 | Avg Prompt Tok | Avg Output Tok |
@@ -30,8 +35,8 @@
 | 4B_base | 98.0% (401/409) | 59.2% (242/409) | 10.5% (43/409) | 0.0% (0/409) | 1156 | 114 |
 | 4B_lora | 95.8% (392/409) | 95.8% (392/409) | 64.8% (265/409) | 64.5% (264/409) | 958 | 114 |
 
-> 完整 per-category 数据见：`logs/ab_eval_report_v2_deployment_2b.json`、`logs/ab_eval_report_v2_deployment_4b.json`
-> Per-sample 详情见：`results/ab_eval_predictions_{size}_{variant}_deployment.jsonl`
+> 完整 per-category 数据见：`results/phase5_6_deployment/reports/ab_eval_report_v2_deployment_2b_main.json`、`results/phase5_6_deployment/reports/ab_eval_report_v2_deployment_4b_main.json`
+> Per-sample 详情见：`results/phase5_6_deployment/predictions/ab_eval_predictions_{size}_{variant}_deployment.jsonl`
 
 ## 4. Defect Group Exact（辅助分析指标）
 
@@ -44,7 +49,7 @@
 | 4B_base | 10.5% | 21.2% | +10.7% |
 | 4B_lora | 64.8% | 77.3% | +12.5% |
 
-> 完整分析见：`results/defect_group_analysis.md`
+> 完整分析见：`results/phase5_6_deployment/analysis/defect_group_analysis.md`
 >
 > **注意**：defect_group_exact 是辅助分析指标，不替代 strict defect_type_exact。
 > 它反映模型是否学会"大类方向"（如区分 wire_defect vs insulation_defect），
