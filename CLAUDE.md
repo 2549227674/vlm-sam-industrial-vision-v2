@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-3 完成，Phase 4（轨道A 联调验收）为下一步，Phase 5/6 v1 初版已完成，v2 重做准备中**
+**Phase 1-3 完成；Phase 5 v2 VLM 方法学实验已完成（5.6 Deployment / 5.7 Method Control / 5.8 OPRO）；Phase 4 联调与 Phase 6 v2 转换为后续任务**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）

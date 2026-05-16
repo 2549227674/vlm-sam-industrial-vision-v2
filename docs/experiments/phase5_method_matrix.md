@@ -12,10 +12,10 @@ Phase 5 分成两条独立的评估线路，目标不同，产出不同：
 
 | 变体 | 模型 | 模式 | Prompt 策略 |
 |---|---|---|---|
-| `2B_base` | Qwen3-VL-2B | 基座 W8A8 | 工程化 Prompt (~300 tokens) |
-| `2B_lora` | Qwen3-VL-2B | LoRA W8A8 | 极简 Prompt (~50 tokens) |
-| `4B_base` | Qwen3-VL-4B | 基座 W8A8 | 工程化 Prompt (~300 tokens) |
-| `4B_lora` | Qwen3-VL-4B | LoRA W8A8 | 极简 Prompt (~50 tokens) |
+| `2B_base` | Qwen3-VL-2B | 基座 W8A8 | 工程化 Prompt（avg prompt tok≈1156） |
+| `2B_lora` | Qwen3-VL-2B | LoRA W8A8 | 极简 Prompt（avg prompt tok≈958） |
+| `4B_base` | Qwen3-VL-4B | 基座 W8A8 | 工程化 Prompt（avg prompt tok≈1156） |
+| `4B_lora` | Qwen3-VL-4B | LoRA W8A8 | 极简 Prompt（avg prompt tok≈958） |
 
 **评估维度**（PC 阶段 8 项指标 + RK3588 四维指标）：
 

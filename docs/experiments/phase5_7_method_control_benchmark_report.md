@@ -2,7 +2,7 @@
 
 ## 1. 实验动机（Motivation）
 
-Phase 5.6 Deployment Benchmark 中，LoRA 变体（2B_lora / 4B_lora）在 category_exact、defect_type_exact、bbox_iou_at_0_5 上全面领先 base 变体。然而，5.6 的四变体使用了两套不同的 prompt 策略——base 使用工程化 prompt（~300 tokens），LoRA 使用极简 prompt（~50 tokens）。
+Phase 5.6 Deployment Benchmark 中，LoRA 变体（2B_lora / 4B_lora）在 category_exact、defect_type_exact、bbox_iou_at_0_5 上全面领先 base 变体。然而，5.6 的四变体使用了两套不同的 prompt 策略——base 使用工程化 prompt（纯文本更长，完整输入 avg prompt tokens≈1156），LoRA 使用极简 prompt（纯文本更短，完整输入 avg prompt tokens≈958）。
 
 这引出一个关键方法学问题：**Phase 5.6 中观察到的 LoRA 优势，究竟来自 LoRA-SFT 参数适应，还是 prompt 工程差异的假象？**
 

@@ -2,7 +2,7 @@
 
 ## 1. 实验动机（Motivation）
 
-Phase 5.6 Deployment Benchmark 中，人工 engineered prompt（~300 tokens）使 2B_base 在 category_exact 上达到 53.1%。Phase 5.7 Method Control Benchmark 证明 LoRA-SFT 的净贡献不是 prompt 假象。但一个自然的后续问题是：**如果用自动化方法搜索更优 prompt，能否逼近甚至超越 LoRA？**
+Phase 5.6 Deployment Benchmark 中，人工 engineered prompt（完整输入 avg prompt tokens≈1156）使 2B_base 在 category_exact 上达到 53.1%。Phase 5.7 Method Control Benchmark 证明 LoRA-SFT 的净贡献不是 prompt 假象。但一个自然的后续问题是：**如果用自动化方法搜索更优 prompt，能否逼近甚至超越 LoRA？**
 
 Phase 5.8 使用 OPRO（Optimization by PROmpting）方法，在 2B base 模型上自动搜索最优 prompt，量化 prompt-only 方法的贡献上界，并与人工 engineered prompt 和 LoRA-SFT 形成三阶段对照。
 

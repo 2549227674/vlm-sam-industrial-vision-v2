@@ -9,10 +9,10 @@
 
 | 变体 | 模型 | 模式 | Prompt |
 |------|------|------|--------|
-| `2B_base` | Qwen3-VL-2B | 基座 fp16 | 工程化 (~300 tokens) |
-| `2B_lora` | Qwen3-VL-2B | LoRA fp16 | 极简 (~50 tokens) |
-| `4B_base` | Qwen3-VL-4B | 基座 fp16 | 工程化 (~300 tokens) |
-| `4B_lora` | Qwen3-VL-4B | LoRA fp16 | 极简 (~50 tokens) |
+| `2B_base` | Qwen3-VL-2B | 基座 fp16 | 工程化（avg prompt tok≈1156） |
+| `2B_lora` | Qwen3-VL-2B | LoRA fp16 | 极简（avg prompt tok≈958） |
+| `4B_base` | Qwen3-VL-4B | 基座 fp16 | 工程化（avg prompt tok≈1156） |
+| `4B_lora` | Qwen3-VL-4B | LoRA fp16 | 极简（avg prompt tok≈958） |
 
 ## 2. 实验口径
 
@@ -21,10 +21,7 @@
 - **GT 来源**：`scripts/mvtec_mask_to_json.py` 自动生成（基于 MVTec 官方 GT mask）
 - **训练配置**：LoRA rank=32, alpha=32, target=q_proj/k_proj/v_proj/o_proj, 5 epochs, cosine scheduler
 
-> **Prompt token 口径说明**：表中 "工程化 (~300 tokens)" / "极简 (~50 tokens)" 指的是用户提示文本本身的 token 数。
-> Avg Prompt Tok 列（base=1156, lora=958）是 Qwen3-VL tokenizer 返回的 `prompt_tokens` 总量，包含 system prompt、
-> 用户提示文本、图片占位符 token（每张图 ~600-800 tokens，取决于分辨率）以及特殊标记开销。
-> 两套数字口径不同，不可直接对比。
+> **Prompt token 口径说明**：表中 prompt 列的数字是 Qwen3-VL tokenizer 返回的完整 `prompt_tokens` 总量，包含 system prompt、用户提示文本、图片占位符 token（每张图 ~600-800 tokens，取决于分辨率）以及特殊标记开销。
 
 ## 3. 四变体主结果（max_tokens=200）
 
