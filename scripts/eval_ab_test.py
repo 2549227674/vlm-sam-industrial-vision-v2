@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Stage 5.6: PC-side 4-variant evaluation (v2).
 
-Two benchmark modes:
+Three benchmark modes:
   1. deployment:  base + engineered prompt vs LoRA + minimal prompt
      (ships to RK3588, measures prompt-length advantage)
   2. method_control: base vs LoRA with identical prompt
      (isolates LoRA fine-tuning effect from prompt engineering)
+  3. opro: base + OPRO-optimized prompt (prompt-only baseline)
 
 Variants:
   2B_base: Qwen3-VL-2B base + engineered prompt (~300 tokens)
@@ -16,6 +17,9 @@ Variants:
 Method control:
   2B_base_same_prompt: Qwen3-VL-2B base + minimal prompt (~50 tokens)
   2B_lora_same_prompt: Qwen3-VL-2B LoRA + minimal prompt (~50 tokens)
+
+OPRO baseline:
+  2B_base_opro_prompt: Qwen3-VL-2B base + OPRO-optimized prompt
 
 Metrics:
   - json_parse_ok: valid JSON with all required keys
@@ -33,6 +37,7 @@ Usage:
     python scripts/eval_ab_test.py --model-size 4B --mode deployment
     python scripts/eval_ab_test.py --max-tokens 300
     python scripts/eval_ab_test.py --model-size 2B --mode deployment --image-filter scripts/truncated_2b_lora.txt
+    python scripts/eval_ab_test.py --model-size 2B --mode opro --prompt-override-path results/prompt_opro_best.json
 """
 
 import argparse
@@ -282,7 +287,8 @@ def _extract_prediction_json(text: str) -> tuple[dict | None, str | None]:
 
 def evaluate_variant(model, processor, samples: list[dict],
                      variant: str, max_new_tokens: int,
-                     use_engineered_prompt: bool) -> tuple[dict, list[dict]]:
+                     use_engineered_prompt: bool,
+                     prompt_override: str | None = None) -> tuple[dict, list[dict]]:
     """Run one variant over all samples, return (cat_metrics, sample_records)."""
     cat_metrics: dict[str, dict[str, Any]] = {cat: {
         "json_parse_ok": 0, "schema_ok": 0, "category_exact": 0,
@@ -295,7 +301,12 @@ def evaluate_variant(model, processor, samples: list[dict],
         cat = sample["category"]
         cat_metrics[cat]["total"] += 1
 
-        if use_engineered_prompt:
+        if prompt_override is not None:
+            messages = [{"role": "user", "content": [
+                {"type": "image", "image": str(sample["path"])},
+                {"type": "text", "text": prompt_override},
+            ]}]
+        elif use_engineered_prompt:
             messages = [{"role": "user", "content": [
                 {"type": "image", "image": str(sample["path"])},
                 {"type": "text", "text": PROMPT_ENGINEERED},
@@ -477,17 +488,33 @@ def run_method_control_benchmark(model, processor, samples: list[dict],
     return report, all_records
 
 
+def run_opro_baseline(model, processor, samples: list[dict],
+                      max_new_tokens: int, best_prompt: str) -> tuple[dict, list[dict]]:
+    """OPRO prompt-only baseline: base model + OPRO-optimized prompt."""
+    variant = "2B_base_opro_prompt"
+    print(f"\n--- OPRO Baseline: {variant} (base + OPRO prompt) ---")
+    cat_metrics, records = evaluate_variant(
+        model, processor, samples, variant,
+        max_new_tokens, use_engineered_prompt=False,
+        prompt_override=best_prompt)
+    report = build_report(cat_metrics, variant)
+    print_report(report)
+    return {"benchmark": "opro", "variants": [report]}, records
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="4-variant evaluation for Qwen3-VL")
     parser.add_argument("--model-size", choices=["2B", "4B"], required=True,
                         help="Model size to evaluate (2B or 4B)")
-    parser.add_argument("--mode", choices=["deployment", "method_control", "both"],
+    parser.add_argument("--mode", choices=["deployment", "method_control", "opro", "both"],
                         default="both", help="Benchmark mode")
     parser.add_argument("--max-tokens", type=int, default=200)
     parser.add_argument("--lora-adapter-path", type=str, default=None,
                         help="Override LoRA adapter path (default: models/qwen3vl_lora_adapter_15cls for 2B)")
     parser.add_argument("--image-filter", type=str, default=None,
                         help="Text file with one basename per line; only evaluate matching images")
+    parser.add_argument("--prompt-override-path", type=str, default=None,
+                        help="JSON file with 'best_prompt' field; used as user message in opro mode")
     args = parser.parse_args()
 
     size = args.model_size
@@ -560,6 +587,34 @@ def main() -> None:
                     if rec["variant"] == variant_name:
                         f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
             print(f"  Per-sample dump: {out_path}")
+
+    if args.mode == "opro":
+        if not args.prompt_override_path:
+            parser.error("--mode opro requires --prompt-override-path")
+        prompt_path = Path(args.prompt_override_path)
+        with open(prompt_path, encoding="utf-8") as f:
+            best_prompt = json.load(f)["best_prompt"]
+        print(f"OPRO prompt loaded from: {prompt_path} ({len(best_prompt)} chars)")
+
+        opro_dir = PROJECT_ROOT / "results" / "phase5_8_opro_baseline"
+        opro_dir.mkdir(parents=True, exist_ok=True)
+
+        result, records = run_opro_baseline(
+            model, processor, samples, args.max_tokens, best_prompt)
+        results.append(result)
+
+        report_path = opro_dir / "reports" / f"ab_eval_report_v2_opro_{size}.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, ensure_ascii=False, indent=2)
+        print(f"\nOPRO report saved: {report_path}")
+
+        pred_path = opro_dir / "predictions" / f"ab_eval_predictions_{size}_base_opro_prompt.jsonl"
+        pred_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(pred_path, "w", encoding="utf-8") as f:
+            for rec in records:
+                f.write(json.dumps(rec, ensure_ascii=False, default=str) + "\n")
+        print(f"  Per-sample dump: {pred_path}")
 
     print("\nAll evaluations complete.")
 
