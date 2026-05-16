@@ -171,9 +171,15 @@ Phase 5 评估
 
 ```
 results/
-├── ab_eval_report_v2_deployment.json      # Deployment benchmark 结果
-├── ab_eval_report_v2_method_control.json  # Method control benchmark 结果
-└── prompt_opro_best.json                  # OPRO 最优 prompt + 评估分数
+├── phase5_6_deployment/
+│   ├── reports/                           # Deployment benchmark 聚合报告
+│   ├── predictions/                       # Per-sample JSONL
+│   ├── analysis/                          # defect_group / lora_diff 分析
+│   └── max-token-300/                     # 截断敏感性补测
+├── phase5_7_method_control/
+│   ├── reports/                           # Method control 聚合报告
+│   └── predictions/                       # Per-sample JSONL
+└── prompt_opro_best.json                  # OPRO 最优 prompt + 评估分数（待执行）
 
 models/
 ├── qwen3vl_lora_adapter_15cls/            # 2B LoRA v2 adapter
