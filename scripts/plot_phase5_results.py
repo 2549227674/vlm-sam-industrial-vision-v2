@@ -104,9 +104,9 @@ def summarize_metrics(records: list[dict]) -> dict:
                 "defect_type_exact", "severity_valid", "bbox_iou_at_0_5"):
         sums[key] = sum(1 for r in records if r.get("metrics", {}).get(key, False))
     sums["total"] = n
-    for key in sums:
-        if key != "total":
-            sums[f"{key}_rate"] = sums[key] / n * 100 if n > 0 else 0.0
+    rates = {f"{key}_rate": sums[key] / n * 100 if n > 0 else 0.0
+             for key in sums if key != "total"}
+    sums.update(rates)
     return sums
 
 
@@ -170,9 +170,9 @@ def plot_cross_phase_metrics(data: dict[str, list[dict]], output_dir: Path) -> N
         vals = [summaries[v].get(f"{metric}_rate", 0.0) for v in present]
         bars = ax.bar(x + i * width, vals, width, label=label, color=color)
         for bar, val in zip(bars, vals):
-            if val > 0:
-                ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
-                        f"{val:.1f}", ha="center", va="bottom", fontsize=7)
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 1,
+                    f"{val:.1f}" if val > 0 else "0.0", ha="center", va="bottom",
+                    fontsize=7)
 
     ax.set_ylabel("Percentage (%)")
     ax.set_title("Phase 5: Cross-Phase Variant Comparison")
@@ -247,7 +247,7 @@ def plot_lora_delta(data: dict[str, list[dict]], output_dir: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def plot_bbox_heatmap(data: dict[str, list[dict]], output_dir: Path) -> None:
-    """Heatmap: per-category bbox_iou_at_0_5 for 2B_lora_mc and 4B_lora_mc."""
+    """Heatmap: per-category bbox_iou_at_0_5 for 2B_lora_mc and 4B_lora_mc, sorted by avg hit rate."""
     variants = ["2B_lora_mc", "4B_lora_mc"]
     present = [v for v in variants if v in data]
     if len(present) < 2:
@@ -255,23 +255,37 @@ def plot_bbox_heatmap(data: dict[str, list[dict]], output_dir: Path) -> None:
         return
 
     cat_data = {v: summarize_by_category(data[v], "bbox_iou_at_0_5") for v in present}
-    matrix = np.array([[cat_data[v][c] for v in present] for c in CATEGORIES])
+    # Sort categories by average hit rate (descending)
+    avg_rates = {c: (cat_data[present[0]][c] + cat_data[present[1]][c]) / 2 for c in CATEGORIES}
+    sorted_cats = sorted(CATEGORIES, key=lambda c: avg_rates[c], reverse=True)
+
+    matrix = np.array([[cat_data[v][c] for v in present] for c in sorted_cats])
+    # Add delta column
+    delta_col = matrix[:, 1] - matrix[:, 0]
+    matrix_with_delta = np.column_stack([matrix, delta_col])
 
     fig, ax = plt.subplots(figsize=(8, 8))
-    im = ax.imshow(matrix, cmap="YlGn", vmin=0, vmax=1, aspect="auto")
+    im = ax.imshow(matrix_with_delta, cmap="YlGn", vmin=-0.3, vmax=1.0, aspect="auto")
 
-    ax.set_xticks(np.arange(len(present)))
-    ax.set_xticklabels(present)
-    ax.set_yticks(np.arange(len(CATEGORIES)))
-    ax.set_yticklabels(CATEGORIES)
+    col_labels = present + ["Delta (4B-2B)"]
+    ax.set_xticks(np.arange(len(col_labels)))
+    ax.set_xticklabels(col_labels)
+    ax.set_yticks(np.arange(len(sorted_cats)))
+    ax.set_yticklabels(sorted_cats)
 
-    for i in range(len(CATEGORIES)):
-        for j in range(len(present)):
-            val = matrix[i, j]
-            color = "white" if val > 0.5 else "black"
-            ax.text(j, i, f"{val:.2f}", ha="center", va="center", color=color, fontsize=8)
+    for i in range(len(sorted_cats)):
+        for j in range(len(col_labels)):
+            val = matrix_with_delta[i, j]
+            if j < 2:
+                color = "white" if val > 0.5 else "black"
+                ax.text(j, i, f"{val:.2f}", ha="center", va="center", color=color, fontsize=8)
+            else:
+                color = "#55A868" if val >= 0 else "#C44E52"
+                sign = "+" if val >= 0 else ""
+                ax.text(j, i, f"{sign}{val:.2f}", ha="center", va="center",
+                        color=color, fontsize=8, fontweight="bold")
 
-    ax.set_title("Per-Category BBox IoU>=0.5 Hit Rate")
+    ax.set_title("Per-Category BBox IoU>=0.5 Hit Rate (sorted by avg)")
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     fig.tight_layout()
     out = output_dir / "fig3_bbox_per_category_heatmap.png"
@@ -285,7 +299,7 @@ def plot_bbox_heatmap(data: dict[str, list[dict]], output_dir: Path) -> None:
 # ---------------------------------------------------------------------------
 
 def plot_iou_distribution(data: dict[str, list[dict]], output_dir: Path) -> None:
-    """Histogram: max_iou distribution for 2B_lora_mc and 4B_lora_mc."""
+    """Histogram: max_iou distribution for 2B_lora_mc and 4B_lora_mc (side-by-side)."""
     variants = ["2B_lora_mc", "4B_lora_mc"]
     present = [v for v in variants if v in data]
     if not present:
@@ -296,15 +310,30 @@ def plot_iou_distribution(data: dict[str, list[dict]], output_dir: Path) -> None
     fig, ax = plt.subplots(figsize=(10, 5))
     colors = ["#4C72B0", "#C44E52"]
 
-    for v, color in zip(present, colors):
+    # Compute histograms first for side-by-side layout
+    histograms = {}
+    for v in present:
         ious = [r["max_iou"] for r in data[v] if r.get("max_iou") is not None]
         if ious:
-            ax.hist(ious, bins=bins, alpha=0.6, label=v, color=color, edgecolor="black")
+            counts, _ = np.histogram(ious, bins=bins)
+            histograms[v] = counts
+        else:
+            histograms[v] = np.zeros(len(bins) - 1)
+
+    bin_centers = [(bins[i] + bins[i + 1]) / 2 for i in range(len(bins) - 1)]
+    bin_width = (bins[1] - bins[0]) * 0.8
+    offsets = np.linspace(-bin_width / 2, bin_width / 2, len(present) + 1)[1:]
+
+    for v, color, offset in zip(present, colors, offsets):
+        ax.bar(np.array(bin_centers) + offset, histograms[v], width=bin_width,
+               alpha=0.8, label=v, color=color, edgecolor="black", linewidth=0.5)
 
     ax.axvline(x=0.5, color="red", linestyle="--", linewidth=1.5, label="IoU=0.5 threshold")
     ax.set_xlabel("Max IoU")
     ax.set_ylabel("Count")
     ax.set_title("Max IoU Distribution (LoRA variants, Phase 5.7)")
+    ax.set_xticks(bin_centers)
+    ax.set_xticklabels([f"{b:.1f}" for b in bin_centers], rotation=45)
     ax.legend()
     ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
@@ -319,7 +348,7 @@ def plot_iou_distribution(data: dict[str, list[dict]], output_dir: Path) -> None
 # ---------------------------------------------------------------------------
 
 def plot_ablation_summary(data: dict[str, list[dict]], output_dir: Path) -> None:
-    """Line/grouped-point plot: 4 configurations across 3 task metrics."""
+    """Line/grouped-point plot: 4 configurations across 3 task metrics, with inset zoom."""
     configs = [
         ("2B_base + minimal (5.7)", "2B_base_mc"),
         ("2B_base + engineered (5.6)", "2B_base_deploy"),
@@ -337,17 +366,19 @@ def plot_ablation_summary(data: dict[str, list[dict]], output_dir: Path) -> None
     markers = ["o", "s", "^", "D"]
     colors = ["#4C72B0", "#55A868", "#C44E52", "#8172B2"]
 
+    all_vals = {}  # store values for table
+
     for (name, variant), marker, color in zip(configs, markers, colors):
         if variant in data:
             s = summarize_metrics(data[variant])
             vals = [s.get(f"{m}_rate", 0.0) for m in metrics]
         elif variant == "2B_base_deploy":
-            # fallback to known values
             vals = [engineered_fallback[m] for m in metrics]
             print(f"  [INFO] fig5: using fallback values for {name}")
         else:
             print(f"  [WARN] fig5: missing {variant}, skipping")
             continue
+        all_vals[name] = vals
         ax.plot(x, vals, marker=marker, label=name, color=color, markersize=8, linewidth=2)
         for xi, vi in zip(x, vals):
             ax.annotate(f"{vi:.1f}", (xi, vi), textcoords="offset points",
@@ -360,7 +391,31 @@ def plot_ablation_summary(data: dict[str, list[dict]], output_dir: Path) -> None
     ax.set_ylim(0, 105)
     ax.legend(loc="upper left")
     ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
+
+    # Inset zoom for bottom region (0-6%)
+    ax_inset = ax.inset_axes([0.55, 0.05, 0.35, 0.35])
+    for (name, variant), marker, color in zip(configs, markers, colors):
+        if name in all_vals:
+            ax_inset.plot(x, all_vals[name], marker=marker, color=color,
+                          markersize=6, linewidth=1.5)
+    ax_inset.set_xticks(x)
+    ax_inset.set_xticklabels(labels, fontsize=7)
+    ax_inset.set_ylim(-1, 6)
+    ax_inset.set_title("Zoom: 0-6% region", fontsize=8)
+    ax_inset.grid(axis="y", alpha=0.3)
+
+    # Add summary table below the chart
+    table_data = []
+    for name in all_vals:
+        table_data.append([name.split("(")[0].strip()] + [f"{v:.1f}" for v in all_vals[name]])
+    col_labels = ["Configuration"] + labels
+    table = ax.table(cellText=table_data, colLabels=col_labels,
+                     loc="bottom", bbox=[0.0, -0.45, 1.0, 0.25])
+    table.auto_set_font_size(False)
+    table.set_fontsize(7)
+    table.scale(1, 1.2)
+
+    fig.subplots_adjust(bottom=0.3)
     out = output_dir / "fig5_ablation_summary.png"
     fig.savefig(out, dpi=150, bbox_inches="tight")
     plt.close(fig)
