@@ -19,6 +19,7 @@ Usage:
     python scripts/convert_efficientad_rknn.py --categories metal_nut
     python scripts/convert_efficientad_rknn.py --categories bottle cable zipper
     python scripts/convert_efficientad_rknn.py --calib-samples 100
+    python scripts/convert_efficientad_rknn.py --skip-accuracy-analysis
     python scripts/convert_efficientad_rknn.py --dry-run            # pre-check only
     python scripts/convert_efficientad_rknn.py --dry-run --categories metal_nut
 """
@@ -71,32 +72,57 @@ def create_calib_list(category: str, num_samples: int) -> str:
     return str(calib_file)
 
 
-def parse_accuracy_report(analysis_dir: Path) -> tuple[float, bool]:
-    """Parse error_analysis.txt, return (min_entire_cosine, all_pass).
+def parse_accuracy_report(analysis_dir: Path) -> dict:
+    """Parse error_analysis.txt with output-layer-aware cosine reporting.
 
-    Table row format:
+    Returns dict with keys:
+        min_cosine:         minimum entire-cosine across ALL layers
+        output_layer_cosine: entire-cosine for the final output tensor (anomaly_map or pred_score)
+        output_layer_name:  name of the matched output layer, or None
+        all_pass:           True if min_cosine >= COSINE_THRESHOLD
+
+    Table row format (rknn-toolkit2 v2.3.2):
       [Conv] /model.0/...   0.99858 | 504.43    0.99858 | 504.43
       entire cos ^                 ^ single cos
     """
     report_path = analysis_dir / "error_analysis.txt"
+    result = {
+        "min_cosine": 0.0,
+        "output_layer_cosine": None,
+        "output_layer_name": None,
+        "all_pass": False,
+    }
     if not report_path.exists():
         print(f"  WARNING: report not found at {report_path}")
-        return 0.0, False
+        return result
 
     # group(1) = entire cosine, group(2) = single cosine
-    pattern = re.compile(r"^\[.*?\].*?\s+([\d.]+)\s+\|\s+[\d.]+\s+([\d.]+)")
+    row_pattern = re.compile(r"^\[.*?\].*?\s+([\d.]+)\s+\|\s+[\d.]+\s+([\d.]+)")
+    # EfficientAD final outputs: /anomaly_map/... or /pred_score/...
+    output_pattern = re.compile(r"/(anomaly_map|pred_score)")
+
     min_cosine = 1.0
+    output_layer_cosine: float | None = None
+    output_layer_name: str | None = None
 
     with open(report_path) as f:
         for line in f:
-            m = pattern.search(line)
-            if m:
-                val = float(m.group(1))  # entire cosine
-                if val < min_cosine:
-                    min_cosine = val
+            m = row_pattern.search(line)
+            if not m:
+                continue
+            val = float(m.group(1))  # entire cosine
+            if val < min_cosine:
+                min_cosine = val
+            om = output_pattern.search(line)
+            if om:
+                output_layer_cosine = val
+                output_layer_name = om.group(1)
 
-    all_pass = min_cosine >= COSINE_THRESHOLD
-    return min_cosine, all_pass
+    result["min_cosine"] = min_cosine
+    result["output_layer_cosine"] = output_layer_cosine
+    result["output_layer_name"] = output_layer_name
+    result["all_pass"] = min_cosine >= COSINE_THRESHOLD
+    return result
 
 
 def dry_run_check(categories: list[str], calib_samples: int) -> None:
@@ -147,8 +173,12 @@ def dry_run_check(categories: list[str], calib_samples: int) -> None:
         print(f"  Convertible:    (none — run Phase 5.1 training first)")
 
 
-def convert_category(category: str, calib_samples: int) -> bool:
-    """Convert one category. Returns True on success."""
+def convert_category(category: str, calib_samples: int, skip_accuracy_analysis: bool = False) -> bool:
+    """Convert one category. Returns True on success (RKNN exported).
+
+    Order: config → load → build → export → accuracy_analysis (optional).
+    A failure in accuracy_analysis does NOT invalidate an already-exported model.
+    """
     from rknn.api import RKNN
 
     onnx_path = MODELS_DIR / category / "weights" / "onnx" / "model.onnx"
@@ -158,6 +188,7 @@ def convert_category(category: str, calib_samples: int) -> bool:
         print(f"  [SKIP] ONNX not found: {onnx_path}")
         return False
 
+    total_steps = 4 if skip_accuracy_analysis else 5
     print(f"\n{'=' * 50}")
     print(f"  Converting: {category}")
     print(f"{'=' * 50}")
@@ -166,7 +197,7 @@ def convert_category(category: str, calib_samples: int) -> bool:
 
     try:
         # 1. Config — no rknn_core_num (runtime param, not conversion param)
-        print("  [1/5] Config (INT8, rk3588)...")
+        print(f"  [1/{total_steps}] Config (INT8, rk3588)...")
         ret = rknn.config(
             mean_values=MEAN_VALUES,
             std_values=STD_VALUES,
@@ -178,48 +209,64 @@ def convert_category(category: str, calib_samples: int) -> bool:
             return False
 
         # 2. Load ONNX
-
-        print("  [2/5] Load ONNX...")
+        print(f"  [2/{total_steps}] Load ONNX...")
         ret = rknn.load_onnx(
                 model=str(onnx_path),
-                inputs=['input'],  # 指定输入节点的名称
-                input_size_list=[[1, 3, 256, 256]]  # 强制固定动态 batch_size 为 1
+                inputs=['input'],
+                input_size_list=[[1, 3, 256, 256]]
         )
         if ret != 0:
             print("  FAIL: load_onnx()")
             return False
 
         # 3. Build INT8 quantized model
-        print(f"  [3/5] Build INT8 (calib={calib_samples} samples)...")
+        print(f"  [3/{total_steps}] Build INT8 (calib={calib_samples} samples)...")
         calib_file = create_calib_list(category, calib_samples)
         ret = rknn.build(do_quantization=True, dataset=calib_file)
         if ret != 0:
             print("  FAIL: build()")
             return False
 
-        # 4. Accuracy analysis
-        analysis_dir = MODELS_DIR / category / "accuracy_analysis"
-        analysis_dir.mkdir(parents=True, exist_ok=True)
-
-        print("  [4/5] Accuracy analysis...")
-        with open(calib_file) as f:
-            first_image = f.readline().strip()
-        rknn.accuracy_analysis(inputs=[first_image], output_dir=str(analysis_dir))
-
-        min_cosine, all_pass = parse_accuracy_report(analysis_dir)
-        print(f"  Min cosine similarity: {min_cosine:.4f}")
-        if not all_pass:
-            print(f"  WARNING: below threshold {COSINE_THRESHOLD}!")
-
-        # 5. Export
-        print("  [5/5] Export RKNN...")
+        # 4. Export — must happen before accuracy_analysis so the .rknn
+        #    file is safe even if accuracy_analysis crashes.
+        print(f"  [4/{total_steps}] Export RKNN...")
         ret = rknn.export_rknn(str(rknn_path))
         if ret != 0:
             print("  FAIL: export_rknn()")
             return False
 
-        print(f"  OK: {rknn_path}")
-        return all_pass
+        print(f"  Exported: {rknn_path}")
+
+        if skip_accuracy_analysis:
+            print("  Accuracy analysis: SKIPPED (--skip-accuracy-analysis)")
+            return True
+
+        # 5. Accuracy analysis (optional, failure non-fatal)
+        analysis_dir = MODELS_DIR / category / "accuracy_analysis"
+        analysis_dir.mkdir(parents=True, exist_ok=True)
+
+        print(f"  [5/{total_steps}] Accuracy analysis...")
+        try:
+            with open(calib_file) as f:
+                first_image = f.readline().strip()
+            rknn.accuracy_analysis(inputs=[first_image], output_dir=str(analysis_dir))
+
+            report = parse_accuracy_report(analysis_dir)
+            min_cos = report["min_cosine"]
+            out_cos = report["output_layer_cosine"]
+            out_name = report["output_layer_name"]
+
+            print(f"  Min cosine (all layers): {min_cos:.5f}")
+            if out_cos is not None and out_name:
+                status = "OK" if out_cos >= COSINE_THRESHOLD else "BELOW THRESHOLD"
+                print(f"  Output layer ({out_name}): {out_cos:.5f}  [{status}]")
+            if not report["all_pass"]:
+                print(f"  WARNING: min cosine below threshold {COSINE_THRESHOLD}")
+        except Exception as e:
+            print(f"  WARNING: accuracy_analysis failed ({e})")
+            print(f"  Exported model at {rknn_path} is unaffected.")
+
+        return True
 
     finally:
         rknn.release()
@@ -231,6 +278,8 @@ def main() -> None:
                         help="Categories to convert (default: all 15 MVTec classes)")
     parser.add_argument("--calib-samples", type=int, default=100,
                         help="Number of good/ images for INT8 calibration")
+    parser.add_argument("--skip-accuracy-analysis", action="store_true",
+                        help="Skip accuracy_analysis after export (faster, model.rknn still valid)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Pre-check only: verify ONNX and calib images without RKNN conversion")
     args = parser.parse_args()
@@ -250,7 +299,7 @@ def main() -> None:
 
     for cat in args.categories:
         try:
-            ok = convert_category(cat, args.calib_samples)
+            ok = convert_category(cat, args.calib_samples, args.skip_accuracy_analysis)
             results[cat] = ok
         except Exception as e:
             print(f"  ERROR ({cat}): {e}")
@@ -276,7 +325,10 @@ def main() -> None:
 
     total = len(results)
     print(f"\n  PASS={pass_count}  FAIL={fail_count}  SKIP/ERROR={skip_count}  total={total}")
-    print(f"  Threshold: cosine >= {COSINE_THRESHOLD}")
+    if args.skip_accuracy_analysis:
+        print("  Accuracy analysis: SKIPPED")
+    else:
+        print(f"  Threshold: cosine >= {COSINE_THRESHOLD}")
 
     if fail_count > 0 or skip_count > 0:
         sys.exit(1)
