@@ -14,7 +14,7 @@ Normalization: YOLOv8 default (0-255 -> 0-1)
 Usage:
     source .venv_rknn/bin/activate
     python scripts/convert_fastsam_rknn.py
-    python scripts/convert_fastsam_rknn.py --calib-samples 100
+    python scripts/convert_fastsam_rknn.py --calib-samples 150
 """
 
 from __future__ import annotations
@@ -28,7 +28,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 FASTSAM_DIR = PROJECT_ROOT / "models" / "fastsam_models"
 MVTEC_DIR = PROJECT_ROOT / "simulator" / "mvtec"
-CATEGORIES = ["metal_nut", "screw", "pill"]
+CATEGORIES = [
+    "bottle", "cable", "capsule", "carpet", "grid",
+    "hazelnut", "leather", "metal_nut", "pill", "screw",
+    "tile", "toothbrush", "transistor", "wood", "zipper",
+]
 COSINE_THRESHOLD = 0.99
 
 # YOLOv8 normalization: pixel [0,255] -> [0,1]
@@ -37,14 +41,14 @@ STD_VALUES = [[255, 255, 255]]
 
 
 def create_calib_list(num_samples: int) -> str:
-    """Mix good/ images from all 3 categories for INT8 calibration.
+    """Mix good/ images from all 15 categories for INT8 calibration.
 
     FastSAM is a general segmentation model shared across categories,
-    so calibration must cover all three texture distributions.
+    so calibration must cover diverse texture distributions.
     """
     random.seed(42)
-    per_cat = num_samples // len(CATEGORIES)  # 33
-    remainder = num_samples - per_cat * len(CATEGORIES)  # 1
+    per_cat = num_samples // len(CATEGORIES)
+    remainder = num_samples - per_cat * len(CATEGORIES)
 
     all_images: list[Path] = []
     for i, cat in enumerate(CATEGORIES):
