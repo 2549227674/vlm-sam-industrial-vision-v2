@@ -16,11 +16,12 @@ Target components:
 |---|---|---|
 | EfficientAD 15-class RKNN | Done (15/15) | `models/efficientad_models/{category}/model.rknn` |
 | FastSAM 15-class calibrated RKNN | Done | `models/fastsam_models/fastsam_s.rknn` |
-| Qwen3-VL 2B LoRA 15cls RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_w8a8_lora_15cls.rkllm` |
-| Qwen3-VL 4B LoRA 15cls RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_4b_w8a8_lora_15cls.rkllm` |
-| Qwen3-VL 2B vision RKNN | Done (reused v1) | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_vision.rknn` |
-| Qwen3-VL 4B vision RKNN | Done | Converted locally in WSL `.venv_rknn` from AutoDL-exported `qwen3vl_vision.onnx` |
-| Qwen3-VL 4B base RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_4b_w8a8_base.rkllm` |
+| Qwen3-VL 2B base RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_w8a8_base.rkllm` (2.3G) |
+| Qwen3-VL 2B LoRA 15cls RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_w8a8_lora_15cls.rkllm` (2.3G) |
+| Qwen3-VL 2B vision RKNN | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_vision.rknn` (812M) |
+| Qwen3-VL 4B base RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_4b_w8a8_base.rkllm` (4.6G) |
+| Qwen3-VL 4B LoRA 15cls RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_4b_w8a8_lora_15cls.rkllm` (4.6G) |
+| Qwen3-VL 4B vision RKNN | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_4b_vision.rknn` (843M) |
 
 ### 2.1 Known sha256
 
@@ -28,7 +29,7 @@ Target components:
 qwen3vl_2b_w8a8_lora_15cls.rkllm  de2a25b08d5a87093fb8305364bdae4cb3d3db773477ac0153bca300190f0482
 ```
 
-sha256 files for other artifacts are not yet generated.
+sha256 files for other artifacts are not yet generated (low priority, local files verified by size/date).
 
 ## 3. Calibration Strategy
 
@@ -112,14 +113,13 @@ Requires newer transformers (>=4.57.0) with `Qwen3VLForConditionalGeneration` su
 
 ```
 models/qwen3vl_models/rkllm_15cls/
-├── qwen3vl_2b_vision.rknn                    # Present
-├── qwen3vl_2b_w8a8_lora_15cls.rkllm          # Present
-├── qwen3vl_2b_w8a8_lora_15cls.sha256         # TO GENERATE
-├── qwen3vl_4b_vision.rknn                    # Present (converted locally)
-├── qwen3vl_4b_w8a8_lora_15cls.rkllm          # Present
-├── qwen3vl_4b_w8a8_lora_15cls.sha256         # TO GENERATE
-├── qwen3vl_4b_w8a8_base.rkllm                # Present
-└── qwen3vl_4b_w8a8_base.sha256               # TO GENERATE
+├── qwen3vl_2b_vision.rknn                    # 812M
+├── qwen3vl_2b_w8a8_base.rkllm                # 2.3G
+├── qwen3vl_2b_w8a8_lora_15cls.rkllm          # 2.3G
+├── qwen3vl_2b_w8a8_lora_15cls.sha256         # Done
+├── qwen3vl_4b_vision.rknn                    # 843M
+├── qwen3vl_4b_w8a8_base.rkllm                # 4.6G
+├── qwen3vl_4b_w8a8_lora_15cls.rkllm          # 4.6G
 ```
 
 ## 8. Completion

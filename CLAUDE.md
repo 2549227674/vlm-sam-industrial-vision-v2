@@ -50,10 +50,13 @@ Phase 5 v2 进行中：
 Phase 6 v2 Track B completed:
 - EfficientAD 15-class RKNN: done (15/15 model.rknn)
 - FastSAM 15-class calibrated RKNN: done
-- Qwen3-VL 2B base / LoRA RKLLM: done
-- Qwen3-VL 2B vision RKNN: done
-- Qwen3-VL 4B base / LoRA RKLLM: done
-- Qwen3-VL 4B vision RKNN: done (本地 WSL .venv_rknn 基于 AutoDL 导出的 onnx 转换)
+- Qwen3-VL 2B base RKLLM: done (2.3G)
+- Qwen3-VL 2B LoRA 15cls RKLLM: done (2.3G, sha256 verified)
+- Qwen3-VL 2B vision RKNN: done (812M)
+- Qwen3-VL 4B base RKLLM: done (4.6G)
+- Qwen3-VL 4B LoRA 15cls RKLLM: done (4.6G)
+- Qwen3-VL 4B vision RKNN: done (843M, 本地 WSL .venv_rknn 基于 AutoDL 导出的 onnx 转换)
+- 全部产物位于 `models/qwen3vl_models/rkllm_15cls/`
 - 详见 `docs/experiments/phase6_track_b_model_conversion_report.md`
 
 尚未开始（下一步）：
