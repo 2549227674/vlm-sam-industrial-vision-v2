@@ -81,7 +81,7 @@ const __TWEAKS_STYLE = `
     color:rgba(41,38,27,.45);padding:10px 0 0}
   .twk-sect:first-child{padding-top:0}
 
-  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+  .twk-field{appearance:none;box-sizing:border-box;width:100%;min-width:0;height:26px;padding:0 8px;
     border:.5px solid rgba(0,0,0,.1);border-radius:7px;
     background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
   .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
@@ -115,7 +115,7 @@ const __TWEAKS_STYLE = `
     background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
   .twk-toggle[data-on="1"] i{transform:translateX(14px)}
 
-  .twk-num{display:flex;align-items:center;height:26px;padding:0 0 0 8px;
+  .twk-num{display:flex;align-items:center;box-sizing:border-box;min-width:0;height:26px;padding:0 0 0 8px;
     border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
   .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
     user-select:none;padding-right:8px}
@@ -196,11 +196,11 @@ function TweaksPanel({ title = 'Tweaks', noDeckControls = false, children }) {
     () => typeof document !== 'undefined' && !!document.querySelector('deck-stage'),
     [],
   );
-  // Hide the toggle until the host has actually enabled the rail (the
-  // __omelette_rail_enabled window message, posted only when the
-  // omelette_deck_rail_enabled flag is on for this user). The initial read
-  // covers TweaksPanel mounting after the message already arrived; the
-  // listener covers the common case of mounting first.
+  // deck-stage enables its rail in connectedCallback, but this panel can
+  // mount before that element has upgraded. The initial read catches the
+  // common case; the listener covers mounting first. (Older deck-stage.js
+  // copies still wait for the host's __omelette_rail_enabled postMessage —
+  // same listener handles those.)
   const [railEnabled, setRailEnabled] = React.useState(
     () => hasDeckStage && !!document.querySelector('deck-stage')?._railEnabled,
   );
