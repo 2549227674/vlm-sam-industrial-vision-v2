@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-3 完成；Phase 5 v2 VLM 方法学实验已完成（5.6 Deployment / 5.7 Method Control / 5.8 OPRO）；Phase 6 v2 轨道 B 模型转换基本完成（2B/4B LoRA RKLLM 已就绪，4B base 待归档）；Phase 4 联调为下一步**
+**Phase 1-3 完成；Phase 5 v2 VLM 方法学实验已完成（5.6 Deployment / 5.7 Method Control / 5.8 OPRO）；Phase 6 v2 轨道 B 模型转换完成；Phase 4 联调为下一步**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -46,20 +46,18 @@ Phase 5 v2 进行中：
 - `qwen3vl_lora_4b.yaml`：已与 2B 保持控制变量一致
 - `docs/experiments/phase5_method_matrix.md`：双轨评估设计（deployment benchmark vs method_control benchmark）
 
-Phase 6 v2 轨道 B 执行状态（冻结点）：
-- EfficientAD 15-class RKNN：✅ 完成（15/15 model.rknn）
-- FastSAM RKNN：✅ 完成（15-class MVTec 混合校准，非 v1 3-class）
-- Qwen3-VL 2B LoRA 15cls RKLLM：✅ 完成
-- Qwen3-VL 4B LoRA 15cls RKLLM：✅ 完成
-- Qwen3-VL 2B vision encoder：✅ 复用 v1 vision RKNN（已复制为 qwen3vl_2b_vision.rknn）
-- Qwen3-VL 4B vision encoder：✅ 已在 AutoDL 下载（待同步本地）
-- Qwen3-VL 4B base RKLLM：🔄 AutoDL 自转换中（磁盘空间问题，不阻塞 Phase 4）
+Phase 6 v2 Track B completed:
+- EfficientAD 15-class RKNN: done (15/15 model.rknn)
+- FastSAM 15-class calibrated RKNN: done
+- Qwen3-VL 2B base / LoRA RKLLM: done
+- Qwen3-VL 2B vision RKNN: done
+- Qwen3-VL 4B base / LoRA RKLLM: done
+- Qwen3-VL 4B vision RKNN: done (本地 WSL .venv_rknn 基于 AutoDL 导出的 onnx 转换)
 - 详见 `docs/experiments/phase6_track_b_model_conversion_report.md`
 
 尚未开始（下一步）：
 - Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
   见 `docs/PROJECT_TIMELINE.md` 阶段 4
-- Phase 6 v2 补完：4B base RKLLM 最终导出归档 + sha256 生成 + 4B vision 同步本地
 
 ## 一句话定义
 

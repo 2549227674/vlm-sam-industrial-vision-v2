@@ -18,9 +18,9 @@ Target components:
 | FastSAM 15-class calibrated RKNN | Done | `models/fastsam_models/fastsam_s.rknn` |
 | Qwen3-VL 2B LoRA 15cls RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_w8a8_lora_15cls.rkllm` |
 | Qwen3-VL 4B LoRA 15cls RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_4b_w8a8_lora_15cls.rkllm` |
-| Qwen3-VL 2B vision RKNN | Reuse v1 | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_vision.rknn` |
-| Qwen3-VL 4B vision RKNN | Not yet local | Downloaded from Qengineering on AutoDL, needs transfer |
-| Qwen3-VL 4B base RKLLM | Pending | AutoDL self-conversion still in progress |
+| Qwen3-VL 2B vision RKNN | Done (reused v1) | `models/qwen3vl_models/rkllm_15cls/qwen3vl_2b_vision.rknn` |
+| Qwen3-VL 4B vision RKNN | Done | Converted locally in WSL `.venv_rknn` from AutoDL-exported `qwen3vl_vision.onnx` |
+| Qwen3-VL 4B base RKLLM | Done | `models/qwen3vl_models/rkllm_15cls/qwen3vl_4b_w8a8_base.rkllm` |
 
 ### 2.1 Known sha256
 
@@ -112,28 +112,25 @@ Requires newer transformers (>=4.57.0) with `Qwen3VLForConditionalGeneration` su
 
 ```
 models/qwen3vl_models/rkllm_15cls/
-├── qwen3vl_2b_vision.rknn                    # Present (reused from v1)
+├── qwen3vl_2b_vision.rknn                    # Present
 ├── qwen3vl_2b_w8a8_lora_15cls.rkllm          # Present
 ├── qwen3vl_2b_w8a8_lora_15cls.sha256         # TO GENERATE
-├── qwen3vl_4b_vision.rknn                    # TO TRANSFER from AutoDL
+├── qwen3vl_4b_vision.rknn                    # Present (converted locally)
 ├── qwen3vl_4b_w8a8_lora_15cls.rkllm          # Present
 ├── qwen3vl_4b_w8a8_lora_15cls.sha256         # TO GENERATE
-├── qwen3vl_4b_w8a8_base.rkllm                # PENDING (AutoDL)
-└── qwen3vl_4b_w8a8_base.sha256               # PENDING
+├── qwen3vl_4b_w8a8_base.rkllm                # Present
+└── qwen3vl_4b_w8a8_base.sha256               # TO GENERATE
 ```
 
-## 8. Current Freeze Point
+## 8. Completion
 
-Phase 6 Track B is frozen with:
-- 2B/4B LoRA RKLLM complete and synced locally
-- 4B vision encoder downloaded on AutoDL but not yet transferred locally
-- 4B base RKLLM pending final AutoDL export (non-blocking for Phase 4)
-- Phase 4 integration can start without waiting for 4B base RKLLM
+Phase 6 Track B is complete:
+- All 2B/4B base and LoRA RKLLM exports done
+- Both vision encoders (2B, 4B) ready locally
+- 4B vision encoder converted locally in WSL `.venv_rknn` from AutoDL-exported `qwen3vl_vision.onnx`
+- 4B base RKLLM completed and downloaded to local
 
 ## 9. Next Steps
 
-1. Generate sha256 files for all local RKLLM/RKNN artifacts.
-2. Transfer `qwen3vl_4b_vision.rknn` from AutoDL to local `rkllm_15cls/`.
-3. Update `scripts/check_phase6_assets.py` to reflect actual artifact structure.
-4. Revisit 4B base RKLLM when AutoDL export completes (expand disk to 80-100GB, set TMPDIR, or patch --savepath).
-5. Start Phase 4 Track A integration validation.
+1. Generate sha256 files for all RKLLM/RKNN artifacts.
+2. Start Phase 4 Track A integration validation.

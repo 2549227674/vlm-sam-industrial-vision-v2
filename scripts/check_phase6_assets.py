@@ -152,18 +152,18 @@ def check_qwen3vl_rkllm() -> list[str]:
     issues: list[str] = []
     rkllm_dir = MODELS_DIR / "qwen3vl_models" / "rkllm_15cls"
 
-    # Required artifacts
+    # Required artifacts (Phase 6 Track B complete)
     required = [
+        ("2B base RKLLM", "qwen3vl_2b_w8a8_base.rkllm"),
         ("2B LoRA 15cls RKLLM", "qwen3vl_2b_w8a8_lora_15cls.rkllm"),
+        ("4B base RKLLM", "qwen3vl_4b_w8a8_base.rkllm"),
         ("4B LoRA 15cls RKLLM", "qwen3vl_4b_w8a8_lora_15cls.rkllm"),
         ("2B vision encoder", "qwen3vl_2b_vision.rknn"),
         ("4B vision encoder", "qwen3vl_4b_vision.rknn"),
     ]
 
-    # Optional / pending artifacts (4B base does not block Phase 4)
-    optional = [
-        ("4B base RKLLM", "qwen3vl_4b_w8a8_base.rkllm"),
-    ]
+    # Optional (none currently)
+    optional: list[tuple[str, str]] = []
 
     if not rkllm_dir.exists():
         print("  [EMPTY]   rkllm_15cls/ directory does not exist")

@@ -1057,18 +1057,16 @@ models/qwen3vl_models/
 - 2B embeddings: hidden size 2048. 4B embeddings: hidden size 2560 (requires `visual.merger` patch).
 - `export_rkllm.py` defines `--savepath` but the original script ignores it (hardcodes `./rkllm/`).
 
-#### Current Status
-- EfficientAD 15-class RKNN: done
+#### Current Status (Phase 6 Track B completed)
+- EfficientAD 15-class RKNN: done (15/15)
 - FastSAM 15-class calibrated RKNN: done
-- Qwen3-VL 2B LoRA 15cls RKLLM: done
-- Qwen3-VL 4B LoRA 15cls RKLLM: done
-- Qwen3-VL 2B vision encoder: reused v1 vision RKNN, copied as `qwen3vl_2b_vision.rknn`
-- Qwen3-VL 4B vision encoder: downloaded Qengineering preconverted file (needs transfer to local)
-- Qwen3-VL 4B base RKLLM: pending final AutoDL export/archival (non-blocking for Phase 4)
+- Qwen3-VL 2B base / LoRA RKLLM: done
+- Qwen3-VL 2B vision RKNN: done
+- Qwen3-VL 4B base / LoRA RKLLM: done
+- Qwen3-VL 4B vision RKNN: done (converted locally in WSL .venv_rknn from AutoDL-exported onnx)
 
 #### Next
 - Start Phase 4 Track A integration validation.
-- Revisit 4B base RKLLM when AutoDL disk is expanded.
 
 ### 6.5 将模型文件传到板子
 
