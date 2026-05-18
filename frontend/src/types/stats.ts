@@ -1,3 +1,19 @@
+export type VariantMetrics = {
+  count: number;
+  json_ok: number;
+  json_ok_rate: number;
+  ttft: number;
+  avg_ttft_ms: number;
+  tps: number;
+  avg_decode_tps: number;
+  rss: number;
+  avg_rss_mb: number;
+  prompt: number;
+  avg_prompt_tokens: number;
+  output: number;
+  avg_output_tokens: number;
+};
+
 export interface AbMetrics {
   count: number;
   json_ok_rate: number;
@@ -12,10 +28,7 @@ export interface StatsResponse {
   by_category: Record<string, number>;
   by_severity: Record<string, number>;
   timeline: Array<{ ts: string; count: number }>;
-  ab_compare: {
-    A: AbMetrics;
-    B: AbMetrics;
-  };
+  ab_compare: Record<string, AbMetrics>;
   avg_pipeline_ms: {
     efficientad: number;
     fastsam: number;

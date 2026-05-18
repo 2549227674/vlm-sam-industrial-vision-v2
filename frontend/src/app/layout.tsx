@@ -14,7 +14,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Industrial Vision Dashboard v2",
+  title: "Industrial Vision Dashboard v4",
   description: "RK3588 edge AI defect detection — real-time monitoring dashboard",
 };
 

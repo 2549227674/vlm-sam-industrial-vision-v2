@@ -1,3 +1,15 @@
+export type VariantKey =
+  | "2B_base" | "2B_lora" | "4B_base" | "4B_lora"
+  | "A" | "B";
+
+export type ModelSize = "2B" | "4B";
+export type ModelVariant = "base" | "lora";
+
+export interface ActiveConfig {
+  model_size: ModelSize;
+  variant: ModelVariant;
+}
+
 export interface BBox {
   x: number;
   y: number;
@@ -20,6 +32,7 @@ export interface TraceEvent {
   dur: number;
   tid: string;
   ph: "X";
+  cat?: string;
 }
 
 export interface DefectRead {
@@ -33,7 +46,7 @@ export interface DefectRead {
   anomaly_score: number;
   bboxes: BBox[];
   description: string;
-  variant: "A" | "B";
+  variant: VariantKey;
   edge_ts: string;
   pipeline_ms: {
     efficientad: number;

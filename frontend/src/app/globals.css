@@ -75,20 +75,20 @@ a {
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* V2 design tokens — from design-reference/Industrial Vision Dashboard v2.html */
-  --color-bg-0: #0a0c10;
-  --color-bg-1: #0f1218;
-  --color-bg-2: #161a23;
-  --color-bg-3: #1d222d;
-  --color-bg-4: #262c39;
-  --color-line: #2a3142;
-  --color-line-soft: #1f2533;
-  --color-line-hot: #3a4258;
-  --color-fg: #e6ebf5;
-  --color-fg-1: #b6becf;
-  --color-fg-2: #7d869c;
-  --color-fg-3: #555d72;
-  --color-fg-4: #3d4458;
+  /* V4 design tokens */
+  --color-bg-0: #050507;
+  --color-bg-1: #0b0b0f;
+  --color-bg-2: #111116;
+  --color-bg-3: #181820;
+  --color-bg-4: #20202b;
+  --color-line: #1a1a22;
+  --color-line-soft: #141418;
+  --color-line-hot: #2e2e3a;
+  --color-fg: #f4f7fb;
+  --color-fg-1: #c8c8d2;
+  --color-fg-2: #84848e;
+  --color-fg-3: #5a5a64;
+  --color-fg-4: #38383f;
   --color-sig-cyan: #5ad6ff;
   --color-sig-green: #4ade80;
   --color-sig-amber: #fbbf24;
@@ -96,12 +96,21 @@ a {
   --color-sig-violet: #a78bfa;
   --color-sig-teal: #2dd4bf;
   --color-sig-mag: #f472b6;
-  --color-stage-1: #4ade80;
-  --color-stage-2: #fbbf24;
-  --color-stage-3: #f87171;
-  --color-sev-low: #4ade80;
-  --color-sev-med: #fbbf24;
-  --color-sev-high: #f87171;
+  --color-stage-1: #7cdcff;
+  --color-stage-2: #ffbf5c;
+  --color-stage-3: #ff7a90;
+  --color-sev-low: #6dffac;
+  --color-sev-med: #ffbf5c;
+  --color-sev-high: #ff6378;
+  /* V4 alias tokens */
+  --color-acc: #c1ff72;
+  --color-acc-glow: rgba(193,255,114,0.22);
+  --color-core-0: #7cdcff;
+  --color-core-1: #ffbf5c;
+  --color-core-2: #ff7a90;
+  --color-ok: #6dffac;
+  --color-warn: #ffbf5c;
+  --color-crit: #ff6378;
 }
 
 :root {
@@ -129,6 +138,29 @@ a {
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
+  /* V4 alias variables (used by v4 components in inline styles) */
+  --acc: #c1ff72;
+  --acc-glow: rgba(193,255,114,0.22);
+  --core-0: #7cdcff;
+  --core-1: #ffbf5c;
+  --core-2: #ff7a90;
+  --ok: #6dffac;
+  --warn: #ffbf5c;
+  --crit: #ff6378;
+  /* V4 unprefixed aliases (inline styles use var(--bg-1) not var(--color-bg-1)) */
+  --bg-0: #050507;
+  --bg-1: #0b0b0f;
+  --bg-2: #111116;
+  --bg-3: #181820;
+  --bg-4: #20202b;
+  --line: rgba(255,255,255,0.08);
+  --line-soft: rgba(255,255,255,0.05);
+  --line-hot: rgba(255,255,255,0.18);
+  --fg: #f4f7fb;
+  --fg-1: #c8c8d2;
+  --fg-2: #84848e;
+  --fg-3: #5a5a64;
+  --fg-4: #38383f;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -185,6 +217,26 @@ a {
   }
 }
 
+/* V4 utility classes */
+.mono {
+  font-family: var(--font-mono);
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  font-family: var(--font-mono);
+}
+select {
+  background-color: var(--bg-1);
+  color: var(--fg-1);
+}
+select option {
+  background-color: var(--bg-1);
+  color: var(--fg-1);
+}
+
 /* V2 animations */
 @keyframes flash {
   0% { opacity: 0.18; }
@@ -204,4 +256,31 @@ a {
 @keyframes scan-line {
   0% { top: 0; }
   100% { top: 100%; }
+}
+
+@keyframes ring-expand {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes log-in {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes packet-flow {
+  0% { offset-distance: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
 }
