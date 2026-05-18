@@ -3,44 +3,39 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>RK3588 Digital Twin · Edge Vision</title>
+<title>RK3588 Edge Vision · Digital Twin + Profiler</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:        #0a0a0d;
-  --bg-1:      #0f0f14;
-  --bg-2:      #15151c;
-  --bg-3:      #1c1c25;
-  --bg-4:      #252531;
-  --line:      #232330;
-  --line-soft: #1a1a23;
-  --line-hot:  #353548;
-  --fg:        #f5f5f7;
+  /* NVIDIA-inspired near-black surfaces, hairline borders */
+  --bg:        #050507;
+  --bg-1:      #0b0b0f;
+  --bg-2:      #111116;
+  --bg-3:      #181820;
+  --bg-4:      #20202b;
+  --line:      rgba(255,255,255,0.08);
+  --line-soft: rgba(255,255,255,0.05);
+  --line-hot:  rgba(255,255,255,0.18);
+  --fg:        #f4f7fb;
   --fg-1:      #c8c8d2;
   --fg-2:      #84848e;
   --fg-3:      #5a5a64;
   --fg-4:      #38383f;
 
-  /* single bold accent */
-  --acc:       #c1ff72;    /* electric lime — fresh, AI-modern */
-  --acc-dim:   #4a6628;
-  --acc-glow:  rgba(193, 255, 114, 0.22);
+  /* single bold accent (user-chosen, default electric lime) */
+  --acc:       #c1ff72;
+  --acc-glow:  rgba(193,255,114,0.22);
 
-  /* stage / core colors */
-  --core-0:    #6dd5ff;    /* EfficientAD - cool blue */
-  --core-1:    #ffbf5c;    /* FastSAM - amber */
-  --core-2:    #ff7a90;    /* Qwen3-VL - hot pink/red */
+  /* stage colors (per NPU core) */
+  --core-0:    #7cdcff;  /* EfficientAD */
+  --core-1:    #ffbf5c;  /* FastSAM */
+  --core-2:    #ff7a90;  /* Qwen3-VL */
 
-  /* semantic */
   --ok:        #6dffac;
   --warn:      #ffbf5c;
   --crit:      #ff6378;
-
-  /* AB */
-  --ab-a:      #b07cff;
-  --ab-b:      #5ee2c8;
 
   --font-sans: "Geist", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -62,10 +57,9 @@ html, body{
 }
 
 body{
-  /* subtle atmospheric gradient */
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(193,255,114,0.04) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(110,212,255,0.03) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(193,255,114,0.025) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(124,220,255,0.018) 0%, transparent 70%),
     var(--bg);
   background-attachment: fixed;
 }
@@ -76,7 +70,7 @@ button{ font-family: inherit; color: inherit; cursor: pointer; }
 
 ::-webkit-scrollbar{ width: 10px; height: 10px; }
 ::-webkit-scrollbar-track{ background: var(--bg); }
-::-webkit-scrollbar-thumb{ background: var(--bg-3); border: 2px solid var(--bg); border-radius: 6px; }
+::-webkit-scrollbar-thumb{ background: var(--bg-3); border: 2px solid var(--bg); }
 ::-webkit-scrollbar-thumb:hover{ background: var(--line-hot); }
 
 .mono{ font-family: var(--font-mono); font-feature-settings: "zero", "ss02"; font-variant-numeric: tabular-nums; }
@@ -87,6 +81,7 @@ button{ font-family: inherit; color: inherit; cursor: pointer; }
   color: var(--fg-3);
   text-transform: uppercase;
   letter-spacing: 0.12em;
+  display: inline-block;
 }
 
 @keyframes pulse-dot{ 0%,100%{ opacity: 1; transform: scale(1); } 50%{ opacity: 0.4; transform: scale(0.7); } }
@@ -100,7 +95,6 @@ button{ font-family: inherit; color: inherit; cursor: pointer; }
   90%  { opacity: 1; }
   100% { offset-distance: 100%; opacity: 0; }
 }
-@keyframes spin-slow{ from{ transform: rotate(0); } to{ transform: rotate(360deg); } }
 @keyframes blink-cursor{ 0%,49%{ opacity: 1; } 50%,100%{ opacity: 0; } }
 @keyframes slide-in-up{
   from { opacity: 0; transform: translateY(8px); }
@@ -110,21 +104,17 @@ button{ font-family: inherit; color: inherit; cursor: pointer; }
   0%   { transform: translateY(-100%); }
   100% { transform: translateY(900%); }
 }
-@keyframes type-in{
-  from { width: 0; }
-  to   { width: 100%; }
-}
 @keyframes ring-expand{
   0%   { transform: scale(0.4); opacity: 0.6; }
   100% { transform: scale(2.2); opacity: 0; }
 }
+@keyframes log-in{
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 #root{ min-height: 100vh; }
 
-.glow-acc{ box-shadow: 0 0 24px var(--acc-glow); }
-.dot{ width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-
-/* hairline divider */
 .hairline{ background: var(--line); height: 1px; }
 </style>
 </head>
@@ -135,21 +125,24 @@ button{ font-family: inherit; color: inherit; cursor: pointer; }
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-  <script type="text/babel" src="src/tweaks-panel.jsx"></script>
-  <script type="text/babel" src="src/data.jsx"></script>
-  <script type="text/babel" src="src3/v3-twin.jsx"></script>
-  <script type="text/babel" src="src3/v3-inspector.jsx"></script>
-  <script type="text/babel" src="src3/v3-ab.jsx"></script>
-  <script type="text/babel" src="src3/v3-stream.jsx"></script>
-  <script type="text/babel" src="src3/v3-profile.jsx"></script>
-  <script type="text/babel" src="src3/v3-app.jsx"></script>
+  <script type="text/babel" src="src4/tweaks-panel.jsx"></script>
+  <script type="text/babel" src="src4/data.jsx"></script>
+  <script type="text/babel" src="src4/v4-twin.jsx"></script>
+  <script type="text/babel" src="src4/v4-inspector.jsx"></script>
+  <script type="text/babel" src="src4/v4-stream.jsx"></script>
+  <script type="text/babel" src="src4/v4-ab.jsx"></script>
+  <script type="text/babel" src="src4/v4-models.jsx"></script>
+  <script type="text/babel" src="src4/v4-logs.jsx"></script>
+  <script type="text/babel" src="src4/v4-profile.jsx"></script>
+  <script type="text/babel" src="src4/v4-app.jsx"></script>
 
   <script>
-    window.__TWEAK_DEFAULTS__V3 = /*EDITMODE-BEGIN*/{
+    window.__TWEAK_DEFAULTS__V4 = /*EDITMODE-BEGIN*/{
       "accentHue": "lime",
       "animSpeed": 1,
       "live": true,
-      "showTraces": true
+      "showTraces": true,
+      "twinMode": "trace"
     }/*EDITMODE-END*/;
   </script>
 </body>
