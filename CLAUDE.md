@@ -24,12 +24,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 3.3：统计聚合图（KPI 6 联 / 瀑布图 / Category×Severity 矩阵 / AB 5 轴对比）
   - 后端同步扩展 stats.py：avg_pipeline_ms / category_severity_matrix / avg_prompt_tokens
 - Phase 3.4：DetailDrawer（Sheet 侧滑，非跳转新页）+ CSS 百分比 BBox Overlay + NPU Trace 占位区
-  - 新增 frontend/src/types/defect.ts 中的 TraceEvent 接口（Phase 7 预留）
+  - 新增 frontend/src/types/defect.ts 中的 TraceEvent 接口（v4 ProfilePage 已实现完整 Chrome Trace 可视化 + 导出）
   - 模拟器新增 generate_trace_events() 函数（暂不上报，供前端联调）
 - Phase 3.5：WebSocket Toast（Sonner，已随 3.2/3.4 完成）
 - Phase 3.6：静态导出验证（npm run build 通过，out/ 目录存在）
 - Phase 3.7：视觉精修 — 对齐 V2 设计稿（新增 12 个 v2/ 组件，mock-data.ts fallback，visual-verify subagent 截图对比，10/11 视觉匹配）
 - Phase 3.8：功能完整性验证 + 旧组件清理（5 个旧组件删除，约 -800 行，BBox/Trace/Toast/API_BASE 全部迁移到 v2/ 组件，Hydration 错误修复）
+- Phase 3.9：V4 设计体系迁移（v2→v4，14 个新组件，15 类 MVTec AD，4 变体键，近黑 NVIDIA 风格色彩，RK3588Twin 三模式，Chrome Trace 导出，v2 归档至 v2_archive/）
 - Phase 5.1-5.6 v1 初版：3 类（metal_nut/screw/pill）EfficientAD-S 训练 + FastSAM ONNX + LoRA 数据划分 + GT Mask 标注 + Qwen3-VL-2B LoRA 微调 + PC 端 AB 评估（方案A=100%，方案B=100%）
 - Phase 6 v1 初版：3 类模型转换（EfficientAD RKNN / FastSAM RKNN / Qwen3-VL .rkllm）
 - Phase 5.5 v2：Qwen3-VL-2B LoRA 15 类微调完成（rank=32，train_loss=0.5233，11m37s，RTX 4090 48GB）
@@ -73,7 +74,7 @@ Phase 6 v2 Track B completed:
 | Stage 2 分割 | FastSAM-s（640×640, INT8） | YOLOv8-seg 衍生 |
 | Stage 3 VLM | Qwen3-VL-2B/4B-Instruct W8A8 | airockchip 官方 + Qengineering 镜像 |
 | 后端 | Python 3.12、FastAPI 0.115+、SQLAlchemy 2.0 async、aiosqlite、Pydantic v2 | 生产单 worker（ConnectionManager 进程内单例）|
-| 前端 | Next.js 15 App Router（`output: 'export'` 纯静态导出）、React 19、Tailwind v4、shadcn/ui | sonner / TanStack Table v8 / v2/ 原生 SVG 组件 |
+| 前端 | Next.js 15 App Router（`output: 'export'` 纯静态导出）、React 19、Tailwind v4、shadcn/ui | sonner / TanStack Table v8 / v4/ 原生 SVG 组件 |
 | 模拟器 | Python 多线程 + 静态图片集循环 | 充当 RK3588 替身做契约测试 |
 | 数据集 | MVTec AD：全 15 类（Phase 5 重做目标） | CC BY-NC-SA 4.0 |
 | 通信 | HTTP `multipart/form-data`（边缘→后端）、WebSocket（后端↔前端） | 严禁 Base64 |
@@ -185,7 +186,7 @@ vlm-sam-industrial-vision-v2/
 │   └── tests/contract/             # pytest 契约测试
 ├── frontend/                       # 轨道 A：Next.js 15 App Router
 │   ├── app/
-│   ├── components/{ui,v2}/         # ui=shadcn 基础组件，v2=Phase 3.7 V2 设计稿组件
+│   ├── components/{ui,v4}/         # ui=shadcn 基础组件，v4=V4 设计稿组件（14 个文件）
 │   ├── lib/{mock-data,ws,api,utils}.ts
 │   ├── types/{defect,stats}.ts
 │   └── tailwind / postcss config
