@@ -1032,6 +1032,44 @@ models/qwen3vl_models/
 ```
 **完成标志**：六个模型文件均存在（或至少 2B 全部 + 4B base），`config.yaml` 中路径按 `vlm_model_size` 字段分支填写完毕。
 
+### 6.x Phase 6 v2 Track B Actual Execution Notes
+
+> The original Phase 6 conversion plan was adjusted during real execution. Full report: `docs/experiments/phase6_track_b_model_conversion_report.md`.
+
+#### EfficientAD
+- 15-class RKNN conversion completed (15/15 `model.rknn` ready).
+- `accuracy_analysis` is optional and runs after RKNN export, not before.
+- SIGBUS / exit code 135 was caused by disk pressure from accuracy analysis intermediate files, not category-specific model failures.
+- Recommended order: `build -> export_rknn -> optional accuracy_analysis`.
+
+#### FastSAM
+- v1 3-class calibration was NOT reused.
+- FastSAM was re-converted using a 15-class MVTec calibration set (~300 images).
+- This is a quantization calibration change, not a FastSAM training change.
+- FastSAM weights remain COCO-pretrained.
+
+#### Qwen3-VL RKLLM
+- MVTec 15-class industrial images used for RKLLM calibration (30 samples, Chinese industrial prompt), replacing generic COCO examples.
+- `make_input_embeds_for_quantize.py` must run from `examples/multimodal_model_demo/` (hardcoded `data/datasets.json` relative path).
+- Two environments required:
+  - Embedding generation: newer transformers (>=4.57.0) with `Qwen3VLForConditionalGeneration`
+  - RKLLM export: `venv_rkllm_clean` with rkllm-toolkit 1.2.3, transformers==4.55.2
+- 2B embeddings: hidden size 2048. 4B embeddings: hidden size 2560 (requires `visual.merger` patch).
+- `export_rkllm.py` defines `--savepath` but the original script ignores it (hardcodes `./rkllm/`).
+
+#### Current Status
+- EfficientAD 15-class RKNN: done
+- FastSAM 15-class calibrated RKNN: done
+- Qwen3-VL 2B LoRA 15cls RKLLM: done
+- Qwen3-VL 4B LoRA 15cls RKLLM: done
+- Qwen3-VL 2B vision encoder: reused v1 vision RKNN, copied as `qwen3vl_2b_vision.rknn`
+- Qwen3-VL 4B vision encoder: downloaded Qengineering preconverted file (needs transfer to local)
+- Qwen3-VL 4B base RKLLM: pending final AutoDL export/archival (non-blocking for Phase 4)
+
+#### Next
+- Start Phase 4 Track A integration validation.
+- Revisit 4B base RKLLM when AutoDL disk is expanded.
+
 ### 6.5 将模型文件传到板子
 
 ```bash

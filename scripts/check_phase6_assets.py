@@ -53,7 +53,7 @@ def check_efficientad() -> list[str]:
 def check_fastsam() -> list[str]:
     """Check FastSAM: fastsam_s.rknn + calib_dataset.txt."""
     print(f"\n{SEPARATOR}")
-    print("  FastSAM-s (ONNX -> RKNN INT8)")
+    print("  FastSAM-s (15-class calibrated RKNN INT8)")
     print(SEPARATOR)
 
     issues: list[str] = []
@@ -144,52 +144,84 @@ def check_qwen3vl_merged() -> list[str]:
 
 
 def check_qwen3vl_rkllm() -> list[str]:
-    """Check RKLLM converted models."""
+    """Check RKLLM converted models in rkllm_15cls/."""
     print(f"\n{SEPARATOR}")
-    print("  Qwen3-VL RKLLM Models (W8A8)")
+    print("  Qwen3-VL RKLLM Models (W8A8, rkllm_15cls/)")
     print(SEPARATOR)
 
     issues: list[str] = []
+    rkllm_dir = MODELS_DIR / "qwen3vl_models" / "rkllm_15cls"
 
-    # rkllm_15cls
-    rkllm_15cls = MODELS_DIR / "qwen3vl_models" / "rkllm_15cls"
-    print(f"\n  rkllm_15cls/")
-    if not rkllm_15cls.exists():
-        print("    [EMPTY]   directory does not exist")
-        issues.append("rkllm_15cls: directory does not exist (run export_rkllm.py)")
-    else:
-        contents = list(rkllm_15cls.iterdir())
-        if contents:
-            for f in sorted(contents):
-                size_mb = f.stat().st_size / (1024 * 1024)
-                print(f"    [OK]      {f.name}  ({size_mb:.1f} MB)")
+    # Required artifacts
+    required = [
+        ("2B LoRA 15cls RKLLM", "qwen3vl_2b_w8a8_lora_15cls.rkllm"),
+        ("4B LoRA 15cls RKLLM", "qwen3vl_4b_w8a8_lora_15cls.rkllm"),
+        ("2B vision encoder", "qwen3vl_2b_vision.rknn"),
+        ("4B vision encoder", "qwen3vl_4b_vision.rknn"),
+    ]
+
+    # Optional / pending artifacts (4B base does not block Phase 4)
+    optional = [
+        ("4B base RKLLM", "qwen3vl_4b_w8a8_base.rkllm"),
+    ]
+
+    if not rkllm_dir.exists():
+        print("  [EMPTY]   rkllm_15cls/ directory does not exist")
+        issues.append("rkllm_15cls: directory does not exist")
+        return issues
+
+    for label, filename in required:
+        path = rkllm_dir / filename
+        if path.exists():
+            size_mb = path.stat().st_size / (1024 * 1024)
+            print(f"  [OK]      {label:24s}  {filename}  ({size_mb:.1f} MB)")
+            # Check for sha256 sidecar
+            sha_path = path.with_suffix(path.suffix + ".sha256") if not filename.endswith(".sha256") else path
+            # Try the common .sha256 naming
+            sha_path = path.parent / (filename.replace(".rkllm", ".sha256").replace(".rknn", ".sha256"))
+            if not sha_path.exists():
+                print(f"            {'':24s}  (sha256 sidecar missing)")
         else:
-            print("    [EMPTY]   directory exists but is empty")
-            issues.append("rkllm_15cls: empty (run export_rkllm.py)")
+            print(f"  [MISSING] {label:24s}  {filename}")
+            issues.append(f"rkllm_15cls/{filename}: missing")
 
-    # rkllm_v1_3cls
+    print()
+    for label, filename in optional:
+        path = rkllm_dir / filename
+        if path.exists():
+            size_mb = path.stat().st_size / (1024 * 1024)
+            print(f"  [OK]      {label:24s}  {filename}  ({size_mb:.1f} MB)")
+        else:
+            print(f"  [PENDING] {label:24s}  {filename}  (optional for Phase 8 comparison)")
+
+    return issues
+
+
+def check_qwen3vl_rkllm_v1() -> list[str]:
+    """Check v1 3cls reference models (informational)."""
+    print(f"\n{SEPARATOR}")
+    print("  Qwen3-VL RKLLM v1 3cls (reference only)")
+    print(SEPARATOR)
+
     rkllm_v1 = MODELS_DIR / "qwen3vl_models" / "rkllm_v1_3cls"
     expected_v1 = [
-        "qwen3vl_2b_w8a8_base.rkllm",
         "qwen3vl_2b_w8a8_lora.rkllm",
         "qwen3vl_vision.rknn",
     ]
 
-    print(f"\n  rkllm_v1_3cls/")
     if not rkllm_v1.exists():
-        print("    [MISSING] directory does not exist")
-        issues.append("rkllm_v1_3cls: directory does not exist")
-    else:
-        for name in expected_v1:
-            path = rkllm_v1 / name
-            if path.exists():
-                size_mb = path.stat().st_size / (1024 * 1024)
-                print(f"    [OK]      {name}  ({size_mb:.1f} MB)")
-            else:
-                print(f"    [MISSING] {name}")
-                issues.append(f"rkllm_v1_3cls/{name}: missing")
+        print("    [INFO]    directory does not exist")
+        return []
 
-    return issues
+    for name in expected_v1:
+        path = rkllm_v1 / name
+        if path.exists():
+            size_mb = path.stat().st_size / (1024 * 1024)
+            print(f"    [OK]      {name}  ({size_mb:.1f} MB)")
+        else:
+            print(f"    [INFO]    {name}  (not present)")
+
+    return []
 
 
 def main() -> None:
@@ -204,6 +236,7 @@ def main() -> None:
     all_issues.extend(check_qwen3vl_adapters())
     all_issues.extend(check_qwen3vl_merged())
     all_issues.extend(check_qwen3vl_rkllm())
+    check_qwen3vl_rkllm_v1()  # informational only, never adds issues
 
     print(f"\n{SEPARATOR}")
     print("  Summary")

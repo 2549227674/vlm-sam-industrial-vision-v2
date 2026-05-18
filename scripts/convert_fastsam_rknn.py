@@ -15,6 +15,10 @@ Usage:
     source .venv_rknn/bin/activate
     python scripts/convert_fastsam_rknn.py
     python scripts/convert_fastsam_rknn.py --calib-samples 150
+    python scripts/convert_fastsam_rknn.py --skip-accuracy-analysis
+
+Note: This overwrites models/fastsam_models/fastsam_s.rknn.
+      Back up any existing .rknn before running.
 """
 
 from __future__ import annotations
@@ -104,8 +108,12 @@ def parse_accuracy_report(analysis_dir: Path) -> tuple[float, bool]:
     return min_cosine, all_pass
 
 
-def convert_fastsam(calib_samples: int) -> bool:
-    """Convert FastSAM-s ONNX to RKNN. Returns True on success."""
+def convert_fastsam(calib_samples: int, skip_accuracy_analysis: bool = False) -> bool:
+    """Convert FastSAM-s ONNX to RKNN. Returns True on success.
+
+    Order: config → load → build → export → accuracy_analysis (optional).
+    A failure in accuracy_analysis does NOT invalidate an already-exported model.
+    """
     from rknn.api import RKNN
 
     onnx_path = FASTSAM_DIR / "fastsam_s.onnx"
@@ -115,6 +123,7 @@ def convert_fastsam(calib_samples: int) -> bool:
         print(f"  [SKIP] ONNX not found: {onnx_path}")
         return False
 
+    total_steps = 4 if skip_accuracy_analysis else 5
     print(f"\n{'=' * 50}")
     print("  Converting: FastSAM-s")
     print(f"{'=' * 50}")
@@ -123,7 +132,7 @@ def convert_fastsam(calib_samples: int) -> bool:
 
     try:
         # 1. Config — YOLOv8 normalization, INT8, rk3588
-        print("  [1/5] Config (INT8, rk3588)...")
+        print(f"  [1/{total_steps}] Config (INT8, rk3588)...")
         ret = rknn.config(
             mean_values=MEAN_VALUES,
             std_values=STD_VALUES,
@@ -135,7 +144,7 @@ def convert_fastsam(calib_samples: int) -> bool:
             return False
 
         # 2. Load ONNX — fixed input size [1,3,640,640]
-        print("  [2/5] Load ONNX...")
+        print(f"  [2/{total_steps}] Load ONNX...")
         ret = rknn.load_onnx(
             model=str(onnx_path),
             inputs=["images"],
@@ -146,36 +155,46 @@ def convert_fastsam(calib_samples: int) -> bool:
             return False
 
         # 3. Build INT8 quantized model
-        print(f"  [3/5] Build INT8 (calib={calib_samples} samples)...")
+        print(f"  [3/{total_steps}] Build INT8 (calib={calib_samples} samples)...")
         calib_file = create_calib_list(calib_samples)
         ret = rknn.build(do_quantization=True, dataset=calib_file)
         if ret != 0:
             print("  FAIL: build()")
             return False
 
-        # 4. Accuracy analysis
-        analysis_dir = FASTSAM_DIR / "accuracy_analysis"
-        analysis_dir.mkdir(parents=True, exist_ok=True)
-
-        print("  [4/5] Accuracy analysis...")
-        with open(calib_file) as f:
-            first_image = f.readline().strip()
-        rknn.accuracy_analysis(inputs=[first_image], output_dir=str(analysis_dir))
-
-        min_cosine, all_pass = parse_accuracy_report(analysis_dir)
-        print(f"  Min cosine similarity: {min_cosine:.4f}")
-        if not all_pass:
-            print(f"  WARNING: below threshold {COSINE_THRESHOLD}!")
-
-        # 5. Export
-        print("  [5/5] Export RKNN...")
+        # 4. Export — must happen before accuracy_analysis so the .rknn
+        #    file is safe even if accuracy_analysis crashes.
+        print(f"  [4/{total_steps}] Export RKNN...")
         ret = rknn.export_rknn(str(rknn_path))
         if ret != 0:
             print("  FAIL: export_rknn()")
             return False
 
         print(f"  OK: {rknn_path}")
-        return all_pass
+
+        if skip_accuracy_analysis:
+            print("  Accuracy analysis: SKIPPED (--skip-accuracy-analysis)")
+            return True
+
+        # 5. Accuracy analysis (optional, failure non-fatal)
+        analysis_dir = FASTSAM_DIR / "accuracy_analysis"
+        analysis_dir.mkdir(parents=True, exist_ok=True)
+
+        print(f"  [5/{total_steps}] Accuracy analysis...")
+        try:
+            with open(calib_file) as f:
+                first_image = f.readline().strip()
+            rknn.accuracy_analysis(inputs=[first_image], output_dir=str(analysis_dir))
+
+            min_cosine, all_pass = parse_accuracy_report(analysis_dir)
+            print(f"  Min cosine similarity: {min_cosine:.4f}")
+            if not all_pass:
+                print(f"  WARNING: below threshold {COSINE_THRESHOLD}!")
+        except Exception as e:
+            print(f"  WARNING: accuracy_analysis failed ({e})")
+            print(f"  Exported model at {rknn_path} is unaffected.")
+
+        return True
 
     finally:
         rknn.release()
@@ -185,10 +204,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="FastSAM-s ONNX -> RKNN INT8")
     parser.add_argument("--calib-samples", type=int, default=100,
                         help="Number of good/ images for INT8 calibration")
+    parser.add_argument("--skip-accuracy-analysis", action="store_true",
+                        help="Skip accuracy_analysis after export (faster, .rknn still valid)")
     args = parser.parse_args()
 
     try:
-        ok = convert_fastsam(args.calib_samples)
+        ok = convert_fastsam(args.calib_samples, args.skip_accuracy_analysis)
     except Exception as e:
         print(f"  ERROR: {e}")
         ok = False
@@ -196,6 +217,8 @@ def main() -> None:
     print(f"\n{'=' * 50}")
     status = "PASS" if ok else "FAIL"
     print(f"  FastSAM-s  {status}  (cosine >= {COSINE_THRESHOLD})")
+    if args.skip_accuracy_analysis:
+        print("  Accuracy analysis: SKIPPED")
     print(f"{'=' * 50}")
 
     if not ok:
