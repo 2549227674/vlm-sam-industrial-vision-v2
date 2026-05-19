@@ -183,7 +183,7 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
         {/* Trace SVG */}
         <div style={{ position: "relative", background: "var(--bg-1)", border: "1px solid var(--line)", overflow: "hidden" }}>
           <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", background: "var(--bg-2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span className="eyebrow">Chrome 追踪 · 横向拖拽可缩放</span>
+            <span className="eyebrow">CHROME 追踪 · 滚轮缩放 · 拖拽平移 · 双击重置</span>
             <div style={{ display: "flex", gap: 10 }}>
               {legend.map(([l, k]) => (
                 <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -193,7 +193,7 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
               ))}
             </div>
           </div>
-          <TraceCanvas defect={defect} byTid={byTid} visible={visible} totalDur={totalDur} onZoom={(s, e) => setZoom({ start_us: s, end_us: e })} onHover={setHover} hover={hover} showCritical={showCritical} accent={accent} />
+          <TraceCanvas defect={defect} byTid={byTid} span={span} visible={visible} totalDur={totalDur} onZoom={(s, e) => setZoom({ start_us: s, end_us: e })} onHover={setHover} hover={hover} showCritical={showCritical} accent={accent} />
         </div>
 
         {/* Bottleneck explanation */}
@@ -230,9 +230,10 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
 
 // ── Trace SVG canvas ────────────────────────────────────────────────────────
 
-function TraceCanvas({ byTid, visible, totalDur, onZoom, onHover, hover, showCritical = true, accent }: {
+function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, showCritical = true, accent }: {
   defect: DefectRead;
   byTid: Record<string, { name: string; ts: number; dur: number; tid: string; ph: "X"; cat?: string }[]>;
+  span: { start: number; end: number };
   visible: { start: number; end: number };
   totalDur: number;
   onZoom: (s: number, e: number) => void;
@@ -270,19 +271,69 @@ function TraceCanvas({ byTid, visible, totalDur, onZoom, onHover, hover, showCri
 
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragEnd, setDragEnd] = useState<number | null>(null);
+  const dragPan = useRef<{ startX: number; startVisible: { start: number; end: number } } | null>(null);
+  const [isPanning, setIsPanning] = useState(false);
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
+  // Wheel zoom anchored at cursor X position
+  const onWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = (e.clientX - rect.left - labelW) / innerW;
+    const anchorUs = visible.start + ratio * (visible.end - visible.start);
+    const ZOOM_FACTOR = 0.12;
+    const dir = e.deltaY > 0 ? 1 + ZOOM_FACTOR : 1 - ZOOM_FACTOR;
+    const curSpan = visible.end - visible.start;
+    const totalSpan = span.end - span.start;
+    const minSpan = totalSpan > 0 ? totalSpan * 0.01 : 10000;
+    const newSpan = Math.max(minSpan, Math.min(totalSpan, curSpan * dir));
+    const anchorRatio = (anchorUs - visible.start) / curSpan;
+    const newStart = Math.max(span.start, Math.min(span.end - newSpan, anchorUs - anchorRatio * newSpan));
+    onZoom(newStart, Math.min(span.end, newStart + newSpan));
+  }, [visible, labelW, innerW, span, onZoom]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Double-click resets to full range
+  const onDoubleClick = useCallback(() => {
+    onZoom(span.start, span.end);
+  }, [span, onZoom]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // MouseDown: left-drag pan (default) or Shift+drag box-select
+  const onMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (e.button !== 0) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     if (x < labelW) return;
-    setDragStart(x); setDragEnd(x);
-  }, []);
-  const onMouseMove = useCallback((e: React.MouseEvent) => {
-    if (dragStart == null) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDragEnd(e.clientX - rect.left);
-  }, [dragStart]);
-  const onMouseUp = useCallback((e: React.MouseEvent) => {
+    if (e.shiftKey) {
+      setDragStart(x); setDragEnd(x);
+      return;
+    }
+    dragPan.current = { startX: e.clientX, startVisible: { ...visible } };
+    setIsPanning(true);
+  }, [labelW, visible]);
+
+  // MouseMove: pan or extend box-select
+  const onMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (dragPan.current) {
+      const dpx = e.clientX - dragPan.current.startX;
+      const sv = dragPan.current.startVisible;
+      const dus = -(dpx / innerW) * (sv.end - sv.start);
+      const spanLen = sv.end - sv.start;
+      const newStart = Math.max(span.start, Math.min(span.end - spanLen, sv.start + dus));
+      onZoom(newStart, Math.min(span.end, newStart + spanLen));
+      return;
+    }
+    if (dragStart != null) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setDragEnd(e.clientX - rect.left);
+    }
+  }, [dragStart, innerW, span, onZoom]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // MouseUp: finish pan or box-select zoom
+  const onMouseUp = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (dragPan.current) {
+      dragPan.current = null;
+      setIsPanning(false);
+      return;
+    }
     if (dragStart == null) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -291,9 +342,16 @@ function TraceCanvas({ byTid, visible, totalDur, onZoom, onHover, hover, showCri
     if (eX - sX > 5) {
       const start_us = visible.start + ((sX - labelW) / innerW) * totalDur;
       const end_us = visible.start + ((eX - labelW) / innerW) * totalDur;
-      onZoom(Math.max(0, start_us), end_us);
+      onZoom(Math.max(span.start, start_us), Math.min(span.end, end_us));
     }
-  }, [dragStart, visible, innerW, totalDur, onZoom]);
+  }, [dragStart, visible, innerW, totalDur, span, onZoom]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // MouseLeave: cancel any active interaction
+  const onMouseLeave = useCallback(() => {
+    if (dragPan.current) { dragPan.current = null; setIsPanning(false); }
+    setDragStart(null); setDragEnd(null);
+    onHover(null);
+  }, [onHover]);
 
   const ticks = useMemo(() => {
     const ms = totalDur / 1000;
@@ -309,7 +367,7 @@ function TraceCanvas({ byTid, visible, totalDur, onZoom, onHover, hover, showCri
 
   return (
     <div style={{ position: "relative" }}>
-      <svg ref={ref} width={w} height={totalH} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={() => { setDragStart(null); setDragEnd(null); onHover(null); }} style={{ display: "block", cursor: dragStart != null ? "ew-resize" : "default" }}>
+      <svg ref={ref} width={w} height={totalH} tabIndex={0} onClick={() => ref.current?.focus({ preventScroll: true })} onWheel={onWheel} onDoubleClick={onDoubleClick} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave} style={{ display: "block", outline: "none", cursor: dragStart != null ? "crosshair" : isPanning ? "grabbing" : "grab", userSelect: "none" }}>
         <g>
           {ticks.map((t_ms) => {
             const x = us2x(t_ms * 1000);
