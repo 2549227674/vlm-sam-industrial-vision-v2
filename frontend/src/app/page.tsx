@@ -15,15 +15,14 @@ import { DetailDrawer } from "@/components/v4/DetailDrawer";
 import { useFrameSimulator, useCpuLoads, useNpuLoads } from "@/components/v4/RK3588Twin";
 
 export default function Dashboard() {
-  // Routing
-  const [route, setRoute] = useState(() =>
-    typeof window !== "undefined" ? (window.location.hash.replace("#", "") || "overview") : "overview"
-  );
+  // Routing — always start with "overview" to match SSR, then sync to hash after hydration
+  const [route, setRoute] = useState("overview");
 
   useEffect(() => {
-    const onHash = () => setRoute(window.location.hash.replace("#", "") || "overview");
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    const sync = () => setRoute(window.location.hash.replace("#", "") || "overview");
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
   }, []);
 
   const navigate = useCallback((key: string) => { window.location.hash = "#" + key; }, []);
@@ -36,7 +35,6 @@ export default function Dashboard() {
   const [activeConfig, setActiveConfig] = useState<ActiveConfig>({ model_size: "2B", variant: "lora" });
   const [twinMode, setTwinMode] = useState("xray");
   const [live] = useState(true);
-  const [tracePaused, setTracePaused] = useState(false);
 
   // Clock
   useEffect(() => {
@@ -55,7 +53,6 @@ export default function Dashboard() {
   const phase = useFrameSimulator({
     live,
     onComplete: () => {
-      if (tracePaused) return;
       const d = makeDefect({ ts: new Date() });
       setDefects(prev => [d, ...prev].slice(0, 100));
     },
@@ -104,7 +101,7 @@ export default function Dashboard() {
                 聚焦瓶颈，逐帧分析：Chrome-trace 精度追踪每一个事件，NPU.2（Qwen3-VL）——占关键路径的 98%，但仅需 1ms 无需过度优化。
               </p>
             </section>
-            <ProfilePage defects={defects} initialFrameIdx={profileSeedIdx} onTraceHoverChange={setTracePaused} />
+            <ProfilePage defects={defects} initialFrameIdx={profileSeedIdx} />
           </>
         )}
 

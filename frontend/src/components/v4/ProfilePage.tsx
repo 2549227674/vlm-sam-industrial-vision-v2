@@ -48,7 +48,7 @@ const CAT_COLOR: Record<string, string> = {
   "vlm-prompt": "#ff7a90", "vlm-decode": "#ff5c7a", "vlm-encode": "#f472b6",
 };
 
-export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 0, onTraceHoverChange }: { defects: DefectRead[]; accent?: string; initialFrameIdx?: number; onTraceHoverChange?: (isHovering: boolean) => void }) {
+export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 0 }: { defects: DefectRead[]; accent?: string; initialFrameIdx?: number }) {
   const [frameIdx, setFrameIdx] = useState(initialFrameIdx);
   const [pinnedId, setPinnedId] = useState<number | null>(null);
   useEffect(() => { setFrameIdx(initialFrameIdx); }, [initialFrameIdx]);
@@ -65,11 +65,6 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
   const [zoom, setZoom] = useState({ start_us: 0, end_us: 0 });
   const [hover, setHover] = useState<{ x: number; y: number; event: { name: string; ts: number; dur: number; cat?: string }; laneName: string } | null>(null);
   const [showCritical, setShowCritical] = useState(true);
-
-  const handleHover = useCallback((h: { x: number; y: number; event: { name: string; ts: number; dur: number; cat?: string }; laneName: string } | null) => {
-    setHover(h);
-    onTraceHoverChange?.(h !== null);
-  }, [onTraceHoverChange]);
 
   const defect = defects[resolvedIdx];
   const span = useMemo(() => {
@@ -209,7 +204,9 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
               ))}
             </div>
           </div>
-          <TraceCanvas defect={defect} byTid={byTid} span={span} visible={visible} totalDur={totalDur} onZoom={(s, e) => setZoom({ start_us: s, end_us: e })} onHover={handleHover} hover={hover} showCritical={showCritical} accent={accent} onTraceHoverChange={onTraceHoverChange} />
+          <div onMouseLeave={() => { setPinnedId(null); }}>
+            <TraceCanvas defect={defect} byTid={byTid} span={span} visible={visible} totalDur={totalDur} onZoom={(s, e) => setZoom({ start_us: s, end_us: e })} onHover={setHover} hover={hover} showCritical={showCritical} accent={accent} onSvgLeave={() => { setPinnedId(null); }} />
+          </div>
         </div>
 
         {/* Bottleneck explanation */}
@@ -297,7 +294,7 @@ function HoverTip({ hover, containerWidth }: { hover: HoverState; containerWidth
 
 // ── Trace SVG canvas ────────────────────────────────────────────────────────
 
-function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, showCritical = true, accent, onTraceHoverChange }: {
+function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, showCritical = true, accent, onSvgLeave }: {
   defect: DefectRead;
   byTid: Record<string, { name: string; ts: number; dur: number; tid: string; ph: "X"; cat?: string }[]>;
   span: { start: number; end: number };
@@ -308,7 +305,7 @@ function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, s
   hover: { x: number; y: number; event: { name: string; ts: number; dur: number; cat?: string }; laneName: string } | null;
   showCritical?: boolean;
   accent: string;
-  onTraceHoverChange?: (isHovering: boolean) => void;
+  onSvgLeave?: () => void;
 }) {
   const ref = useRef<SVGSVGElement>(null);
   const [w, setW] = useState(1100);
@@ -419,8 +416,8 @@ function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, s
     if (dragPan.current) { dragPan.current = null; setIsPanning(false); }
     setDragStart(null); setDragEnd(null);
     onHover(null);
-    onTraceHoverChange?.(false);
-  }, [onHover, onTraceHoverChange]);
+    onSvgLeave?.();
+  }, [onHover, onSvgLeave]);
 
   const ticks = useMemo(() => {
     const ms = totalDur / 1000;
@@ -436,7 +433,7 @@ function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, s
 
   return (
     <div style={{ position: "relative" }}>
-      <svg ref={ref} width={w} height={totalH} tabIndex={0} onClick={() => ref.current?.focus({ preventScroll: true })} onWheel={onWheel} onDoubleClick={onDoubleClick} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseEnter={() => onTraceHoverChange?.(true)} onMouseLeave={onMouseLeave} style={{ display: "block", outline: "none", cursor: dragStart != null ? "crosshair" : isPanning ? "grabbing" : "grab", userSelect: "none" }}>
+      <svg ref={ref} width={w} height={totalH} tabIndex={0} onClick={() => ref.current?.focus({ preventScroll: true })} onWheel={onWheel} onDoubleClick={onDoubleClick} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave} style={{ display: "block", outline: "none", cursor: dragStart != null ? "crosshair" : isPanning ? "grabbing" : "grab", userSelect: "none" }}>
         <g>
           {ticks.map((t_ms) => {
             const x = us2x(t_ms * 1000);
