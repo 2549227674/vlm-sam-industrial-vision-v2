@@ -46,7 +46,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # CORS — registered first to handle OPTIONS preflight
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://vision.example.com"],
+    allow_origin_regex=r"https?://localhost(:\d+)?",
+    allow_origins=["https://vision.example.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

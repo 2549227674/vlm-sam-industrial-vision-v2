@@ -2,7 +2,7 @@
 // 15 MVTec AD categories · 4 variant keys · Chrome-trace generation · 4-variant buildStats()
 
 import type { DefectRead, TraceEvent, VariantKey } from "@/types/defect";
-import type { VariantMetrics } from "@/types/stats";
+import type { DashboardStatsLike, VariantMetrics } from "@/types/stats";
 
 // Backwards-compat alias for v2 components
 export type { VariantMetrics as MockAbMetrics };
@@ -289,7 +289,7 @@ export function seedDefects(n = 120): DefectRead[] {
 
 // ── Stats ───────────────────────────────────────────────────────────────────
 
-export interface MockStats {
+export interface MockStats extends DashboardStatsLike {
   total: number;
   today_defects: number;
   today_high: number;

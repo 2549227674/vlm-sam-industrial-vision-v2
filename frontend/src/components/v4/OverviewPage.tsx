@@ -2,14 +2,14 @@
 
 import React from "react";
 import type { DefectRead, ActiveConfig } from "@/types/defect";
-import type { MockStats } from "@/lib/mock-data";
+import type { DashboardStatsLike } from "@/types/stats";
 import { KPITile, SectionHeader } from "./primitives";
 import { RK3588Twin, FramePhase } from "./RK3588Twin";
 import { FrameInspector } from "./FrameInspector";
 import { RecentStream } from "./RecentStream";
 
 interface OverviewProps {
-  stats: MockStats;
+  stats: DashboardStatsLike;
   defects: DefectRead[];
   phase: FramePhase;
   npuLoads: number[];

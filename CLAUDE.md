@@ -62,6 +62,9 @@ Phase 6 v2 Track B completed:
 Phase 4.0 completed:
 - Phase 4.0：后端补全（API_CONTRACT v1.2 增加 trace_events/stats 字段；DB 增加 trace_events JSON 列；Schema/API/WS 返回 trace_events；stats 增加 avg_output_tokens、today_defects、today_high；模拟器启用 trace_events 上报且保证 dur 非负）
 
+Phase 4.1 completed:
+- Phase 4.1：前端接入真实 API（page.tsx 接入 GET /api/defects + GET /api/stats + useDefectWebSocket；后端不可达时 fallback mock；useFrameSimulator 仅保留动画驱动并在 fallback 模式生成 mock；v4 stats props 统一为 DashboardStatsLike；ABMatrix 展示 avg_output_tokens）
+
 尚未开始（下一步）：
 - Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
   见 `docs/PROJECT_TIMELINE.md` 阶段 4

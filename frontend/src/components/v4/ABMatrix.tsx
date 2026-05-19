@@ -2,11 +2,11 @@
 
 import React from "react";
 import type { ActiveConfig } from "@/types/defect";
-import type { MockStats } from "@/lib/mock-data";
+import type { AbMetrics, DashboardStatsLike } from "@/types/stats";
 import { variantLabel, variantColor, fmtNumber } from "@/lib/mock-data";
 
 interface ABProps {
-  stats: MockStats;
+  stats: DashboardStatsLike;
   activeConfig: ActiveConfig;
   accent?: string;
 }
@@ -108,10 +108,10 @@ function RowHead({ label, sub }: { label: string; sub: string }) {
   );
 }
 
-function Cell({ variant, data, active, winner, altWinner }: { variant: string; data: { count: number; json_ok_rate: number; avg_ttft_ms: number; avg_decode_tps: number; avg_rss_mb: number; avg_prompt_tokens: number } | undefined; active: string; winner?: boolean; altWinner?: boolean }) {
+function Cell({ variant, data, active, winner, altWinner }: { variant: string; data: AbMetrics | undefined; active: string; winner?: boolean; altWinner?: boolean }) {
   const c = variantColor(variant);
   const isActive = variant === active;
-  const d = data || { count: 0, json_ok_rate: 0, avg_ttft_ms: 0, avg_decode_tps: 0, avg_rss_mb: 0, avg_prompt_tokens: 0 };
+  const d: AbMetrics = data || { count: 0, json_ok_rate: 0, avg_ttft_ms: 0, avg_decode_tps: 0, avg_rss_mb: 0, avg_prompt_tokens: 0, avg_output_tokens: 0 };
 
   return (
     <div style={{ background: "var(--bg-1)", padding: 18, position: "relative", borderLeft: isActive ? `3px solid ${c}` : "3px solid transparent", overflow: "hidden" }}>
@@ -136,6 +136,7 @@ function Cell({ variant, data, active, winner, altWinner }: { variant: string; d
             { l: "解码速率", v: d.avg_decode_tps.toFixed(2), u: "tok/s" },
             { l: "内存", v: fmtNumber(Math.round(d.avg_rss_mb)), u: "MB" },
             { l: "提示词元", v: Math.round(d.avg_prompt_tokens) },
+            { l: "输出词元", v: Math.round(d.avg_output_tokens) },
           ].map((s) => (
             <div key={s.l} style={{ background: "var(--bg-1)", padding: "10px 12px" }}>
               <div className="eyebrow" style={{ fontSize: 9 }}>{s.l}</div>

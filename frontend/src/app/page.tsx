@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { seedDefects, buildStats, makeDefect } from "@/lib/mock-data";
 import type { DefectRead, ActiveConfig } from "@/types/defect";
+import type { DashboardStatsLike, StatsResponse } from "@/types/stats";
+import { useDefectWebSocket } from "@/lib/ws";
+import { API_BASE } from "@/lib/api";
 
 import { TopBar } from "@/components/v4/TopBar";
 import { BottomBar } from "@/components/v4/BottomBar";
@@ -36,6 +39,9 @@ export default function Dashboard() {
   const [twinMode, setTwinMode] = useState("xray");
   const [live] = useState(true);
 
+  const [apiStats, setApiStats] = useState<StatsResponse | null>(null);
+  const [usingMock, setUsingMock] = useState(false);
+
   // Clock
   useEffect(() => {
     setNow(new Date());
@@ -43,23 +49,84 @@ export default function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
-  // Mock data init
-  useEffect(() => {
-    setDefects(seedDefects(80));
+  // Stats refresh helper
+  const loadStats = useCallback(async (signal?: AbortSignal) => {
+    const statsResp = await fetch(`${API_BASE}/api/stats`, { signal });
+    if (!statsResp.ok) {
+      throw new Error(`stats fetch failed: ${statsResp.status}`);
+    }
+    const statsData: StatsResponse = await statsResp.json();
+    setApiStats(statsData);
+    return statsData;
   }, []);
+
+  // Initial data load — real API with mock fallback
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadInitialData() {
+      try {
+        const defectsResp = await fetch(
+          `${API_BASE}/api/defects?page=1&page_size=100&sort=-edge_ts`,
+          { signal: AbortSignal.timeout(5000) },
+        );
+
+        if (!defectsResp.ok) {
+          throw new Error(`defects fetch failed: ${defectsResp.status}`);
+        }
+
+        const data = await defectsResp.json();
+        if (cancelled) return;
+
+        setDefects(data.items ?? []);
+        setUsingMock(false);
+
+        try {
+          await loadStats(AbortSignal.timeout(5000));
+        } catch (statsErr) {
+          console.warn("[Dashboard] Stats API unavailable, using client-side stats fallback:", statsErr);
+          if (!cancelled) setApiStats(null);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.warn("[Dashboard] Backend unreachable, using mock data:", err);
+          setDefects(seedDefects(80));
+          setApiStats(null);
+          setUsingMock(true);
+        }
+      }
+    }
+
+    loadInitialData();
+    return () => { cancelled = true; };
+  }, [loadStats]);
 
   // Frame simulator + loads
   const npuLoads = useNpuLoads();
   const phase = useFrameSimulator({
     live,
     onComplete: () => {
+      if (!usingMock) return;
       const d = makeDefect({ ts: new Date() });
       setDefects(prev => [d, ...prev].slice(0, 100));
     },
   });
   const cpuLoads = useCpuLoads(phase);
 
-  const stats = buildStats(defects);
+  // WebSocket — real-time defects from backend
+  useDefectWebSocket((newDefect) => {
+    setUsingMock(false);
+    setDefects(prev => [newDefect, ...prev].slice(0, 100));
+
+    loadStats().catch((err) => {
+      console.warn("[Dashboard] Failed to refresh stats after WS event:", err);
+    });
+  });
+
+  // Unified stats: prefer real API, fallback to client-side computed
+  const mockStats = useMemo(() => buildStats(defects), [defects]);
+  const stats: DashboardStatsLike = apiStats ?? mockStats;
+
   const ramUsed = (activeConfig.model_size === "4B" ? 11.4 : 5.0) + (npuLoads[2] / 100) * 0.6;
 
   const openProfileForDefect = useCallback((d: DefectRead) => {
