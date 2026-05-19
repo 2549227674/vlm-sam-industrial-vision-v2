@@ -29,6 +29,23 @@ class VlmMetrics(BaseModel):
     json_parse_ok: bool
 
 
+class TraceEvent(BaseModel):
+    """Chrome Trace format single complete event.
+
+    ts/dur unit: microseconds, origin=0 corresponds to frame start.
+    extra="ignore" to accept future C++ / Perfetto extension fields (args/pid).
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    name: str = Field(min_length=1, max_length=128)
+    ts: float = Field(ge=0)
+    dur: float = Field(ge=0)
+    tid: str = Field(min_length=1, max_length=64)
+    ph: Literal["X"]
+    cat: str = Field(default="", max_length=64)
+
+
 class DefectCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -48,6 +65,7 @@ class DefectCreate(BaseModel):
     edge_ts: datetime
     pipeline_ms: dict[Stage, float]
     vlm_metrics: Optional[VlmMetrics] = None
+    trace_events: Optional[list[TraceEvent]] = Field(default=None, max_length=64)
     schema_version: Literal["v1"] = "v1"
 
     @field_validator("edge_ts")

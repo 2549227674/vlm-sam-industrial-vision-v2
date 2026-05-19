@@ -29,6 +29,20 @@ async def get_stats(
         select(func.count()).select_from(Defect).where(*base)
     ) or 0
 
+    # today_defects and today_high
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    today_total = await db.scalar(
+        select(func.count()).select_from(Defect).where(Defect.edge_ts >= today_start)
+    ) or 0
+
+    today_high_count = await db.scalar(
+        select(func.count()).select_from(Defect).where(
+            Defect.edge_ts >= today_start,
+            Defect.severity == "high",
+        )
+    ) or 0
+
     # by_category
     cat_rows = await db.execute(
         select(Defect.category, func.count()).where(*base).group_by(Defect.category)
@@ -100,6 +114,9 @@ async def get_stats(
             func.avg(
                 func.json_extract(Defect.vlm_metrics, "$.prompt_tokens")
             ).label("avg_prompt_tokens"),
+            func.avg(
+                func.json_extract(Defect.vlm_metrics, "$.output_tokens")
+            ).label("avg_output_tokens"),
         )
         .where(*base)
         .group_by(Defect.variant)
@@ -112,12 +129,28 @@ async def get_stats(
             "avg_decode_tps": round(float(r.avg_decode_tps or 0), 2),
             "avg_rss_mb": round(float(r.avg_rss_mb or 0), 1),
             "avg_prompt_tokens": round(float(r.avg_prompt_tokens or 0), 0),
+            "avg_output_tokens": round(float(r.avg_output_tokens or 0), 0),
         }
         for r in ab_rows
     }
 
+    # Ensure all four primary variant keys always present
+    DEFAULT_AB_METRICS = {
+        "count": 0,
+        "json_ok_rate": 0,
+        "avg_ttft_ms": 0,
+        "avg_decode_tps": 0,
+        "avg_rss_mb": 0,
+        "avg_prompt_tokens": 0,
+        "avg_output_tokens": 0,
+    }
+    for variant in ["2B_base", "2B_lora", "4B_base", "4B_lora"]:
+        ab_compare.setdefault(variant, DEFAULT_AB_METRICS.copy())
+
     return {
         "total": total,
+        "today_defects": today_total,
+        "today_high": today_high_count,
         "by_category": by_category,
         "by_severity": by_severity,
         "timeline": timeline,

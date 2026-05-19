@@ -36,7 +36,7 @@
 
 ### 2.2 后端（FastAPI）
 
-- 接收 multipart 报文，落盘图片到 `static/defects/{YYYYMMDD}/{uuid}.jpg`，元数据写入 SQLite（`defects` 表）。
+- 接收 multipart 报文，落盘图片到 `static/defects/{YYYYMMDD}/{uuid}.jpg`，元数据写入 SQLite（`defects` 表，含 `trace_events` JSON 列用于前端 ProfilePage 性能追踪）。
 - 提供 REST 查询接口（分页、过滤、AB 聚合）与静态文件服务（开发模式由 FastAPI StaticFiles，生产模式由 Nginx 直接 serve）。
 - 维护 WebSocket `ConnectionManager` 进程内单例，向前端实时广播 `defect_created` / `metrics_tick` 事件。
 - **不**做模型推理、**不**调用云端 LLM、**不**生成报告。

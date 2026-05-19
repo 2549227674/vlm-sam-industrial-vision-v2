@@ -1,6 +1,12 @@
-# API 接口契约 v1.1
+# API 接口契约 v1.2
 
 本文档是 RK3588 边缘端、Python 模拟器、FastAPI 后端、Next.js 前端之间的**唯一权威接口定义**。任何字段或语义变更必须先改本文档（bump 版本），再改实现。模拟器是契约测试客户端，覆盖所有路径。
+
+> **v1.2 变更摘要**（2026-05-19）：
+> - 新增 `TraceEvent` schema，`DefectCreate` / `DefectRead` 增加可选 `trace_events` 字段
+> - `/api/stats` 顶层增加 `today_defects`、`today_high`
+> - `/api/stats` 的 `ab_compare` 每个 variant 增加 `avg_output_tokens`
+> - WebSocket `defect_created` 说明补充 `trace_events` 可选携带
 
 > **v1.1 变更摘要**（2026-05-12）：
 > - `variant` 字段：`Literal["A", "B"]` → `str`，白名单 `{"2B_base", "2B_lora", "4B_base", "4B_lora"}`，保留 A/B 向下兼容
@@ -50,6 +56,20 @@ class VlmMetrics(BaseModel):
     rss_mb:         float = Field(ge=0)
     json_parse_ok:  bool
 
+class TraceEvent(BaseModel):
+    """Chrome Trace 格式的单条完整事件。
+
+    ts/dur 单位为微秒，origin=0 对应本帧开始时刻。
+    使用 extra="ignore" 以兼容未来 C++ 端或 Perfetto 导出的 args/pid 等扩展字段。
+    """
+    model_config = ConfigDict(extra="ignore")
+    name: str = Field(min_length=1, max_length=128)   # e.g. EfficientAD_infer, VLM_decode
+    ts:   float = Field(ge=0)                          # start time, microseconds
+    dur:  float = Field(ge=0)                          # duration, microseconds
+    tid:  str = Field(min_length=1, max_length=64)     # thread/core ID, e.g. T2.pipeline, NPU.core2
+    ph:   Literal["X"]                                 # Chrome Trace complete event
+    cat:  str = Field(default="", max_length=64)       # category, e.g. infer, vlm-prompt, vlm-decode, io
+
 class DefectCreate(BaseModel):
     """随 multipart 一同提交的 JSON 字段（form 字段名 'meta'）"""
     model_config = ConfigDict(extra="forbid")
@@ -67,6 +87,7 @@ class DefectCreate(BaseModel):
     edge_ts:        datetime
     pipeline_ms:    dict[Stage, float]
     vlm_metrics:    Optional[VlmMetrics] = None
+    trace_events:   Optional[list[TraceEvent]] = Field(default=None, max_length=64)  # v1.2: Chrome Trace 时序事件
     schema_version: Literal["v1"] = "v1"
 
     @field_validator("edge_ts")
@@ -190,14 +211,16 @@ curl -X POST https://vision.example.com/api/edge/report \
 ```json
 {
   "total": 1248,
+  "today_defects": 87,
+  "today_high": 12,
   "by_category": { "metal_nut": 412, "screw": 380, "pill": 456 },
   "by_severity": { "low": 800, "medium": 320, "high": 128 },
   "timeline":   [ { "ts": "2026-05-02T09:00:00Z", "count": 23 } ],
   "ab_compare": {
-    "2B_base": { "count": 312, "json_ok_rate": 0.812, "avg_ttft_ms": 2240, "avg_decode_tps": 11.2, "avg_rss_mb": 3110 },
-    "2B_lora": { "count": 312, "json_ok_rate": 0.946, "avg_ttft_ms": 1180, "avg_decode_tps": 11.8, "avg_rss_mb": 3080 },
-    "4B_base": { "count": 312, "json_ok_rate": 0.850, "avg_ttft_ms": 5500, "avg_decode_tps": 5.7, "avg_rss_mb": 8900 },
-    "4B_lora": { "count": 312, "json_ok_rate": 0.960, "avg_ttft_ms": 5200, "avg_decode_tps": 5.8, "avg_rss_mb": 8700 }
+    "2B_base": { "count": 312, "json_ok_rate": 0.812, "avg_ttft_ms": 2240, "avg_decode_tps": 11.2, "avg_rss_mb": 3110, "avg_prompt_tokens": 78, "avg_output_tokens": 98 },
+    "2B_lora": { "count": 312, "json_ok_rate": 0.946, "avg_ttft_ms": 1180, "avg_decode_tps": 11.8, "avg_rss_mb": 3080, "avg_prompt_tokens": 78, "avg_output_tokens": 98 },
+    "4B_base": { "count": 312, "json_ok_rate": 0.850, "avg_ttft_ms": 5500, "avg_decode_tps": 5.7, "avg_rss_mb": 8900, "avg_prompt_tokens": 78, "avg_output_tokens": 98 },
+    "4B_lora": { "count": 312, "json_ok_rate": 0.960, "avg_ttft_ms": 5200, "avg_decode_tps": 5.8, "avg_rss_mb": 8700, "avg_prompt_tokens": 78, "avg_output_tokens": 98 }
   }
 }
 ```
@@ -222,7 +245,7 @@ curl -X POST https://vision.example.com/api/edge/report \
 | `type` | payload | 触发时机 |
 |---|---|---|
 | `hello` | `{ "ws_id": "...", "server_ts": "..." }` | 连接建立后立即发送 |
-| `defect_created` | DefectRead | 新缺陷入库后广播 |
+| `defect_created` | DefectRead | 新缺陷入库后广播；`data` 为完整 `DefectRead`，包含 `pipeline_ms`、`vlm_metrics`，并在可用时包含 `trace_events`。前端不得假设 `trace_events` 必然存在，必须按可选字段处理 |
 | `metrics_tick` | `{ "ws_clients": int, "qps": float }` | 每 5 s |
 | `ping` | `{ "ts": "..." }` | 每 30 s（保活） |
 

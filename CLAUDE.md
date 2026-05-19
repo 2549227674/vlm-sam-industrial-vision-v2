@@ -59,6 +59,9 @@ Phase 6 v2 Track B completed:
 - 全部产物位于 `models/qwen3vl_models/rkllm_15cls/`
 - 详见 `docs/experiments/phase6_track_b_model_conversion_report.md`
 
+Phase 4.0 completed:
+- Phase 4.0：后端补全（API_CONTRACT v1.2 增加 trace_events/stats 字段；DB 增加 trace_events JSON 列；Schema/API/WS 返回 trace_events；stats 增加 avg_output_tokens、today_defects、today_high；模拟器启用 trace_events 上报且保证 dur 非负）
+
 尚未开始（下一步）：
 - Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
   见 `docs/PROJECT_TIMELINE.md` 阶段 4

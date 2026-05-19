@@ -119,41 +119,55 @@ def fabricate_metadata(
         "edge_ts":        edge_ts.isoformat(),
         "pipeline_ms":    pipeline_ms,
         "vlm_metrics":    vlm_metrics,
+        "trace_events":   generate_trace_events(pipeline_ms, vlm_metrics),
         "schema_version": "v1",
     }
 
 
 def generate_trace_events(pipeline_ms: dict, vlm_metrics: dict) -> list[dict]:
-    """Phase 7 预留：模拟 C++ 四线程打点数据。
+    """Generate Chrome Trace events for one simulated frame.
 
-    真实数据由 C++ std::chrono 生成；此处用随机值做前端联调。
-    注意：后端 DefectCreate 有 extra="forbid"，此字段暂不上报。
+    Units: pipeline_ms / vlm_metrics are in ms; TraceEvent ts/dur are in us.
+    All dur must be >= 0, otherwise Pydantic returns 422.
     """
-    t_rga  = round(random.uniform(0.8, 2.0), 2)
-    t_ead  = pipeline_ms["efficientad"]
-    t_fsam = pipeline_ms["fastsam"]
-    t_qwen = pipeline_ms["qwen3vl"]
+
+    def ms(value: object) -> float:
+        try:
+            return max(0.0, float(value or 0.0))
+        except (TypeError, ValueError):
+            return 0.0
+
+    def us(value_ms: float) -> float:
+        return round(max(0.0, value_ms) * 1000.0, 3)
+
+    ead_ms = ms(pipeline_ms.get("efficientad"))
+    sam_ms = ms(pipeline_ms.get("fastsam"))
+    qwen_ms = ms(pipeline_ms.get("qwen3vl"))
+    ttft_ms = ms(vlm_metrics.get("ttft_ms"))
+
+    prompt_ms = min(ttft_ms, qwen_ms)
+    decode_ms = max(0.0, qwen_ms - prompt_ms)
+
+    t0 = 0.0
+    capture_ms = 6.0
+    preprocess_ms = 4.0
+    upload_ms = 12.0
+
+    t_capture = t0
+    t_pipeline = t_capture + capture_ms
+    t_ead = t_pipeline + preprocess_ms
+    t_sam = t_ead + ead_ms
+    t_vlm = t_sam + sam_ms
+    t_upload = t_vlm + qwen_ms
 
     return [
-        {"name": "RGA_resize",        "ts": 0,
-         "dur": int(t_rga * 1000),    "tid": "T2_Pipeline", "ph": "X"},
-        {"name": "EfficientAD_infer", "ts": int(t_rga * 1000),
-         "dur": int(t_ead * 1000),    "tid": "T2_Pipeline", "ph": "X"},
-        {"name": "FastSAM_infer",
-         "ts": int((t_rga + t_ead) * 1000),
-         "dur": int(t_fsam * 1000),   "tid": "T2_Pipeline", "ph": "X"},
-        {"name": "VLM_prompt_build",
-         "ts": int((t_rga + t_ead + t_fsam) * 1000),
-         "dur": int(random.uniform(0.05, 0.15) * 1000),
-         "tid": "T3_VLM", "ph": "X"},
-        {"name": "VLM_TTFT",
-         "ts": int((t_rga + t_ead + t_fsam + 0.1) * 1000),
-         "dur": int(vlm_metrics["ttft_ms"] * 1000),
-         "tid": "T3_VLM", "ph": "X"},
-        {"name": "VLM_decode",
-         "ts": int((t_rga + t_ead + t_fsam + 0.1 + vlm_metrics["ttft_ms"]) * 1000),
-         "dur": int((t_qwen - vlm_metrics["ttft_ms"]) * 1000),
-         "tid": "T3_VLM", "ph": "X"},
+        {"name": "V4L2_dequeue", "ts": us(t_capture), "dur": us(capture_ms), "tid": "T1.capture", "ph": "X", "cat": "io"},
+        {"name": "RGA_preprocess", "ts": us(t_pipeline), "dur": us(preprocess_ms), "tid": "T2.pipeline", "ph": "X", "cat": "rga"},
+        {"name": "EfficientAD_infer", "ts": us(t_ead), "dur": us(ead_ms), "tid": "NPU.core0", "ph": "X", "cat": "infer"},
+        {"name": "FastSAM_infer", "ts": us(t_sam), "dur": us(sam_ms), "tid": "NPU.core1", "ph": "X", "cat": "infer"},
+        {"name": "VLM_prompt", "ts": us(t_vlm), "dur": us(prompt_ms), "tid": "NPU.core2", "ph": "X", "cat": "vlm-prompt"},
+        {"name": "VLM_decode", "ts": us(t_vlm + prompt_ms), "dur": us(decode_ms), "tid": "NPU.core2", "ph": "X", "cat": "vlm-decode"},
+        {"name": "HTTP_upload", "ts": us(t_upload), "dur": us(upload_ms), "tid": "T4.upload", "ph": "X", "cat": "io"},
     ]
 
 

@@ -119,6 +119,7 @@ async def report_defect(
         edge_ts=meta_data.edge_ts,
         pipeline_ms=meta_data.pipeline_ms,
         vlm_metrics=meta_data.vlm_metrics.model_dump() if meta_data.vlm_metrics else None,
+        trace_events=[e.model_dump() for e in meta_data.trace_events] if meta_data.trace_events else None,
         schema_version=meta_data.schema_version,
     )
     db.add(db_defect)

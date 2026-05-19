@@ -1,3 +1,5 @@
+# v1.1 schema: trace_events column added for frontend v4 ProfilePage tracing.
+
 from datetime import datetime, timezone
 
 from sqlalchemy import CheckConstraint, Float, Integer, JSON, String, UniqueConstraint
@@ -36,4 +38,5 @@ class Defect(Base):
 
     pipeline_ms: Mapped[dict] = mapped_column(JSON)
     vlm_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    trace_events: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     schema_version: Mapped[str] = mapped_column(String(8), default="v1")
