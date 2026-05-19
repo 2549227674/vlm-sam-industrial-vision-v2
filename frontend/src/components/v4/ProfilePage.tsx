@@ -51,12 +51,14 @@ const CAT_COLOR: Record<string, string> = {
 export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 0 }: { defects: DefectRead[]; accent?: string; initialFrameIdx?: number }) {
   const [frameIdx, setFrameIdx] = useState(initialFrameIdx);
   const [pinnedId, setPinnedId] = useState<number | null>(null);
+  const initPinnedRef = useRef(false);
   useEffect(() => { setFrameIdx(initialFrameIdx); }, [initialFrameIdx]);
   useEffect(() => {
-    if (defects.length > 0 && pinnedId === null) {
+    if (defects.length > 0 && !initPinnedRef.current) {
+      initPinnedRef.current = true;
       setPinnedId(defects[initialFrameIdx]?.id ?? defects[0].id);
     }
-  }, [defects, initialFrameIdx, pinnedId]);
+  }, [defects, initialFrameIdx]);
   const resolvedIdx = useMemo(() => {
     if (pinnedId === null) return 0;
     const idx = defects.findIndex(d => d.id === pinnedId);

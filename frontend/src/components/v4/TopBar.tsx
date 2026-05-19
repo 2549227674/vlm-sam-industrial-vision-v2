@@ -71,7 +71,7 @@ export function TopBar({ now, live, route, accent = "var(--acc)" }: TopBarProps)
             {live ? "实时" : "已暂停"}
           </span>
         </span>
-        <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)" }}>{fmtTime(now)}</span>
+        <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)" }} suppressHydrationWarning>{fmtTime(now)}</span>
       </div>
     </header>
   );
