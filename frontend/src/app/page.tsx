@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [activeConfig, setActiveConfig] = useState<ActiveConfig>({ model_size: "2B", variant: "lora" });
   const [twinMode, setTwinMode] = useState("xray");
   const [live] = useState(true);
+  const [tracePaused, setTracePaused] = useState(false);
 
   // Clock
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function Dashboard() {
   const phase = useFrameSimulator({
     live,
     onComplete: () => {
+      if (tracePaused) return;
       const d = makeDefect({ ts: new Date() });
       setDefects(prev => [d, ...prev].slice(0, 100));
     },
@@ -102,7 +104,7 @@ export default function Dashboard() {
                 聚焦瓶颈，逐帧分析：Chrome-trace 精度追踪每一个事件，NPU.2（Qwen3-VL）——占关键路径的 98%，但仅需 1ms 无需过度优化。
               </p>
             </section>
-            <ProfilePage defects={defects} initialFrameIdx={profileSeedIdx} />
+            <ProfilePage defects={defects} initialFrameIdx={profileSeedIdx} onTraceHoverChange={setTracePaused} />
           </>
         )}
 

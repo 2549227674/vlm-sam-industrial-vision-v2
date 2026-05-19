@@ -48,14 +48,30 @@ const CAT_COLOR: Record<string, string> = {
   "vlm-prompt": "#ff7a90", "vlm-decode": "#ff5c7a", "vlm-encode": "#f472b6",
 };
 
-export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 0 }: { defects: DefectRead[]; accent?: string; initialFrameIdx?: number }) {
+export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 0, onTraceHoverChange }: { defects: DefectRead[]; accent?: string; initialFrameIdx?: number; onTraceHoverChange?: (isHovering: boolean) => void }) {
   const [frameIdx, setFrameIdx] = useState(initialFrameIdx);
+  const [pinnedId, setPinnedId] = useState<number | null>(null);
   useEffect(() => { setFrameIdx(initialFrameIdx); }, [initialFrameIdx]);
+  useEffect(() => {
+    if (defects.length > 0 && pinnedId === null) {
+      setPinnedId(defects[initialFrameIdx]?.id ?? defects[0].id);
+    }
+  }, [defects, initialFrameIdx, pinnedId]);
+  const resolvedIdx = useMemo(() => {
+    if (pinnedId === null) return 0;
+    const idx = defects.findIndex(d => d.id === pinnedId);
+    return idx >= 0 ? idx : 0;
+  }, [defects, pinnedId]);
   const [zoom, setZoom] = useState({ start_us: 0, end_us: 0 });
   const [hover, setHover] = useState<{ x: number; y: number; event: { name: string; ts: number; dur: number; cat?: string }; laneName: string } | null>(null);
   const [showCritical, setShowCritical] = useState(true);
 
-  const defect = defects[frameIdx];
+  const handleHover = useCallback((h: { x: number; y: number; event: { name: string; ts: number; dur: number; cat?: string }; laneName: string } | null) => {
+    setHover(h);
+    onTraceHoverChange?.(h !== null);
+  }, [onTraceHoverChange]);
+
+  const defect = defects[resolvedIdx];
   const span = useMemo(() => {
     if (!defect?.trace_events?.length) return { start: 0, end: 1000 };
     let min = Infinity, max = -Infinity;
@@ -98,9 +114,9 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
           {defects.slice(0, 14).map((d, i) => {
             const totalMs = Math.round(d.pipeline_ms.efficientad + d.pipeline_ms.fastsam + d.pipeline_ms.qwen3vl);
             const sevColor = { low: "var(--ok)", medium: "var(--warn)", high: "var(--crit)" }[d.severity];
-            const active = i === frameIdx;
+            const active = i === resolvedIdx;
             return (
-              <button key={d.id} onClick={() => setFrameIdx(i)} style={{
+              <button key={d.id} onClick={() => { setFrameIdx(i); setPinnedId(d.id); }} style={{
                 padding: 0, background: "var(--bg-1)", border: active ? "2px solid var(--acc)" : "1px solid var(--line)",
                 cursor: "pointer", position: "relative", overflow: "hidden", boxShadow: active ? "0 0 12px var(--acc-glow)" : "none",
               }}>
@@ -167,9 +183,9 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
           <div><div className="eyebrow">事件数</div><span className="mono" style={{ fontSize: 16, color: "var(--fg-1)", marginTop: 4, display: "inline-block" }}>{defect.trace_events?.length ?? 0}</span></div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={() => setFrameIdx(Math.min(defects.length - 1, frameIdx + 1))} disabled={frameIdx >= defects.length - 1} style={{ background: "transparent", color: frameIdx >= defects.length - 1 ? "var(--fg-4)" : "var(--fg-2)", border: "1px solid var(--line)", padding: "4px 10px", fontSize: 11, fontFamily: "var(--font-mono)", cursor: frameIdx >= defects.length - 1 ? "default" : "pointer" }}>‹ 更早</button>
-          <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)", padding: "0 4px" }}>{frameIdx + 1} / {defects.length}</span>
-          <button onClick={() => setFrameIdx(Math.max(0, frameIdx - 1))} disabled={frameIdx === 0} style={{ background: "transparent", color: frameIdx === 0 ? "var(--fg-4)" : "var(--fg-2)", border: "1px solid var(--line)", padding: "4px 10px", fontSize: 11, fontFamily: "var(--font-mono)", cursor: frameIdx === 0 ? "default" : "pointer" }}>更新 ›</button>
+          <button onClick={() => { const ni = Math.min(defects.length - 1, resolvedIdx + 1); setFrameIdx(ni); setPinnedId(defects[ni].id); }} disabled={resolvedIdx >= defects.length - 1} style={{ background: "transparent", color: resolvedIdx >= defects.length - 1 ? "var(--fg-4)" : "var(--fg-2)", border: "1px solid var(--line)", padding: "4px 10px", fontSize: 11, fontFamily: "var(--font-mono)", cursor: resolvedIdx >= defects.length - 1 ? "default" : "pointer" }}>‹ 更早</button>
+          <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)", padding: "0 4px" }}>{resolvedIdx + 1} / {defects.length}</span>
+          <button onClick={() => { const ni = Math.max(0, resolvedIdx - 1); setFrameIdx(ni); setPinnedId(defects[ni].id); }} disabled={resolvedIdx === 0} style={{ background: "transparent", color: resolvedIdx === 0 ? "var(--fg-4)" : "var(--fg-2)", border: "1px solid var(--line)", padding: "4px 10px", fontSize: 11, fontFamily: "var(--font-mono)", cursor: resolvedIdx === 0 ? "default" : "pointer" }}>更新 ›</button>
           <button onClick={() => setZoom({ start_us: 0, end_us: 0 })} style={{ background: "transparent", color: "var(--fg-2)", border: "1px solid var(--line)", padding: "4px 10px", fontSize: 11, fontFamily: "var(--font-mono)", cursor: "pointer" }}>重置缩放</button>
           <span style={{ width: 1, height: 20, background: "var(--line)", margin: "0 2px" }} />
           <button onClick={() => setShowCritical(c => !c)} style={{ background: showCritical ? "var(--bg-3)" : "transparent", color: showCritical ? "var(--fg)" : "var(--fg-2)", border: `1px solid ${showCritical ? "var(--fg-2)" : "var(--line)"}`, padding: "4px 10px", fontSize: 11, fontFamily: "var(--font-mono)", cursor: "pointer", letterSpacing: "0.04em" }}>关键路径</button>
@@ -181,7 +197,7 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
       {/* Trace viewer + explanation */}
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 320px", gap: 14 }}>
         {/* Trace SVG */}
-        <div style={{ position: "relative", background: "var(--bg-1)", border: "1px solid var(--line)", overflow: "hidden" }}>
+        <div style={{ position: "relative", background: "var(--bg-1)", border: "1px solid var(--line)", overflow: "visible" }}>
           <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", background: "var(--bg-2)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span className="eyebrow">CHROME 追踪 · 滚轮缩放 · 拖拽平移 · 双击重置</span>
             <div style={{ display: "flex", gap: 10 }}>
@@ -193,7 +209,7 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
               ))}
             </div>
           </div>
-          <TraceCanvas defect={defect} byTid={byTid} span={span} visible={visible} totalDur={totalDur} onZoom={(s, e) => setZoom({ start_us: s, end_us: e })} onHover={setHover} hover={hover} showCritical={showCritical} accent={accent} />
+          <TraceCanvas defect={defect} byTid={byTid} span={span} visible={visible} totalDur={totalDur} onZoom={(s, e) => setZoom({ start_us: s, end_us: e })} onHover={handleHover} hover={hover} showCritical={showCritical} accent={accent} onTraceHoverChange={onTraceHoverChange} />
         </div>
 
         {/* Bottleneck explanation */}
@@ -228,9 +244,60 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
   );
 }
 
+// ── HoverTip ─────────────────────────────────────────────────────────────────
+
+type HoverState = { x: number; y: number; event: { name: string; ts: number; dur: number; cat?: string }; laneName: string };
+
+function HoverTip({ hover, containerWidth }: { hover: HoverState; containerWidth: number }) {
+  const tipRef = useRef<HTMLDivElement>(null);
+  const [adjustedLeft, setAdjustedLeft] = useState(hover.x);
+
+  useEffect(() => {
+    if (!tipRef.current) return;
+    const tipW = tipRef.current.offsetWidth;
+    const half = tipW / 2;
+    const clamped = Math.min(containerWidth - half - 8, Math.max(140 + half, hover.x));
+    setAdjustedLeft(clamped);
+  }, [hover.x, containerWidth]);
+
+  return (
+    <div
+      ref={tipRef}
+      style={{
+        position: "absolute",
+        left: adjustedLeft,
+        top: hover.y,
+        transform: "translate(-50%, calc(-100% - 10px))",
+        pointerEvents: "none",
+        zIndex: 20,
+        background: "var(--bg-1)",
+        border: "1px solid var(--line-hot)",
+        padding: "8px 10px",
+        fontSize: 11,
+        lineHeight: 1.5,
+        minWidth: 180,
+        maxWidth: 280,
+        boxShadow: "0 4px 16px rgba(0,0,0,0.55)",
+        animation: "fadeIn 80ms ease-out",
+      }}
+    >
+      <div className="mono" style={{ color: "var(--fg)", fontWeight: 600, fontSize: 12 }}>{hover.event.name}</div>
+      <div className="mono" style={{ color: "var(--fg-3)", fontSize: 9, marginTop: 2 }}>{hover.laneName}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, gap: 12 }}>
+        <span style={{ color: "var(--fg-3)" }}>ts</span>
+        <span className="mono" style={{ color: "var(--fg-1)" }}>{(hover.event.ts / 1000).toFixed(2)}<span style={{ color: "var(--fg-3)" }}>ms</span></span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
+        <span style={{ color: "var(--fg-3)" }}>dur</span>
+        <span className="mono" style={{ color: CAT_COLOR[hover.event.cat || ""] || "var(--fg-1)", fontWeight: 600 }}>{(hover.event.dur / 1000).toFixed(2)}<span style={{ color: "var(--fg-3)" }}>ms</span></span>
+      </div>
+    </div>
+  );
+}
+
 // ── Trace SVG canvas ────────────────────────────────────────────────────────
 
-function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, showCritical = true, accent }: {
+function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, showCritical = true, accent, onTraceHoverChange }: {
   defect: DefectRead;
   byTid: Record<string, { name: string; ts: number; dur: number; tid: string; ph: "X"; cat?: string }[]>;
   span: { start: number; end: number };
@@ -241,6 +308,7 @@ function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, s
   hover: { x: number; y: number; event: { name: string; ts: number; dur: number; cat?: string }; laneName: string } | null;
   showCritical?: boolean;
   accent: string;
+  onTraceHoverChange?: (isHovering: boolean) => void;
 }) {
   const ref = useRef<SVGSVGElement>(null);
   const [w, setW] = useState(1100);
@@ -351,7 +419,8 @@ function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, s
     if (dragPan.current) { dragPan.current = null; setIsPanning(false); }
     setDragStart(null); setDragEnd(null);
     onHover(null);
-  }, [onHover]);
+    onTraceHoverChange?.(false);
+  }, [onHover, onTraceHoverChange]);
 
   const ticks = useMemo(() => {
     const ms = totalDur / 1000;
@@ -367,7 +436,7 @@ function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, s
 
   return (
     <div style={{ position: "relative" }}>
-      <svg ref={ref} width={w} height={totalH} tabIndex={0} onClick={() => ref.current?.focus({ preventScroll: true })} onWheel={onWheel} onDoubleClick={onDoubleClick} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave} style={{ display: "block", outline: "none", cursor: dragStart != null ? "crosshair" : isPanning ? "grabbing" : "grab", userSelect: "none" }}>
+      <svg ref={ref} width={w} height={totalH} tabIndex={0} onClick={() => ref.current?.focus({ preventScroll: true })} onWheel={onWheel} onDoubleClick={onDoubleClick} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseEnter={() => onTraceHoverChange?.(true)} onMouseLeave={onMouseLeave} style={{ display: "block", outline: "none", cursor: dragStart != null ? "crosshair" : isPanning ? "grabbing" : "grab", userSelect: "none" }}>
         <g>
           {ticks.map((t_ms) => {
             const x = us2x(t_ms * 1000);
@@ -429,20 +498,7 @@ function TraceCanvas({ byTid, span, visible, totalDur, onZoom, onHover, hover, s
           <rect x={Math.min(dragStart, dragEnd)} y={padT - 14} width={Math.abs(dragEnd - dragStart)} height={totalH - padT - 4} fill={accent} opacity={0.12} stroke={accent} strokeOpacity={0.6} strokeDasharray="2 2" />
         )}
       </svg>
-      {hover && (
-        <div style={{ position: "absolute", left: hover.x, top: hover.y, transform: "translate(-50%, calc(-100% - 10px))", background: "var(--bg)", border: "1px solid var(--fg-2)", padding: "8px 10px", pointerEvents: "none", fontSize: 11, lineHeight: 1.5, minWidth: 180, maxWidth: 280, boxShadow: "0 4px 16px rgba(0,0,0,0.5)", zIndex: 5 }}>
-          <div className="mono" style={{ color: "var(--fg)", fontWeight: 600, fontSize: 12 }}>{hover.event.name}</div>
-          <div className="mono" style={{ color: "var(--fg-3)", fontSize: 9, marginTop: 2 }}>{hover.laneName}</div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, gap: 12 }}>
-            <span style={{ color: "var(--fg-3)" }}>ts</span>
-            <span className="mono" style={{ color: "var(--fg-1)" }}>{(hover.event.ts / 1000).toFixed(2)}<span style={{ color: "var(--fg-3)" }}>ms</span></span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
-            <span style={{ color: "var(--fg-3)" }}>dur</span>
-            <span className="mono" style={{ color: CAT_COLOR[hover.event.cat || ""] || "var(--fg-1)", fontWeight: 600 }}>{(hover.event.dur / 1000).toFixed(2)}<span style={{ color: "var(--fg-3)" }}>ms</span></span>
-          </div>
-        </div>
-      )}
+      {hover && <HoverTip hover={hover} containerWidth={w} />}
     </div>
   );
 }
