@@ -12,7 +12,7 @@
 阶段 1  轨道A：后端 FastAPI                   ← Claude Code 主导
 阶段 2  轨道A：模拟器 + 契约测试               ← Claude Code 主导
 阶段 3  轨道A：前端 Next.js                   ← Claude Code 主导
-阶段 4  轨道A 联调验收                        ← 你验证
+阶段 4  轨道A 联调验收（v4 + API_CONTRACT v1.2）← 你验证
 阶段 5  PC 端模型训练与 AB 评估（可与 1-4 并行） ← 混合（脚本 Claude Code 写，训练你跑）
 阶段 6  轨道B：模型转换                       ← 板子到货前后
 阶段 7  轨道B：C++ 四线程流水线                ← Claude Code + 你上板测试
@@ -485,10 +485,15 @@ npx serve out    # 本地预览静态产物
 
 ---
 
-## 阶段 4：轨道A 联调验收
+## 阶段 4：轨道A 联调验收（v4 + API_CONTRACT v1.2）
 
 **时间预估**：0.5 天
-**前置依赖**：阶段 1-3 全部完成
+**前置依赖**：
+- Phase 1-3 完成
+- Phase 4.0 后端补全完成（`trace_events` 列、`today_defects`、`today_high`、`avg_output_tokens`）
+- Phase 4.1 前端真实 API 接入完成（REST + WebSocket + mock fallback）
+- `docs/API_CONTRACT.md` 已升级到 v1.2
+- 本地 `vision.db` 已重建，或已手动添加 `trace_events` 列
 
 ### 4.1 全链路端到端运行
 
@@ -505,27 +510,69 @@ cd frontend && npm run dev
 cd simulator && python line_runner.py
 ```
 
+**命令行验证**：
+
+```bash
+# 后端契约测试
+pytest backend/tests/contract/ -v
+
+# 前端类型检查
+cd frontend && npx tsc --noEmit
+
+# 前端静态导出
+cd frontend && npm run build
+
+# stats 字段检查
+curl -s http://localhost:8000/api/stats | python -m json.tool
+
+# defects trace_events 检查
+sqlite3 backend/vision.db "SELECT id, json_array_length(trace_events) FROM defects ORDER BY id DESC LIMIT 5;"
+```
+
 **验证清单**：
 
 | 检查项 | 预期结果 | 对应文档 |
 |---|---|---|
-| 模拟器日志 | 每 ~1.5s 发一次 POST，返回 200 | ARCHITECTURE.md §4.1 |
-| 后端 `static/defects/` | 按日期子目录落盘 JPEG | API_CONTRACT.md §9 |
-| `vision.db` | `defects` 表有数据 | ARCHITECTURE.md §9.1 |
-| 前端 DataTable | 实时追加行 | — |
-| 前端 ECharts | AB 对比卡片有数据 | — |
-| 前端 Toast | 每条新缺陷弹通知 | — |
-| 单帧详情 | 图片可加载 + bbox overlay 正确 | — |
-| `/api/health` | `{"status": "ok", ...}` | API_CONTRACT.md §7 |
+| 后端启动 | `uvicorn app.main:app --reload --port 8000` 无报错 | ARCHITECTURE.md §2.2 |
+| 前端启动 | `npm run dev` 正常，页面可访问 | — |
+| 模拟器启动 | `python line_runner.py` 每约 1.5s POST 一次，返回 200 | ARCHITECTURE.md §4.1 |
+| 图片落盘 | `backend/static/defects/{YYYYMMDD}/` 下持续生成 JPEG | API_CONTRACT.md §9 |
+| DB 写入 | `defects` 表有数据，`trace_events` 列非 NULL | API_CONTRACT.md v1.2 |
+| trace_events 数量 | `sqlite3 backend/vision.db "SELECT json_array_length(trace_events) FROM defects LIMIT 3;"` 输出数字 | API_CONTRACT.md v1.2 |
+| `/api/stats` | 返回 `today_defects`、`today_high`、`avg_output_tokens` | API_CONTRACT.md §6 (v1.2) |
+| `/api/defects` | 返回分页结构 `{ items, total, page, page_size }`，items 中含真实 DB 数据 | API_CONTRACT.md §4 |
+| 前端初始加载 | 控制台没有 `Backend unreachable`，页面显示真实后端数据 | Phase 4.1 |
+| Overview 页面 | KPI、最新帧、检测流能显示真实缺陷数据 | — |
+| RK3588Twin | 动画仍运行，不因真实 API 接入失效 | — |
+| WebSocket | 模拟器上报后，前端实时追加新缺陷，并弹出 toast | API_CONTRACT.md §8 |
+| ABMatrix | 4 变体卡片存在，"输出词元"指标有值 | Phase 4.0 |
+| ProfilePage | 选中缺陷后 Chrome Trace 时间线可渲染，事件来自真实 `trace_events` | API_CONTRACT.md v1.2 |
+| Detail/FrameInspector | 图片可加载，BBox overlay 不错位 | — |
+| fallback 验证 | 停止后端后刷新前端，进入 mock fallback，不白屏 | Phase 4.1 |
+| `/api/health` | 返回 `{"status":"ok", ...}` | API_CONTRACT.md §7 |
+| 契约测试 | `pytest backend/tests/contract/ -v` 为 `34/34 passed` | API_CONTRACT.md §13 |
+| 前端类型检查 | `cd frontend && npx tsc --noEmit` 为 0 errors | — |
+| 静态导出 | `cd frontend && npm run build` 成功 | ARCHITECTURE.md §9.2 |
 
-### 4.2 契约测试全绿
+### 4.2 视觉验证
 
-```bash
-pytest backend/tests/contract/ -v
-# 6 个文件全 PASSED
-```
+凡涉及页面截图、浏览器渲染效果、UI 是否正常显示、动画是否运行、布局是否对齐、视觉风格是否接近 Claude Design v4、是否白屏/遮挡/溢出/重叠等判断，主 agent 不得自行处理视觉输入任务。
 
-**阶段 4 完成标志**：上述所有检查项通过 + 契约测试全绿。这是轨道 A 的完成节点。
+所有视觉验证必须调用 phase4-accept-verify 子 agent 专门处理（参考 `.claude/agents/phase4-accept-verify.md`）。phase4-accept-verify 子 agent 只输出功能状态报告，不做代码审查，不修改文件。主 agent 根据报告再决定是否修改代码。
+
+**阶段 4 完成标志**：
+
+- 模拟器 → 后端 → DB → WebSocket → 前端 v4 全链路跑通
+- `trace_events` 能从模拟器上报、后端入库、GET/WS 返回，并在 ProfilePage 渲染
+- `/api/stats` v1.2 字段完整，ABMatrix 能显示 `avg_output_tokens`
+- 前端真实 API 模式和 mock fallback 模式都可用
+- `pytest backend/tests/contract/ -v`：34/34 passed
+- `cd frontend && npx tsc --noEmit`：0 errors
+- `cd frontend && npm run build`：成功
+- 本地 `vision.db` 已使用 v1.2 schema，不再沿用旧 schema
+- phase4-accept-verify 子 agent 未报告 HIGH 级视觉阻塞
+
+这是轨道 A 的完成节点。
 
 ---
 

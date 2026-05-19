@@ -65,9 +65,13 @@ Phase 4.0 completed:
 Phase 4.1 completed:
 - Phase 4.1：前端接入真实 API（page.tsx 接入 GET /api/defects + GET /api/stats + useDefectWebSocket；后端不可达时 fallback mock；useFrameSimulator 仅保留动画驱动并在 fallback 模式生成 mock；v4 stats props 统一为 DashboardStatsLike；ABMatrix 展示 avg_output_tokens）
 
+Phase 4 completed:
+- Phase 4：轨道A 联调验收（34/34 契约测试通过，tsc 0 errors，npm run build 成功，trace_events 全链路验证，phase4-accept-verify 视觉验收通过）
+- 详见 `docs/experiments/phase4_track_a_e2e_acceptance_report.md`
+
 尚未开始（下一步）：
-- Phase 4：轨道A 联调验收（模拟器 + 后端 + 前端全链路端到端验证）
-  见 `docs/PROJECT_TIMELINE.md` 阶段 4
+- Phase 7：轨道B C++ 四线程流水线（需上板）
+  见 `docs/PROJECT_TIMELINE.md` 阶段 7
 
 ## 一句话定义
 
