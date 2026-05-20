@@ -5,6 +5,7 @@ Requires: rknn-toolkit2 in .venv_rknn (NOT .venv)
 Runs on:  PC or cross-compile host (not on RK3588 itself)
 
 Input:  models/efficientad_models/{category}/weights/onnx/model.onnx
+        (or model_raw.onnx with --use-raw-onnx)
 Output: models/efficientad_models/{category}/model.rknn
         models/efficientad_models/{category}/accuracy_analysis/
 
@@ -22,6 +23,8 @@ Usage:
     python scripts/convert_efficientad_rknn.py --skip-accuracy-analysis
     python scripts/convert_efficientad_rknn.py --dry-run            # pre-check only
     python scripts/convert_efficientad_rknn.py --dry-run --categories metal_nut
+    python scripts/convert_efficientad_rknn.py --use-raw-onnx --categories bottle
+    python scripts/convert_efficientad_rknn.py --use-raw-onnx --dry-run
 """
 
 from __future__ import annotations
@@ -125,11 +128,14 @@ def parse_accuracy_report(analysis_dir: Path) -> dict:
     return result
 
 
-def dry_run_check(categories: list[str], calib_samples: int) -> None:
+def dry_run_check(categories: list[str], calib_samples: int,
+                  use_raw_onnx: bool = False) -> None:
     """Pre-check: verify ONNX and calibration images exist without running RKNN."""
+    onnx_label = "model_raw.onnx" if use_raw_onnx else "model.onnx"
     print(f"\n{'=' * 50}")
-    print("  DRY-RUN: Pre-check")
+    print(f"  DRY-RUN: Pre-check (use_raw_onnx={use_raw_onnx})")
     print(f"{'=' * 50}")
+    print(f"  ONNX target: {onnx_label}")
     print(f"  Calib samples threshold: {MIN_CALIB_SAMPLES}")
     print()
 
@@ -138,7 +144,7 @@ def dry_run_check(categories: list[str], calib_samples: int) -> None:
     calib_warn: list[str] = []
 
     for cat in categories:
-        onnx_path = MODELS_DIR / cat / "weights" / "onnx" / "model.onnx"
+        onnx_path = MODELS_DIR / cat / "weights" / "onnx" / onnx_label
         rknn_path = MODELS_DIR / cat / "model.rknn"
         good_dir = MVTEC_DIR / cat / "train" / "good"
 
@@ -173,7 +179,9 @@ def dry_run_check(categories: list[str], calib_samples: int) -> None:
         print(f"  Convertible:    (none — run Phase 5.1 training first)")
 
 
-def convert_category(category: str, calib_samples: int, skip_accuracy_analysis: bool = False) -> bool:
+def convert_category(category: str, calib_samples: int,
+                     skip_accuracy_analysis: bool = False,
+                     use_raw_onnx: bool = False) -> bool:
     """Convert one category. Returns True on success (RKNN exported).
 
     Order: config → load → build → export → accuracy_analysis (optional).
@@ -181,8 +189,16 @@ def convert_category(category: str, calib_samples: int, skip_accuracy_analysis: 
     """
     from rknn.api import RKNN
 
-    onnx_path = MODELS_DIR / category / "weights" / "onnx" / "model.onnx"
+    onnx_name = "model_raw.onnx" if use_raw_onnx else "model.onnx"
+    onnx_path = MODELS_DIR / category / "weights" / "onnx" / onnx_name
     rknn_path = MODELS_DIR / category / "model.rknn"
+
+    # Raw model outputs: raw_score [1,1] + raw_anomaly_map [1,1,256,256]
+    # Legacy model outputs: pred_score + anomaly_map (post-processed, clipped)
+    if use_raw_onnx:
+        rknn_outputs = ["raw_score", "raw_anomaly_map"]
+    else:
+        rknn_outputs = ["pred_score", "anomaly_map"]
 
     if not onnx_path.exists():
         print(f"  [SKIP] ONNX not found: {onnx_path}")
@@ -192,6 +208,9 @@ def convert_category(category: str, calib_samples: int, skip_accuracy_analysis: 
     print(f"\n{'=' * 50}")
     print(f"  Converting: {category}")
     print(f"{'=' * 50}")
+    print(f"  using_raw_onnx={use_raw_onnx}")
+    print(f"  onnx_path={onnx_path}")
+    print(f"  outputs={rknn_outputs}")
 
     rknn = RKNN(verbose=False)
 
@@ -209,12 +228,12 @@ def convert_category(category: str, calib_samples: int, skip_accuracy_analysis: 
             return False
 
         # 2. Load ONNX
-        print(f"  [2/{total_steps}] Load ONNX...")
+        print(f"  [2/{total_steps}] Load ONNX (outputs={rknn_outputs})...")
         ret = rknn.load_onnx(
                 model=str(onnx_path),
                 inputs=['input'],
                 input_size_list=[[1, 3, 256, 256]],
-		outputs=['pred_score', 'anomaly_map'],
+		outputs=rknn_outputs,
         )
         if ret != 0:
             print("  FAIL: load_onnx()")
@@ -283,6 +302,8 @@ def main() -> None:
                         help="Skip accuracy_analysis after export (faster, model.rknn still valid)")
     parser.add_argument("--dry-run", action="store_true",
                         help="Pre-check only: verify ONNX and calib images without RKNN conversion")
+    parser.add_argument("--use-raw-onnx", action="store_true",
+                        help="Use model_raw.onnx (pre-postprocessor) instead of model.onnx")
     args = parser.parse_args()
 
     # Validate categories against whitelist
@@ -293,14 +314,16 @@ def main() -> None:
         sys.exit(1)
 
     if args.dry_run:
-        dry_run_check(args.categories, args.calib_samples)
+        dry_run_check(args.categories, args.calib_samples, args.use_raw_onnx)
         return
 
     results: dict[str, bool | str] = {}
 
     for cat in args.categories:
         try:
-            ok = convert_category(cat, args.calib_samples, args.skip_accuracy_analysis)
+            ok = convert_category(cat, args.calib_samples,
+                                  args.skip_accuracy_analysis,
+                                  args.use_raw_onnx)
             results[cat] = ok
         except Exception as e:
             print(f"  ERROR ({cat}): {e}")
