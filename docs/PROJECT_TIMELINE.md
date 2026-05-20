@@ -8,20 +8,20 @@
 ## 全局时间线总览
 
 ```
-阶段 0  准备工作（你手动）                    ← 你现在在这里
-阶段 1  轨道A：后端 FastAPI                   ← Claude Code 主导
-阶段 2  轨道A：模拟器 + 契约测试               ← Claude Code 主导
-阶段 3  轨道A：前端 Next.js                   ← Claude Code 主导
-阶段 4  轨道A 联调验收（v4 + API_CONTRACT v1.2）← 你验证
-阶段 5  PC 端模型训练与 AB 评估（可与 1-4 并行） ← 混合（脚本 Claude Code 写，训练你跑）
-阶段 6  轨道B：模型转换                       ← 板子到货前后
-阶段 7  轨道B：C++ 四线程流水线                ← Claude Code + 你上板测试
-阶段 8  全链路验收 + 数据对比                  ← 你验证
+阶段 0  准备工作                              ✅ 已完成
+阶段 1  轨道A：后端 FastAPI                   ✅ 已完成（Phase 1.1-1.7）
+阶段 2  轨道A：模拟器 + 契约测试               ✅ 已完成（Phase 2.1-2.2, 34/34 passed）
+阶段 3  轨道A：前端 Next.js                   ✅ 已完成（Phase 3.1-3.8 + v4 迁移）
+阶段 4  轨道A 联调验收（v4 + API_CONTRACT v1.2）✅ 已完成（Phase 4.0-4.2 全链路验证）
+阶段 5  PC 端模型训练与 AB 评估                ✅ 已完成（v2: 15类, 4变体, 3 benchmark）
+阶段 6  轨道B：模型转换                       ✅ 已完成（Phase 6 v2 Track B 全部产物就绪）
+阶段 7  轨道B：C++ 四线程流水线                ← 下一步（需上板）
+阶段 8  全链路验收 + 数据对比                  ← 待阶段 7 完成
 ```
 
 ---
 
-## 阶段 0：准备工作
+## 阶段 0：准备工作 ✅ 已完成
 
 **时间预估**：0.5-1 天
 
@@ -106,7 +106,7 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 
 ---
 
-## 阶段 1：轨道A — 后端 FastAPI
+## 阶段 1：轨道A — 后端 FastAPI ✅ 已完成
 
 **时间预估**：1-2 天（Claude Code 编写 + 你审查）
 **前置依赖**：阶段 0 完成
@@ -259,7 +259,7 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 
 ---
 
-## 阶段 2：轨道A — 模拟器 + 契约测试
+## 阶段 2：轨道A — 模拟器 + 契约测试 ✅ 已完成
 
 **时间预估**：1 天
 **前置依赖**：阶段 1 后端核心路由完成
@@ -309,7 +309,7 @@ nvidia-smi         # 确认 RTX 4060 可用（阶段5 训练用）
 
 ---
 
-## 阶段 3：轨道A — 前端 Next.js
+## 阶段 3：轨道A — 前端 Next.js ✅ 已完成
 
 **时间预估**：2-3 天
 **前置依赖**：阶段 1 后端 API 可用
@@ -483,9 +483,24 @@ npx serve out    # 本地预览静态产物
 
 **完成标志**：npm run build 通过 + 浏览器控制台无 Hydration 错误。
 
+### 3.9 V4 设计体系迁移（Phase 3.8 后执行）
+
+**执行人**：Claude Code
+
+**触发原因**：design-reference 从 v2 升级到 v3 再到 v4（近黑 NVIDIA 风格色彩，RK3588Twin 三模式，Chrome Trace 导出）。
+
+**产出**：
+- `frontend/src/components/v4/`（14 个新组件，v2/ 组件保留为 archive）
+- `design-reference/` 升级到 v4 HTML（`RK3588 Edge Vision-local.html`）
+- MVTec AD 15 类扩展（原 3 类 → 15 类全覆盖）
+- 4 变体键支持（`2B_base` / `2B_lora` / `4B_base` / `4B_lora`）
+- Chrome Trace 导出功能（ProfilePage 完整实现）
+
+**完成标志**：npm run build 通过，前端展示 v4 设计体系。
+
 ---
 
-## 阶段 4：轨道A 联调验收（v4 + API_CONTRACT v1.2）
+## 阶段 4：轨道A 联调验收（v4 + API_CONTRACT v1.2）✅ 已完成
 
 **时间预估**：0.5 天
 **前置依赖**：
@@ -494,6 +509,12 @@ npx serve out    # 本地预览静态产物
 - Phase 4.1 前端真实 API 接入完成（REST + WebSocket + mock fallback）
 - `docs/API_CONTRACT.md` 已升级到 v1.2
 - 本地 `vision.db` 已重建，或已手动添加 `trace_events` 列
+
+**Phase 4 完成情况**：
+- Phase 4.0：后端补全（API_CONTRACT v1.2 增加 trace_events/stats 字段；DB 增加 trace_events JSON 列）
+- Phase 4.1：前端接入真实 API（page.tsx 接入 GET /api/defects + GET /api/stats + useDefectWebSocket；后端不可达时 fallback mock）
+- Phase 4.2：全链路端到端验证（34/34 契约测试通过，tsc 0 errors，npm run build 成功，phase4-accept-verify 视觉验收通过）
+- 详见 `docs/experiments/phase4_track_a_e2e_acceptance_report.md`
 
 ### 4.1 全链路端到端运行
 
@@ -576,14 +597,15 @@ sqlite3 backend/vision.db "SELECT id, json_array_length(trace_events) FROM defec
 
 ---
 
-## 阶段 5：PC 端模型训练与 AB 评估
+## 阶段 5：PC 端模型训练与 AB 评估 ✅ 已完成
 
 > **⚠️ 重做说明（2026-05-11 决策）**：
 > 本阶段已完成「v1 初版」（3 类别：metal_nut/screw/pill，240 train/113 eval，2 变体 A/B）。
-> 当前执行「v2 重做」，目标：全 15 类别 + 4 变体 2×2 矩阵（2B_base/2B_lora/4B_base/4B_lora）。
+> v2 重做已完成：全 15 类别 + 4 变体 2×2 矩阵（2B_base/2B_lora/4B_base/4B_lora）。
+> 三个 Benchmark（Deployment / Method Control / OPRO）全部完成。
 > v1 实测数据保留在各子节末尾，标注为「v1 初版结果」。
 
-**时间预估**：v1 已完成；v2 重做估计 5-10 天（15 类训练 ~2-3h + 4B LoRA 云端 ~2h + 评估）
+**时间预估**：v1 已完成；v2 重做已完成
 **前置依赖**：MVTec AD 数据集已下载（阶段 0.2）
 **可与阶段 1-4 并行**：训练不依赖后端/前端
 **文档依据**：ARCHITECTURE.md §3.2/§7.2、CLAUDE.md AB 测试方案
@@ -861,7 +883,7 @@ system/user/assistant 三条消息，images 字段用相对路径。
 > **v1 初版结果**（3 类，2 变体）：方案A JSON OK=100%，方案B JSON OK=100%
 > 说明：3 类小样本 + 高质量标注下，2B 两变体均达满分，无法区分优劣——这正是扩展到 15 类 + 4 变体的动机
 
-### 5.7 Method Control Benchmark（v2 新增）⬅️ 下一步，尚未执行
+### 5.7 Method Control Benchmark（v2 新增）✅ 已完成
 
 **目标**：消除 prompt 差异，隔离 LoRA 微调的真实收益。
 
@@ -875,8 +897,8 @@ system/user/assistant 三条消息，images 字段用相对路径。
 |---|---|---|
 | `2B_base_same_prompt` | Qwen3-VL-2B base | 极简 Prompt (~50 tokens) |
 | `2B_lora_same_prompt` | Qwen3-VL-2B LoRA | 极简 Prompt (~50 tokens) |
-| `4B_base_same_prompt` | Qwen3-VL-4B base | 极简 Prompt (~50 tokens)（可选） |
-| `4B_lora_same_prompt` | Qwen3-VL-4B LoRA | 极简 Prompt (~50 tokens)（可选） |
+| `4B_base_same_prompt` | Qwen3-VL-4B base | 极简 Prompt (~50 tokens) |
+| `4B_lora_same_prompt` | Qwen3-VL-4B LoRA | 极简 Prompt (~50 tokens) |
 
 **评估指标**（8 项，比 Deployment 更细）：
 - json_parse_ok / schema_ok / category_exact / defect_type_exact
@@ -891,7 +913,11 @@ python scripts/eval_ab_test.py --model-size 2B --mode both  # 同时跑 deployme
 
 **产出**：`results/ab_eval_report_v2_method_control.json`
 
-### 5.8 OPRO Prompt-only Baseline（v2 新增，可选）
+**实测结论**：详见 `docs/experiments/phase5_7_method_control_benchmark_report.md`
+- Method Control（相同极简 prompt）下，LoRA 的净贡献被量化
+- 与 Deployment Benchmark 对比可分离 prompt 效应和 LoRA 参数适应效应
+
+### 5.8 OPRO Prompt-only Baseline（v2 新增）✅ 已完成
 
 **目标**：量化 prompt engineering 的单独贡献，作为 LoRA 的方法学对照。
 
@@ -919,9 +945,20 @@ python scripts/optimize_prompt_opro.py --model-size 2B --num-iterations 5 --num-
 
 **完成标志**：4 变体在所有 15 类的 JSON 解析成功率对比表完成。
 
+**实测结论**：详见 `docs/experiments/phase5_8_opro_baseline_report.md`
+- OPRO 最优 prompt 在标准 409-sample eval set 上 JSON OK=97.1%
+- 但 schema_ok / category_exact / defect_type_exact / severity_valid / bbox_iou_at_0_5 全部为 0.0%
+- 结论：OPRO 优化了 JSON 可解析性，但未超越人工 engineered prompt
+- 进一步证明 LoRA-SFT 对工业 schema / ontology / bbox 风格对齐是必要的
+
+**Phase 5 总结**：
+- 三个 Benchmark（Deployment / Method Control / OPRO）全部完成
+- 核心结论：LoRA 微调对 15 类工业缺陷检测的 schema 对齐、category/defect_type 识别、bbox 预测有显著贡献
+- 4B_lora 在所有指标上优于 2B_lora（DefType 64.8% vs 53.1%, BBox 64.5% vs 48.9%）
+
 ---
 
-## 阶段 6：轨道B — 模型转换
+## 阶段 6：轨道B — 模型转换 ✅ 已完成
 
 **时间预估**：1-2 天
 **前置依赖**：阶段 5 模型训练完成 + rknn-toolkit2 环境搭好
@@ -1113,7 +1150,8 @@ models/qwen3vl_models/
 - Qwen3-VL 4B vision RKNN: done (converted locally in WSL .venv_rknn from AutoDL-exported onnx)
 
 #### Next
-- Start Phase 4 Track A integration validation.
+- Phase 4 Track A integration validation: ✅ completed
+- Phase 7: C++ 四线程流水线（需上板）
 
 ### 6.5 将模型文件传到板子
 
@@ -1127,7 +1165,7 @@ scp -r models/ ubuntu@<rk3588-ip>:/home/ubuntu/models/
 
 ---
 
-## 阶段 7：轨道B — C++ 四线程流水线
+## 阶段 7：轨道B — C++ 四线程流水线 ⬅️ 下一步
 
 **时间预估**：5-10 天（最复杂的阶段）
 **前置依赖**：阶段 4（后端可用）+ 阶段 6（模型在板子上）
@@ -1269,7 +1307,7 @@ pytest backend/tests/contract/ -v
 
 ---
 
-## 阶段 8：全链路验收 + 数据对比
+## 阶段 8：全链路验收 + 数据对比（待阶段 7 完成）
 
 **时间预估**：1-2 天
 **前置依赖**：阶段 7 完成

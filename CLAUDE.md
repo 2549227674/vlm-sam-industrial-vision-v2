@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-3 完成；Phase 5 v2 VLM 方法学实验已完成（5.6 Deployment / 5.7 Method Control / 5.8 OPRO）；Phase 6 v2 轨道 B 模型转换完成；Phase 4 联调为下一步**
+**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线为下一步（需上板）**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Phase 5.7 Method Control Benchmark 已完成：相同 minimal prompt 隔离 LoRA 净贡献，结论见 `docs/experiments/phase5_7_method_control_benchmark_report.md`
 - Phase 5.8 OPRO Prompt-only Baseline 已完成：OPRO 最优 prompt 在标准 409-sample eval set 上 JSON OK=97.1%，但 schema_ok/category_exact/defect_type_exact/severity_valid/bbox_iou_at_0_5 全部为 0.0%；结论：OPRO 优化了 JSON 可解析性，但未超越人工 engineered prompt，进一步证明 LoRA-SFT 对工业 schema / ontology / bbox 风格对齐是必要的
 
-Phase 5 v2 进行中：
+Phase 5 v2 已完成：
 - `scripts/format_llama_factory_data.py`：已扩展到 15 类自动发现 + train/eval 双输出 + 基础校验
 - `scripts/eval_ab_test.py`：已扩展 deployment + method_control 双基准 + 8 项评估指标
 - `scripts/optimize_prompt_opro.py`：新增 OPRO prompt-only baseline（PC 阶段方法学对照）
@@ -89,7 +89,7 @@ Phase 4 completed:
 | 后端 | Python 3.12、FastAPI 0.115+、SQLAlchemy 2.0 async、aiosqlite、Pydantic v2 | 生产单 worker（ConnectionManager 进程内单例）|
 | 前端 | Next.js 15 App Router（`output: 'export'` 纯静态导出）、React 19、Tailwind v4、shadcn/ui | sonner / TanStack Table v8 / v4/ 原生 SVG 组件 |
 | 模拟器 | Python 多线程 + 静态图片集循环 | 充当 RK3588 替身做契约测试 |
-| 数据集 | MVTec AD：全 15 类（Phase 5 重做目标） | CC BY-NC-SA 4.0 |
+| 数据集 | MVTec AD：全 15 类 | CC BY-NC-SA 4.0 |
 | 通信 | HTTP `multipart/form-data`（边缘→后端）、WebSocket（后端↔前端） | 严禁 Base64 |
 
 ## Development Commands
@@ -173,7 +173,7 @@ vlm-sam-industrial-vision-v2/
 │   │   └── vlm_bbox_ref.py         # 五级 bbox 净化逻辑参考（仅迁移此一个 _ref 文件）
 │   └── third_party/                # rknn-llm-runtime、librga 头文件
 ├── models/
-│   ├── efficientad_models/         # EfficientAD-S 模型 ONNX/RKNN（15 类重做目标）
+│   ├── efficientad_models/         # EfficientAD-S 模型 ONNX/RKNN（15 类）
 │   │   ├── metal_nut/
 │   │   ├── screw/
 │   │   └── pill/  …（共 15 类）
@@ -236,7 +236,7 @@ vlm-sam-industrial-vision-v2/
 ### MUST（必须遵守）
 
 1. **三段式流水线顺序固定**：Stage 1 EfficientAD-S → Stage 2 FastSAM → Stage 3 Qwen3-VL-2B/4B。Stage 3 通过 `edge/config.yaml` 的 `vlm_model_size` 切换 2B/4B。
-2. **数据集**：MVTec AD 全 15 类（Phase 5 重做目标）；扩展类别需经评审。
+2. **数据集**：MVTec AD 全 15 类；扩展类别需经评审。
 3. **图片传输**：所有边缘→后端图片走 `multipart/form-data`；后端落盘到 `static/defects/{YYYYMMDD}/{uuid}.jpg`，前端用 `<img src>` 直接引用。
 4. **WebSocket 范围**：仅存在于「后端 ↔ 前端」一段；RK3588 端只做 HTTP POST 客户端。
 5. **配置分离**：边缘端配置写在 `edge/config.yaml`，后端配置写在 `backend/.env`，不复用。
