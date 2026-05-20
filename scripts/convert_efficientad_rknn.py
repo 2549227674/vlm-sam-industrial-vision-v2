@@ -25,6 +25,7 @@ Usage:
     python scripts/convert_efficientad_rknn.py --dry-run --categories metal_nut
     python scripts/convert_efficientad_rknn.py --use-raw-onnx --categories bottle
     python scripts/convert_efficientad_rknn.py --use-raw-onnx --dry-run
+    python scripts/convert_efficientad_rknn.py --use-raw-onnx --no-quant --categories bottle
 """
 
 from __future__ import annotations
@@ -181,7 +182,8 @@ def dry_run_check(categories: list[str], calib_samples: int,
 
 def convert_category(category: str, calib_samples: int,
                      skip_accuracy_analysis: bool = False,
-                     use_raw_onnx: bool = False) -> bool:
+                     use_raw_onnx: bool = False,
+                     no_quant: bool = False) -> bool:
     """Convert one category. Returns True on success (RKNN exported).
 
     Order: config → load → build → export → accuracy_analysis (optional).
@@ -191,7 +193,13 @@ def convert_category(category: str, calib_samples: int,
 
     onnx_name = "model_raw.onnx" if use_raw_onnx else "model.onnx"
     onnx_path = MODELS_DIR / category / "weights" / "onnx" / onnx_name
-    rknn_path = MODELS_DIR / category / "model.rknn"
+
+    # Output path: no-quant raw models go to a separate file to avoid
+    # overwriting the production INT8 model.rknn.
+    if no_quant:
+        rknn_path = MODELS_DIR / category / "model_raw_noquant.rknn"
+    else:
+        rknn_path = MODELS_DIR / category / "model.rknn"
 
     # Raw model outputs: raw_score [1,1] + raw_anomaly_map [1,1,256,256]
     # Legacy model outputs: pred_score + anomaly_map (post-processed, clipped)
@@ -204,31 +212,52 @@ def convert_category(category: str, calib_samples: int,
         print(f"  [SKIP] ONNX not found: {onnx_path}")
         return False
 
-    total_steps = 4 if skip_accuracy_analysis else 5
+    # Step count: no-quant skips calibration and accuracy analysis.
+    if no_quant:
+        total_steps = 4  # config, load, build, export
+    elif skip_accuracy_analysis:
+        total_steps = 4
+    else:
+        total_steps = 5
+
     print(f"\n{'=' * 50}")
     print(f"  Converting: {category}")
     print(f"{'=' * 50}")
     print(f"  using_raw_onnx={use_raw_onnx}")
+    print(f"  no_quant={no_quant}")
     print(f"  onnx_path={onnx_path}")
+    print(f"  rknn_output_path={rknn_path}")
     print(f"  outputs={rknn_outputs}")
 
     rknn = RKNN(verbose=False)
 
     try:
-        # 1. Config — no rknn_core_num (runtime param, not conversion param)
-        print(f"  [1/{total_steps}] Config (INT8, rk3588)...")
-        ret = rknn.config(
-            mean_values=MEAN_VALUES,
-            std_values=STD_VALUES,
-            target_platform="rk3588",
-            quantized_dtype="asymmetric_quantized-8",
-        )
+        # 1. Config
+        step = 0
+        if no_quant:
+            step += 1
+            print(f"  [{step}/{total_steps}] Config (FP16 no-quant, rk3588)...")
+            ret = rknn.config(
+                mean_values=MEAN_VALUES,
+                std_values=STD_VALUES,
+                target_platform="rk3588",
+            )
+        else:
+            step += 1
+            print(f"  [{step}/{total_steps}] Config (INT8, rk3588)...")
+            ret = rknn.config(
+                mean_values=MEAN_VALUES,
+                std_values=STD_VALUES,
+                target_platform="rk3588",
+                quantized_dtype="asymmetric_quantized-8",
+            )
         if ret != 0:
             print("  FAIL: config()")
             return False
 
         # 2. Load ONNX
-        print(f"  [2/{total_steps}] Load ONNX (outputs={rknn_outputs})...")
+        step += 1
+        print(f"  [{step}/{total_steps}] Load ONNX (outputs={rknn_outputs})...")
         ret = rknn.load_onnx(
                 model=str(onnx_path),
                 inputs=['input'],
@@ -239,17 +268,22 @@ def convert_category(category: str, calib_samples: int,
             print("  FAIL: load_onnx()")
             return False
 
-        # 3. Build INT8 quantized model
-        print(f"  [3/{total_steps}] Build INT8 (calib={calib_samples} samples)...")
-        calib_file = create_calib_list(category, calib_samples)
-        ret = rknn.build(do_quantization=True, dataset=calib_file)
+        # 3. Build
+        step += 1
+        if no_quant:
+            print(f"  [{step}/{total_steps}] Build FP16 (no quantization)...")
+            ret = rknn.build(do_quantization=False)
+        else:
+            print(f"  [{step}/{total_steps}] Build INT8 (calib={calib_samples} samples)...")
+            calib_file = create_calib_list(category, calib_samples)
+            ret = rknn.build(do_quantization=True, dataset=calib_file)
         if ret != 0:
             print("  FAIL: build()")
             return False
 
-        # 4. Export — must happen before accuracy_analysis so the .rknn
-        #    file is safe even if accuracy_analysis crashes.
-        print(f"  [4/{total_steps}] Export RKNN...")
+        # 4. Export
+        step += 1
+        print(f"  [{step}/{total_steps}] Export RKNN -> {rknn_path}...")
         ret = rknn.export_rknn(str(rknn_path))
         if ret != 0:
             print("  FAIL: export_rknn()")
@@ -257,15 +291,17 @@ def convert_category(category: str, calib_samples: int,
 
         print(f"  Exported: {rknn_path}")
 
-        if skip_accuracy_analysis:
-            print("  Accuracy analysis: SKIPPED (--skip-accuracy-analysis)")
+        if no_quant or skip_accuracy_analysis:
+            reason = "no-quant mode" if no_quant else "--skip-accuracy-analysis"
+            print(f"  Accuracy analysis: SKIPPED ({reason})")
             return True
 
         # 5. Accuracy analysis (optional, failure non-fatal)
         analysis_dir = MODELS_DIR / category / "accuracy_analysis"
         analysis_dir.mkdir(parents=True, exist_ok=True)
 
-        print(f"  [5/{total_steps}] Accuracy analysis...")
+        step += 1
+        print(f"  [{step}/{total_steps}] Accuracy analysis...")
         try:
             with open(calib_file) as f:
                 first_image = f.readline().strip()
@@ -304,6 +340,9 @@ def main() -> None:
                         help="Pre-check only: verify ONNX and calib images without RKNN conversion")
     parser.add_argument("--use-raw-onnx", action="store_true",
                         help="Use model_raw.onnx (pre-postprocessor) instead of model.onnx")
+    parser.add_argument("--no-quant", action="store_true",
+                        help="Build without INT8 quantization (FP16). Requires --use-raw-onnx. "
+                             "Output: model_raw_noquant.rknn (does not overwrite model.rknn)")
     args = parser.parse_args()
 
     # Validate categories against whitelist
@@ -311,6 +350,10 @@ def main() -> None:
     if invalid:
         print(f"ERROR: invalid categories: {invalid}")
         print(f"Allowed: {sorted(CATEGORY_SET)}")
+        sys.exit(1)
+
+    if args.no_quant and not args.use_raw_onnx:
+        print("ERROR: --no-quant requires --use-raw-onnx")
         sys.exit(1)
 
     if args.dry_run:
@@ -323,7 +366,8 @@ def main() -> None:
         try:
             ok = convert_category(cat, args.calib_samples,
                                   args.skip_accuracy_analysis,
-                                  args.use_raw_onnx)
+                                  args.use_raw_onnx,
+                                  args.no_quant)
             results[cat] = ok
         except Exception as e:
             print(f"  ERROR ({cat}): {e}")
