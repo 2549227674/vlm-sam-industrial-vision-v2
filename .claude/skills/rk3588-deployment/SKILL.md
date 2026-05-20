@@ -4,7 +4,7 @@ description: |
   Generates and reviews C++20 edge inference code for the vlm-sam-industrial-vision-v2
   project targeting RK3588 16GB. Use this skill whenever the user mentions RK3588,
   Rockchip NPU, rknn, rkllm, librga, V4L2, dma_buf, EfficientAD-S, FastSAM,
-  Qwen3-VL deployment, W8A8 quantization, jthread pipeline, BoundedQueue,
+  Qwen3-VL-2B, Qwen3-VL-4B, LoRA deployment, W8A8 quantization, jthread pipeline, BoundedQueue,
   libcurl multipart upload, or zero-copy inference — even without the word "deployment".
 allowed-tools: Bash(cmake *), Bash(make *), Bash(scp *), Bash(ssh *)
 license: Internal-CourseProject
@@ -41,7 +41,7 @@ license: Internal-CourseProject
 - **必须** Cache line 对齐 metrics（`alignas(64)`）。
 - 错误处理用 `std::expected<T, ErrorCode>`（GCC 13+）或 `tl::expected`（GCC 11/12 fallback）。
 
-## 始终遵守的硬约束（不分场景，12 条）
+## 始终遵守的硬约束（不分场景，15 条）
 
 1. C++ 标准 ≥ C++20；GCC ≥ 11；`#pragma once`；成员变量 trailing underscore（`member_`），struct 公有字段不加。
 2. 线程模型固定 4 个：T1 Capture / T2 Pipeline / T3 VLM Worker / T4 Upload，不要新增线程。
