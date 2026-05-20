@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线为下一步（需上板）**
+**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线进行中（Prompt 2B 代表类验证完成）**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -69,9 +69,20 @@ Phase 4 completed:
 - Phase 4：轨道A 联调验收（34/34 契约测试通过，tsc 0 errors，npm run build 成功，trace_events 全链路验证，phase4-accept-verify 视觉验收通过）
 - 详见 `docs/experiments/phase4_track_a_e2e_acceptance_report.md`
 
-尚未开始（下一步）：
-- Phase 7：轨道B C++ 四线程流水线（需上板）
-  见 `docs/PROJECT_TIMELINE.md` 阶段 7
+Phase 7 Prompt 2B completed:
+- T2 EfficientAD 已从 MockPipelineWorker 替换为真实 EfficientAD-S RKNN 推理
+- 发现 Anomalib ONNX post_processor 包含 Greater INT8/FLOAT 类型不支持，通过 ONNX trace 找到 raw tensor
+- 当前主路线：raw ONNX -> FP16/no-quant raw RKNN -> C++ FP16 parse
+- raw INT8 RKNN 输出分布失真，不作为当前主路线
+- C++ T2 支持 score_mode（raw_score/map_max/map_mean/map_top1/map_top01）和 gate_mode（threshold/pass_all）
+- `pass_all` 仅 debug，正式默认为 `threshold`
+- `efficientad_threshold_default: 0.50` 是旧 post_processor 尺度占位，raw output 阈值需 Phase 8 重新校准
+- 代表类 bottle / metal_nut / pill / screw FP16/no-quant raw RKNN 工程验证通过
+- 详见 `docs/experiments/phase7_prompt2b_efficientad_edge_report.md`
+
+下一步：
+- Phase 7 批量 15 类 FP16/no-quant raw RKNN 转换、上传、smoke test
+- Phase 7 Prompt 2C：FastSAM + Qwen3-VL T3 实现
 
 ## 一句话定义
 

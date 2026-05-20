@@ -79,6 +79,26 @@ license: Internal-CourseProject
 
 Qwen3-VL 部署失败时的备选降级顺序与性能数据见 `docs/ARCHITECTURE.md` §3.2，**只改 `edge/config.yaml`，不改 C++ 代码**。已排除 Qwen3.5（rknn-llm #472，Gated DeltaNet 不支持）。
 
+## EfficientAD Phase 7 Prompt 2B 约束
+
+- 不依赖 Anomalib post_processor 输出 `pred_score/anomaly_map` 作为 T2 gate。
+- 使用 post_processor 前的 raw 输出：
+  - `raw_score`（`/model/ReduceMax_output_0`）
+  - `raw_anomaly_map`（`/model/Add_output_0`）
+- 当前主路线为 FP16/no-quant raw RKNN：
+  - `model_raw_noquant.rknn`
+- raw INT8 RKNN 在 Prompt 2B 板端测试中显示分布失真，不得作为默认 T2 路径。
+- T2 必须支持 `efficientad_score_mode`：
+  - raw_score / map_max / map_mean / map_top1 / map_top01
+- T2 必须支持 `efficientad_gate_mode`：
+  - threshold（正式默认）
+  - pass_all（仅调试）
+- `pass_all` 是 DEBUG-ONLY，不代表正式产线节拍。
+- 正式配置默认使用 `efficientad_gate_mode: threshold`。
+- 调试配置可使用 `efficientad_gate_mode: pass_all`。
+- 旧阈值 `0.50` 不适用于 raw EfficientAD 输出。per-category raw threshold 需后续校准。
+- FP16 RKNN 输出不要按 INT8 解析，应通过 output attr type 判断，使用 `want_float=1`。
+
 ## Prompt-only / OPRO 与 RKLLM 部署链路的关系
 
 **Prompt-only baseline 和 OPRO 优化不进入 RKLLM 模型转换链路**。这些方法仅作为 PC 阶段的方法学对照实验，用于量化 prompt engineering 的单独贡献和 LoRA 微调的真实收益。

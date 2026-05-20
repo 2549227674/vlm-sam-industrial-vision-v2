@@ -1,0 +1,228 @@
+device_id:         rk3588-line-A-cam01
+line_id:           L1
+backend_url:       http://192.168.1.100:8000
+vlm_variant:       base
+vlm_model_size:    4B
+capture_mode:      image_loop
+image_loop_dir:    /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
+categories (3):  metal_nut pill screw 
+beat_ms:           1500
+jitter_ms:         200
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 0.50
+ead_score_mode:    map_mean
+ead_gate_mode:     pass_all
+model_variant:     4B_base
+
+--- Starting pipeline (Prompt 2B: real EfficientAD) ---
+[T2] EadWorker started | score_mode=map_mean gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T3] MockVlmWorker started (mock, no FastSAM/RKLLM)
+[T4] uploading to http://192.168.1.100:8000/api/edge/report
+[T1] scanned 442 images across 3 categories
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=129.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 0 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=129.25 map_max=129.25 map_mean=45.71 map_top1=126.07 map_top01=128.56
+     final_score=45.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=343.6
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.75,"anomaly_score":45.7079,"bboxes":[{"x":0.3000,"y":0.3000,"w":0.4000,"h":0.4000}],"description":"","variant":"4B_base","edge_ts":"2026-05-20T17:46:39Z","pipeline_ms":{"efficientad":343.6,"fastsam":40.0,"qwen3vl":2000.0},"vlm_metrics":{"ttft_ms":1500.0,"decode_tps":11.5,"prompt_tokens":50,"output_tokens":30,"rss_mb":3100.0,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":343572.7,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"mock_fastsam","ts":343572.7,"dur":40000.0,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"mock_vlm","ts":383572.7,"dur":2000000.0,"tid":"T3.vlm","ph":"X","cat":"vlm"}],"schema_version":"v1"}
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 1 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.94 map_max=121.94 map_mean=45.23 map_top1=119.35 map_top01=120.83
+     final_score=45.23 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=285.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=124.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 2 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=124.94 map_max=124.94 map_mean=43.46 map_top1=122.32 map_top01=124.29
+     final_score=43.46 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=285.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=120.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 3 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=120.81 map_max=120.81 map_mean=46.71 map_top1=118.92 map_top01=120.14
+     final_score=46.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=287.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=128.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 4 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=128.38 map_max=128.38 map_mean=42.22 map_top1=124.67 map_top01=127.30
+     final_score=42.22 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=124.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 5 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=124.50 map_max=124.50 map_mean=45.98 map_top1=121.66 map_top01=123.97
+     final_score=45.98 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=308.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=123.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 6 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=123.25 map_max=123.25 map_mean=44.58 map_top1=119.06 map_top01=121.89
+     final_score=44.58 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=285.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=110.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 7 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=110.31 map_max=110.31 map_mean=43.43 map_top1=108.04 map_top01=109.96
+     final_score=43.43 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 8 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.44 map_max=116.44 map_mean=41.81 map_top1=111.48 map_top01=115.24
+     final_score=41.81 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=278.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=127.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 9 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=127.00 map_max=127.00 map_mean=45.99 map_top1=123.88 map_top01=126.41
+     final_score=45.99 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=111.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 10 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=111.56 map_max=111.56 map_mean=41.89 map_top1=109.01 map_top01=111.15
+     final_score=41.89 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=122.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 11 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=122.69 map_max=122.69 map_mean=44.50 map_top1=120.18 map_top01=122.02
+     final_score=44.50 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=124.1875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 12 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=124.19 map_max=124.19 map_mean=47.26 map_top1=120.58 map_top01=122.80
+     final_score=47.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=277.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=111.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 13 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=111.44 map_max=111.44 map_mean=43.36 map_top1=109.37 map_top01=110.79
+     final_score=43.36 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=128.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 14 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=128.88 map_max=128.88 map_mean=44.38 map_top1=121.96 map_top01=126.84
+     final_score=44.38 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=291.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=126.1875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 15 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=126.19 map_max=126.19 map_mean=47.14 map_top1=122.03 map_top01=124.54
+     final_score=47.14 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=112.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 16 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=112.12 map_max=112.12 map_mean=42.24 map_top1=109.96 map_top01=111.67
+     final_score=42.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=126.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 17 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=126.06 map_max=126.06 map_mean=42.00 map_top1=123.43 map_top01=125.40
+     final_score=42.00 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=285.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=130.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 18 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=130.25 map_max=130.25 map_mean=47.21 map_top1=126.38 map_top01=129.08
+     final_score=47.21 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=281.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 19 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.00 map_max=116.00 map_mean=42.76 map_top1=110.25 map_top01=114.42
+     final_score=42.76 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=122.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 20 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=122.31 map_max=122.31 map_mean=46.45 map_top1=120.00 map_top01=122.00
+     final_score=46.45 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=284.6
+[T4] upload failed: HTTP 0 (frame from metal_nut)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=112.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 21 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=112.25 map_max=112.25 map_mean=43.58 map_top1=108.94 map_top01=110.84
+     final_score=43.58 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=285.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=126.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 22 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=126.81 map_max=126.81 map_mean=46.15 map_top1=122.03 map_top01=125.16
+     final_score=46.15 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=114.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 23 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=114.88 map_max=114.88 map_mean=41.28 map_top1=112.02 map_top01=114.08
+     final_score=41.28 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=115.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 24 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=115.50 map_max=115.50 map_mean=41.38 map_top1=113.84 map_top01=115.15
+     final_score=41.38 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=115.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 25 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=115.00 map_max=115.00 map_mean=40.17 map_top1=111.98 map_top01=113.70
+     final_score=40.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=289.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=118.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 26 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=118.38 map_max=118.38 map_mean=42.48 map_top1=116.95 map_top01=118.06
+     final_score=42.48 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=290.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=113.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 27 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=113.94 map_max=113.94 map_mean=39.52 map_top1=110.52 map_top01=112.70
+     final_score=39.52 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=112.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 28 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=112.94 map_max=112.94 map_mean=39.77 map_top1=111.13 map_top01=112.61
+     final_score=39.77 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=114.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 29 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=114.44 map_max=114.44 map_mean=41.37 map_top1=112.01 map_top01=113.90
+     final_score=41.37 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=272.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=104.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 30 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=104.88 map_max=104.88 map_mean=38.15 map_top1=103.50 map_top01=104.47
+     final_score=38.15 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=120.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 31 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=120.06 map_max=120.06 map_mean=42.53 map_top1=116.69 map_top01=119.34
+     final_score=42.53 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=292.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=109.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 32 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=109.69 map_max=109.69 map_mean=38.42 map_top1=107.17 map_top01=108.98
+     final_score=38.42 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=264.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=115.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 33 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=115.12 map_max=115.12 map_mean=39.03 map_top1=112.58 map_top01=113.95
+     final_score=39.03 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=115.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 34 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=115.38 map_max=115.38 map_mean=41.25 map_top1=113.13 map_top01=114.69
+     final_score=41.25 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=260.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=110.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 35 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=110.38 map_max=110.38 map_mean=39.94 map_top1=108.64 map_top01=110.02
+     final_score=39.94 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=284.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=118.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 36 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=118.81 map_max=118.81 map_mean=40.60 map_top1=115.40 map_top01=117.51
+     final_score=40.60 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=288.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 37 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.06 map_max=116.06 map_mean=39.97 map_top1=113.96 map_top01=115.21
+     final_score=39.97 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=288.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=109.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 38 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=109.31 map_max=109.31 map_mean=39.11 map_top1=107.50 map_top01=108.73
+     final_score=39.11 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=282.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=115.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 39 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=115.50 map_max=115.50 map_mean=40.63 map_top1=113.49 map_top01=115.07
+     final_score=40.63 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=262.9

@@ -15,7 +15,7 @@
 阶段 4  轨道A 联调验收（v4 + API_CONTRACT v1.2）✅ 已完成（Phase 4.0-4.2 全链路验证）
 阶段 5  PC 端模型训练与 AB 评估                ✅ 已完成（v2: 15类, 4变体, 3 benchmark）
 阶段 6  轨道B：模型转换                       ✅ 已完成（Phase 6 v2 Track B 全部产物就绪）
-阶段 7  轨道B：C++ 四线程流水线                ← 下一步（需上板）
+阶段 7  轨道B：C++ 四线程流水线               ← 进行中（Prompt 2B 代表类 FP16 raw RKNN 已验证）
 阶段 8  全链路验收 + 数据对比                  ← 待阶段 7 完成
 ```
 
@@ -1165,13 +1165,36 @@ scp -r models/ ubuntu@<rk3588-ip>:/home/ubuntu/models/
 
 ---
 
-## 阶段 7：轨道B — C++ 四线程流水线 ⬅️ 下一步
+## 阶段 7：轨道B — C++ 四线程流水线 ⬅️ 进行中（Prompt 2B 完成）
 
 **时间预估**：5-10 天（最复杂的阶段）
 **前置依赖**：阶段 4（后端可用）+ 阶段 6（模型在板子上）
 **文档依据**：SKILL.md 全文、ARCHITECTURE.md §3/§11、CLAUDE.md 轨道B
 
 **此时安装 `clangd-lsp` 插件**。
+
+### 7.x Prompt 2B 实际执行记录（EfficientAD T2）
+
+> 完整报告：`docs/experiments/phase7_prompt2b_efficientad_edge_report.md`
+
+实际执行中，T2 EfficientAD 路线相对原规划发生调整：
+
+- 原始 Anomalib ONNX 的 `pred_score/anomaly_map` 是 post_processor 后的 Clip 输出，不适合作为 raw gate。
+- 原始 RKNN 若保留 `pred_label/pred_mask`，板端 `rknn_run` 会触发 `Greater` INT8/FLOAT 类型不支持。
+- 已通过 ONNX trace 找到 post_processor 前的 raw tensors：
+  - `/model/ReduceMax_output_0` → `raw_score`
+  - `/model/Add_output_0` → `raw_anomaly_map`
+- 已新增 raw ONNX 导出和 raw RKNN 转换流程。
+- raw INT8 RKNN 板端分布失真，不作为当前主路线。
+- 当前推荐路线：
+  `model_raw.onnx → model_raw_noquant.rknn → C++ FP16 parse_mode=fp16_want_float`
+- C++ T2 已支持：
+  - `efficientad_score_mode`（raw_score / map_max / map_mean / map_top1 / map_top01）
+  - `efficientad_gate_mode`（threshold / pass_all）
+- `pass_all` 仅 debug，正式默认仍为 `threshold`。
+- `efficientad_threshold_default: 0.50` 是旧 post_processor 输出 [0,1] 尺度的占位值，不适用于 raw output。per-category raw threshold 需在 Phase 8 系统校准。
+- Prompt 2B 当前冻结点：bottle / metal_nut / pill / screw 代表类 FP16/no-quant raw RKNN 工程验证通过。
+- 下一步：批量 15 类 FP16/no-quant raw RKNN 转换、上传和 smoke test，然后进入 Prompt 2C。
 
 ### 7.1 CMake 项目搭建
 

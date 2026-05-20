@@ -76,6 +76,36 @@
 
 **EfficientAD-S 选型理由**：替代 PaDiM 解决位置敏感性问题（PaDiM 对像素位置敏感，工业件轻微平移即误报）；PDN 全卷积、平移等变；MVTec AD image-AUROC 平均 98.8%（论文 5 次平均），三类基准 metal_nut 0.979 / pill 0.987 / screw 0.960（Anomalib benchmark）。
 
+#### EfficientAD Raw Output Deployment Update（Phase 7 Prompt 2B）
+
+Phase 7 上板实测后，EfficientAD-S 不再直接使用 Anomalib ONNX 的 post_processor 输出 `pred_score/anomaly_map` 作为 T2 gate。
+
+原因：
+
+1. `pred_score/anomaly_map` 是 post_processor 后的 Clip 输出，good/defect 均可能饱和到接近 1.0。
+2. `pred_label/pred_mask` 中的 Greater 节点在 RKNN Runtime 上触发 INT8/FLOAT 类型不支持。
+3. raw INT8 RKNN 对 raw anomaly map 的分布造成明显失真。
+
+当前主路线：
+
+- 导出 post_processor 前 raw tensor：
+  - `raw_score` (`/model/ReduceMax_output_0`)
+  - `raw_anomaly_map` (`/model/Add_output_0`)
+- 转换为 FP16/no-quant RKNN：
+  - `model_raw_noquant.rknn`
+- C++ T2 根据 `efficientad_score_mode` 计算 final_score：
+  - raw_score / map_max / map_mean / map_top1 / map_top01
+- C++ T2 根据 `efficientad_gate_mode` 决策：
+  - threshold：正式默认
+  - pass_all：debug only
+
+说明：
+
+- `efficientad_threshold_default: 0.50` 是旧 post_processor 输出 [0,1] 尺度的占位值，不适用于 raw output。
+- per-category threshold 将在 Phase 8 系统校准。
+- 原始 INT8 量化 RKNN（Phase 6 产出的 `model.rknn`）仍保留，但当前 T2 主路线使用 FP16/no-quant `model_raw_noquant.rknn`。
+- 详细排错过程见 `docs/experiments/phase7_prompt2b_efficientad_edge_report.md`。
+
 **Qwen3-VL 降级备选**（部署失败时按此顺序，**只改 `edge/config.yaml`，不改 C++ 代码**）：
 
 | 优先级 | 模型 | 推荐场景 | 预期 tps | RAM | 备注 |
@@ -108,7 +138,7 @@
 - T3 异步：异常分数高才触发；FastSAM 与 Qwen3-VL 串行（共享 NPU 资源）。
 - T4 libcurl 复用 easy handle，只 `curl_easy_reset` 不 `cleanup`，TLS 连接池命中率接近 100%。
 
-**EfficientAD-S INT8 量化实测发现（阶段 6.2，rknn-toolkit2 v2.3.2）**：
+**EfficientAD-S INT8 量化实测发现（阶段 6.2，rknn-toolkit2 v2.3.2 — Phase 6 初始转换结果，Phase 7 已调整主路线，见下方 Raw Output Update）**：
 
 build 阶段确认 dtype 变更：
 - 输入 `input`：float32 → int8

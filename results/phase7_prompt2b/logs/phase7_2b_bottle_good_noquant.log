@@ -1,0 +1,87 @@
+device_id:         rk3588-line-A-cam01
+line_id:           L1
+backend_url:       http://192.168.1.100:8000
+vlm_variant:       base
+vlm_model_size:    4B
+capture_mode:      image_loop
+image_loop_dir:    /tmp/mvtec_bottle_good
+categories (1):  bottle 
+beat_ms:           1500
+jitter_ms:         200
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 0.50
+ead_score_mode:    map_mean
+ead_gate_mode:     pass_all
+model_variant:     4B_base
+
+--- Starting pipeline (Prompt 2B: real EfficientAD) ---
+[T2] EadWorker started | score_mode=map_mean gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T3] MockVlmWorker started (mock, no FastSAM/RKLLM)
+[T4] uploading to http://192.168.1.100:8000/api/edge/report
+[T1] scanned 20 images across 1 categories
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=1 qnt_type=2 zp=0 scale=1.000000 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=1 qnt_type=2 zp=0 scale=1.000000 size=131072
+[T2] frame 0 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=4.00 map_max=127.00 map_mean=7.57 map_top1=123.79 map_top01=127.00
+     final_score=7.57 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=398.1
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"bottle","defect_type":"anomaly","severity":"medium","confidence":0.75,"anomaly_score":7.57037,"bboxes":[{"x":0.3000,"y":0.3000,"w":0.4000,"h":0.4000}],"description":"","variant":"4B_base","edge_ts":"2026-05-20T17:15:17Z","pipeline_ms":{"efficientad":398.1,"fastsam":40.0,"qwen3vl":2000.0},"vlm_metrics":{"ttft_ms":1500.0,"decode_tps":11.5,"prompt_tokens":50,"output_tokens":30,"rss_mb":3100.0,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":398134.0,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"mock_fastsam","ts":398134.0,"dur":40000.0,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"mock_vlm","ts":438134.0,"dur":2000000.0,"tid":"T3.vlm","ph":"X","cat":"vlm"}],"schema_version":"v1"}
+[T2] frame 1 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=41.00 map_max=127.00 map_mean=9.77 map_top1=124.11 map_top01=127.00
+     final_score=9.77 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=309.4
+[T2] frame 2 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-38.00 map_max=127.00 map_mean=10.03 map_top1=124.20 map_top01=127.00
+     final_score=10.03 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=308.3
+[T2] frame 3 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.00 map_max=127.00 map_mean=10.66 map_top1=123.67 map_top01=127.00
+     final_score=10.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=308.6
+[T2] frame 4 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.00 map_max=127.00 map_mean=8.53 map_top1=124.13 map_top01=127.00
+     final_score=8.53 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=309.3
+[T2] frame 5 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.00 map_max=127.00 map_mean=10.89 map_top1=124.60 map_top01=127.00
+     final_score=10.89 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=443.7
+[T2] frame 6 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=93.00 map_max=127.00 map_mean=10.55 map_top1=123.62 map_top01=127.00
+     final_score=10.55 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=306.4
+[T2] frame 7 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=10.00 map_max=127.00 map_mean=10.96 map_top1=124.29 map_top01=127.00
+     final_score=10.96 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.8
+[T2] frame 8 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=112.00 map_max=127.00 map_mean=11.59 map_top1=124.11 map_top01=127.00
+     final_score=11.59 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=322.0
+[T2] frame 9 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-100.00 map_max=127.00 map_mean=8.29 map_top1=123.74 map_top01=127.00
+     final_score=8.29 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=304.4
+[T2] frame 10 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-47.00 map_max=127.00 map_mean=10.75 map_top1=124.48 map_top01=127.00
+     final_score=10.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=302.2
+[T2] frame 11 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-98.00 map_max=127.00 map_mean=8.35 map_top1=124.05 map_top01=127.00
+     final_score=8.35 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=306.4
+[T2] frame 12 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-34.00 map_max=127.00 map_mean=10.46 map_top1=123.62 map_top01=127.00
+     final_score=10.46 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.4
+[T2] frame 13 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=21.00 map_max=127.00 map_mean=9.03 map_top1=124.56 map_top01=127.00
+     final_score=9.03 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=304.4
+[T2] frame 14 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-40.00 map_max=127.00 map_mean=10.32 map_top1=123.38 map_top01=127.00
+     final_score=10.32 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=391.4
+[T2] frame 15 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-44.00 map_max=127.00 map_mean=9.71 map_top1=124.28 map_top01=127.00
+     final_score=9.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=303.5
+[T2] frame 16 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-56.00 map_max=127.00 map_mean=10.34 map_top1=124.36 map_top01=127.00
+     final_score=10.34 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=303.5
+[T2] frame 17 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=83.00 map_max=127.00 map_mean=11.25 map_top1=124.21 map_top01=127.00
+     final_score=11.25 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=305.5
+[T2] frame 18 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-64.00 map_max=127.00 map_mean=12.07 map_top1=124.20 map_top01=127.00
+     final_score=12.07 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=304.9
+[T2] frame 19 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=-117.00 map_max=127.00 map_mean=10.31 map_top1=124.45 map_top01=127.00
+     final_score=10.31 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=302.5

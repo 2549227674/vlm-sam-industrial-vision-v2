@@ -1,0 +1,259 @@
+device_id:         rk3588-line-A-cam01
+line_id:           L1
+backend_url:       http://192.168.1.100:8000
+vlm_variant:       base
+vlm_model_size:    4B
+capture_mode:      image_loop
+image_loop_dir:    /tmp/mvtec_representative_small
+categories (3):  metal_nut pill screw 
+beat_ms:           1500
+jitter_ms:         200
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 0.50
+ead_score_mode:    map_mean
+ead_gate_mode:     pass_all
+model_variant:     4B_base
+
+--- Starting pipeline (Prompt 2B: real EfficientAD) ---
+[T2] EadWorker started | score_mode=map_mean gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T3] MockVlmWorker started (mock, no FastSAM/RKLLM)
+[T4] uploading to http://192.168.1.100:8000/api/edge/report
+[T1] scanned 12 images across 3 categories
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=118.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 0 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=118.00 map_max=118.00 map_mean=39.93 map_top1=115.47 map_top01=117.45
+     final_score=39.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=337.0
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.75,"anomaly_score":39.9262,"bboxes":[{"x":0.3000,"y":0.3000,"w":0.4000,"h":0.4000}],"description":"","variant":"4B_base","edge_ts":"2026-05-20T17:51:14Z","pipeline_ms":{"efficientad":337.0,"fastsam":40.0,"qwen3vl":2000.0},"vlm_metrics":{"ttft_ms":1500.0,"decode_tps":11.5,"prompt_tokens":50,"output_tokens":30,"rss_mb":3100.0,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":336970.9,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"mock_fastsam","ts":336970.9,"dur":40000.0,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"mock_vlm","ts":376970.9,"dur":2000000.0,"tid":"T3.vlm","ph":"X","cat":"vlm"}],"schema_version":"v1"}
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 1 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.69 map_max=121.69 map_mean=37.64 map_top1=118.99 map_top01=120.95
+     final_score=37.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=113.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 2 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=113.50 map_max=113.50 map_mean=40.98 map_top1=111.27 map_top01=112.79
+     final_score=40.98 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 3 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.25 map_max=116.25 map_mean=41.00 map_top1=114.38 map_top01=115.64
+     final_score=41.00 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=281.2
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=87.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 4 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=87.00 map_max=87.00 map_mean=35.71 map_top1=84.70 map_top01=86.20
+     final_score=35.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=397.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=84.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 5 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=84.94 map_max=84.94 map_mean=35.26 map_top1=82.23 map_top01=83.51
+     final_score=35.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=309.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=83.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 6 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=83.25 map_max=83.25 map_mean=34.64 map_top1=80.48 map_top01=82.51
+     final_score=34.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=304.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=86.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 7 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=86.56 map_max=86.56 map_mean=35.21 map_top1=83.50 map_top01=85.62
+     final_score=35.21 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=301.1
+[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=22.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 8 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=22.41 map_max=22.41 map_mean=12.15 map_top1=20.74 map_top01=21.83
+     final_score=12.15 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=338.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.5781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 9 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.58 map_max=25.58 map_mean=12.19 map_top1=23.19 map_top01=24.59
+     final_score=12.19 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 10 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.28 map_max=27.28 map_mean=12.76 map_top1=25.12 map_top01=26.53
+     final_score=12.76 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=239.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 11 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.14 map_max=25.14 map_mean=12.30 map_top1=22.89 map_top01=24.59
+     final_score=12.30 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=271.6
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=118.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 12 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=118.00 map_max=118.00 map_mean=39.93 map_top1=115.47 map_top01=117.45
+     final_score=39.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=334.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 13 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.69 map_max=121.69 map_mean=37.64 map_top1=118.99 map_top01=120.95
+     final_score=37.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=310.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=113.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 14 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=113.50 map_max=113.50 map_mean=40.98 map_top1=111.27 map_top01=112.79
+     final_score=40.98 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=370.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 15 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.25 map_max=116.25 map_mean=41.00 map_top1=114.38 map_top01=115.64
+     final_score=41.00 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=285.4
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=87.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 16 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=87.00 map_max=87.00 map_mean=35.71 map_top1=84.70 map_top01=86.20
+     final_score=35.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=468.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=84.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 17 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=84.94 map_max=84.94 map_mean=35.26 map_top1=82.23 map_top01=83.51
+     final_score=35.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=83.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 18 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=83.25 map_max=83.25 map_mean=34.64 map_top1=80.48 map_top01=82.51
+     final_score=34.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=310.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=86.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 19 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=86.56 map_max=86.56 map_mean=35.21 map_top1=83.50 map_top01=85.62
+     final_score=35.21 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=294.3
+[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=22.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 20 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=22.41 map_max=22.41 map_mean=12.15 map_top1=20.74 map_top01=21.83
+     final_score=12.15 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=343.4
+[T4] upload failed: HTTP 0 (frame from metal_nut)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.5781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 21 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.58 map_max=25.58 map_mean=12.19 map_top1=23.19 map_top01=24.59
+     final_score=12.19 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=278.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 22 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.28 map_max=27.28 map_mean=12.76 map_top1=25.12 map_top01=26.53
+     final_score=12.76 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=267.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 23 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.14 map_max=25.14 map_mean=12.30 map_top1=22.89 map_top01=24.59
+     final_score=12.30 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=271.8
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=118.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 24 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=118.00 map_max=118.00 map_mean=39.93 map_top1=115.47 map_top01=117.45
+     final_score=39.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=359.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 25 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.69 map_max=121.69 map_mean=37.64 map_top1=118.99 map_top01=120.95
+     final_score=37.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=288.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=113.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 26 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=113.50 map_max=113.50 map_mean=40.98 map_top1=111.27 map_top01=112.79
+     final_score=40.98 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 27 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.25 map_max=116.25 map_mean=41.00 map_top1=114.38 map_top01=115.64
+     final_score=41.00 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=291.4
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=87.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 28 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=87.00 map_max=87.00 map_mean=35.71 map_top1=84.70 map_top01=86.20
+     final_score=35.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=367.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=84.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 29 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=84.94 map_max=84.94 map_mean=35.26 map_top1=82.23 map_top01=83.51
+     final_score=35.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=505.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=83.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 30 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=83.25 map_max=83.25 map_mean=34.64 map_top1=80.48 map_top01=82.51
+     final_score=34.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=86.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 31 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=86.56 map_max=86.56 map_mean=35.21 map_top1=83.50 map_top01=85.62
+     final_score=35.21 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=386.4
+[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=22.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 32 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=22.41 map_max=22.41 map_mean=12.15 map_top1=20.74 map_top01=21.83
+     final_score=12.15 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=346.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.5781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 33 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.58 map_max=25.58 map_mean=12.19 map_top1=23.19 map_top01=24.59
+     final_score=12.19 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=269.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 34 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.28 map_max=27.28 map_mean=12.76 map_top1=25.12 map_top01=26.53
+     final_score=12.76 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=267.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 35 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.14 map_max=25.14 map_mean=12.30 map_top1=22.89 map_top01=24.59
+     final_score=12.30 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=350.5
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=118.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 36 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=118.00 map_max=118.00 map_mean=39.93 map_top1=115.47 map_top01=117.45
+     final_score=39.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=357.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 37 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.69 map_max=121.69 map_mean=37.64 map_top1=118.99 map_top01=120.95
+     final_score=37.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=113.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 38 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=113.50 map_max=113.50 map_mean=40.98 map_top1=111.27 map_top01=112.79
+     final_score=40.98 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=287.1

@@ -1,23 +1,24 @@
 # ── edge/config.debug.yaml ─────────────────────────────────────
-# DEBUG-ONLY configuration for Prompt 2C integration testing.
+# 仅调试配置，用于 Prompt 2C 集成测试。
 #
-# Purpose:
-#   - Verify T3 FastSAM / Qwen3-VL / T4 upload chain end-to-end.
-#   - Bypass T2 threshold gate so ALL frames reach Q2 → T3 → T4.
-#   - NOT representative of production line cadence.
-#   - NOT the default deployment configuration.
+# 用途：
+#   - 验证 T3 FastSAM / Qwen3-VL / T4 upload 链路端到端。
+#   - 绕过 T2 阈值门控，所有帧进入 Q2 → T3 → T4。
+#   - 不代表正式产线节拍。
+#   - 不是默认部署配置。
+#   - pass_all 仅用于调试和集成测试，不是正式生产模式。
 #
-# Usage:
+# 使用方式：
 #   ./edge_pipeline edge/config.debug.yaml
 #
-# When to use:
-#   - Prompt 2C integration debugging (real FastSAM + Qwen3-VL).
-#   - Verifying T4 upload pipeline with real images.
-#   - Temporary fallback for categories with unknown thresholds.
+# 适用场景：
+#   - Prompt 2C 集成调试（真实 FastSAM + Qwen3-VL）。
+#   - 验证 T4 upload 流水线。
+#   - 未知阈值类别的临时回退。
 #
-# When NOT to use:
-#   - Production deployment (use config.yaml instead).
-#   - Performance benchmarks (pass_all overwhelms T3/T4).
+# 不适用场景：
+#   - 正式部署（使用 config.yaml）。
+#   - 性能基准测试（pass_all 会导致 T3/T4 过载）。
 
 # ── 设备标识 ──────────────────────────────────────
 device_id: rk3588-line-A-cam01
@@ -67,9 +68,10 @@ efficientad_model_dir: /home/orangepi/models/efficientad_models
 efficientad_threshold: 0.5
 efficientad_input_size: 256
 
-# ── Stage 1：Debug gate configuration ────────────
-# pass_all: every frame enters Q2 regardless of score.
-# Logs will clearly indicate gate_mode=pass_all.
+# ── Stage 1：调试门控配置 ────────────────────────
+# pass_all：所有帧不论分数均进入 Q2。
+# 日志会明确显示 gate_mode=pass_all。
+# 仅用于调试和 Prompt 2C 集成测试，不代表正式生产模式。
 efficientad_threshold_default: 0.50
 efficientad_score_mode: map_mean
 efficientad_gate_mode: pass_all
