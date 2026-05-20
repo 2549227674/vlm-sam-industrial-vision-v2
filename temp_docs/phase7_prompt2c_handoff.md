@@ -2,14 +2,17 @@
 
 ## 当前冻结点
 
-Phase 7 Prompt 2B 已完成代表类 EfficientAD FP16/no-quant raw RKNN 验证。
+Phase 7 Prompt 2B 已完成代表类 + 批量 15 类 EfficientAD FP16/no-quant raw RKNN 转换与上传。
 
 当前冻结状态：
 
 ```text
-Prompt 2B：代表类验证通过。
-下一步：批量 15 类 FP16/no-quant raw RKNN 转换上传 + 15 类 smoke test。
-然后开始 Prompt 2C：FastSAM + Qwen3-VL。
+Prompt 2B：
+  ✅ 代表类（bottle/metal_nut/pill/screw）FP16/no-quant 工程验证通过
+  ✅ 15 类 FP16/no-quant raw RKNN 批量转换完成（15/15，每个 17MB）
+  ✅ 15 类模型已上传到 Orange Pi（/home/orangepi/models/efficientad_models/）
+  ❌ 15 类 smoke test 未执行（板端无 /tmp/mvtec_15cls_small 数据集和日志）
+下一步：15 类 smoke test，然后开始 Prompt 2C：FastSAM + Qwen3-VL。
 ```
 
 ## 已完成
@@ -96,60 +99,15 @@ efficientad_gate_mode: pass_all
 
 ## Prompt 2C 前置任务
 
-先完成：
+### ✅ 15 类 FP16/no-quant raw RKNN 批量转换
 
-```bash
-source .venv_rknn/bin/activate
-python scripts/convert_efficientad_rknn.py \
-  --use-raw-onnx \
-  --no-quant \
-  --skip-accuracy-analysis
-```
+已完成。15/15 类 `model_raw_noquant.rknn` 均在 `models/efficientad_models/{category}/` 下，每个 17MB。
 
-然后用 staging + tar pipe 上传全部 15 类。
+### ✅ 上传到 Orange Pi
 
-推荐上传方式：
+已完成。15/15 类 `model.rknn` 均在 `/home/orangepi/models/efficientad_models/{category}/` 下。
 
-```bash
-cd ~/vlm-sam-industrial-vision-v2
-
-CATS="bottle cable capsule carpet grid hazelnut leather metal_nut pill screw tile toothbrush transistor wood zipper"
-
-STAGE=/tmp/ead_fp16_upload
-rm -rf "$STAGE"
-mkdir -p "$STAGE"
-
-for c in $CATS; do
-  src="models/efficientad_models/$c/model_raw_noquant.rknn"
-  if [ ! -f "$src" ]; then
-    echo "MISSING: $src"
-    exit 1
-  fi
-  mkdir -p "$STAGE/$c"
-  cp "$src" "$STAGE/$c/model.rknn"
-done
-
-tar -C "$STAGE" -cf - . | ssh orangepi@192.168.137.66 '
-set -e
-DST=/home/orangepi/models/efficientad_models
-
-for c in bottle cable capsule carpet grid hazelnut leather metal_nut pill screw tile toothbrush transistor wood zipper; do
-  mkdir -p "$DST/$c"
-  if [ -f "$DST/$c/model.rknn" ]; then
-    cp "$DST/$c/model.rknn" "$DST/$c/model_before_fp16_raw_backup.rknn"
-  fi
-done
-
-tar -C "$DST" -xf -
-
-echo "uploaded fp16/no-quant raw RKNN models:"
-for c in bottle cable capsule carpet grid hazelnut leather metal_nut pill screw tile toothbrush transistor wood zipper; do
-  ls -lh "$DST/$c/model.rknn"
-done
-'
-```
-
-## 15 类 smoke test 建议
+### ❌ 15 类 smoke test（待执行）
 
 在 Orange Pi 上创建小样本 15 类数据：
 
