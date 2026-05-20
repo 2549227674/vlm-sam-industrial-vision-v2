@@ -164,15 +164,16 @@ void EadWorker::operator()(std::stop_token st) {
       continue;
     }
 
-    // Set input: pass uint8 RGB directly (pass_through mode).
-    // The RKNN model was calibrated with uint8 [0,255] data.
+    // Set input: pass uint8 RGB, let RKNN driver do quantization conversion.
+    // pass_through=0 means the driver applies the model's input quant params
+    // (scale, zero_point, mean/std baked in during calibration).
     uint32_t input_size = img_w * img_h * 3;
 
     rknn_input inputs[1]{};
     inputs[0].index = 0;
     inputs[0].buf = rgb_data.get();
     inputs[0].size = input_size;
-    inputs[0].pass_through = 1;  // pass raw uint8, no driver conversion
+    inputs[0].pass_through = 0;  // driver handles uint8→INT8 conversion
     inputs[0].type = RKNN_TENSOR_UINT8;
     inputs[0].fmt = RKNN_TENSOR_NHWC;
 
@@ -189,10 +190,10 @@ void EadWorker::operator()(std::stop_token st) {
       continue;
     }
 
-    // Get outputs with want_float=1 (driver does INT8→float dequantization).
+    // Get outputs as raw INT8 (want_float=0). We dequantize manually.
     std::vector<rknn_output> outputs(n_output_);
     for (uint32_t i = 0; i < n_output_; ++i) {
-      outputs[i].want_float = 1;
+      outputs[i].want_float = 0;
       outputs[i].is_prealloc = 0;
       outputs[i].index = i;
       outputs[i].buf = nullptr;
@@ -207,33 +208,68 @@ void EadWorker::operator()(std::stop_token st) {
     auto t1 = std::chrono::steady_clock::now();
     float inference_ms = std::chrono::duration<float, std::milli>(t1 - t0).count();
 
-    // Find the scalar output (anomaly score).
-    // Strategy: query output attrs, find the output with the smallest size
-    // (most likely a scalar or small vector = pred_score).
-    // Log the selection rationale.
-    float anomaly_score = 0.0f;
-    int score_output_idx = -1;
-    uint32_t min_size = UINT32_MAX;
+    // --- RGB input stats for debugging ---
+    uint8_t rgb_min = 255, rgb_max = 0;
+    uint64_t rgb_sum = 0;
+    for (uint32_t i = 0; i < input_size; ++i) {
+      uint8_t v = rgb_data[i];
+      if (v < rgb_min) rgb_min = v;
+      if (v > rgb_max) rgb_max = v;
+      rgb_sum += v;
+    }
+    float rgb_mean = static_cast<float>(rgb_sum) / input_size;
 
+    // --- Select score output: prefer name "pred_score", fallback to smallest n_elems ---
+    int score_output_idx = -1;
+    std::string selected_name;
+    uint32_t selected_n_elems = 0;
+    float selected_scale = 1.0f;
+    int32_t selected_zp = 0;
+
+    // First pass: look for output named "pred_score".
     for (uint32_t i = 0; i < n_output_; ++i) {
       rknn_tensor_attr attr{};
       attr.index = i;
       rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
-
-      // The scalar score output has the smallest element count.
-      if (attr.n_elems < min_size) {
-        min_size = attr.n_elems;
+      if (std::string(attr.name) == "pred_score") {
         score_output_idx = static_cast<int>(i);
+        selected_name = attr.name;
+        selected_n_elems = attr.n_elems;
+        selected_scale = attr.scale;
+        selected_zp = attr.zp;
+        break;
       }
     }
 
+    // Fallback: smallest n_elems.
+    if (score_output_idx < 0) {
+      uint32_t min_size = UINT32_MAX;
+      for (uint32_t i = 0; i < n_output_; ++i) {
+        rknn_tensor_attr attr{};
+        attr.index = i;
+        rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
+        if (attr.n_elems < min_size) {
+          min_size = attr.n_elems;
+          score_output_idx = static_cast<int>(i);
+          selected_name = attr.name;
+          selected_n_elems = attr.n_elems;
+          selected_scale = attr.scale;
+          selected_zp = attr.zp;
+        }
+      }
+    }
+
+    // Manual INT8 dequantization: real_val = (raw_int8 - zero_point) * scale
+    float anomaly_score = 0.0f;
+    int8_t raw_score = 0;
+
     if (score_output_idx >= 0 && outputs[score_output_idx].buf) {
-      // want_float=1 returns float; take the first element as anomaly score.
-      anomaly_score = static_cast<float*>(
+      raw_score = static_cast<int8_t*>(
           outputs[score_output_idx].buf)[0];
-      std::fprintf(stderr,
-                   "[T2] score from output[%d] (n_elems=%u): %.4f\n",
-                   score_output_idx, min_size, anomaly_score);
+      anomaly_score = (static_cast<float>(raw_score) -
+                       static_cast<float>(selected_zp)) * selected_scale;
+      // Clamp to [0, +inf) — EfficientAD anomaly scores are non-negative.
+      if (anomaly_score < 0.0f) anomaly_score = 0.0f;
     } else {
       std::fprintf(stderr, "[T2] WARNING: no score output found\n");
     }
@@ -250,10 +286,19 @@ void EadWorker::operator()(std::stop_token st) {
 
     bool is_anomaly = anomaly_score > threshold;
 
+    // Enhanced per-frame log.
     std::fprintf(stderr,
-                 "[T2] frame %zu | cat=%s | score=%.4f | thr=%.2f | %s\n",
+                 "[T2] frame %zu | img=%s\n"
+                 "      cat=%s | %dx%dx%d | rgb min/max/mean=%u/%u/%.1f\n"
+                 "      out[%d]='%s' n_elems=%u | raw=%d zp=%d scale=%.6f\n"
+                 "      dequant=%.4f | thr=%.2f | %s\n",
                  static_cast<std::size_t>(frame.frame_id),
+                 frame.image_path.c_str(),
                  frame.category.c_str(),
+                 img_w, img_h, 3,
+                 rgb_min, rgb_max, rgb_mean,
+                 score_output_idx, selected_name.c_str(), selected_n_elems,
+                 static_cast<int>(raw_score), selected_zp, selected_scale,
                  anomaly_score, threshold,
                  is_anomaly ? "UPLOAD" : "drop");
 
