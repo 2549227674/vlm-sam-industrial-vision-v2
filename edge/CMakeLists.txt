@@ -9,11 +9,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Suppress hardware_destructive_interference_size warning — we always use 64.
 add_compile_options(-Wno-interference-size)
 
-# -- Third-party include paths (RKNN, RKLLM, librga headers) --
+# -- Third-party include paths (RKNN, RKLLM, librga, stb headers) --
 set(THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 include_directories(${THIRD_PARTY_DIR}/rknn_api)
 include_directories(${THIRD_PARTY_DIR}/rkllm_api)
 include_directories(${THIRD_PARTY_DIR}/librga)
+include_directories(${THIRD_PARTY_DIR})
 
 # -- Project include path --
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -48,12 +49,14 @@ find_package(CURL REQUIRED)
 set(COMMON_SOURCES
     src/common/config_loader.cpp
     src/common/http_client.cpp
+    src/common/image_utils.cpp
 )
 
-# -- Worker sources (Prompt 2A: T1 image_loop + MockPipeline + T4 Upload) --
+# -- Worker sources (Prompt 2B: T1 + T2 EfficientAD + T3 MockVlm + T4) --
 set(WORKER_SOURCES
     src/capture/capture_worker.cpp
-    src/pipeline/mock_pipeline_worker.cpp
+    src/pipeline/ead_worker.cpp
+    src/pipeline/mock_vlm_worker.cpp
     src/upload/upload_worker.cpp
 )
 

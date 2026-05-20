@@ -1,5 +1,5 @@
 // edge_pipeline — RK3588 16GB edge inference pipeline.
-// Prompt 2A: T1 image_loop + MockPipelineWorker + T4 UploadWorker.
+// Prompt 2B: T1 image_loop + T2 EfficientAD + T3 MockVlm + T4 Upload.
 
 #include <csignal>
 #include <cstdio>
@@ -12,12 +12,13 @@
 #include "edge/common/bounded_queue.hpp"
 #include "edge/common/config.hpp"
 #include "edge/common/config_loader.hpp"
+#include "edge/common/ead_result.hpp"
 #include "edge/common/metrics.hpp"
 #include "edge/common/types.hpp"
-#include "edge/pipeline/mock_pipeline_worker.hpp"
+#include "edge/pipeline/ead_worker.hpp"
+#include "edge/pipeline/mock_vlm_worker.hpp"
 #include "edge/upload/upload_worker.hpp"
 
-// Global flag for SIGINT / SIGTERM handling.
 namespace {
 std::atomic<bool> g_shutdown_requested{false};
 
@@ -50,6 +51,10 @@ void print_config(const vlm_industrial::edge::common::Config& cfg) {
   std::fprintf(stderr, "\n");
   std::fprintf(stderr, "beat_ms:           %d\n", cfg.image_loop_beat_ms);
   std::fprintf(stderr, "jitter_ms:         %d\n", cfg.image_loop_jitter_ms);
+  std::fprintf(stderr, "ead_model_dir:     %s\n",
+               cfg.efficientad_model_dir.c_str());
+  std::fprintf(stderr, "ead_threshold_def: %.2f\n",
+               cfg.efficientad_threshold_default);
   std::fprintf(stderr, "model_variant:     %s_%s\n",
                cfg.vlm_model_size.c_str(), cfg.vlm_variant.c_str());
 }
@@ -75,9 +80,7 @@ void print_metrics(const vlm_industrial::edge::common::PipelineMetrics& m) {
 }  // namespace
 
 int main(int argc, char* argv[]) {
-  // curl_global_init must be called once, before any threads start.
   curl_global_init(CURL_GLOBAL_DEFAULT);
-
   install_signal_handlers();
 
   const char* config_path = (argc > 1) ? argv[1] : "edge/config.yaml";
@@ -92,38 +95,36 @@ int main(int argc, char* argv[]) {
   const auto& cfg = cfg_result.value();
   print_config(cfg);
 
-  // Shared metrics.
   vlm_industrial::edge::common::PipelineMetrics metrics;
 
-  // Queues: Q1 cap=4, Q2 cap=2 (reserved, unused this round), Q3 cap=4.
+  // Queues: Q1(4) → T2 → Q2(2) → T3 → Q3(4) → T4
   using vlm_industrial::edge::CaptureFrame;
+  using vlm_industrial::edge::EadResult;
   using vlm_industrial::edge::VlmReport;
   using vlm_industrial::edge::common::BoundedQueue;
 
   BoundedQueue<CaptureFrame> q1(4);
-  BoundedQueue<CaptureFrame> q2(2);  // reserved for real T2→T3 handoff
+  BoundedQueue<EadResult>    q2(2);
   BoundedQueue<VlmReport>    q3(4);
-  (void)q2;  // unused in Prompt 2A
 
-  std::fprintf(stderr, "\n--- Starting pipeline (Prompt 2A: mock mode) ---\n");
+  std::fprintf(stderr, "\n--- Starting pipeline (Prompt 2B: real EfficientAD) ---\n");
 
-  // Start workers as jthreads. Destructor calls request_stop() + join().
   {
-    vlm_industrial::edge::CaptureWorker t1_worker(cfg, q1, metrics);
-    vlm_industrial::edge::MockPipelineWorker mock_worker(cfg, q1, q3, metrics);
-    vlm_industrial::edge::UploadWorker t4_worker(cfg, q3, metrics);
+    vlm_industrial::edge::CaptureWorker t1(cfg, q1, metrics);
+    vlm_industrial::edge::EadWorker t2(cfg, q1, q2, metrics);
+    vlm_industrial::edge::MockVlmWorker t3(cfg, q2, q3, metrics);
+    vlm_industrial::edge::UploadWorker t4(cfg, q3, metrics);
 
-    std::jthread t1{std::move(t1_worker)};
-    std::jthread t23{std::move(mock_worker)};
-    std::jthread t4{std::move(t4_worker)};
+    std::jthread t1_th{std::move(t1)};
+    std::jthread t2_th{std::move(t2)};
+    std::jthread t3_th{std::move(t3)};
+    std::jthread t4_th{std::move(t4)};
 
-    // Block until SIGINT / SIGTERM.
     while (!g_shutdown_requested.load(std::memory_order_acquire)) {
       std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
-    std::fprintf(stderr, "\n--- Shutdown requested, stopping workers... ---\n");
-    // jthread destructors will call request_stop() + join() in reverse order.
+    std::fprintf(stderr, "\n--- Shutdown requested ---\n");
   }
 
   print_metrics(metrics);
