@@ -44,16 +44,24 @@ endforeach()
 # -- libcurl (required for T4 Upload) --
 find_package(CURL REQUIRED)
 
-# -- Common infrastructure sources (Phase 7 foundation) --
+# -- Common infrastructure sources --
 set(COMMON_SOURCES
     src/common/config_loader.cpp
     src/common/http_client.cpp
+)
+
+# -- Worker sources (Prompt 2A: T1 image_loop + MockPipeline + T4 Upload) --
+set(WORKER_SOURCES
+    src/capture/capture_worker.cpp
+    src/pipeline/mock_pipeline_worker.cpp
+    src/upload/upload_worker.cpp
 )
 
 # -- Main executable --
 add_executable(edge_pipeline
     src/main.cpp
     ${COMMON_SOURCES}
+    ${WORKER_SOURCES}
 )
 
 target_link_libraries(edge_pipeline PRIVATE

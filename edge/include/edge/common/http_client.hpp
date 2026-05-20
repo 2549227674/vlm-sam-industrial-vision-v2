@@ -3,6 +3,7 @@
 #include <curl/curl.h>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace vlm_industrial::edge::common {
 
@@ -16,8 +17,14 @@ class HttpClient {
 
   HttpClient(const HttpClient&) = delete;
   HttpClient& operator=(const HttpClient&) = delete;
-  HttpClient(HttpClient&&) = delete;
-  HttpClient& operator=(HttpClient&&) = delete;
+  HttpClient(HttpClient&& o) noexcept : curl_(std::exchange(o.curl_, nullptr)) {}
+  HttpClient& operator=(HttpClient&& o) noexcept {
+    if (this != &o) {
+      if (curl_) curl_easy_cleanup(curl_);
+      curl_ = std::exchange(o.curl_, nullptr);
+    }
+    return *this;
+  }
 
   // POST multipart (image file + meta JSON) to url.
   // Returns HTTP status code (200 = success).

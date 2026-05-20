@@ -18,7 +18,8 @@ struct PipelineMetrics {
   alignas(kCacheLine) std::atomic<uint64_t> vlm_count{};
   alignas(kCacheLine) std::atomic<uint64_t> upload_count{};
   alignas(kCacheLine) std::atomic<uint64_t> dropped_count{};
-  alignas(kCacheLine) std::atomic<uint64_t> retry_count{};
+  alignas(kCacheLine) std::atomic<uint64_t> upload_retry{};
+  alignas(kCacheLine) std::atomic<uint64_t> upload_failed{};
 };
 
 }  // namespace vlm_industrial::edge::common
