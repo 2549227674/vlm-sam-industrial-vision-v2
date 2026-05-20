@@ -213,7 +213,8 @@ def convert_category(category: str, calib_samples: int, skip_accuracy_analysis: 
         ret = rknn.load_onnx(
                 model=str(onnx_path),
                 inputs=['input'],
-                input_size_list=[[1, 3, 256, 256]]
+                input_size_list=[[1, 3, 256, 256]],
+		outputs=['pred_score', 'anomaly_map'],
         )
         if ret != 0:
             print("  FAIL: load_onnx()")
