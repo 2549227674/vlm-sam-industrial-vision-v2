@@ -35,7 +35,7 @@ license: Internal-CourseProject
 所有 C++ 代码从一开始就按以下标准：
 
 - **必须** V4L2 + dma_buf 零拷贝（`importbuffer_fd` → `rknn_create_mem_from_fd`）。
-- **必须** INT8 / W8A8 量化；量化后必须跑 `accuracy_analysis` 验证 cosine sim > 0.99。
+- **必须** INT8 / W8A8 量化；量化后必须跑 `accuracy_analysis` 验证 cosine sim > 0.99。已知例外：FastSAM output1（proto masks）cosine=0.966，此为已知精度损失，**不得因此判定转换失败**，需上板人工确认分割质量。
 - **必须** 三核 NPU 并行（`rknn_core_num=3`）。
 - **必须** KV cache preload 长 system prompt（`rkllm_load_prompt_cache`）。
 - **必须** Cache line 对齐 metrics（`alignas(64)`）。

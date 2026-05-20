@@ -21,10 +21,22 @@ camera_height: 1080
 
 # Image Loop 模式（静态图片集循环测试用）
 image_loop_dir: /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
-image_loop_categories:           # T1 循环读取的类别列表
+image_loop_categories:           # T1 循环读取的类别列表（全 15 类）
+  - bottle
+  - cable
+  - capsule
+  - carpet
+  - grid
+  - hazelnut
+  - leather
   - metal_nut
-  - screw
   - pill
+  - screw
+  - tile
+  - toothbrush
+  - transistor
+  - wood
+  - zipper
 image_loop_beat_ms: 1500         # 每帧间隔，毫秒
 image_loop_jitter_ms: 200        # ± 抖动
 
@@ -60,6 +72,9 @@ vlm_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
 vlm_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
 vlm_4b_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_base.rkllm
 vlm_4b_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_vision.rknn
+# LoRA 模型路径（当 vlm_variant="lora" 时使用）
+vlm_2b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+vlm_4b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_lora_15cls.rkllm
 # 4B 运行时 RAM ~8.7 GB，Pipeline 总峰值 ~11.4 GB（16GB 板裕度 ~3.1 GB）
 # 4B 文件来源：Qengineering Sync.com（不自行转换 base 文件）
 # 视觉文件：使用 v1.2.2 版本（v1.2.3 精度存在回退，见 Issue #421）
