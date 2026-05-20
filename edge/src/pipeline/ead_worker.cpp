@@ -100,14 +100,15 @@ bool EadWorker::load_model(const std::string& category) {
     attr.index = i;
     rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
     std::fprintf(stderr,
-                 "  output[%u]: name='%s' dims=[%u,%u,%u,%u] type=%d "
-                 "qnt_type=%d zp=%d scale=%.6f size=%u\n",
+                 "  output[%u]: name='%s' dims=[%u,%u,%u,%u] type=%s(%d) "
+                 "qnt_type=%d zp=%d scale=%.6f n_elems=%u size=%u\n",
                  i, attr.name,
                  attr.n_dims > 0 ? attr.dims[0] : 0,
                  attr.n_dims > 1 ? attr.dims[1] : 0,
                  attr.n_dims > 2 ? attr.dims[2] : 0,
                  attr.n_dims > 3 ? attr.dims[3] : 0,
-                 attr.type, attr.qnt_type, attr.zp, attr.scale, attr.size);
+                 get_type_string(attr.type), attr.type,
+                 attr.qnt_type, attr.zp, attr.scale, attr.n_elems, attr.size);
   }
 
   cached_category_ = category;
@@ -151,6 +152,22 @@ static int find_output_by_name(rknn_context ctx, uint32_t n_output,
   return -1;
 }
 
+// Return human-readable parse mode string for a given tensor type.
+static const char* parse_mode_for_type(rknn_tensor_type type) {
+  switch (type) {
+    case RKNN_TENSOR_INT8:    return "int8_manual_dequant";
+    case RKNN_TENSOR_UINT8:   return "uint8_manual_dequant";
+    case RKNN_TENSOR_FLOAT16: return "fp16_want_float";
+    case RKNN_TENSOR_FLOAT32: return "fp32_direct";
+    default:                  return "unknown";
+  }
+}
+
+// Check if tensor type is quantized integer (needs manual dequant).
+static bool is_quantized_type(rknn_tensor_type type) {
+  return type == RKNN_TENSOR_INT8 || type == RKNN_TENSOR_UINT8;
+}
+
 // Dequantize INT8 buffer to float array.
 // out[i] = (raw_int8[i] - zero_point) * scale
 static void dequantize_int8(const void* raw_buf, uint32_t n_elems,
@@ -160,6 +177,22 @@ static void dequantize_int8(const void* raw_buf, uint32_t n_elems,
   for (uint32_t i = 0; i < n_elems; ++i) {
     out[i] = (static_cast<float>(src[i]) - static_cast<float>(zero_point)) * scale;
   }
+}
+
+// Dequantize UINT8 buffer to float array.
+static void dequantize_uint8(const void* raw_buf, uint32_t n_elems,
+                             int32_t zero_point, float scale,
+                             float* out) {
+  const auto* src = static_cast<const uint8_t*>(raw_buf);
+  for (uint32_t i = 0; i < n_elems; ++i) {
+    out[i] = (static_cast<float>(src[i]) - static_cast<float>(zero_point)) * scale;
+  }
+}
+
+// Extract a single float value from an output buffer (after want_float=1).
+static float extract_float_scalar(const void* buf) {
+  if (!buf) return 0.0f;
+  return static_cast<const float*>(buf)[0];
 }
 
 // Compute top-k mean: mean of the k largest values in arr[0..n).
@@ -235,10 +268,25 @@ void EadWorker::operator()(std::stop_token st) {
       continue;
     }
 
-    // Get outputs as raw INT8 (want_float=0). We dequantize manually.
+    // --- Query ALL output attributes BEFORE rknn_outputs_get ---
+    // This determines want_float per output: quantized types get raw INT8
+    // for manual dequant; float types get want_float=1 for runtime conversion.
+    struct OutputInfo {
+      rknn_tensor_attr attr{};
+      int   want_float{0};
+    };
+    std::vector<OutputInfo> out_info(n_output_);
+    for (uint32_t i = 0; i < n_output_; ++i) {
+      out_info[i].attr.index = i;
+      rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR,
+                 &out_info[i].attr, sizeof(rknn_tensor_attr));
+      out_info[i].want_float = is_quantized_type(out_info[i].attr.type) ? 0 : 1;
+    }
+
+    // Get outputs with per-tensor want_float.
     std::vector<rknn_output> outputs(n_output_);
     for (uint32_t i = 0; i < n_output_; ++i) {
-      outputs[i].want_float = 0;
+      outputs[i].want_float = out_info[i].want_float;
       outputs[i].is_prealloc = 0;
       outputs[i].index = i;
       outputs[i].buf = nullptr;
@@ -267,15 +315,12 @@ void EadWorker::operator()(std::stop_token st) {
     if (score_idx < 0 || map_idx < 0) {
       uint32_t min_elems = UINT32_MAX, max_elems = 0;
       for (uint32_t i = 0; i < n_output_; ++i) {
-        rknn_tensor_attr attr{};
-        attr.index = i;
-        rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
-        if (score_idx < 0 && attr.n_elems < min_elems) {
-          min_elems = attr.n_elems;
+        if (score_idx < 0 && out_info[i].attr.n_elems < min_elems) {
+          min_elems = out_info[i].attr.n_elems;
           score_idx = static_cast<int>(i);
         }
-        if (map_idx < 0 && attr.n_elems > max_elems) {
-          max_elems = attr.n_elems;
+        if (map_idx < 0 && out_info[i].attr.n_elems > max_elems) {
+          max_elems = out_info[i].attr.n_elems;
           map_idx = static_cast<int>(i);
         }
       }
@@ -291,28 +336,59 @@ void EadWorker::operator()(std::stop_token st) {
       continue;
     }
 
-    // --- Query output attributes for dequantization ---
-    rknn_tensor_attr score_attr{};
-    score_attr.index = static_cast<uint32_t>(score_idx);
-    rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &score_attr, sizeof(score_attr));
-
-    rknn_tensor_attr map_attr{};
-    map_attr.index = static_cast<uint32_t>(map_idx);
-    rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &map_attr, sizeof(map_attr));
-
-    // --- Dequantize raw_score ---
+    // --- Parse raw_score based on tensor type ---
     float raw_score_val = 0.0f;
+    const auto& si = out_info[score_idx];
     {
-      int8_t raw = static_cast<int8_t*>(outputs[score_idx].buf)[0];
-      raw_score_val = (static_cast<float>(raw) -
-                       static_cast<float>(score_attr.zp)) * score_attr.scale;
+      const char* pm = parse_mode_for_type(si.attr.type);
+      if (is_quantized_type(si.attr.type)) {
+        // INT8/UINT8: manual dequant from raw integer buffer.
+        if (si.attr.type == RKNN_TENSOR_INT8) {
+          int8_t raw = static_cast<int8_t*>(outputs[score_idx].buf)[0];
+          raw_score_val = (static_cast<float>(raw) -
+                           static_cast<float>(si.attr.zp)) * si.attr.scale;
+        } else {
+          uint8_t raw = static_cast<uint8_t*>(outputs[score_idx].buf)[0];
+          raw_score_val = (static_cast<float>(raw) -
+                           static_cast<float>(si.attr.zp)) * si.attr.scale;
+        }
+      } else {
+        // FLOAT16/FLOAT32: RKNN runtime already converted to float.
+        raw_score_val = extract_float_scalar(outputs[score_idx].buf);
+      }
+      std::fprintf(stderr,
+                   "  output raw_score: type=%s parse_mode=%s "
+                   "n_elems=%u size=%u val=%.4f\n",
+                   get_type_string(si.attr.type), pm,
+                   si.attr.n_elems, outputs[score_idx].size, raw_score_val);
     }
 
-    // --- Dequantize raw_anomaly_map ---
-    const uint32_t map_elems = map_attr.n_elems;
+    // --- Parse raw_anomaly_map based on tensor type ---
+    const auto& mi = out_info[map_idx];
+    const uint32_t map_elems = mi.attr.n_elems;
     std::vector<float> map_float(map_elems);
-    dequantize_int8(outputs[map_idx].buf, map_elems,
-                    map_attr.zp, map_attr.scale, map_float.data());
+    {
+      const char* pm = parse_mode_for_type(mi.attr.type);
+      if (is_quantized_type(mi.attr.type)) {
+        // INT8/UINT8: manual dequant.
+        if (mi.attr.type == RKNN_TENSOR_INT8) {
+          dequantize_int8(outputs[map_idx].buf, map_elems,
+                          mi.attr.zp, mi.attr.scale, map_float.data());
+        } else {
+          dequantize_uint8(outputs[map_idx].buf, map_elems,
+                           mi.attr.zp, mi.attr.scale, map_float.data());
+        }
+      } else {
+        // FLOAT16/FLOAT32: buffer is already float after want_float=1.
+        const float* src = static_cast<const float*>(outputs[map_idx].buf);
+        std::memcpy(map_float.data(), src, map_elems * sizeof(float));
+      }
+      std::fprintf(stderr,
+                   "  output raw_anomaly_map: type=%s parse_mode=%s "
+                   "n_elems=%u size=%u\n",
+                   get_type_string(mi.attr.type), pm,
+                   map_elems, outputs[map_idx].size);
+    }
 
     // --- Compute multi-metric scores (Task 5) ---
     float map_max_val = 0.0f;
