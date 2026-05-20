@@ -32,9 +32,9 @@ import sys
 import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 import onnxruntime as ort
-from PIL import Image
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODELS_DIR = PROJECT_ROOT / "models" / "efficientad_models"
@@ -56,10 +56,18 @@ STD = np.array([58.395, 57.12, 57.375], dtype=np.float32)
 SWEEP_STEPS = 200
 
 
-def _preprocess(img_path: Path) -> np.ndarray:
-    """Load and normalize a single image to NCHW float32."""
-    img = Image.open(img_path).convert("RGB").resize((INPUT_SIZE, INPUT_SIZE))
-    arr = np.array(img, dtype=np.float32)
+def _preprocess(img_path: Path) -> np.ndarray | None:
+    """Load and normalize a single image to NCHW float32.
+
+    Returns None if the image cannot be read.
+    """
+    img = cv2.imread(str(img_path), cv2.IMREAD_COLOR)
+    if img is None:
+        print(f"  WARNING: cannot read image, skipping: {img_path}")
+        return None
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE), interpolation=cv2.INTER_LINEAR)
+    arr = img.astype(np.float32)
     arr = (arr - MEAN) / STD
     return arr.transpose(2, 0, 1)[np.newaxis]  # [1, 3, 256, 256]
 
@@ -251,6 +259,9 @@ def evaluate_category(
 
         for img_path in images:
             inp = _preprocess(img_path)
+            if inp is None:
+                total_images -= 1
+                continue
             raw_score, raw_map = sess.run(None, {"input": inp})
             metrics = _compute_metrics(raw_score, raw_map)
 
