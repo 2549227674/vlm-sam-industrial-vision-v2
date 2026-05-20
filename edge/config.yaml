@@ -48,7 +48,15 @@ efficientad_input_size: 256      # 固定 256×256，不要改
 # ── Stage 1：类别级自适应阈值 ─────────────────────
 # 默认阈值：anomaly_score > 0.50 时触发 FastSAM + VLM
 efficientad_threshold_default: 0.50
+# Score mode: which metric from raw anomaly map to use as final_score
+# Options: raw_score, map_max, map_mean, map_top1, map_top01
+# Evaluation showed map_mean has best AUROC for most categories.
+efficientad_score_mode: map_mean
+# Gate mode: how T2 decides to push frames to Q2
+# Options: threshold (production), pass_all (debug only)
+efficientad_gate_mode: threshold
 # 类别级自适应阈值（覆盖默认值）
+# NOTE: thresholds below are calibrated for map_mean score_mode.
 # capsule: image_AUROC=0.70，定位能力尚可但整图排序弱，降低阈值提高召回
 # 其余类别未配置则使用 default
 per_category_threshold:

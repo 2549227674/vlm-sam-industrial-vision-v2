@@ -1,0 +1,97 @@
+# ── edge/config.debug.yaml ─────────────────────────────────────
+# DEBUG-ONLY configuration for Prompt 2C integration testing.
+#
+# Purpose:
+#   - Verify T3 FastSAM / Qwen3-VL / T4 upload chain end-to-end.
+#   - Bypass T2 threshold gate so ALL frames reach Q2 → T3 → T4.
+#   - NOT representative of production line cadence.
+#   - NOT the default deployment configuration.
+#
+# Usage:
+#   ./edge_pipeline edge/config.debug.yaml
+#
+# When to use:
+#   - Prompt 2C integration debugging (real FastSAM + Qwen3-VL).
+#   - Verifying T4 upload pipeline with real images.
+#   - Temporary fallback for categories with unknown thresholds.
+#
+# When NOT to use:
+#   - Production deployment (use config.yaml instead).
+#   - Performance benchmarks (pass_all overwhelms T3/T4).
+
+# ── 设备标识 ──────────────────────────────────────
+device_id: rk3588-line-A-cam01
+line_id: "L1"
+
+# ── 后端连接 ──────────────────────────────────────
+backend_url: http://192.168.1.100:8000
+upload_timeout_s: 30
+upload_max_retries: 5
+
+# ── AB 测试 ───────────────────────────────────────
+vlm_variant: "base"
+vlm_model_size: "4B"
+
+# ── 取帧模式 ──────────────────────────────────────
+capture_mode: image_loop
+
+# V4L2 模式
+camera_device: /dev/video0
+camera_width: 1920
+camera_height: 1080
+
+# Image Loop 模式
+# NOTE: Reduce categories for faster debug cycles if needed.
+image_loop_dir: /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
+image_loop_categories:
+  - bottle
+  - cable
+  - capsule
+  - carpet
+  - grid
+  - hazelnut
+  - leather
+  - metal_nut
+  - pill
+  - screw
+  - tile
+  - toothbrush
+  - transistor
+  - wood
+  - zipper
+image_loop_beat_ms: 1500
+image_loop_jitter_ms: 200
+
+# ── Stage 1：EfficientAD-S ───────────────────────
+efficientad_model_dir: /home/orangepi/models/efficientad_models
+efficientad_threshold: 0.5
+efficientad_input_size: 256
+
+# ── Stage 1：Debug gate configuration ────────────
+# pass_all: every frame enters Q2 regardless of score.
+# Logs will clearly indicate gate_mode=pass_all.
+efficientad_threshold_default: 0.50
+efficientad_score_mode: map_mean
+efficientad_gate_mode: pass_all
+per_category_threshold:
+  capsule: 0.30
+  screw: 0.35
+
+# ── Stage 2：FastSAM ──────────────────────────────
+fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s.rknn
+fastsam_input_size: 640
+fastsam_conf: 0.5
+
+# ── Stage 3：Qwen3-VL-2B/4B ──────────────────────
+vlm_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+vlm_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+vlm_4b_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_base.rkllm
+vlm_4b_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_vision.rknn
+vlm_2b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+vlm_4b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_lora_15cls.rkllm
+vlm_max_new_tokens: 200
+vlm_max_context: 4096
+vlm_npu_core_num: 3
+
+# ── 图片落盘 ──────────────────────────────────────
+jpeg_quality: 85

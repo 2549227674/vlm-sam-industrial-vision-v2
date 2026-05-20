@@ -28,7 +28,7 @@ void MockVlmWorker::operator()(std::stop_token st) {
     report.defect_type = "anomaly";
     report.severity = "medium";
     report.confidence = 0.75f;
-    report.anomaly_score = ead.anomaly_score;
+    report.anomaly_score = ead.final_score;
     report.variant = cfg_.vlm_model_size + "_" + cfg_.vlm_variant;
     report.frame_timestamp_us = ead.frame_timestamp_us;
 

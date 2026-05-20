@@ -20,6 +20,7 @@
 #include "edge/upload/upload_worker.hpp"
 
 namespace {
+using namespace vlm_industrial::edge::common;
 std::atomic<bool> g_shutdown_requested{false};
 
 void signal_handler(int /*sig*/) {
@@ -55,6 +56,10 @@ void print_config(const vlm_industrial::edge::common::Config& cfg) {
                cfg.efficientad_model_dir.c_str());
   std::fprintf(stderr, "ead_threshold_def: %.2f\n",
                cfg.efficientad_threshold_default);
+  std::fprintf(stderr, "ead_score_mode:    %s\n",
+               score_mode_str(cfg.efficientad_score_mode));
+  std::fprintf(stderr, "ead_gate_mode:     %s\n",
+               gate_mode_str(cfg.efficientad_gate_mode));
   std::fprintf(stderr, "model_variant:     %s_%s\n",
                cfg.vlm_model_size.c_str(), cfg.vlm_variant.c_str());
 }

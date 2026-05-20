@@ -140,6 +140,27 @@ Result<Config> load_config(std::string_view path) {
       cfg.efficientad_input_size = std::stoi(val);
     else if (full_key == "efficientad_threshold_default")
       cfg.efficientad_threshold_default = std::stof(val);
+    else if (full_key == "efficientad_score_mode") {
+      cfg.efficientad_score_mode = parse_score_mode(val);
+      // Validate: re-serialize and compare to detect unknown values.
+      if (std::string(score_mode_str(cfg.efficientad_score_mode)) != val &&
+          val != "raw_score" && val != "map_max" && val != "map_mean" &&
+          val != "map_top1" && val != "map_top01") {
+        std::fprintf(stderr,
+                     "[config] WARNING: unknown efficientad_score_mode='%s', "
+                     "falling back to map_mean\n", val.c_str());
+        cfg.efficientad_score_mode = ScoreMode::kMapMean;
+      }
+    }
+    else if (full_key == "efficientad_gate_mode") {
+      cfg.efficientad_gate_mode = parse_gate_mode(val);
+      if (val != "threshold" && val != "pass_all") {
+        std::fprintf(stderr,
+                     "[config] WARNING: unknown efficientad_gate_mode='%s', "
+                     "falling back to threshold\n", val.c_str());
+        cfg.efficientad_gate_mode = GateMode::kThreshold;
+      }
+    }
 
     // -- per_category_threshold --
     else if (full_key.starts_with("per_category_threshold."))

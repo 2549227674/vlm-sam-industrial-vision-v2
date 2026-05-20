@@ -1,6 +1,8 @@
 #include "edge/pipeline/ead_worker.hpp"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -127,7 +129,6 @@ std::unique_ptr<uint8_t[]> EadWorker::preprocess(const std::string& image_path,
   }
 
   // CPU bilinear resize (stb_image_resize2).
-  // TODO: RGA im2d virtualaddr path for zero-copy resize on RK3588.
   std::unique_ptr<Image> resized(resize_bilinear(*img, target, target));
   if (!resized) return nullptr;
 
@@ -136,8 +137,54 @@ std::unique_ptr<uint8_t[]> EadWorker::preprocess(const std::string& image_path,
   return std::move(resized->data);
 }
 
+// Find output index by name. Returns -1 if not found.
+static int find_output_by_name(rknn_context ctx, uint32_t n_output,
+                               const char* target_name) {
+  for (uint32_t i = 0; i < n_output; ++i) {
+    rknn_tensor_attr attr{};
+    attr.index = i;
+    rknn_query(ctx, RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
+    if (std::string(attr.name) == target_name) {
+      return static_cast<int>(i);
+    }
+  }
+  return -1;
+}
+
+// Dequantize INT8 buffer to float array.
+// out[i] = (raw_int8[i] - zero_point) * scale
+static void dequantize_int8(const void* raw_buf, uint32_t n_elems,
+                            int32_t zero_point, float scale,
+                            float* out) {
+  const auto* src = static_cast<const int8_t*>(raw_buf);
+  for (uint32_t i = 0; i < n_elems; ++i) {
+    out[i] = (static_cast<float>(src[i]) - static_cast<float>(zero_point)) * scale;
+  }
+}
+
+// Compute top-k mean: mean of the k largest values in arr[0..n).
+static float top_k_mean(const float* arr, uint32_t n, uint32_t k) {
+  if (k == 0 || n == 0) return 0.0f;
+  if (k > n) k = n;
+  // Partial sort: bring top-k to front.
+  std::vector<float> tmp(arr, arr + n);
+  std::partial_sort(tmp.begin(), tmp.begin() + k, tmp.end(),
+                    std::greater<float>{});
+  double sum = 0.0;
+  for (uint32_t i = 0; i < k; ++i) sum += tmp[i];
+  return static_cast<float>(sum / k);
+}
+
 void EadWorker::operator()(std::stop_token st) {
-  std::fprintf(stderr, "[T2] EadWorker started\n");
+  const char* sm_str = common::score_mode_str(cfg_.efficientad_score_mode);
+  const char* gm_str = common::gate_mode_str(cfg_.efficientad_gate_mode);
+  std::fprintf(stderr, "[T2] EadWorker started | score_mode=%s gate_mode=%s\n",
+               sm_str, gm_str);
+  if (cfg_.efficientad_gate_mode == common::GateMode::kPassAll) {
+    std::fprintf(stderr,
+                 "[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. "
+                 "All frames will enter Q2 regardless of score. ***\n");
+  }
 
   while (!st.stop_requested()) {
     auto frame_opt = in_.pop(st);
@@ -158,15 +205,13 @@ void EadWorker::operator()(std::stop_token st) {
     int img_w = 0, img_h = 0;
     auto rgb_data = preprocess(frame.image_path, img_w, img_h);
     if (!rgb_data) {
-      std::fprintf(stderr, "[T2] skip frame %zudecode/resize failed: %s\n",
+      std::fprintf(stderr, "[T2] skip frame %zu: decode/resize failed: %s\n",
                    static_cast<std::size_t>(frame.frame_id),
                    frame.image_path.c_str());
       continue;
     }
 
     // Set input: pass uint8 RGB, let RKNN driver do quantization conversion.
-    // pass_through=0 means the driver applies the model's input quant params
-    // (scale, zero_point, mean/std baked in during calibration).
     uint32_t input_size = img_w * img_h * 3;
 
     rknn_input inputs[1]{};
@@ -208,105 +253,142 @@ void EadWorker::operator()(std::stop_token st) {
     auto t1 = std::chrono::steady_clock::now();
     float inference_ms = std::chrono::duration<float, std::milli>(t1 - t0).count();
 
-    // --- RGB input stats for debugging ---
-    uint8_t rgb_min = 255, rgb_max = 0;
-    uint64_t rgb_sum = 0;
-    for (uint32_t i = 0; i < input_size; ++i) {
-      uint8_t v = rgb_data[i];
-      if (v < rgb_min) rgb_min = v;
-      if (v > rgb_max) rgb_max = v;
-      rgb_sum += v;
-    }
-    float rgb_mean = static_cast<float>(rgb_sum) / input_size;
+    // --- Locate raw_score and raw_anomaly_map outputs by name ---
+    int score_idx = find_output_by_name(ctx_.get(), n_output_, "raw_score");
+    int map_idx   = find_output_by_name(ctx_.get(), n_output_, "raw_anomaly_map");
 
-    // --- Select score output: prefer name "pred_score", fallback to smallest n_elems ---
-    int score_output_idx = -1;
-    std::string selected_name;
-    uint32_t selected_n_elems = 0;
-    float selected_scale = 1.0f;
-    int32_t selected_zp = 0;
+    // Fallback: try legacy names for backward compatibility.
+    if (score_idx < 0)
+      score_idx = find_output_by_name(ctx_.get(), n_output_, "pred_score");
+    if (map_idx < 0)
+      map_idx = find_output_by_name(ctx_.get(), n_output_, "anomaly_map");
 
-    // First pass: look for output named "pred_score".
-    for (uint32_t i = 0; i < n_output_; ++i) {
-      rknn_tensor_attr attr{};
-      attr.index = i;
-      rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
-      if (std::string(attr.name) == "pred_score") {
-        score_output_idx = static_cast<int>(i);
-        selected_name = attr.name;
-        selected_n_elems = attr.n_elems;
-        selected_scale = attr.scale;
-        selected_zp = attr.zp;
-        break;
-      }
-    }
-
-    // Fallback: smallest n_elems.
-    if (score_output_idx < 0) {
-      uint32_t min_size = UINT32_MAX;
+    // Fallback: positional — score is smallest n_elems, map is largest.
+    if (score_idx < 0 || map_idx < 0) {
+      uint32_t min_elems = UINT32_MAX, max_elems = 0;
       for (uint32_t i = 0; i < n_output_; ++i) {
         rknn_tensor_attr attr{};
         attr.index = i;
         rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
-        if (attr.n_elems < min_size) {
-          min_size = attr.n_elems;
-          score_output_idx = static_cast<int>(i);
-          selected_name = attr.name;
-          selected_n_elems = attr.n_elems;
-          selected_scale = attr.scale;
-          selected_zp = attr.zp;
+        if (score_idx < 0 && attr.n_elems < min_elems) {
+          min_elems = attr.n_elems;
+          score_idx = static_cast<int>(i);
+        }
+        if (map_idx < 0 && attr.n_elems > max_elems) {
+          max_elems = attr.n_elems;
+          map_idx = static_cast<int>(i);
         }
       }
     }
 
-    // Manual INT8 dequantization: real_val = (raw_int8 - zero_point) * scale
-    float anomaly_score = 0.0f;
-    int8_t raw_score = 0;
-
-    if (score_output_idx >= 0 && outputs[score_output_idx].buf) {
-      raw_score = static_cast<int8_t*>(
-          outputs[score_output_idx].buf)[0];
-      anomaly_score = (static_cast<float>(raw_score) -
-                       static_cast<float>(selected_zp)) * selected_scale;
-      // Clamp to [0, +inf) — EfficientAD anomaly scores are non-negative.
-      if (anomaly_score < 0.0f) anomaly_score = 0.0f;
-    } else {
-      std::fprintf(stderr, "[T2] WARNING: no score output found\n");
+    if (score_idx < 0 || map_idx < 0 || !outputs[score_idx].buf || !outputs[map_idx].buf) {
+      std::fprintf(stderr,
+                   "[T2] ERROR: cannot locate score/map outputs "
+                   "(score_idx=%d map_idx=%d). Dropping frame %zu.\n",
+                   score_idx, map_idx,
+                   static_cast<std::size_t>(frame.frame_id));
+      rknn_outputs_release(ctx_.get(), n_output_, outputs.data());
+      continue;
     }
 
-    // Release output buffers.
+    // --- Query output attributes for dequantization ---
+    rknn_tensor_attr score_attr{};
+    score_attr.index = static_cast<uint32_t>(score_idx);
+    rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &score_attr, sizeof(score_attr));
+
+    rknn_tensor_attr map_attr{};
+    map_attr.index = static_cast<uint32_t>(map_idx);
+    rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &map_attr, sizeof(map_attr));
+
+    // --- Dequantize raw_score ---
+    float raw_score_val = 0.0f;
+    {
+      int8_t raw = static_cast<int8_t*>(outputs[score_idx].buf)[0];
+      raw_score_val = (static_cast<float>(raw) -
+                       static_cast<float>(score_attr.zp)) * score_attr.scale;
+    }
+
+    // --- Dequantize raw_anomaly_map ---
+    const uint32_t map_elems = map_attr.n_elems;
+    std::vector<float> map_float(map_elems);
+    dequantize_int8(outputs[map_idx].buf, map_elems,
+                    map_attr.zp, map_attr.scale, map_float.data());
+
+    // --- Compute multi-metric scores (Task 5) ---
+    float map_max_val = 0.0f;
+    float map_mean_val = 0.0f;
+    float map_top1_val = 0.0f;
+    float map_top01_val = 0.0f;
+
+    if (map_elems > 0) {
+      double sum = 0.0;
+      float  mx = map_float[0];
+      for (uint32_t i = 0; i < map_elems; ++i) {
+        float v = map_float[i];
+        sum += v;
+        if (v > mx) mx = v;
+      }
+      map_max_val = mx;
+      map_mean_val = static_cast<float>(sum / map_elems);
+
+      uint32_t top1_k  = std::max(1u, map_elems / 100);   // top 1%
+      uint32_t top01_k = std::max(1u, map_elems / 1000);   // top 0.1%
+      map_top1_val  = top_k_mean(map_float.data(), map_elems, top1_k);
+      map_top01_val = top_k_mean(map_float.data(), map_elems, top01_k);
+    }
+
+    // Release output buffers (map_float is a copy, safe to release).
     rknn_outputs_release(ctx_.get(), n_output_, outputs.data());
 
-    // Threshold lookup.
+    // --- Select final_score based on score_mode (Task 5) ---
+    float final_score = 0.0f;
+    switch (cfg_.efficientad_score_mode) {
+      case common::ScoreMode::kRawScore: final_score = raw_score_val; break;
+      case common::ScoreMode::kMapMax:   final_score = map_max_val;   break;
+      case common::ScoreMode::kMapMean:  final_score = map_mean_val;  break;
+      case common::ScoreMode::kMapTop1:  final_score = map_top1_val;  break;
+      case common::ScoreMode::kMapTop01: final_score = map_top01_val; break;
+    }
+
+    // --- Threshold lookup ---
     float threshold = cfg_.efficientad_threshold_default;
     auto it = cfg_.per_category_threshold.find(frame.category);
     if (it != cfg_.per_category_threshold.end()) {
       threshold = it->second;
     }
 
-    bool is_anomaly = anomaly_score > threshold;
+    // --- Gate decision (Task 6) ---
+    bool would_anomaly = final_score > threshold;
+    bool push_to_q2 = false;
+    const char* decision = "DROP";
 
-    // Enhanced per-frame log.
+    if (cfg_.efficientad_gate_mode == common::GateMode::kPassAll) {
+      push_to_q2 = true;
+      decision = would_anomaly ? "PASS_ALL_WOULD_UPLOAD" : "PASS_ALL_WOULD_DROP";
+    } else {
+      push_to_q2 = would_anomaly;
+      decision = would_anomaly ? "UPLOAD" : "DROP";
+    }
+
+    // --- Enhanced per-frame log (Task 7) ---
     std::fprintf(stderr,
-                 "[T2] frame %zu | img=%s\n"
-                 "      cat=%s | %dx%dx%d | rgb min/max/mean=%u/%u/%.1f\n"
-                 "      out[%d]='%s' n_elems=%u | raw=%d zp=%d scale=%.6f\n"
-                 "      dequant=%.4f | thr=%.2f | %s\n",
+                 "[T2] frame %zu | cat=%s | score_mode=%s | gate_mode=%s\n"
+                 "     raw_score=%.2f map_max=%.2f map_mean=%.2f "
+                 "map_top1=%.2f map_top01=%.2f\n"
+                 "     final_score=%.2f thr=%.2f decision=%s infer_ms=%.1f\n",
                  static_cast<std::size_t>(frame.frame_id),
-                 frame.image_path.c_str(),
                  frame.category.c_str(),
-                 img_w, img_h, 3,
-                 rgb_min, rgb_max, rgb_mean,
-                 score_output_idx, selected_name.c_str(), selected_n_elems,
-                 static_cast<int>(raw_score), selected_zp, selected_scale,
-                 anomaly_score, threshold,
-                 is_anomaly ? "UPLOAD" : "drop");
+                 common::score_mode_str(cfg_.efficientad_score_mode),
+                 common::gate_mode_str(cfg_.efficientad_gate_mode),
+                 raw_score_val, map_max_val, map_mean_val,
+                 map_top1_val, map_top01_val,
+                 final_score, threshold, decision, inference_ms);
 
     m_.ead_count.fetch_add(1, std::memory_order_relaxed);
 
-    if (!is_anomaly) continue;
+    if (!push_to_q2) continue;
 
-    // Push EadResult to Q2 for MockT3.
+    // Build EadResult and push to Q2.
     EadResult result;
     result.image_path = frame.image_path;
     result.category = frame.category;
@@ -314,9 +396,16 @@ void EadWorker::operator()(std::stop_token st) {
     result.line_id = frame.line_id;
     result.frame_id = frame.frame_id;
     result.frame_timestamp_us = frame.timestamp_us;
-    result.anomaly_score = anomaly_score;
+    result.raw_score = raw_score_val;
+    result.map_max = map_max_val;
+    result.map_mean = map_mean_val;
+    result.map_top1 = map_top1_val;
+    result.map_top01 = map_top01_val;
+    result.final_score = final_score;
     result.threshold = threshold;
-    result.is_anomaly = true;
+    result.is_anomaly = would_anomaly;
+    result.score_mode = static_cast<int8_t>(cfg_.efficientad_score_mode);
+    result.gate_mode = static_cast<int8_t>(cfg_.efficientad_gate_mode);
     result.inference_ms = inference_ms;
 
     out_.push_drop_oldest(std::move(result));
