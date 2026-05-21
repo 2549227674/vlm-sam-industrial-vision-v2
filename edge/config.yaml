@@ -49,38 +49,42 @@ efficientad_input_size: 256      # 固定 256×256，不要改
 # 默认阈值：anomaly_score > 此值时触发 FastSAM + VLM
 # NOTE:
 # Raw EfficientAD 输出不在旧 post_processor [0,1] 分数尺度上。
-# Phase 8A 已在 Orange Pi 板端用 RKNNLite 对 15 类 MVTec test split 做了全量校准。
-# 所有类别均存在 good/defect 分布重叠（AUROC < 0.80），阈值仅为工程起始值。
-efficientad_threshold_default: 12.31
+# Phase 8A + 8A-Fix 已在 Orange Pi 板端用 RKNNLite 对 15 类 MVTec test split
+# 做了全量校准，并比较了 5 种 score_mode。
+# 所有类别均存在 good/defect 分布重叠（AUROC < 0.80，tile 除外），
+# 阈值仅为工程起始值，T2 gate 定位为 load shedding gate。
+efficientad_threshold_default: 49.17
 # Score mode：从 raw anomaly map 中选择哪个指标作为 final_score
 # 可选值：raw_score, map_max, map_mean, map_top1, map_top01
-# Phase 8A 校准使用 map_mean。其他 score mode 尚未全量评估。
-efficientad_score_mode: map_mean
+# Phase 8A-Fix 比较：raw_score/map_max 平均 AUROC=0.5320（最佳），
+# map_mean 平均 AUROC=0.4561（最差）。delta=+0.0759，14/15 类 raw_score 优于 map_mean。
+efficientad_score_mode: raw_score
 # Gate mode：T2 如何决定将帧推入 Q2
 # 可选值：threshold（正式生产），pass_all（仅调试）
 efficientad_gate_mode: threshold
 # Preliminary thresholds calibrated on MVTec test split using Orange Pi RKNN raw EfficientAD.
 # Not production-certified.
-# Phase 8A: score_mode=map_mean, FP16/no-quant raw RKNN, 1725 test images, 0 failures.
-# All categories show severe good/defect overlap (AUROC < 0.80).
+# Phase 8A-Fix: score_mode=raw_score (best mean AUROC=0.5320),
+# per-category uses best mode for that category (raw_score/map_top1/map_top01).
+# T2 gate is a load shedding gate, not a detection gate.
 # Thresholds set to good_p95 to control ~5% good false positive rate.
 # Real production calibration required before deployment.
 per_category_threshold:
-  bottle: 12.31
-  cable: 13.44
-  capsule: 29.04
-  carpet: 18.22
-  grid: 29.95
-  hazelnut: 176.06
-  leather: 313.54
-  metal_nut: 42.56
-  pill: 73.02
-  screw: 12.90
-  tile: 13.39
-  toothbrush: 22.34
-  transistor: 64.36
-  wood: 446.51
-  zipper: 16.54
+  bottle: 49.17     # raw_score, AUROC=0.4972 (map_mean better at 0.7421 but raw is default)
+  cable: 99.84      # raw_score, AUROC=0.4822
+  capsule: 668.60   # raw_score, AUROC=0.4779
+  carpet: 38.70     # raw_score, AUROC=0.7887
+  grid: 46.72       # raw_score, AUROC=0.6099
+  hazelnut: 1142.50 # raw_score, AUROC=0.5673
+  leather: 619.70   # raw_score, AUROC=0.4693
+  metal_nut: 118.50 # map_top01 (best), AUROC=0.6197
+  pill: 218.69      # raw_score, AUROC=0.3682
+  screw: 25.76      # map_top1 (best), AUROC=0.5505
+  tile: 29.47       # map_top1 (best), AUROC=0.8488 — only category > 0.80
+  toothbrush: 429.01 # raw_score, AUROC=0.5250
+  transistor: 631.65 # raw_score, AUROC=0.3308
+  wood: 809.40      # raw_score, AUROC=0.4162
+  zipper: 36.42     # raw_score, AUROC=0.4766
 
 # ── Stage 2：FastSAM ──────────────────────────────
 fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s.rknn
