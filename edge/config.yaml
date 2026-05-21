@@ -46,34 +46,41 @@ efficientad_threshold: 0.5       # 异常分数超过此值触发 Stage 2/3（�
 efficientad_input_size: 256      # 固定 256×256，不要改
 
 # ── Stage 1：类别级自适应阈值 ─────────────────────
-# 默认阈值：anomaly_score > 0.50 时触发 FastSAM + VLM
+# 默认阈值：anomaly_score > 此值时触发 FastSAM + VLM
 # NOTE:
 # Raw EfficientAD 输出不在旧 post_processor [0,1] 分数尺度上。
-# efficientad_threshold_default=0.50 是旧 post_processor 尺度的占位值，
-# Phase 8 需要按 raw output 重新校准 per-category threshold。
-# 正式 gate mode 仍为 threshold，但类别阈值需更新后才能用于正式评估。
-efficientad_threshold_default: 0.50
+# Phase 8A 已在 Orange Pi 板端用 RKNNLite 对 15 类 MVTec test split 做了全量校准。
+# 所有类别均存在 good/defect 分布重叠（AUROC < 0.80），阈值仅为工程起始值。
+efficientad_threshold_default: 12.31
 # Score mode：从 raw anomaly map 中选择哪个指标作为 final_score
 # 可选值：raw_score, map_max, map_mean, map_top1, map_top01
-# 评估显示 map_mean 在多数类别上 AUROC 最佳。
+# Phase 8A 校准使用 map_mean。其他 score mode 尚未全量评估。
 efficientad_score_mode: map_mean
 # Gate mode：T2 如何决定将帧推入 Q2
 # 可选值：threshold（正式生产），pass_all（仅调试）
 efficientad_gate_mode: threshold
-# 类别级自适应阈值（覆盖默认值）
-# 以下阈值按 map_mean score_mode 校准。
-# capsule: image_AUROC=0.70，定位能力尚可但整图排序弱，降低阈值提高召回
-# 其余类别未配置则使用 default
+# Preliminary thresholds calibrated on MVTec test split using Orange Pi RKNN raw EfficientAD.
+# Not production-certified.
+# Phase 8A: score_mode=map_mean, FP16/no-quant raw RKNN, 1725 test images, 0 failures.
+# All categories show severe good/defect overlap (AUROC < 0.80).
+# Thresholds set to good_p95 to control ~5% good false positive rate.
+# Real production calibration required before deployment.
 per_category_threshold:
-  capsule: 0.30      # 系统性弱点类别，高召回策略
-  screw: 0.35        # 40ep 退化，采用 20ep(0.89)，略降阈值提高召回
-  # transistor: 0.50  # 40ep 后 AUROC=0.90，使用默认值
-  # toothbrush: 0.50  # 40ep 后 AUROC=0.91，使用默认值
-  # hazelnut: 0.50    # 40ep 后 AUROC=0.93，使用默认值
-  # cable: 0.50       # 40ep 后 AUROC=0.94，使用默认值
-# TODO(Phase 7)：C++ T2 Pipeline 需要读取 per_category_threshold，
-# 按当前帧 category 查表，找不到则 fallback 到 efficientad_threshold_default。
-# 当前 edge/config.yaml 已预置配置，等 C++ 实现后直接读取即可。
+  bottle: 12.31
+  cable: 13.44
+  capsule: 29.04
+  carpet: 18.22
+  grid: 29.95
+  hazelnut: 176.06
+  leather: 313.54
+  metal_nut: 42.56
+  pill: 73.02
+  screw: 12.90
+  tile: 13.39
+  toothbrush: 22.34
+  transistor: 64.36
+  wood: 446.51
+  zipper: 16.54
 
 # ── Stage 2：FastSAM ──────────────────────────────
 fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s.rknn

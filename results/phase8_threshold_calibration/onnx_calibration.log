@@ -1,0 +1,720 @@
+
+============================================================
+  bottle
+============================================================
+  [1/83] 000.png       elapsed=1s  ETA=98s    [2/83] 001.png       elapsed=2s  ETA=75s    [3/83] 002.png       elapsed=3s  ETA=76s    [4/83] 003.png       elapsed=4s  ETA=75s    [5/83] 004.png       elapsed=5s  ETA=73s    [6/83] 005.png       elapsed=6s  ETA=73s    [7/83] 006.png       elapsed=7s  ETA=75s    [8/83] 007.png       elapsed=8s  ETA=74s    [9/83] 008.png       elapsed=9s  ETA=71s    [10/83] 009.png       elapsed=10s  ETA=71s    [11/83] 010.png       elapsed=11s  ETA=69s    [12/83] 011.png       elapsed=12s  ETA=69s    [13/83] 012.png       elapsed=13s  ETA=68s    [14/83] 013.png       elapsed=13s  ETA=67s    [15/83] 014.png       elapsed=14s  ETA=65s    [16/83] 015.png       elapsed=15s  ETA=65s    [17/83] 016.png       elapsed=16s  ETA=63s    [18/83] 017.png       elapsed=17s  ETA=62s    [19/83] 018.png       elapsed=18s  ETA=62s    [20/83] 019.png       elapsed=19s  ETA=61s  
+  broken_large          n=  20  raw_score mean=   40.12  max=   72.97
+  [21/83] 000.png       elapsed=20s  ETA=60s    [22/83] 001.png       elapsed=21s  ETA=59s    [23/83] 002.png       elapsed=22s  ETA=58s    [24/83] 003.png       elapsed=23s  ETA=57s    [25/83] 004.png       elapsed=24s  ETA=56s    [26/83] 005.png       elapsed=25s  ETA=55s    [27/83] 006.png       elapsed=26s  ETA=54s    [28/83] 007.png       elapsed=27s  ETA=53s    [29/83] 008.png       elapsed=28s  ETA=52s    [30/83] 009.png       elapsed=29s  ETA=51s    [31/83] 010.png       elapsed=29s  ETA=49s    [32/83] 011.png       elapsed=30s  ETA=48s    [33/83] 012.png       elapsed=31s  ETA=47s    [34/83] 013.png       elapsed=32s  ETA=46s    [35/83] 014.png       elapsed=33s  ETA=45s    [36/83] 015.png       elapsed=33s  ETA=44s    [37/83] 016.png       elapsed=34s  ETA=43s    [38/83] 017.png       elapsed=35s  ETA=42s    [39/83] 018.png       elapsed=36s  ETA=41s    [40/83] 019.png       elapsed=37s  ETA=40s    [41/83] 020.png       elapsed=38s  ETA=39s    [42/83] 021.png       elapsed=39s  ETA=38s  
+  broken_small          n=  22  raw_score mean=   44.10  max=  157.82
+  [43/83] 000.png       elapsed=40s  ETA=37s    [44/83] 001.png       elapsed=41s  ETA=36s    [45/83] 002.png       elapsed=42s  ETA=35s    [46/83] 003.png       elapsed=43s  ETA=34s    [47/83] 004.png       elapsed=44s  ETA=33s    [48/83] 005.png       elapsed=44s  ETA=32s    [49/83] 006.png       elapsed=45s  ETA=31s    [50/83] 007.png       elapsed=46s  ETA=30s    [51/83] 008.png       elapsed=47s  ETA=29s    [52/83] 009.png       elapsed=48s  ETA=28s    [53/83] 010.png       elapsed=49s  ETA=28s    [54/83] 011.png       elapsed=50s  ETA=27s    [55/83] 012.png       elapsed=50s  ETA=26s    [56/83] 013.png       elapsed=51s  ETA=25s    [57/83] 014.png       elapsed=52s  ETA=24s    [58/83] 015.png       elapsed=53s  ETA=23s    [59/83] 016.png       elapsed=54s  ETA=22s    [60/83] 017.png       elapsed=55s  ETA=21s    [61/83] 018.png       elapsed=55s  ETA=20s    [62/83] 019.png       elapsed=56s  ETA=19s    [63/83] 020.png       elapsed=57s  ETA=18s  
+  contamination         n=  21  raw_score mean=  506.66  max= 4443.73
+  [64/83] 000.png       elapsed=58s  ETA=17s    [65/83] 001.png       elapsed=59s  ETA=16s    [66/83] 002.png       elapsed=60s  ETA=15s    [67/83] 003.png       elapsed=61s  ETA=14s    [68/83] 004.png       elapsed=62s  ETA=14s    [69/83] 005.png       elapsed=63s  ETA=13s    [70/83] 006.png       elapsed=64s  ETA=12s    [71/83] 007.png       elapsed=64s  ETA=11s    [72/83] 008.png       elapsed=65s  ETA=10s    [73/83] 009.png       elapsed=66s  ETA=9s    [74/83] 010.png       elapsed=67s  ETA=8s    [75/83] 011.png       elapsed=68s  ETA=7s    [76/83] 012.png       elapsed=69s  ETA=6s    [77/83] 013.png       elapsed=70s  ETA=5s    [78/83] 014.png       elapsed=71s  ETA=5s    [79/83] 015.png       elapsed=71s  ETA=4s    [80/83] 016.png       elapsed=72s  ETA=3s    [81/83] 017.png       elapsed=73s  ETA=2s    [82/83] 018.png       elapsed=74s  ETA=1s    [83/83] 019.png       elapsed=75s  ETA=0s  
+  good                  n=  20  raw_score mean=   37.34  max=   53.13
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      25.86     37.46     48.25     49.15     52.33     53.13
+  raw_score       DEFECT     25.84     33.29    197.34   1095.64   2925.82   4443.73
+  map_max          GOOD      25.86     37.46     48.25     49.15     52.33     53.13
+  map_max         DEFECT     25.84     33.29    197.34   1095.64   2925.82   4443.73
+  map_mean         GOOD      11.48     11.88     12.19     12.30     12.34     12.36
+  map_mean        DEFECT     11.47     12.11     17.90     33.07    132.53    253.54
+  map_top1         GOOD      22.76     26.80     33.38     34.40     35.01     35.16
+  map_top1        DEFECT     22.78     26.73    146.84    825.03   2056.07   3819.95
+  map_top01        GOOD      24.98     35.20     44.66     45.01     46.38     46.72
+  map_top01       DEFECT     24.75     32.10    185.48   1046.65   2699.82   4323.77
+
+  AUROC:
+    raw_score     0.4960
+    map_max       0.4960
+    map_mean      0.7421
+    map_top1      0.5183
+    map_top01     0.4976
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          25.84    1.0000    1.0000  
+  map_max            25.84    1.0000    1.0000  
+  map_mean           11.47    1.0000    1.0000  
+  map_top1           22.76    1.0000    1.0000  
+  map_top01          24.75    1.0000    1.0000  
+
+  >>> Recommended T2 config for 'bottle':
+      metric=raw_score  threshold=25.8356  recall=1.0000  fpr=1.0000
+
+============================================================
+  cable
+============================================================
+  [1/150] 000.png       elapsed=1s  ETA=139s    [2/150] 001.png       elapsed=2s  ETA=147s    [3/150] 002.png       elapsed=3s  ETA=165s    [4/150] 003.png       elapsed=4s  ETA=164s    [5/150] 004.png       elapsed=5s  ETA=157s    [6/150] 005.png       elapsed=7s  ETA=158s    [7/150] 006.png       elapsed=8s  ETA=156s    [8/150] 007.png       elapsed=9s  ETA=153s    [9/150] 008.png       elapsed=10s  ETA=157s    [10/150] 009.png       elapsed=11s  ETA=156s    [11/150] 010.png       elapsed=12s  ETA=154s    [12/150] 011.png       elapsed=13s  ETA=151s    [13/150] 012.png       elapsed=14s  ETA=150s  
+  bent_wire             n=  13  raw_score mean=   64.86  max=  106.63
+  [14/150] 000.png       elapsed=15s  ETA=146s    [15/150] 001.png       elapsed=16s  ETA=146s    [16/150] 002.png       elapsed=17s  ETA=144s    [17/150] 003.png       elapsed=18s  ETA=144s    [18/150] 004.png       elapsed=20s  ETA=144s    [19/150] 005.png       elapsed=21s  ETA=142s    [20/150] 006.png       elapsed=22s  ETA=141s    [21/150] 007.png       elapsed=23s  ETA=140s    [22/150] 008.png       elapsed=24s  ETA=140s    [23/150] 009.png       elapsed=25s  ETA=138s    [24/150] 010.png       elapsed=26s  ETA=139s    [25/150] 011.png       elapsed=27s  ETA=137s  
+  cable_swap            n=  12  raw_score mean=   57.00  max=   67.22
+  [26/150] 000.png       elapsed=28s  ETA=136s    [27/150] 001.png       elapsed=30s  ETA=135s    [28/150] 002.png       elapsed=31s  ETA=133s    [29/150] 003.png       elapsed=32s  ETA=132s    [30/150] 004.png       elapsed=33s  ETA=131s    [31/150] 005.png       elapsed=34s  ETA=130s    [32/150] 006.png       elapsed=35s  ETA=130s    [33/150] 007.png       elapsed=36s  ETA=129s    [34/150] 008.png       elapsed=37s  ETA=127s    [35/150] 009.png       elapsed=39s  ETA=127s    [36/150] 010.png       elapsed=40s  ETA=126s  
+  combined              n=  11  raw_score mean=   79.19  max=  151.20
+  [37/150] 000.png       elapsed=41s  ETA=125s    [38/150] 001.png       elapsed=42s  ETA=125s    [39/150] 002.png       elapsed=44s  ETA=124s    [40/150] 003.png       elapsed=45s  ETA=123s    [41/150] 004.png       elapsed=46s  ETA=123s    [42/150] 005.png       elapsed=47s  ETA=121s    [43/150] 006.png       elapsed=49s  ETA=121s    [44/150] 007.png       elapsed=50s  ETA=120s    [45/150] 008.png       elapsed=51s  ETA=119s    [46/150] 009.png       elapsed=52s  ETA=118s    [47/150] 010.png       elapsed=53s  ETA=117s    [48/150] 011.png       elapsed=54s  ETA=115s    [49/150] 012.png       elapsed=55s  ETA=114s    [50/150] 013.png       elapsed=57s  ETA=113s  
+  cut_inner_insulation  n=  14  raw_score mean=   70.35  max=  111.09
+  [51/150] 000.png       elapsed=58s  ETA=112s    [52/150] 001.png       elapsed=59s  ETA=111s    [53/150] 002.png       elapsed=60s  ETA=110s    [54/150] 003.png       elapsed=61s  ETA=109s    [55/150] 004.png       elapsed=62s  ETA=107s    [56/150] 005.png       elapsed=63s  ETA=107s    [57/150] 006.png       elapsed=65s  ETA=106s    [58/150] 007.png       elapsed=66s  ETA=105s    [59/150] 008.png       elapsed=67s  ETA=104s    [60/150] 009.png       elapsed=68s  ETA=102s  
+  cut_outer_insulation  n=  10  raw_score mean=   53.43  max=   59.81
+  [61/150] 000.png       elapsed=69s  ETA=101s    [62/150] 001.png       elapsed=70s  ETA=100s    [63/150] 002.png       elapsed=71s  ETA=98s    [64/150] 003.png       elapsed=72s  ETA=97s    [65/150] 004.png       elapsed=73s  ETA=96s    [66/150] 005.png       elapsed=74s  ETA=94s    [67/150] 006.png       elapsed=76s  ETA=94s    [68/150] 007.png       elapsed=77s  ETA=92s    [69/150] 008.png       elapsed=78s  ETA=91s    [70/150] 009.png       elapsed=79s  ETA=90s    [71/150] 010.png       elapsed=80s  ETA=90s    [72/150] 011.png       elapsed=81s  ETA=88s    [73/150] 012.png       elapsed=83s  ETA=87s    [74/150] 013.png       elapsed=84s  ETA=86s    [75/150] 014.png       elapsed=85s  ETA=85s    [76/150] 015.png       elapsed=86s  ETA=83s    [77/150] 016.png       elapsed=87s  ETA=82s    [78/150] 017.png       elapsed=88s  ETA=81s    [79/150] 018.png       elapsed=89s  ETA=80s    [80/150] 019.png       elapsed=90s  ETA=79s    [81/150] 020.png       elapsed=91s  ETA=78s    [82/150] 021.png       elapsed=93s  ETA=77s    [83/150] 022.png       elapsed=94s  ETA=76s    [84/150] 023.png       elapsed=95s  ETA=74s    [85/150] 024.png       elapsed=96s  ETA=73s    [86/150] 025.png       elapsed=97s  ETA=72s    [87/150] 026.png       elapsed=98s  ETA=71s    [88/150] 027.png       elapsed=99s  ETA=70s    [89/150] 028.png       elapsed=100s  ETA=69s    [90/150] 029.png       elapsed=101s  ETA=67s    [91/150] 030.png       elapsed=102s  ETA=66s    [92/150] 031.png       elapsed=103s  ETA=65s    [93/150] 032.png       elapsed=104s  ETA=64s    [94/150] 033.png       elapsed=106s  ETA=63s    [95/150] 034.png       elapsed=107s  ETA=62s    [96/150] 035.png       elapsed=108s  ETA=61s    [97/150] 036.png       elapsed=109s  ETA=59s    [98/150] 037.png       elapsed=110s  ETA=58s    [99/150] 038.png       elapsed=111s  ETA=57s    [100/150] 039.png       elapsed=112s  ETA=56s    [101/150] 040.png       elapsed=113s  ETA=55s    [102/150] 041.png       elapsed=113s  ETA=53s    [103/150] 042.png       elapsed=115s  ETA=52s    [104/150] 043.png       elapsed=116s  ETA=51s    [105/150] 044.png       elapsed=117s  ETA=50s    [106/150] 045.png       elapsed=118s  ETA=49s    [107/150] 046.png       elapsed=119s  ETA=48s    [108/150] 047.png       elapsed=120s  ETA=47s    [109/150] 048.png       elapsed=121s  ETA=45s    [110/150] 049.png       elapsed=122s  ETA=44s    [111/150] 050.png       elapsed=123s  ETA=43s    [112/150] 051.png       elapsed=124s  ETA=42s    [113/150] 052.png       elapsed=125s  ETA=41s    [114/150] 053.png       elapsed=126s  ETA=40s    [115/150] 054.png       elapsed=127s  ETA=39s    [116/150] 055.png       elapsed=128s  ETA=38s    [117/150] 056.png       elapsed=129s  ETA=37s    [118/150] 057.png       elapsed=130s  ETA=35s  
+  good                  n=  58  raw_score mean=   63.87  max=  154.84
+  [119/150] 000.png       elapsed=131s  ETA=34s    [120/150] 001.png       elapsed=133s  ETA=33s    [121/150] 002.png       elapsed=134s  ETA=32s    [122/150] 003.png       elapsed=135s  ETA=31s    [123/150] 004.png       elapsed=136s  ETA=30s    [124/150] 005.png       elapsed=137s  ETA=29s    [125/150] 006.png       elapsed=138s  ETA=28s    [126/150] 007.png       elapsed=140s  ETA=27s    [127/150] 008.png       elapsed=141s  ETA=26s    [128/150] 009.png       elapsed=142s  ETA=24s    [129/150] 010.png       elapsed=144s  ETA=23s    [130/150] 011.png       elapsed=145s  ETA=22s  
+  missing_cable         n=  12  raw_score mean=   56.39  max=   89.15
+  [131/150] 000.png       elapsed=146s  ETA=21s    [132/150] 001.png       elapsed=147s  ETA=20s    [133/150] 002.png       elapsed=148s  ETA=19s    [134/150] 003.png       elapsed=149s  ETA=18s    [135/150] 004.png       elapsed=151s  ETA=17s    [136/150] 005.png       elapsed=152s  ETA=16s    [137/150] 006.png       elapsed=153s  ETA=15s    [138/150] 007.png       elapsed=154s  ETA=13s    [139/150] 008.png       elapsed=155s  ETA=12s    [140/150] 009.png       elapsed=157s  ETA=11s  
+  missing_wire          n=  10  raw_score mean=   69.30  max=  113.28
+  [141/150] 000.png       elapsed=158s  ETA=10s    [142/150] 001.png       elapsed=160s  ETA=9s    [143/150] 002.png       elapsed=161s  ETA=8s    [144/150] 003.png       elapsed=162s  ETA=7s    [145/150] 004.png       elapsed=163s  ETA=6s    [146/150] 005.png       elapsed=164s  ETA=5s    [147/150] 006.png       elapsed=165s  ETA=3s    [148/150] 007.png       elapsed=166s  ETA=2s    [149/150] 008.png       elapsed=167s  ETA=1s    [150/150] 009.png       elapsed=169s  ETA=0s  
+  poke_insulation       n=  10  raw_score mean=   51.49  max=   64.11
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      45.01     55.93     89.98     99.75    131.41    154.84
+  raw_score       DEFECT     42.02     56.31     93.33    106.46    130.28    151.20
+  map_max          GOOD      45.01     55.93     89.98     99.75    131.41    154.84
+  map_max         DEFECT     42.02     56.31     93.33    106.46    130.28    151.20
+  map_mean         GOOD      10.54     11.60     12.70     13.44     14.37     14.53
+  map_mean        DEFECT     10.03     11.61     13.49     14.23     14.88     15.25
+  map_top1         GOOD      40.61     46.29     62.31     70.76     89.29     99.33
+  map_top1        DEFECT     36.01     46.36     64.31     75.00     98.38    105.15
+  map_top01        GOOD      44.02     53.50     83.65     93.34    123.93    146.01
+  map_top01       DEFECT     40.95     53.98     88.42    101.26    125.11    141.29
+
+  AUROC:
+    raw_score     0.4814
+    map_max       0.4814
+    map_mean      0.4955
+    map_top1      0.4685
+    map_top01     0.4766
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          45.99    0.9565    0.9828  
+  map_max            45.99    0.9565    0.9828  
+  map_mean           10.32    0.9565    1.0000  
+  map_top1           40.53    0.9565    1.0000  
+  map_top01          44.11    0.9674    0.9828  
+
+  >>> Recommended T2 config for 'cable':
+      metric=raw_score  threshold=45.9865  recall=0.9565  fpr=0.9828
+
+============================================================
+  capsule
+============================================================
+  [1/132] 000.png       elapsed=1s  ETA=111s    [2/132] 001.png       elapsed=2s  ETA=139s    [3/132] 002.png       elapsed=3s  ETA=138s    [4/132] 003.png       elapsed=4s  ETA=142s    [5/132] 004.png       elapsed=5s  ETA=137s    [6/132] 005.png       elapsed=6s  ETA=136s    [7/132] 006.png       elapsed=8s  ETA=137s    [8/132] 007.png       elapsed=9s  ETA=137s    [9/132] 008.png       elapsed=10s  ETA=133s    [10/132] 009.png       elapsed=11s  ETA=133s    [11/132] 010.png       elapsed=12s  ETA=129s    [12/132] 011.png       elapsed=13s  ETA=131s    [13/132] 012.png       elapsed=14s  ETA=132s    [14/132] 013.png       elapsed=16s  ETA=133s    [15/132] 014.png       elapsed=17s  ETA=133s    [16/132] 015.png       elapsed=18s  ETA=131s    [17/132] 016.png       elapsed=19s  ETA=130s    [18/132] 017.png       elapsed=20s  ETA=130s    [19/132] 018.png       elapsed=22s  ETA=129s    [20/132] 019.png       elapsed=23s  ETA=127s    [21/132] 020.png       elapsed=24s  ETA=127s    [22/132] 021.png       elapsed=25s  ETA=127s    [23/132] 022.png       elapsed=27s  ETA=127s  
+  crack                 n=  23  raw_score mean=  531.14  max=  706.50
+  [24/132] 000.png       elapsed=28s  ETA=126s    [25/132] 001.png       elapsed=29s  ETA=124s    [26/132] 002.png       elapsed=30s  ETA=124s    [27/132] 003.png       elapsed=31s  ETA=122s    [28/132] 004.png       elapsed=33s  ETA=121s    [29/132] 005.png       elapsed=34s  ETA=120s    [30/132] 006.png       elapsed=35s  ETA=118s    [31/132] 007.png       elapsed=36s  ETA=116s    [32/132] 008.png       elapsed=37s  ETA=115s    [33/132] 009.png       elapsed=38s  ETA=114s    [34/132] 010.png       elapsed=39s  ETA=113s    [35/132] 011.png       elapsed=41s  ETA=112s    [36/132] 012.png       elapsed=42s  ETA=111s    [37/132] 013.png       elapsed=43s  ETA=110s    [38/132] 014.png       elapsed=44s  ETA=109s    [39/132] 015.png       elapsed=46s  ETA=109s    [40/132] 016.png       elapsed=47s  ETA=108s    [41/132] 017.png       elapsed=48s  ETA=106s    [42/132] 018.png       elapsed=49s  ETA=105s    [43/132] 019.png       elapsed=51s  ETA=105s    [44/132] 020.png       elapsed=52s  ETA=103s    [45/132] 021.png       elapsed=53s  ETA=102s  
+  faulty_imprint        n=  22  raw_score mean=  509.32  max=  592.83
+  [46/132] 000.png       elapsed=54s  ETA=101s    [47/132] 001.png       elapsed=57s  ETA=103s    [48/132] 002.png       elapsed=59s  ETA=103s    [49/132] 003.png       elapsed=61s  ETA=104s    [50/132] 004.png       elapsed=64s  ETA=104s    [51/132] 005.png       elapsed=66s  ETA=105s    [52/132] 006.png       elapsed=68s  ETA=105s    [53/132] 007.png       elapsed=71s  ETA=105s    [54/132] 008.png       elapsed=73s  ETA=105s    [55/132] 009.png       elapsed=74s  ETA=104s    [56/132] 010.png       elapsed=76s  ETA=103s    [57/132] 011.png       elapsed=78s  ETA=103s    [58/132] 012.png       elapsed=80s  ETA=103s    [59/132] 013.png       elapsed=83s  ETA=102s    [60/132] 014.png       elapsed=84s  ETA=101s    [61/132] 015.png       elapsed=86s  ETA=100s    [62/132] 016.png       elapsed=88s  ETA=99s    [63/132] 017.png       elapsed=89s  ETA=97s    [64/132] 018.png       elapsed=90s  ETA=95s    [65/132] 019.png       elapsed=91s  ETA=94s    [66/132] 020.png       elapsed=92s  ETA=92s    [67/132] 021.png       elapsed=94s  ETA=91s    [68/132] 022.png       elapsed=95s  ETA=89s  
+  good                  n=  23  raw_score mean=  525.44  max=  693.33
+  [69/132] 000.png       elapsed=96s  ETA=88s    [70/132] 001.png       elapsed=97s  ETA=86s    [71/132] 002.png       elapsed=98s  ETA=85s    [72/132] 003.png       elapsed=99s  ETA=83s    [73/132] 004.png       elapsed=101s  ETA=81s    [74/132] 005.png       elapsed=102s  ETA=80s    [75/132] 006.png       elapsed=103s  ETA=78s    [76/132] 007.png       elapsed=104s  ETA=77s    [77/132] 008.png       elapsed=105s  ETA=75s    [78/132] 009.png       elapsed=107s  ETA=74s    [79/132] 010.png       elapsed=108s  ETA=72s    [80/132] 011.png       elapsed=109s  ETA=71s    [81/132] 012.png       elapsed=110s  ETA=69s    [82/132] 013.png       elapsed=111s  ETA=67s    [83/132] 014.png       elapsed=111s  ETA=66s    [84/132] 015.png       elapsed=113s  ETA=65s    [85/132] 016.png       elapsed=114s  ETA=63s    [86/132] 017.png       elapsed=116s  ETA=62s    [87/132] 018.png       elapsed=117s  ETA=61s    [88/132] 019.png       elapsed=118s  ETA=59s    [89/132] 020.png       elapsed=119s  ETA=58s  
+  poke                  n=  21  raw_score mean=  502.75  max=  719.68
+  [90/132] 000.png       elapsed=121s  ETA=56s    [91/132] 001.png       elapsed=121s  ETA=55s    [92/132] 002.png       elapsed=123s  ETA=53s    [93/132] 003.png       elapsed=124s  ETA=52s    [94/132] 004.png       elapsed=125s  ETA=50s    [95/132] 005.png       elapsed=126s  ETA=49s    [96/132] 006.png       elapsed=128s  ETA=48s    [97/132] 007.png       elapsed=129s  ETA=47s    [98/132] 008.png       elapsed=130s  ETA=45s    [99/132] 009.png       elapsed=131s  ETA=44s    [100/132] 010.png       elapsed=132s  ETA=42s    [101/132] 011.png       elapsed=133s  ETA=41s    [102/132] 012.png       elapsed=134s  ETA=39s    [103/132] 013.png       elapsed=135s  ETA=38s    [104/132] 014.png       elapsed=136s  ETA=37s    [105/132] 015.png       elapsed=137s  ETA=35s    [106/132] 016.png       elapsed=138s  ETA=34s    [107/132] 017.png       elapsed=139s  ETA=32s    [108/132] 018.png       elapsed=140s  ETA=31s    [109/132] 019.png       elapsed=141s  ETA=30s    [110/132] 020.png       elapsed=142s  ETA=28s    [111/132] 021.png       elapsed=144s  ETA=27s    [112/132] 022.png       elapsed=145s  ETA=26s  
+  scratch               n=  23  raw_score mean=  510.74  max=  705.29
+  [113/132] 000.png       elapsed=146s  ETA=25s    [114/132] 001.png       elapsed=147s  ETA=23s    [115/132] 002.png       elapsed=148s  ETA=22s    [116/132] 003.png       elapsed=149s  ETA=21s    [117/132] 004.png       elapsed=150s  ETA=19s    [118/132] 005.png       elapsed=151s  ETA=18s    [119/132] 006.png       elapsed=152s  ETA=17s    [120/132] 007.png       elapsed=153s  ETA=15s    [121/132] 008.png       elapsed=155s  ETA=14s    [122/132] 009.png       elapsed=156s  ETA=13s    [123/132] 010.png       elapsed=157s  ETA=12s    [124/132] 011.png       elapsed=158s  ETA=10s    [125/132] 012.png       elapsed=160s  ETA=9s    [126/132] 013.png       elapsed=161s  ETA=8s    [127/132] 014.png       elapsed=162s  ETA=6s    [128/132] 015.png       elapsed=164s  ETA=5s    [129/132] 016.png       elapsed=165s  ETA=4s    [130/132] 017.png       elapsed=166s  ETA=3s    [131/132] 018.png       elapsed=167s  ETA=1s    [132/132] 019.png       elapsed=169s  ETA=0s  
+  squeeze               n=  20  raw_score mean=  520.07  max=  835.01
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD     379.60    514.31    662.60    668.87    688.04    693.33
+  raw_score       DEFECT    342.23    512.61    644.71    687.84    718.62    835.01
+  map_max          GOOD     379.60    514.31    662.60    668.87    688.04    693.33
+  map_max         DEFECT    342.23    512.61    644.71    687.84    718.62    835.01
+  map_mean         GOOD      21.94     26.47     27.95     29.03     30.38     30.73
+  map_mean        DEFECT     17.42     25.04     28.60     30.98     35.50     36.34
+  map_top1         GOOD     328.42    440.24    531.62    545.27    568.01    574.05
+  map_top1        DEFECT    306.14    434.05    543.86    566.00    594.41    678.98
+  map_top01        GOOD     367.67    499.48    642.10    649.33    672.13    678.36
+  map_top01       DEFECT    332.78    501.86    625.89    669.39    700.46    812.83
+
+  AUROC:
+    raw_score     0.4779
+    map_max       0.4779
+    map_mean      0.3941
+    map_top1      0.4495
+    map_top01     0.4759
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score         391.76    0.9541    0.9130  
+  map_max           391.76    0.9541    0.9130  
+  map_mean           20.18    0.9541    1.0000  
+  map_top1          332.37    0.9541    0.9565  
+  map_top01         381.03    0.9633    0.9130  
+
+  >>> Recommended T2 config for 'capsule':
+      metric=raw_score  threshold=391.7568  recall=0.9541  fpr=0.9130
+
+============================================================
+  carpet
+============================================================
+  [1/117] 000.png       elapsed=3s  ETA=386s    [2/117] 001.png       elapsed=7s  ETA=377s    [3/117] 002.png       elapsed=10s  ETA=370s    [4/117] 003.png       elapsed=13s  ETA=365s    [5/117] 004.png       elapsed=16s  ETA=357s    [6/117] 005.png       elapsed=19s  ETA=349s    [7/117] 006.png       elapsed=22s  ETA=346s    [8/117] 007.png       elapsed=25s  ETA=338s    [9/117] 008.png       elapsed=28s  ETA=334s    [10/117] 009.png       elapsed=31s  ETA=330s    [11/117] 010.png       elapsed=34s  ETA=324s    [12/117] 011.png       elapsed=37s  ETA=323s    [13/117] 012.png       elapsed=40s  ETA=318s    [14/117] 013.png       elapsed=43s  ETA=314s    [15/117] 014.png       elapsed=45s  ETA=309s    [16/117] 015.png       elapsed=48s  ETA=305s    [17/117] 016.png       elapsed=51s  ETA=301s    [18/117] 017.png       elapsed=54s  ETA=297s    [19/117] 018.png       elapsed=57s  ETA=293s  
+  color                 n=  19  raw_score mean=   51.79  max=  130.20
+  [20/117] 000.png       elapsed=60s  ETA=289s    [21/117] 001.png       elapsed=63s  ETA=286s    [22/117] 002.png       elapsed=65s  ETA=282s    [23/117] 003.png       elapsed=68s  ETA=278s    [24/117] 004.png       elapsed=71s  ETA=276s    [25/117] 005.png       elapsed=74s  ETA=273s    [26/117] 006.png       elapsed=77s  ETA=270s    [27/117] 007.png       elapsed=80s  ETA=267s    [28/117] 008.png       elapsed=83s  ETA=264s    [29/117] 009.png       elapsed=86s  ETA=260s    [30/117] 010.png       elapsed=89s  ETA=257s    [31/117] 011.png       elapsed=92s  ETA=255s    [32/117] 012.png       elapsed=95s  ETA=252s    [33/117] 013.png       elapsed=98s  ETA=249s    [34/117] 014.png       elapsed=101s  ETA=246s    [35/117] 015.png       elapsed=104s  ETA=243s    [36/117] 016.png       elapsed=107s  ETA=240s  
+  cut                   n=  17  raw_score mean=   41.35  max=   48.54
+  [37/117] 000.png       elapsed=109s  ETA=237s    [38/117] 001.png       elapsed=112s  ETA=233s    [39/117] 002.png       elapsed=115s  ETA=230s    [40/117] 003.png       elapsed=118s  ETA=227s    [41/117] 004.png       elapsed=121s  ETA=224s    [42/117] 005.png       elapsed=123s  ETA=220s    [43/117] 006.png       elapsed=126s  ETA=217s    [44/117] 007.png       elapsed=129s  ETA=214s    [45/117] 008.png       elapsed=133s  ETA=212s    [46/117] 009.png       elapsed=135s  ETA=209s    [47/117] 010.png       elapsed=138s  ETA=205s    [48/117] 011.png       elapsed=141s  ETA=203s    [49/117] 012.png       elapsed=144s  ETA=200s    [50/117] 013.png       elapsed=147s  ETA=197s    [51/117] 014.png       elapsed=150s  ETA=194s    [52/117] 015.png       elapsed=153s  ETA=191s    [53/117] 016.png       elapsed=155s  ETA=188s    [54/117] 017.png       elapsed=158s  ETA=185s    [55/117] 018.png       elapsed=161s  ETA=182s    [56/117] 019.png       elapsed=164s  ETA=179s    [57/117] 020.png       elapsed=167s  ETA=176s    [58/117] 021.png       elapsed=170s  ETA=173s    [59/117] 022.png       elapsed=173s  ETA=170s    [60/117] 023.png       elapsed=176s  ETA=167s    [61/117] 024.png       elapsed=179s  ETA=164s    [62/117] 025.png       elapsed=182s  ETA=161s    [63/117] 026.png       elapsed=185s  ETA=158s    [64/117] 027.png       elapsed=188s  ETA=156s  
+  good                  n=  28  raw_score mean=   36.03  max=   39.86
+  [65/117] 000.png       elapsed=191s  ETA=153s    [66/117] 001.png       elapsed=194s  ETA=150s    [67/117] 002.png       elapsed=198s  ETA=147s    [68/117] 003.png       elapsed=201s  ETA=145s    [69/117] 004.png       elapsed=204s  ETA=142s    [70/117] 005.png       elapsed=207s  ETA=139s    [71/117] 006.png       elapsed=210s  ETA=136s    [72/117] 007.png       elapsed=213s  ETA=133s    [73/117] 008.png       elapsed=216s  ETA=130s    [74/117] 009.png       elapsed=219s  ETA=127s    [75/117] 010.png       elapsed=222s  ETA=124s    [76/117] 011.png       elapsed=225s  ETA=121s    [77/117] 012.png       elapsed=228s  ETA=118s    [78/117] 013.png       elapsed=231s  ETA=115s    [79/117] 014.png       elapsed=234s  ETA=113s    [80/117] 015.png       elapsed=237s  ETA=110s    [81/117] 016.png       elapsed=241s  ETA=107s  
+  hole                  n=  17  raw_score mean=   42.58  max=   63.80
+  [82/117] 000.png       elapsed=244s  ETA=104s    [83/117] 001.png       elapsed=247s  ETA=101s    [84/117] 002.png       elapsed=250s  ETA=98s    [85/117] 003.png       elapsed=253s  ETA=95s    [86/117] 004.png       elapsed=256s  ETA=92s    [87/117] 005.png       elapsed=259s  ETA=89s    [88/117] 006.png       elapsed=263s  ETA=87s    [89/117] 007.png       elapsed=266s  ETA=84s    [90/117] 008.png       elapsed=269s  ETA=81s    [91/117] 009.png       elapsed=272s  ETA=78s    [92/117] 010.png       elapsed=276s  ETA=75s    [93/117] 011.png       elapsed=278s  ETA=72s    [94/117] 012.png       elapsed=282s  ETA=69s    [95/117] 013.png       elapsed=285s  ETA=66s    [96/117] 014.png       elapsed=288s  ETA=63s    [97/117] 015.png       elapsed=291s  ETA=60s    [98/117] 016.png       elapsed=294s  ETA=57s  
+  metal_contamination   n=  17  raw_score mean=   41.98  max=   45.87
+  [99/117] 000.png       elapsed=297s  ETA=54s    [100/117] 001.png       elapsed=300s  ETA=51s    [101/117] 002.png       elapsed=303s  ETA=48s    [102/117] 003.png       elapsed=306s  ETA=45s    [103/117] 004.png       elapsed=309s  ETA=42s    [104/117] 005.png       elapsed=312s  ETA=39s    [105/117] 006.png       elapsed=316s  ETA=36s    [106/117] 007.png       elapsed=319s  ETA=33s    [107/117] 008.png       elapsed=322s  ETA=30s    [108/117] 009.png       elapsed=325s  ETA=27s    [109/117] 010.png       elapsed=328s  ETA=24s    [110/117] 011.png       elapsed=331s  ETA=21s    [111/117] 012.png       elapsed=334s  ETA=18s    [112/117] 013.png       elapsed=337s  ETA=15s    [113/117] 014.png       elapsed=340s  ETA=12s    [114/117] 015.png       elapsed=344s  ETA=9s    [115/117] 016.png       elapsed=347s  ETA=6s    [116/117] 017.png       elapsed=350s  ETA=3s    [117/117] 018.png       elapsed=353s  ETA=0s  
+  thread                n=  19  raw_score mean=   34.31  max=   39.81
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      31.73     36.24     38.06     38.67     39.59     39.86
+  raw_score       DEFECT     27.53     40.25     50.72     61.52     80.71    130.20
+  map_max          GOOD      31.73     36.24     38.06     38.67     39.59     39.86
+  map_max         DEFECT     27.53     40.25     50.72     61.52     80.71    130.20
+  map_mean         GOOD      15.53     17.23     18.15     18.20     18.60     18.74
+  map_mean        DEFECT     14.38     18.73     20.84     21.39     22.79     23.48
+  map_top1         GOOD      28.87     32.52     33.89     34.27     36.06     36.67
+  map_top1        DEFECT     25.79     35.51     40.32     44.35     59.84     65.05
+  map_top01        GOOD      30.56     34.99     36.44     37.48     38.71     39.05
+  map_top01       DEFECT     26.63     38.52     46.11     56.73     71.95    113.99
+
+  AUROC:
+    raw_score     0.7889
+    map_max       0.7889
+    map_mean      0.7267
+    map_top1      0.7468
+    map_top01     0.7604
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          30.63    0.9551    1.0000  
+  map_max            30.63    0.9551    1.0000  
+  map_mean           14.83    0.9663    1.0000  
+  map_top1           27.37    0.9551    1.0000  
+  map_top01          29.71    0.9551    1.0000  
+
+  >>> Recommended T2 config for 'carpet':
+      metric=raw_score  threshold=30.6264  recall=0.9551  fpr=1.0000
+
+============================================================
+  grid
+============================================================
+  [1/78] 000.png       elapsed=3s  ETA=246s    [2/78] 001.png       elapsed=6s  ETA=236s    [3/78] 002.png       elapsed=9s  ETA=221s    [4/78] 003.png       elapsed=11s  ETA=212s    [5/78] 004.png       elapsed=15s  ETA=212s    [6/78] 005.png       elapsed=18s  ETA=212s    [7/78] 006.png       elapsed=21s  ETA=210s    [8/78] 007.png       elapsed=24s  ETA=208s    [9/78] 008.png       elapsed=27s  ETA=206s    [10/78] 009.png       elapsed=30s  ETA=204s    [11/78] 010.png       elapsed=33s  ETA=204s    [12/78] 011.png       elapsed=37s  ETA=201s  
+  bent                  n=  12  raw_score mean=   40.68  max=   47.66
+  [13/78] 000.png       elapsed=39s  ETA=197s    [14/78] 001.png       elapsed=42s  ETA=193s    [15/78] 002.png       elapsed=45s  ETA=190s    [16/78] 003.png       elapsed=48s  ETA=185s    [17/78] 004.png       elapsed=51s  ETA=182s    [18/78] 005.png       elapsed=53s  ETA=178s    [19/78] 006.png       elapsed=56s  ETA=174s    [20/78] 007.png       elapsed=59s  ETA=172s    [21/78] 008.png       elapsed=63s  ETA=170s    [22/78] 009.png       elapsed=65s  ETA=166s    [23/78] 010.png       elapsed=68s  ETA=164s    [24/78] 011.png       elapsed=71s  ETA=160s  
+  broken                n=  12  raw_score mean=   41.44  max=   51.19
+  [25/78] 000.png       elapsed=74s  ETA=157s    [26/78] 001.png       elapsed=77s  ETA=154s    [27/78] 002.png       elapsed=80s  ETA=151s    [28/78] 003.png       elapsed=83s  ETA=148s    [29/78] 004.png       elapsed=86s  ETA=145s    [30/78] 005.png       elapsed=89s  ETA=142s    [31/78] 006.png       elapsed=92s  ETA=139s    [32/78] 007.png       elapsed=94s  ETA=136s    [33/78] 008.png       elapsed=98s  ETA=133s    [34/78] 009.png       elapsed=100s  ETA=130s    [35/78] 010.png       elapsed=103s  ETA=126s  
+  glue                  n=  11  raw_score mean=   35.64  max=   44.94
+  [36/78] 000.png       elapsed=105s  ETA=123s    [37/78] 001.png       elapsed=108s  ETA=120s    [38/78] 002.png       elapsed=111s  ETA=117s    [39/78] 003.png       elapsed=114s  ETA=114s    [40/78] 004.png       elapsed=116s  ETA=110s    [41/78] 005.png       elapsed=119s  ETA=107s    [42/78] 006.png       elapsed=122s  ETA=105s    [43/78] 007.png       elapsed=126s  ETA=102s    [44/78] 008.png       elapsed=130s  ETA=100s    [45/78] 009.png       elapsed=133s  ETA=98s    [46/78] 010.png       elapsed=137s  ETA=95s    [47/78] 011.png       elapsed=140s  ETA=92s    [48/78] 012.png       elapsed=144s  ETA=90s    [49/78] 013.png       elapsed=148s  ETA=87s    [50/78] 014.png       elapsed=151s  ETA=85s    [51/78] 015.png       elapsed=155s  ETA=82s    [52/78] 016.png       elapsed=159s  ETA=79s    [53/78] 017.png       elapsed=162s  ETA=76s    [54/78] 018.png       elapsed=166s  ETA=74s    [55/78] 019.png       elapsed=170s  ETA=71s    [56/78] 020.png       elapsed=173s  ETA=68s  
+  good                  n=  21  raw_score mean=   40.14  max=   50.50
+  [57/78] 000.png       elapsed=177s  ETA=65s    [58/78] 001.png       elapsed=180s  ETA=62s    [59/78] 002.png       elapsed=183s  ETA=59s    [60/78] 003.png       elapsed=187s  ETA=56s    [61/78] 004.png       elapsed=189s  ETA=53s    [62/78] 005.png       elapsed=192s  ETA=50s    [63/78] 006.png       elapsed=195s  ETA=46s    [64/78] 007.png       elapsed=198s  ETA=43s    [65/78] 008.png       elapsed=200s  ETA=40s    [66/78] 009.png       elapsed=203s  ETA=37s    [67/78] 010.png       elapsed=206s  ETA=34s  
+  metal_contamination   n=  11  raw_score mean=   47.44  max=   61.10
+  [68/78] 000.png       elapsed=209s  ETA=31s    [69/78] 001.png       elapsed=212s  ETA=28s    [70/78] 002.png       elapsed=214s  ETA=25s    [71/78] 003.png       elapsed=217s  ETA=21s    [72/78] 004.png       elapsed=220s  ETA=18s    [73/78] 005.png       elapsed=224s  ETA=15s    [74/78] 006.png       elapsed=227s  ETA=12s    [75/78] 007.png       elapsed=230s  ETA=9s    [76/78] 008.png       elapsed=233s  ETA=6s    [77/78] 009.png       elapsed=237s  ETA=3s    [78/78] 010.png       elapsed=240s  ETA=0s  
+  thread                n=  11  raw_score mean=   62.66  max=   97.52
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      31.39     40.23     46.48     46.71     49.74     50.50
+  raw_score       DEFECT     27.63     42.93     61.32     66.28     94.54     97.52
+  map_max          GOOD      31.39     40.23     46.48     46.71     49.74     50.50
+  map_max         DEFECT     27.63     42.93     61.32     66.28     94.54     97.52
+  map_mean         GOOD      18.46     23.75     29.30     29.94     30.90     31.14
+  map_mean        DEFECT     14.97     20.57     26.58     26.93     28.50     29.39
+  map_top1         GOOD      28.36     38.33     43.72     44.85     46.80     47.29
+  map_top1        DEFECT     26.37     37.01     48.38     54.74     75.05     75.58
+  map_top01        GOOD      29.53     39.46     45.28     45.97     48.27     48.85
+  map_top01       DEFECT     27.11     41.20     58.22     62.40     89.97     90.58
+
+  AUROC:
+    raw_score     0.6099
+    map_max       0.6099
+    map_mean      0.2857
+    map_top1      0.4754
+    map_top01     0.5806
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          30.79    0.9649    1.0000  
+  map_max            30.79    0.9649    1.0000  
+  map_mean           15.78    0.9649    1.0000  
+  map_top1           27.86    0.9825    1.0000  
+  map_top01          29.67    0.9649    0.9524  
+
+  >>> Recommended T2 config for 'grid':
+      metric=map_top01  threshold=29.6651  recall=0.9649  fpr=0.9524
+
+============================================================
+  hazelnut
+============================================================
+  [1/110] 000.png       elapsed=2s  ETA=267s    [2/110] 001.png       elapsed=5s  ETA=270s    [3/110] 002.png       elapsed=7s  ETA=259s    [4/110] 003.png       elapsed=10s  ETA=253s    [5/110] 004.png       elapsed=12s  ETA=259s    [6/110] 005.png       elapsed=15s  ETA=253s    [7/110] 006.png       elapsed=17s  ETA=249s    [8/110] 007.png       elapsed=19s  ETA=243s    [9/110] 008.png       elapsed=21s  ETA=237s    [10/110] 009.png       elapsed=23s  ETA=232s    [11/110] 010.png       elapsed=25s  ETA=227s    [12/110] 011.png       elapsed=27s  ETA=223s    [13/110] 012.png       elapsed=29s  ETA=220s    [14/110] 013.png       elapsed=31s  ETA=215s    [15/110] 014.png       elapsed=33s  ETA=212s    [16/110] 015.png       elapsed=36s  ETA=209s    [17/110] 016.png       elapsed=38s  ETA=207s    [18/110] 017.png       elapsed=40s  ETA=204s  
+  crack                 n=  18  raw_score mean=  727.97  max= 1245.53
+  [19/110] 000.png       elapsed=42s  ETA=201s    [20/110] 001.png       elapsed=44s  ETA=199s    [21/110] 002.png       elapsed=46s  ETA=196s    [22/110] 003.png       elapsed=49s  ETA=194s    [23/110] 004.png       elapsed=51s  ETA=191s    [24/110] 005.png       elapsed=53s  ETA=189s    [25/110] 006.png       elapsed=55s  ETA=187s    [26/110] 007.png       elapsed=57s  ETA=184s    [27/110] 008.png       elapsed=59s  ETA=181s    [28/110] 009.png       elapsed=61s  ETA=179s    [29/110] 010.png       elapsed=64s  ETA=177s    [30/110] 011.png       elapsed=66s  ETA=176s    [31/110] 012.png       elapsed=68s  ETA=174s    [32/110] 013.png       elapsed=70s  ETA=171s    [33/110] 014.png       elapsed=73s  ETA=169s    [34/110] 015.png       elapsed=75s  ETA=167s    [35/110] 016.png       elapsed=77s  ETA=165s  
+  cut                   n=  17  raw_score mean=  868.58  max= 1419.70
+  [36/110] 000.png       elapsed=79s  ETA=162s    [37/110] 001.png       elapsed=81s  ETA=160s    [38/110] 002.png       elapsed=83s  ETA=158s    [39/110] 003.png       elapsed=86s  ETA=156s    [40/110] 004.png       elapsed=88s  ETA=153s    [41/110] 005.png       elapsed=90s  ETA=151s    [42/110] 006.png       elapsed=92s  ETA=149s    [43/110] 007.png       elapsed=94s  ETA=146s    [44/110] 008.png       elapsed=96s  ETA=144s    [45/110] 009.png       elapsed=98s  ETA=141s    [46/110] 010.png       elapsed=100s  ETA=139s    [47/110] 011.png       elapsed=102s  ETA=137s    [48/110] 012.png       elapsed=104s  ETA=135s    [49/110] 013.png       elapsed=107s  ETA=133s    [50/110] 014.png       elapsed=109s  ETA=131s    [51/110] 015.png       elapsed=112s  ETA=129s    [52/110] 016.png       elapsed=114s  ETA=127s    [53/110] 017.png       elapsed=117s  ETA=125s    [54/110] 018.png       elapsed=119s  ETA=124s    [55/110] 019.png       elapsed=122s  ETA=122s    [56/110] 020.png       elapsed=124s  ETA=120s    [57/110] 021.png       elapsed=127s  ETA=118s    [58/110] 022.png       elapsed=129s  ETA=116s    [59/110] 023.png       elapsed=131s  ETA=114s    [60/110] 024.png       elapsed=134s  ETA=111s    [61/110] 025.png       elapsed=136s  ETA=109s    [62/110] 026.png       elapsed=138s  ETA=107s    [63/110] 027.png       elapsed=140s  ETA=105s    [64/110] 028.png       elapsed=142s  ETA=102s    [65/110] 029.png       elapsed=145s  ETA=100s    [66/110] 030.png       elapsed=147s  ETA=98s    [67/110] 031.png       elapsed=149s  ETA=96s    [68/110] 032.png       elapsed=152s  ETA=94s    [69/110] 033.png       elapsed=154s  ETA=91s    [70/110] 034.png       elapsed=156s  ETA=89s    [71/110] 035.png       elapsed=158s  ETA=87s    [72/110] 036.png       elapsed=160s  ETA=85s    [73/110] 037.png       elapsed=163s  ETA=83s    [74/110] 038.png       elapsed=165s  ETA=80s    [75/110] 039.png       elapsed=167s  ETA=78s  
+  good                  n=  40  raw_score mean=  778.03  max= 1344.17
+  [76/110] 000.png       elapsed=169s  ETA=76s    [77/110] 001.png       elapsed=171s  ETA=73s    [78/110] 002.png       elapsed=174s  ETA=71s    [79/110] 003.png       elapsed=176s  ETA=69s    [80/110] 004.png       elapsed=178s  ETA=67s    [81/110] 005.png       elapsed=180s  ETA=65s    [82/110] 006.png       elapsed=183s  ETA=62s    [83/110] 007.png       elapsed=185s  ETA=60s    [84/110] 008.png       elapsed=188s  ETA=58s    [85/110] 009.png       elapsed=190s  ETA=56s    [86/110] 010.png       elapsed=193s  ETA=54s    [87/110] 011.png       elapsed=195s  ETA=51s    [88/110] 012.png       elapsed=197s  ETA=49s    [89/110] 013.png       elapsed=199s  ETA=47s    [90/110] 014.png       elapsed=201s  ETA=45s    [91/110] 015.png       elapsed=204s  ETA=43s    [92/110] 016.png       elapsed=206s  ETA=40s    [93/110] 017.png       elapsed=209s  ETA=38s  
+  hole                  n=  18  raw_score mean=  797.94  max= 1143.14
+  [94/110] 000.png       elapsed=211s  ETA=36s    [95/110] 001.png       elapsed=214s  ETA=34s    [96/110] 002.png       elapsed=216s  ETA=32s    [97/110] 003.png       elapsed=218s  ETA=29s    [98/110] 004.png       elapsed=220s  ETA=27s    [99/110] 005.png       elapsed=222s  ETA=25s    [100/110] 006.png       elapsed=225s  ETA=22s    [101/110] 007.png       elapsed=227s  ETA=20s    [102/110] 008.png       elapsed=229s  ETA=18s    [103/110] 009.png       elapsed=232s  ETA=16s    [104/110] 010.png       elapsed=234s  ETA=14s    [105/110] 011.png       elapsed=237s  ETA=11s    [106/110] 012.png       elapsed=239s  ETA=9s    [107/110] 013.png       elapsed=242s  ETA=7s    [108/110] 014.png       elapsed=245s  ETA=5s    [109/110] 015.png       elapsed=247s  ETA=2s    [110/110] 016.png       elapsed=250s  ETA=0s  
+  print                 n=  17  raw_score mean=  989.46  max= 1579.41
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD     420.72    720.20   1071.72   1142.80   1298.86   1344.17
+  raw_score       DEFECT    421.04    809.96   1147.04   1310.36   1569.31   1579.41
+  map_max          GOOD     420.72    720.20   1071.72   1142.80   1298.86   1344.17
+  map_max         DEFECT    421.04    809.96   1147.04   1310.36   1569.31   1579.41
+  map_mean         GOOD      67.06    118.41    167.90    175.89    187.78    193.86
+  map_mean        DEFECT     71.35    119.80    154.40    168.04    201.02    212.82
+  map_top1         GOOD     365.82    691.71   1008.32   1075.69   1184.74   1200.81
+  map_top1        DEFECT    361.26    751.16   1104.11   1227.93   1435.43   1531.53
+  map_top01        GOOD     410.52    715.73   1063.53   1135.58   1281.08   1321.95
+  map_top01       DEFECT    408.64    801.92   1139.67   1295.11   1552.45   1569.73
+
+  AUROC:
+    raw_score     0.5675
+    map_max       0.5675
+    map_mean      0.5111
+    map_top1      0.5582
+    map_top01     0.5661
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score         478.94    0.9571    0.9500  
+  map_max           478.94    0.9571    0.9500  
+  map_mean           74.38    0.9571    0.9750  
+  map_top1          431.83    0.9714    0.9750  
+  map_top01         478.65    0.9571    0.9500  
+
+  >>> Recommended T2 config for 'hazelnut':
+      metric=raw_score  threshold=478.9416  recall=0.9571  fpr=0.9500
+
+============================================================
+  leather
+============================================================
+  [1/124] 000.png       elapsed=2s  ETA=218s    [2/124] 001.png       elapsed=3s  ETA=209s    [3/124] 002.png       elapsed=5s  ETA=220s    [4/124] 003.png       elapsed=7s  ETA=221s    [5/124] 004.png       elapsed=9s  ETA=216s    [6/124] 005.png       elapsed=11s  ETA=212s    [7/124] 006.png       elapsed=12s  ETA=207s    [8/124] 007.png       elapsed=15s  ETA=211s    [9/124] 008.png       elapsed=16s  ETA=209s    [10/124] 009.png       elapsed=18s  ETA=207s    [11/124] 010.png       elapsed=20s  ETA=207s    [12/124] 011.png       elapsed=22s  ETA=208s    [13/124] 012.png       elapsed=24s  ETA=205s    [14/124] 013.png       elapsed=26s  ETA=206s    [15/124] 014.png       elapsed=29s  ETA=207s    [16/124] 015.png       elapsed=30s  ETA=202s    [17/124] 016.png       elapsed=32s  ETA=199s    [18/124] 017.png       elapsed=33s  ETA=196s    [19/124] 018.png       elapsed=35s  ETA=196s  
+  color                 n=  19  raw_score mean=  572.42  max=  834.36
+  [20/124] 000.png       elapsed=37s  ETA=195s    [21/124] 001.png       elapsed=39s  ETA=193s    [22/124] 002.png       elapsed=41s  ETA=191s    [23/124] 003.png       elapsed=43s  ETA=191s    [24/124] 004.png       elapsed=46s  ETA=190s    [25/124] 005.png       elapsed=47s  ETA=188s    [26/124] 006.png       elapsed=49s  ETA=186s    [27/124] 007.png       elapsed=51s  ETA=184s    [28/124] 008.png       elapsed=53s  ETA=182s    [29/124] 009.png       elapsed=55s  ETA=179s    [30/124] 010.png       elapsed=57s  ETA=178s    [31/124] 011.png       elapsed=59s  ETA=176s    [32/124] 012.png       elapsed=60s  ETA=174s    [33/124] 013.png       elapsed=62s  ETA=171s    [34/124] 014.png       elapsed=64s  ETA=170s    [35/124] 015.png       elapsed=67s  ETA=170s    [36/124] 016.png       elapsed=69s  ETA=168s    [37/124] 017.png       elapsed=71s  ETA=167s    [38/124] 018.png       elapsed=73s  ETA=165s  
+  cut                   n=  19  raw_score mean=  520.52  max=  631.47
+  [39/124] 000.png       elapsed=75s  ETA=163s    [40/124] 001.png       elapsed=77s  ETA=162s    [41/124] 002.png       elapsed=79s  ETA=159s    [42/124] 003.png       elapsed=81s  ETA=157s    [43/124] 004.png       elapsed=82s  ETA=155s    [44/124] 005.png       elapsed=84s  ETA=153s    [45/124] 006.png       elapsed=86s  ETA=151s    [46/124] 007.png       elapsed=87s  ETA=148s    [47/124] 008.png       elapsed=89s  ETA=146s    [48/124] 009.png       elapsed=91s  ETA=144s    [49/124] 010.png       elapsed=93s  ETA=143s    [50/124] 011.png       elapsed=95s  ETA=141s    [51/124] 012.png       elapsed=97s  ETA=139s    [52/124] 013.png       elapsed=99s  ETA=137s    [53/124] 014.png       elapsed=101s  ETA=135s    [54/124] 015.png       elapsed=103s  ETA=133s    [55/124] 016.png       elapsed=105s  ETA=131s  
+  fold                  n=  17  raw_score mean=  588.63  max=  840.50
+  [56/124] 000.png       elapsed=107s  ETA=129s    [57/124] 001.png       elapsed=108s  ETA=127s    [58/124] 002.png       elapsed=110s  ETA=125s    [59/124] 003.png       elapsed=112s  ETA=123s    [60/124] 004.png       elapsed=114s  ETA=122s    [61/124] 005.png       elapsed=116s  ETA=120s    [62/124] 006.png       elapsed=118s  ETA=118s    [63/124] 007.png       elapsed=120s  ETA=116s    [64/124] 008.png       elapsed=121s  ETA=114s    [65/124] 009.png       elapsed=123s  ETA=112s    [66/124] 010.png       elapsed=125s  ETA=110s    [67/124] 011.png       elapsed=127s  ETA=108s    [68/124] 012.png       elapsed=128s  ETA=106s    [69/124] 013.png       elapsed=130s  ETA=104s    [70/124] 014.png       elapsed=132s  ETA=101s    [71/124] 015.png       elapsed=133s  ETA=99s    [72/124] 016.png       elapsed=135s  ETA=97s    [73/124] 017.png       elapsed=137s  ETA=96s    [74/124] 018.png       elapsed=139s  ETA=94s  
+  glue                  n=  19  raw_score mean=  588.73  max= 1120.72
+  [75/124] 000.png       elapsed=141s  ETA=92s    [76/124] 001.png       elapsed=143s  ETA=90s    [77/124] 002.png       elapsed=144s  ETA=88s    [78/124] 003.png       elapsed=146s  ETA=86s    [79/124] 004.png       elapsed=148s  ETA=84s    [80/124] 005.png       elapsed=150s  ETA=83s    [81/124] 006.png       elapsed=152s  ETA=81s    [82/124] 007.png       elapsed=154s  ETA=79s    [83/124] 008.png       elapsed=155s  ETA=77s    [84/124] 009.png       elapsed=157s  ETA=75s    [85/124] 010.png       elapsed=159s  ETA=73s    [86/124] 011.png       elapsed=161s  ETA=71s    [87/124] 012.png       elapsed=162s  ETA=69s    [88/124] 013.png       elapsed=164s  ETA=67s    [89/124] 014.png       elapsed=166s  ETA=65s    [90/124] 015.png       elapsed=168s  ETA=63s    [91/124] 016.png       elapsed=169s  ETA=61s    [92/124] 017.png       elapsed=171s  ETA=59s    [93/124] 018.png       elapsed=172s  ETA=57s    [94/124] 019.png       elapsed=174s  ETA=55s    [95/124] 020.png       elapsed=176s  ETA=54s    [96/124] 021.png       elapsed=177s  ETA=52s    [97/124] 022.png       elapsed=179s  ETA=50s    [98/124] 023.png       elapsed=181s  ETA=48s    [99/124] 024.png       elapsed=182s  ETA=46s    [100/124] 025.png       elapsed=184s  ETA=44s    [101/124] 026.png       elapsed=186s  ETA=42s    [102/124] 027.png       elapsed=188s  ETA=40s    [103/124] 028.png       elapsed=189s  ETA=39s    [104/124] 029.png       elapsed=191s  ETA=37s    [105/124] 030.png       elapsed=193s  ETA=35s    [106/124] 031.png       elapsed=194s  ETA=33s  
+  good                  n=  32  raw_score mean=  587.02  max=  674.91
+  [107/124] 000.png       elapsed=197s  ETA=31s    [108/124] 001.png       elapsed=198s  ETA=29s    [109/124] 002.png       elapsed=201s  ETA=28s    [110/124] 003.png       elapsed=203s  ETA=26s    [111/124] 004.png       elapsed=205s  ETA=24s    [112/124] 005.png       elapsed=207s  ETA=22s    [113/124] 006.png       elapsed=209s  ETA=20s    [114/124] 007.png       elapsed=211s  ETA=19s    [115/124] 008.png       elapsed=213s  ETA=17s    [116/124] 009.png       elapsed=215s  ETA=15s    [117/124] 010.png       elapsed=217s  ETA=13s    [118/124] 011.png       elapsed=219s  ETA=11s    [119/124] 012.png       elapsed=221s  ETA=9s    [120/124] 013.png       elapsed=224s  ETA=7s    [121/124] 014.png       elapsed=226s  ETA=6s    [122/124] 015.png       elapsed=228s  ETA=4s    [123/124] 016.png       elapsed=230s  ETA=2s    [124/124] 017.png       elapsed=232s  ETA=0s  
+  poke                  n=  18  raw_score mean=  694.55  max=  799.08
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD     500.29    601.04    640.48    650.87    668.39    674.91
+  raw_score       DEFECT    430.39    563.62    733.07    787.70    865.72   1120.72
+  map_max          GOOD     500.29    601.04    640.48    650.87    668.39    674.91
+  map_max         DEFECT    430.39    563.62    733.07    787.70    865.72   1120.72
+  map_mean         GOOD     234.07    297.55    315.94    321.38    326.93    328.92
+  map_mean        DEFECT    205.93    257.11    337.50    352.72    372.48    391.63
+  map_top1         GOOD     453.11    559.53    597.14    615.62    637.86    646.65
+  map_top1        DEFECT    389.27    521.37    665.64    695.32    714.89    737.36
+  map_top01        GOOD     483.99    591.99    628.08    635.93    658.84    666.32
+  map_top01       DEFECT    420.39    549.60    723.84    752.76    831.50    996.76
+
+  AUROC:
+    raw_score     0.4654
+    map_max       0.4654
+    map_mean      0.3512
+    map_top1      0.4243
+    map_top01     0.4562
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score         447.74    0.9565    1.0000  
+  map_max           447.74    0.9565    1.0000  
+  map_mean          224.60    0.9674    1.0000  
+  map_top1          415.51    0.9565    1.0000  
+  map_top01         440.67    0.9565    1.0000  
+
+  >>> Recommended T2 config for 'leather':
+      metric=raw_score  threshold=447.7365  recall=0.9565  fpr=1.0000
+
+============================================================
+  metal_nut
+============================================================
+  [1/115] 000.png       elapsed=1s  ETA=89s    [2/115] 001.png       elapsed=2s  ETA=87s    [3/115] 002.png       elapsed=2s  ETA=84s    [4/115] 003.png       elapsed=3s  ETA=83s    [5/115] 004.png       elapsed=4s  ETA=82s    [6/115] 005.png       elapsed=4s  ETA=81s    [7/115] 006.png       elapsed=5s  ETA=80s    [8/115] 007.png       elapsed=6s  ETA=80s    [9/115] 008.png       elapsed=7s  ETA=79s    [10/115] 009.png       elapsed=7s  ETA=78s    [11/115] 010.png       elapsed=8s  ETA=77s    [12/115] 011.png       elapsed=9s  ETA=77s    [13/115] 012.png       elapsed=10s  ETA=76s    [14/115] 013.png       elapsed=10s  ETA=76s    [15/115] 014.png       elapsed=11s  ETA=75s    [16/115] 015.png       elapsed=12s  ETA=75s    [17/115] 016.png       elapsed=13s  ETA=75s    [18/115] 017.png       elapsed=14s  ETA=74s    [19/115] 018.png       elapsed=14s  ETA=73s    [20/115] 019.png       elapsed=15s  ETA=73s    [21/115] 020.png       elapsed=16s  ETA=72s    [22/115] 021.png       elapsed=17s  ETA=71s    [23/115] 022.png       elapsed=18s  ETA=71s    [24/115] 023.png       elapsed=19s  ETA=71s    [25/115] 024.png       elapsed=19s  ETA=70s  
+  bent                  n=  25  raw_score mean=  113.62  max=  122.28
+  [26/115] 000.png       elapsed=20s  ETA=69s    [27/115] 001.png       elapsed=21s  ETA=69s    [28/115] 002.png       elapsed=22s  ETA=68s    [29/115] 003.png       elapsed=23s  ETA=67s    [30/115] 004.png       elapsed=23s  ETA=66s    [31/115] 005.png       elapsed=24s  ETA=65s    [32/115] 006.png       elapsed=25s  ETA=64s    [33/115] 007.png       elapsed=25s  ETA=63s    [34/115] 008.png       elapsed=26s  ETA=62s    [35/115] 009.png       elapsed=27s  ETA=61s    [36/115] 010.png       elapsed=28s  ETA=60s    [37/115] 011.png       elapsed=28s  ETA=60s    [38/115] 012.png       elapsed=29s  ETA=59s    [39/115] 013.png       elapsed=30s  ETA=58s    [40/115] 014.png       elapsed=31s  ETA=57s    [41/115] 015.png       elapsed=31s  ETA=57s    [42/115] 016.png       elapsed=32s  ETA=56s    [43/115] 017.png       elapsed=33s  ETA=55s    [44/115] 018.png       elapsed=34s  ETA=54s    [45/115] 019.png       elapsed=34s  ETA=53s    [46/115] 020.png       elapsed=35s  ETA=53s    [47/115] 021.png       elapsed=36s  ETA=52s  
+  color                 n=  22  raw_score mean=  243.02  max= 1674.06
+  [48/115] 000.png       elapsed=37s  ETA=51s    [49/115] 001.png       elapsed=37s  ETA=50s    [50/115] 002.png       elapsed=38s  ETA=50s    [51/115] 003.png       elapsed=39s  ETA=49s    [52/115] 004.png       elapsed=40s  ETA=48s    [53/115] 005.png       elapsed=40s  ETA=47s    [54/115] 006.png       elapsed=41s  ETA=46s    [55/115] 007.png       elapsed=42s  ETA=46s    [56/115] 008.png       elapsed=43s  ETA=45s    [57/115] 009.png       elapsed=43s  ETA=44s    [58/115] 010.png       elapsed=44s  ETA=43s    [59/115] 011.png       elapsed=45s  ETA=43s    [60/115] 012.png       elapsed=46s  ETA=43s    [61/115] 013.png       elapsed=47s  ETA=42s    [62/115] 014.png       elapsed=48s  ETA=41s    [63/115] 015.png       elapsed=49s  ETA=40s    [64/115] 016.png       elapsed=49s  ETA=39s    [65/115] 017.png       elapsed=50s  ETA=39s    [66/115] 018.png       elapsed=51s  ETA=38s    [67/115] 019.png       elapsed=52s  ETA=37s    [68/115] 020.png       elapsed=52s  ETA=36s    [69/115] 021.png       elapsed=53s  ETA=35s    [70/115] 022.png       elapsed=54s  ETA=35s  
+  flip                  n=  23  raw_score mean=  121.89  max=  130.55
+  [71/115] 000.png       elapsed=55s  ETA=34s    [72/115] 001.png       elapsed=55s  ETA=33s    [73/115] 002.png       elapsed=56s  ETA=32s    [74/115] 003.png       elapsed=57s  ETA=32s    [75/115] 004.png       elapsed=58s  ETA=31s    [76/115] 005.png       elapsed=59s  ETA=30s    [77/115] 006.png       elapsed=59s  ETA=29s    [78/115] 007.png       elapsed=60s  ETA=28s    [79/115] 008.png       elapsed=61s  ETA=28s    [80/115] 009.png       elapsed=61s  ETA=27s    [81/115] 010.png       elapsed=62s  ETA=26s    [82/115] 011.png       elapsed=63s  ETA=25s    [83/115] 012.png       elapsed=64s  ETA=24s    [84/115] 013.png       elapsed=64s  ETA=24s    [85/115] 014.png       elapsed=65s  ETA=23s    [86/115] 015.png       elapsed=66s  ETA=22s    [87/115] 016.png       elapsed=68s  ETA=22s    [88/115] 017.png       elapsed=69s  ETA=21s    [89/115] 018.png       elapsed=70s  ETA=20s    [90/115] 019.png       elapsed=71s  ETA=20s    [91/115] 020.png       elapsed=72s  ETA=19s    [92/115] 021.png       elapsed=72s  ETA=18s  
+  good                  n=  22  raw_score mean=  114.09  max=  120.24
+  [93/115] 000.png       elapsed=73s  ETA=17s    [94/115] 001.png       elapsed=74s  ETA=17s    [95/115] 002.png       elapsed=75s  ETA=16s    [96/115] 003.png       elapsed=76s  ETA=15s    [97/115] 004.png       elapsed=77s  ETA=14s    [98/115] 005.png       elapsed=78s  ETA=13s    [99/115] 006.png       elapsed=79s  ETA=13s    [100/115] 007.png       elapsed=79s  ETA=12s    [101/115] 008.png       elapsed=81s  ETA=11s    [102/115] 009.png       elapsed=81s  ETA=10s    [103/115] 010.png       elapsed=82s  ETA=10s    [104/115] 011.png       elapsed=83s  ETA=9s    [105/115] 012.png       elapsed=84s  ETA=8s    [106/115] 013.png       elapsed=85s  ETA=7s    [107/115] 014.png       elapsed=86s  ETA=6s    [108/115] 015.png       elapsed=86s  ETA=6s    [109/115] 016.png       elapsed=87s  ETA=5s    [110/115] 017.png       elapsed=88s  ETA=4s    [111/115] 018.png       elapsed=89s  ETA=3s    [112/115] 019.png       elapsed=90s  ETA=2s    [113/115] 020.png       elapsed=90s  ETA=2s    [114/115] 021.png       elapsed=91s  ETA=1s    [115/115] 022.png       elapsed=92s  ETA=0s  
+  scratch               n=  23  raw_score mean=  117.74  max=  134.80
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD     104.75    115.00    118.50    119.33    120.06    120.24
+  raw_score       DEFECT    107.62    115.76    130.73    212.07    711.21   1674.06
+  map_max          GOOD     104.75    115.00    118.50    119.33    120.06    120.24
+  map_max         DEFECT    107.62    115.76    130.73    212.07    711.21   1674.06
+  map_mean         GOOD      37.79     40.20     41.50     42.57     42.65     42.66
+  map_mean        DEFECT     35.21     40.52     45.74     46.66     47.42     47.91
+  map_top1         GOOD     103.21    112.43    115.60    116.95    117.26    117.32
+  map_top1        DEFECT    105.39    113.21    127.53    132.57    386.77    804.78
+  map_top01        GOOD     104.18    114.29    117.78    118.45    119.33    119.55
+  map_top01       DEFECT    107.17    114.91    130.29    192.59    654.88   1521.30
+
+  AUROC:
+    raw_score     0.6158
+    map_max       0.6158
+    map_mean      0.5533
+    map_top1      0.6061
+    map_top01     0.6183
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score         104.75    1.0000    1.0000  
+  map_max           104.75    1.0000    1.0000  
+  map_mean           36.74    0.9570    1.0000  
+  map_top1          106.74    0.9785    0.9091  
+  map_top01         104.18    1.0000    1.0000  
+
+  >>> Recommended T2 config for 'metal_nut':
+      metric=map_top1  threshold=106.7403  recall=0.9785  fpr=0.9091
+
+============================================================
+  pill
+============================================================
+  [1/167] 000.png       elapsed=1s  ETA=157s    [2/167] 001.png       elapsed=2s  ETA=142s    [3/167] 002.png       elapsed=2s  ETA=128s    [4/167] 003.png       elapsed=3s  ETA=134s    [5/167] 004.png       elapsed=4s  ETA=139s    [6/167] 005.png       elapsed=5s  ETA=147s    [7/167] 006.png       elapsed=6s  ETA=148s    [8/167] 007.png       elapsed=7s  ETA=145s    [9/167] 008.png       elapsed=8s  ETA=145s    [10/167] 009.png       elapsed=9s  ETA=144s    [11/167] 010.png       elapsed=10s  ETA=140s    [12/167] 011.png       elapsed=11s  ETA=137s    [13/167] 012.png       elapsed=11s  ETA=133s    [14/167] 013.png       elapsed=12s  ETA=134s    [15/167] 014.png       elapsed=13s  ETA=131s    [16/167] 015.png       elapsed=14s  ETA=132s    [17/167] 016.png       elapsed=15s  ETA=131s    [18/167] 017.png       elapsed=16s  ETA=128s    [19/167] 018.png       elapsed=16s  ETA=125s    [20/167] 019.png       elapsed=17s  ETA=125s    [21/167] 020.png       elapsed=18s  ETA=125s    [22/167] 021.png       elapsed=19s  ETA=122s    [23/167] 022.png       elapsed=19s  ETA=121s    [24/167] 023.png       elapsed=20s  ETA=120s    [25/167] 024.png       elapsed=21s  ETA=119s  
+  color                 n=  25  raw_score mean=  122.53  max=  476.48
+  [26/167] 000.png       elapsed=22s  ETA=117s    [27/167] 001.png       elapsed=22s  ETA=116s    [28/167] 002.png       elapsed=23s  ETA=114s    [29/167] 003.png       elapsed=24s  ETA=113s    [30/167] 004.png       elapsed=24s  ETA=112s    [31/167] 005.png       elapsed=25s  ETA=111s    [32/167] 006.png       elapsed=26s  ETA=110s    [33/167] 007.png       elapsed=27s  ETA=110s    [34/167] 008.png       elapsed=28s  ETA=110s    [35/167] 009.png       elapsed=29s  ETA=110s    [36/167] 010.png       elapsed=30s  ETA=109s    [37/167] 011.png       elapsed=31s  ETA=110s    [38/167] 012.png       elapsed=32s  ETA=109s    [39/167] 013.png       elapsed=33s  ETA=107s    [40/167] 014.png       elapsed=33s  ETA=105s    [41/167] 015.png       elapsed=34s  ETA=105s    [42/167] 016.png       elapsed=35s  ETA=104s  
+  combined              n=  17  raw_score mean=   78.03  max=   97.98
+  [43/167] 000.png       elapsed=36s  ETA=104s    [44/167] 001.png       elapsed=37s  ETA=102s    [45/167] 002.png       elapsed=37s  ETA=101s    [46/167] 003.png       elapsed=38s  ETA=100s    [47/167] 004.png       elapsed=39s  ETA=100s    [48/167] 005.png       elapsed=40s  ETA=100s    [49/167] 006.png       elapsed=41s  ETA=100s    [50/167] 007.png       elapsed=42s  ETA=99s    [51/167] 008.png       elapsed=44s  ETA=99s    [52/167] 009.png       elapsed=45s  ETA=99s    [53/167] 010.png       elapsed=45s  ETA=98s    [54/167] 011.png       elapsed=46s  ETA=97s    [55/167] 012.png       elapsed=47s  ETA=97s    [56/167] 013.png       elapsed=49s  ETA=96s    [57/167] 014.png       elapsed=50s  ETA=96s    [58/167] 015.png       elapsed=51s  ETA=95s    [59/167] 016.png       elapsed=51s  ETA=94s    [60/167] 017.png       elapsed=52s  ETA=93s    [61/167] 018.png       elapsed=53s  ETA=92s    [62/167] 019.png       elapsed=54s  ETA=91s    [63/167] 020.png       elapsed=54s  ETA=90s  
+  contamination         n=  21  raw_score mean=   91.23  max=  106.25
+  [64/167] 000.png       elapsed=55s  ETA=88s    [65/167] 001.png       elapsed=56s  ETA=88s    [66/167] 002.png       elapsed=57s  ETA=87s    [67/167] 003.png       elapsed=58s  ETA=86s    [68/167] 004.png       elapsed=58s  ETA=85s    [69/167] 005.png       elapsed=59s  ETA=83s    [70/167] 006.png       elapsed=59s  ETA=82s    [71/167] 007.png       elapsed=60s  ETA=82s    [72/167] 008.png       elapsed=61s  ETA=81s    [73/167] 009.png       elapsed=62s  ETA=79s    [74/167] 010.png       elapsed=63s  ETA=79s    [75/167] 011.png       elapsed=63s  ETA=78s    [76/167] 012.png       elapsed=64s  ETA=77s    [77/167] 013.png       elapsed=65s  ETA=76s    [78/167] 014.png       elapsed=65s  ETA=74s    [79/167] 015.png       elapsed=66s  ETA=74s    [80/167] 016.png       elapsed=67s  ETA=72s    [81/167] 017.png       elapsed=67s  ETA=71s    [82/167] 018.png       elapsed=68s  ETA=71s    [83/167] 019.png       elapsed=69s  ETA=70s    [84/167] 020.png       elapsed=69s  ETA=69s    [85/167] 021.png       elapsed=70s  ETA=68s    [86/167] 022.png       elapsed=71s  ETA=67s    [87/167] 023.png       elapsed=72s  ETA=66s    [88/167] 024.png       elapsed=73s  ETA=65s    [89/167] 025.png       elapsed=73s  ETA=64s  
+  crack                 n=  26  raw_score mean=   97.10  max=  120.73
+  [90/167] 000.png       elapsed=74s  ETA=63s    [91/167] 001.png       elapsed=75s  ETA=63s    [92/167] 002.png       elapsed=76s  ETA=62s    [93/167] 003.png       elapsed=77s  ETA=61s    [94/167] 004.png       elapsed=77s  ETA=60s    [95/167] 005.png       elapsed=78s  ETA=59s    [96/167] 006.png       elapsed=78s  ETA=58s    [97/167] 007.png       elapsed=79s  ETA=57s    [98/167] 008.png       elapsed=80s  ETA=56s    [99/167] 009.png       elapsed=81s  ETA=56s    [100/167] 010.png       elapsed=82s  ETA=55s    [101/167] 011.png       elapsed=83s  ETA=54s    [102/167] 012.png       elapsed=84s  ETA=53s    [103/167] 013.png       elapsed=84s  ETA=52s    [104/167] 014.png       elapsed=85s  ETA=51s    [105/167] 015.png       elapsed=86s  ETA=50s    [106/167] 016.png       elapsed=86s  ETA=50s    [107/167] 017.png       elapsed=87s  ETA=49s    [108/167] 018.png       elapsed=88s  ETA=48s  
+  faulty_imprint        n=  19  raw_score mean=   94.03  max=  113.55
+  [109/167] 000.png       elapsed=89s  ETA=47s    [110/167] 001.png       elapsed=90s  ETA=46s    [111/167] 002.png       elapsed=90s  ETA=45s    [112/167] 003.png       elapsed=91s  ETA=45s    [113/167] 004.png       elapsed=92s  ETA=44s    [114/167] 005.png       elapsed=92s  ETA=43s    [115/167] 006.png       elapsed=93s  ETA=42s    [116/167] 007.png       elapsed=94s  ETA=41s    [117/167] 008.png       elapsed=95s  ETA=41s    [118/167] 009.png       elapsed=96s  ETA=40s    [119/167] 010.png       elapsed=97s  ETA=39s    [120/167] 011.png       elapsed=98s  ETA=39s    [121/167] 012.png       elapsed=99s  ETA=38s    [122/167] 013.png       elapsed=100s  ETA=37s    [123/167] 014.png       elapsed=101s  ETA=36s    [124/167] 015.png       elapsed=102s  ETA=35s    [125/167] 016.png       elapsed=102s  ETA=34s    [126/167] 017.png       elapsed=103s  ETA=33s    [127/167] 018.png       elapsed=104s  ETA=33s    [128/167] 019.png       elapsed=105s  ETA=32s    [129/167] 020.png       elapsed=106s  ETA=31s    [130/167] 021.png       elapsed=106s  ETA=30s    [131/167] 022.png       elapsed=107s  ETA=29s    [132/167] 023.png       elapsed=108s  ETA=29s    [133/167] 024.png       elapsed=109s  ETA=28s    [134/167] 025.png       elapsed=109s  ETA=27s  
+  good                  n=  26  raw_score mean=  114.93  max=  244.00
+  [135/167] 000.png       elapsed=110s  ETA=26s    [136/167] 001.png       elapsed=111s  ETA=25s    [137/167] 002.png       elapsed=112s  ETA=24s    [138/167] 003.png       elapsed=112s  ETA=24s    [139/167] 004.png       elapsed=113s  ETA=23s    [140/167] 005.png       elapsed=114s  ETA=22s    [141/167] 006.png       elapsed=115s  ETA=21s    [142/167] 007.png       elapsed=116s  ETA=20s    [143/167] 008.png       elapsed=116s  ETA=20s  
+  pill_type             n=   9  raw_score mean=  215.44  max=  533.28
+  [144/167] 000.png       elapsed=117s  ETA=19s    [145/167] 001.png       elapsed=118s  ETA=18s    [146/167] 002.png       elapsed=119s  ETA=17s    [147/167] 003.png       elapsed=119s  ETA=16s    [148/167] 004.png       elapsed=120s  ETA=15s    [149/167] 005.png       elapsed=121s  ETA=15s    [150/167] 006.png       elapsed=122s  ETA=14s    [151/167] 007.png       elapsed=122s  ETA=13s    [152/167] 008.png       elapsed=123s  ETA=12s    [153/167] 009.png       elapsed=124s  ETA=11s    [154/167] 010.png       elapsed=125s  ETA=11s    [155/167] 011.png       elapsed=125s  ETA=10s    [156/167] 012.png       elapsed=126s  ETA=9s    [157/167] 013.png       elapsed=127s  ETA=8s    [158/167] 014.png       elapsed=128s  ETA=7s    [159/167] 015.png       elapsed=128s  ETA=6s    [160/167] 016.png       elapsed=129s  ETA=6s    [161/167] 017.png       elapsed=130s  ETA=5s    [162/167] 018.png       elapsed=131s  ETA=4s    [163/167] 019.png       elapsed=131s  ETA=3s    [164/167] 020.png       elapsed=132s  ETA=2s    [165/167] 021.png       elapsed=133s  ETA=2s    [166/167] 022.png       elapsed=133s  ETA=1s    [167/167] 023.png       elapsed=134s  ETA=0s  
+  scratch               n=  24  raw_score mean=   89.98  max=  114.51
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      74.79     87.84    195.29    218.85    238.64    244.00
+  raw_score       DEFECT     62.97     89.86    113.55    141.01    509.66    533.28
+  map_max          GOOD      74.79     87.84    195.29    218.85    238.64    244.00
+  map_max         DEFECT     62.97     89.86    113.55    141.01    509.66    533.28
+  map_mean         GOOD      30.61     35.72     66.10     72.83     79.21     80.84
+  map_mean        DEFECT     24.66     35.37     42.71     43.37     66.46     79.98
+  map_top1         GOOD      69.70     84.31    185.99    208.55    230.10    235.84
+  map_top1        DEFECT     62.07     84.80    105.82    114.69    241.61    261.05
+  map_top01        GOOD      72.73     86.49    192.91    216.62    236.66    242.06
+  map_top01       DEFECT     62.78     87.92    110.69    119.35    417.89    460.06
+
+  AUROC:
+    raw_score     0.3680
+    map_max       0.3680
+    map_mean      0.3399
+    map_top1      0.3542
+    map_top01     0.3636
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          74.79    0.9574    1.0000  
+  map_max            74.79    0.9574    1.0000  
+  map_mean           30.59    0.9504    1.0000  
+  map_top1           72.07    0.9504    0.9615  
+  map_top01          72.76    0.9716    0.9615  
+
+  >>> Recommended T2 config for 'pill':
+      metric=map_top1  threshold=72.0700  recall=0.9504  fpr=0.9615
+
+============================================================
+  screw
+============================================================
+  [1/160] 000.png       elapsed=2s  ETA=284s    [2/160] 001.png       elapsed=3s  ETA=274s    [3/160] 002.png       elapsed=5s  ETA=272s    [4/160] 003.png       elapsed=7s  ETA=271s    [5/160] 004.png       elapsed=9s  ETA=267s    [6/160] 005.png       elapsed=10s  ETA=250s    [7/160] 006.png       elapsed=12s  ETA=253s    [8/160] 007.png       elapsed=13s  ETA=248s    [9/160] 008.png       elapsed=15s  ETA=251s    [10/160] 009.png       elapsed=17s  ETA=249s    [11/160] 010.png       elapsed=18s  ETA=248s    [12/160] 011.png       elapsed=20s  ETA=243s    [13/160] 012.png       elapsed=22s  ETA=244s    [14/160] 013.png       elapsed=23s  ETA=242s    [15/160] 014.png       elapsed=25s  ETA=240s    [16/160] 015.png       elapsed=27s  ETA=241s    [17/160] 016.png       elapsed=28s  ETA=237s    [18/160] 017.png       elapsed=30s  ETA=237s    [19/160] 018.png       elapsed=32s  ETA=237s    [20/160] 019.png       elapsed=34s  ETA=237s    [21/160] 020.png       elapsed=36s  ETA=238s    [22/160] 021.png       elapsed=38s  ETA=237s    [23/160] 022.png       elapsed=40s  ETA=237s    [24/160] 023.png       elapsed=42s  ETA=237s    [25/160] 024.png       elapsed=44s  ETA=236s    [26/160] 025.png       elapsed=46s  ETA=235s    [27/160] 026.png       elapsed=47s  ETA=233s    [28/160] 027.png       elapsed=49s  ETA=232s    [29/160] 028.png       elapsed=51s  ETA=229s    [30/160] 029.png       elapsed=52s  ETA=227s    [31/160] 030.png       elapsed=54s  ETA=225s    [32/160] 031.png       elapsed=56s  ETA=222s    [33/160] 032.png       elapsed=57s  ETA=221s    [34/160] 033.png       elapsed=59s  ETA=219s    [35/160] 034.png       elapsed=60s  ETA=215s    [36/160] 035.png       elapsed=62s  ETA=213s    [37/160] 036.png       elapsed=64s  ETA=211s    [38/160] 037.png       elapsed=65s  ETA=210s    [39/160] 038.png       elapsed=67s  ETA=209s    [40/160] 039.png       elapsed=69s  ETA=207s    [41/160] 040.png       elapsed=70s  ETA=204s  
+  good                  n=  41  raw_score mean=   23.48  max=   32.99
+  [42/160] 000.png       elapsed=72s  ETA=203s    [43/160] 001.png       elapsed=74s  ETA=202s    [44/160] 002.png       elapsed=76s  ETA=201s    [45/160] 003.png       elapsed=77s  ETA=197s    [46/160] 004.png       elapsed=79s  ETA=195s    [47/160] 005.png       elapsed=81s  ETA=194s    [48/160] 006.png       elapsed=82s  ETA=192s    [49/160] 007.png       elapsed=84s  ETA=191s    [50/160] 008.png       elapsed=86s  ETA=188s    [51/160] 009.png       elapsed=87s  ETA=187s    [52/160] 010.png       elapsed=89s  ETA=186s    [53/160] 011.png       elapsed=91s  ETA=184s    [54/160] 012.png       elapsed=93s  ETA=182s    [55/160] 013.png       elapsed=94s  ETA=180s    [56/160] 014.png       elapsed=96s  ETA=178s    [57/160] 015.png       elapsed=97s  ETA=176s    [58/160] 016.png       elapsed=99s  ETA=173s    [59/160] 017.png       elapsed=100s  ETA=171s    [60/160] 018.png       elapsed=101s  ETA=169s    [61/160] 019.png       elapsed=103s  ETA=167s    [62/160] 020.png       elapsed=105s  ETA=166s    [63/160] 021.png       elapsed=106s  ETA=163s    [64/160] 022.png       elapsed=108s  ETA=161s    [65/160] 023.png       elapsed=109s  ETA=160s  
+  manipulated_front     n=  24  raw_score mean=   23.66  max=   26.13
+  [66/160] 000.png       elapsed=111s  ETA=158s    [67/160] 001.png       elapsed=113s  ETA=156s    [68/160] 002.png       elapsed=114s  ETA=154s    [69/160] 003.png       elapsed=116s  ETA=152s    [70/160] 004.png       elapsed=117s  ETA=150s    [71/160] 005.png       elapsed=119s  ETA=149s    [72/160] 006.png       elapsed=120s  ETA=147s    [73/160] 007.png       elapsed=122s  ETA=145s    [74/160] 008.png       elapsed=124s  ETA=144s    [75/160] 009.png       elapsed=125s  ETA=142s    [76/160] 010.png       elapsed=127s  ETA=140s    [77/160] 011.png       elapsed=128s  ETA=138s    [78/160] 012.png       elapsed=130s  ETA=137s    [79/160] 013.png       elapsed=131s  ETA=135s    [80/160] 014.png       elapsed=133s  ETA=133s    [81/160] 015.png       elapsed=134s  ETA=131s    [82/160] 016.png       elapsed=135s  ETA=129s    [83/160] 017.png       elapsed=137s  ETA=127s    [84/160] 018.png       elapsed=139s  ETA=125s    [85/160] 019.png       elapsed=140s  ETA=124s    [86/160] 020.png       elapsed=142s  ETA=122s    [87/160] 021.png       elapsed=144s  ETA=121s    [88/160] 022.png       elapsed=145s  ETA=119s    [89/160] 023.png       elapsed=147s  ETA=117s  
+  scratch_head          n=  24  raw_score mean=   23.81  max=   26.48
+  [90/160] 000.png       elapsed=148s  ETA=115s    [91/160] 001.png       elapsed=150s  ETA=114s    [92/160] 002.png       elapsed=151s  ETA=112s    [93/160] 003.png       elapsed=153s  ETA=110s    [94/160] 004.png       elapsed=154s  ETA=108s    [95/160] 005.png       elapsed=156s  ETA=106s    [96/160] 006.png       elapsed=157s  ETA=105s    [97/160] 007.png       elapsed=158s  ETA=103s    [98/160] 008.png       elapsed=160s  ETA=101s    [99/160] 009.png       elapsed=162s  ETA=100s    [100/160] 010.png       elapsed=163s  ETA=98s    [101/160] 011.png       elapsed=164s  ETA=96s    [102/160] 012.png       elapsed=166s  ETA=94s    [103/160] 013.png       elapsed=167s  ETA=93s    [104/160] 014.png       elapsed=169s  ETA=91s    [105/160] 015.png       elapsed=170s  ETA=89s    [106/160] 016.png       elapsed=172s  ETA=88s    [107/160] 017.png       elapsed=173s  ETA=86s    [108/160] 018.png       elapsed=175s  ETA=84s    [109/160] 019.png       elapsed=176s  ETA=83s    [110/160] 020.png       elapsed=178s  ETA=81s    [111/160] 021.png       elapsed=179s  ETA=79s    [112/160] 022.png       elapsed=181s  ETA=78s    [113/160] 023.png       elapsed=182s  ETA=76s    [114/160] 024.png       elapsed=184s  ETA=74s  
+  scratch_neck          n=  25  raw_score mean=   23.97  max=   26.92
+  [115/160] 000.png       elapsed=185s  ETA=72s    [116/160] 001.png       elapsed=186s  ETA=71s    [117/160] 002.png       elapsed=188s  ETA=69s    [118/160] 003.png       elapsed=189s  ETA=67s    [119/160] 004.png       elapsed=190s  ETA=66s    [120/160] 005.png       elapsed=192s  ETA=64s    [121/160] 006.png       elapsed=193s  ETA=62s    [122/160] 007.png       elapsed=195s  ETA=61s    [123/160] 008.png       elapsed=196s  ETA=59s    [124/160] 009.png       elapsed=197s  ETA=57s    [125/160] 010.png       elapsed=199s  ETA=56s    [126/160] 011.png       elapsed=200s  ETA=54s    [127/160] 012.png       elapsed=202s  ETA=52s    [128/160] 013.png       elapsed=203s  ETA=51s    [129/160] 014.png       elapsed=205s  ETA=49s    [130/160] 015.png       elapsed=206s  ETA=48s    [131/160] 016.png       elapsed=208s  ETA=46s    [132/160] 017.png       elapsed=209s  ETA=44s    [133/160] 018.png       elapsed=211s  ETA=43s    [134/160] 019.png       elapsed=212s  ETA=41s    [135/160] 020.png       elapsed=214s  ETA=40s    [136/160] 021.png       elapsed=215s  ETA=38s    [137/160] 022.png       elapsed=217s  ETA=36s  
+  thread_side           n=  23  raw_score mean=   24.35  max=   30.23
+  [138/160] 000.png       elapsed=219s  ETA=35s    [139/160] 001.png       elapsed=220s  ETA=33s    [140/160] 002.png       elapsed=221s  ETA=32s    [141/160] 003.png       elapsed=223s  ETA=30s    [142/160] 004.png       elapsed=224s  ETA=28s    [143/160] 005.png       elapsed=226s  ETA=27s    [144/160] 006.png       elapsed=227s  ETA=25s    [145/160] 007.png       elapsed=228s  ETA=24s    [146/160] 008.png       elapsed=230s  ETA=22s    [147/160] 009.png       elapsed=231s  ETA=20s    [148/160] 010.png       elapsed=233s  ETA=19s    [149/160] 011.png       elapsed=234s  ETA=17s    [150/160] 012.png       elapsed=236s  ETA=16s    [151/160] 013.png       elapsed=238s  ETA=14s    [152/160] 014.png       elapsed=239s  ETA=13s    [153/160] 015.png       elapsed=241s  ETA=11s    [154/160] 016.png       elapsed=243s  ETA=9s    [155/160] 017.png       elapsed=244s  ETA=8s    [156/160] 018.png       elapsed=246s  ETA=6s    [157/160] 019.png       elapsed=247s  ETA=5s    [158/160] 020.png       elapsed=249s  ETA=3s    [159/160] 021.png       elapsed=251s  ETA=2s    [160/160] 022.png       elapsed=252s  ETA=0s  
+  thread_top            n=  23  raw_score mean=   22.57  max=   26.33
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      17.97     23.28     27.39     27.98     32.23     32.99
+  raw_score       DEFECT     18.77     24.16     26.23     26.51     28.63     30.23
+  map_max          GOOD      17.97     23.28     27.39     27.98     32.23     32.99
+  map_max         DEFECT     18.77     24.16     26.23     26.51     28.63     30.23
+  map_mean         GOOD      11.91     12.32     12.81     12.90     13.15     13.17
+  map_mean        DEFECT     11.41     12.21     12.59     12.67     12.74     12.96
+  map_top1         GOOD      17.63     21.69     25.13     25.75     26.13     26.30
+  map_top1        DEFECT     18.26     22.62     24.92     25.13     25.36     26.39
+  map_top01        GOOD      17.88     22.84     26.98     27.54     28.07     28.17
+  map_top01       DEFECT     18.67     23.83     25.85     26.18     27.63     29.25
+
+  AUROC:
+    raw_score     0.5347
+    map_max       0.5347
+    map_mean      0.3743
+    map_top1      0.5532
+    map_top01     0.5448
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          19.56    0.9664    0.9024  
+  map_max            19.56    0.9664    0.9024  
+  map_mean           11.76    0.9580    1.0000  
+  map_top1           18.64    0.9664    0.8780  
+  map_top01          19.36    0.9580    0.9024  
+
+  >>> Recommended T2 config for 'screw':
+      metric=map_top1  threshold=18.6411  recall=0.9664  fpr=0.8780
+
+============================================================
+  tile
+============================================================
+  [1/117] 000.png       elapsed=3s  ETA=317s    [2/117] 001.png       elapsed=6s  ETA=317s    [3/117] 002.png       elapsed=8s  ETA=319s    [4/117] 003.png       elapsed=12s  ETA=325s    [5/117] 004.png       elapsed=14s  ETA=316s    [6/117] 005.png       elapsed=17s  ETA=309s    [7/117] 006.png       elapsed=20s  ETA=311s    [8/117] 007.png       elapsed=23s  ETA=309s    [9/117] 008.png       elapsed=26s  ETA=307s    [10/117] 009.png       elapsed=29s  ETA=306s    [11/117] 010.png       elapsed=31s  ETA=302s    [12/117] 011.png       elapsed=34s  ETA=297s    [13/117] 012.png       elapsed=37s  ETA=295s    [14/117] 013.png       elapsed=40s  ETA=291s    [15/117] 014.png       elapsed=42s  ETA=288s    [16/117] 015.png       elapsed=45s  ETA=283s    [17/117] 016.png       elapsed=47s  ETA=279s  
+  crack                 n=  17  raw_score mean=   50.55  max=  105.94
+  [18/117] 000.png       elapsed=50s  ETA=275s    [19/117] 001.png       elapsed=53s  ETA=272s    [20/117] 002.png       elapsed=55s  ETA=267s    [21/117] 003.png       elapsed=58s  ETA=265s    [22/117] 004.png       elapsed=61s  ETA=262s    [23/117] 005.png       elapsed=63s  ETA=258s    [24/117] 006.png       elapsed=66s  ETA=255s    [25/117] 007.png       elapsed=69s  ETA=254s    [26/117] 008.png       elapsed=72s  ETA=251s    [27/117] 009.png       elapsed=75s  ETA=249s    [28/117] 010.png       elapsed=78s  ETA=247s    [29/117] 011.png       elapsed=81s  ETA=245s    [30/117] 012.png       elapsed=84s  ETA=243s    [31/117] 013.png       elapsed=86s  ETA=239s    [32/117] 014.png       elapsed=89s  ETA=236s    [33/117] 015.png       elapsed=92s  ETA=234s    [34/117] 016.png       elapsed=95s  ETA=231s    [35/117] 017.png       elapsed=97s  ETA=228s  
+  glue_strip            n=  18  raw_score mean=   35.15  max=   40.65
+  [36/117] 000.png       elapsed=100s  ETA=225s    [37/117] 001.png       elapsed=103s  ETA=222s    [38/117] 002.png       elapsed=105s  ETA=219s    [39/117] 003.png       elapsed=108s  ETA=217s    [40/117] 004.png       elapsed=111s  ETA=214s    [41/117] 005.png       elapsed=114s  ETA=211s    [42/117] 006.png       elapsed=116s  ETA=208s    [43/117] 007.png       elapsed=119s  ETA=205s    [44/117] 008.png       elapsed=122s  ETA=202s    [45/117] 009.png       elapsed=124s  ETA=199s    [46/117] 010.png       elapsed=127s  ETA=196s    [47/117] 011.png       elapsed=130s  ETA=193s    [48/117] 012.png       elapsed=132s  ETA=190s    [49/117] 013.png       elapsed=135s  ETA=188s    [50/117] 014.png       elapsed=138s  ETA=185s    [51/117] 015.png       elapsed=141s  ETA=182s    [52/117] 016.png       elapsed=143s  ETA=179s    [53/117] 017.png       elapsed=146s  ETA=177s    [54/117] 018.png       elapsed=149s  ETA=174s    [55/117] 019.png       elapsed=152s  ETA=171s    [56/117] 020.png       elapsed=154s  ETA=168s    [57/117] 021.png       elapsed=157s  ETA=165s    [58/117] 022.png       elapsed=160s  ETA=162s    [59/117] 023.png       elapsed=162s  ETA=160s    [60/117] 024.png       elapsed=165s  ETA=157s    [61/117] 025.png       elapsed=168s  ETA=154s    [62/117] 026.png       elapsed=171s  ETA=151s    [63/117] 027.png       elapsed=173s  ETA=149s    [64/117] 028.png       elapsed=176s  ETA=146s    [65/117] 029.png       elapsed=178s  ETA=143s    [66/117] 030.png       elapsed=181s  ETA=140s    [67/117] 031.png       elapsed=184s  ETA=137s    [68/117] 032.png       elapsed=187s  ETA=135s  
+  good                  n=  33  raw_score mean=   32.72  max=   39.19
+  [69/117] 000.png       elapsed=189s  ETA=132s    [70/117] 001.png       elapsed=192s  ETA=129s    [71/117] 002.png       elapsed=196s  ETA=127s    [72/117] 003.png       elapsed=198s  ETA=124s    [73/117] 004.png       elapsed=201s  ETA=121s    [74/117] 005.png       elapsed=204s  ETA=119s    [75/117] 006.png       elapsed=207s  ETA=116s    [76/117] 007.png       elapsed=210s  ETA=113s    [77/117] 008.png       elapsed=213s  ETA=111s    [78/117] 009.png       elapsed=215s  ETA=108s    [79/117] 010.png       elapsed=218s  ETA=105s    [80/117] 011.png       elapsed=221s  ETA=102s    [81/117] 012.png       elapsed=224s  ETA=100s    [82/117] 013.png       elapsed=227s  ETA=97s    [83/117] 014.png       elapsed=230s  ETA=94s    [84/117] 015.png       elapsed=233s  ETA=91s  
+  gray_stroke           n=  16  raw_score mean=   50.74  max=   68.71
+  [85/117] 000.png       elapsed=236s  ETA=89s    [86/117] 001.png       elapsed=238s  ETA=86s    [87/117] 002.png       elapsed=241s  ETA=83s    [88/117] 003.png       elapsed=244s  ETA=80s    [89/117] 004.png       elapsed=246s  ETA=77s    [90/117] 005.png       elapsed=249s  ETA=75s    [91/117] 006.png       elapsed=252s  ETA=72s    [92/117] 007.png       elapsed=254s  ETA=69s    [93/117] 008.png       elapsed=257s  ETA=66s    [94/117] 009.png       elapsed=260s  ETA=64s    [95/117] 010.png       elapsed=262s  ETA=61s    [96/117] 011.png       elapsed=265s  ETA=58s    [97/117] 012.png       elapsed=268s  ETA=55s    [98/117] 013.png       elapsed=271s  ETA=52s    [99/117] 014.png       elapsed=274s  ETA=50s    [100/117] 015.png       elapsed=277s  ETA=47s    [101/117] 016.png       elapsed=279s  ETA=44s    [102/117] 017.png       elapsed=282s  ETA=41s  
+  oil                   n=  18  raw_score mean=  881.71  max= 2140.68
+  [103/117] 000.png       elapsed=285s  ETA=39s    [104/117] 001.png       elapsed=288s  ETA=36s    [105/117] 002.png       elapsed=290s  ETA=33s    [106/117] 003.png       elapsed=293s  ETA=30s    [107/117] 004.png       elapsed=296s  ETA=28s    [108/117] 005.png       elapsed=299s  ETA=25s    [109/117] 006.png       elapsed=301s  ETA=22s    [110/117] 007.png       elapsed=305s  ETA=19s    [111/117] 008.png       elapsed=307s  ETA=17s    [112/117] 009.png       elapsed=310s  ETA=14s    [113/117] 010.png       elapsed=313s  ETA=11s    [114/117] 011.png       elapsed=316s  ETA=8s    [115/117] 012.png       elapsed=319s  ETA=6s    [116/117] 013.png       elapsed=322s  ETA=3s    [117/117] 014.png       elapsed=325s  ETA=0s  
+  rough                 n=  15  raw_score mean=   32.14  max=   36.87
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      28.05     32.51     37.78     38.29     38.96     39.19
+  raw_score       DEFECT     27.61     41.05    835.49   1037.16   1502.46   2140.68
+  map_max          GOOD      28.05     32.51     37.78     38.29     38.96     39.19
+  map_max         DEFECT     27.61     41.05    835.49   1037.16   1502.46   2140.68
+  map_mean         GOOD       8.23     11.06     12.95     13.39     14.07     14.11
+  map_mean        DEFECT      9.19     12.97     34.84     38.05     49.22     55.27
+  map_top1         GOOD      20.38     25.86     28.99     29.46     30.37     30.53
+  map_top1        DEFECT     21.96     32.94    633.88    757.71   1220.51   1561.83
+  map_top01        GOOD      25.10     30.07     33.15     34.36     35.31     35.35
+  map_top01       DEFECT     24.97     37.88    800.51    979.70   1444.92   2042.24
+
+  AUROC:
+    raw_score     0.8185
+    map_max       0.8185
+    map_mean      0.7922
+    map_top1      0.8492
+    map_top01     0.8283
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          27.61    1.0000    1.0000  
+  map_max            27.61    1.0000    1.0000  
+  map_mean           10.60    0.9524    0.6667  
+  map_top1           20.38    1.0000    1.0000  
+  map_top01          24.97    1.0000    1.0000  
+
+  >>> Recommended T2 config for 'tile':
+      metric=map_mean  threshold=10.5968  recall=0.9524  fpr=0.6667
+
+============================================================
+  toothbrush
+============================================================
+  [1/42] 000.png       elapsed=1s  ETA=50s    [2/42] 001.png       elapsed=2s  ETA=42s    [3/42] 002.png       elapsed=3s  ETA=37s    [4/42] 003.png       elapsed=4s  ETA=35s    [5/42] 004.png       elapsed=5s  ETA=34s    [6/42] 005.png       elapsed=5s  ETA=32s    [7/42] 006.png       elapsed=6s  ETA=31s    [8/42] 007.png       elapsed=7s  ETA=29s    [9/42] 008.png       elapsed=8s  ETA=28s    [10/42] 009.png       elapsed=9s  ETA=29s    [11/42] 010.png       elapsed=10s  ETA=28s    [12/42] 011.png       elapsed=11s  ETA=27s    [13/42] 012.png       elapsed=12s  ETA=27s    [14/42] 013.png       elapsed=13s  ETA=26s    [15/42] 014.png       elapsed=14s  ETA=25s    [16/42] 015.png       elapsed=15s  ETA=24s    [17/42] 016.png       elapsed=16s  ETA=24s    [18/42] 017.png       elapsed=17s  ETA=23s    [19/42] 018.png       elapsed=18s  ETA=22s    [20/42] 019.png       elapsed=19s  ETA=21s    [21/42] 020.png       elapsed=20s  ETA=20s    [22/42] 021.png       elapsed=21s  ETA=19s    [23/42] 022.png       elapsed=22s  ETA=19s    [24/42] 023.png       elapsed=23s  ETA=18s    [25/42] 024.png       elapsed=24s  ETA=17s    [26/42] 025.png       elapsed=25s  ETA=16s    [27/42] 026.png       elapsed=26s  ETA=15s    [28/42] 027.png       elapsed=27s  ETA=14s    [29/42] 028.png       elapsed=28s  ETA=13s    [30/42] 029.png       elapsed=30s  ETA=12s  
+  defective             n=  30  raw_score mean=  316.71  max=  835.68
+  [31/42] 000.png       elapsed=31s  ETA=11s    [32/42] 001.png       elapsed=32s  ETA=10s    [33/42] 002.png       elapsed=33s  ETA=9s    [34/42] 003.png       elapsed=34s  ETA=8s    [35/42] 004.png       elapsed=35s  ETA=7s    [36/42] 005.png       elapsed=35s  ETA=6s    [37/42] 006.png       elapsed=36s  ETA=5s    [38/42] 007.png       elapsed=37s  ETA=4s    [39/42] 008.png       elapsed=38s  ETA=3s    [40/42] 009.png       elapsed=39s  ETA=2s    [41/42] 010.png       elapsed=40s  ETA=1s    [42/42] 011.png       elapsed=41s  ETA=0s  
+  good                  n=  12  raw_score mean=  272.91  max=  433.01
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      13.35    379.18    425.45    428.90    432.19    433.01
+  raw_score       DEFECT     12.67    373.63    608.07    634.58    779.49    835.68
+  map_max          GOOD      13.35    379.18    425.45    428.90    432.19    433.01
+  map_max         DEFECT     12.67    373.63    608.07    634.58    779.49    835.68
+  map_mean         GOOD       7.25     20.00     21.80     22.33     22.79     22.90
+  map_mean        DEFECT      7.16     19.21     26.17     29.61     37.05     39.30
+  map_top1         GOOD      13.05    263.74    311.92    316.92    320.33    321.18
+  map_top1        DEFECT     12.46    266.48    415.91    479.89    556.63    582.59
+  map_top01        GOOD      13.28    343.25    390.98    395.43    398.86    399.72
+  map_top01       DEFECT     12.59    334.84    580.49    606.24    722.84    768.16
+
+  AUROC:
+    raw_score     0.5250
+    map_max       0.5250
+    map_mean      0.5361
+    map_top1      0.4944
+    map_top01     0.5056
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          12.67    1.0000    1.0000  
+  map_max            12.67    1.0000    1.0000  
+  map_mean            7.16    1.0000    1.0000  
+  map_top1           12.46    1.0000    1.0000  
+  map_top01          12.59    1.0000    1.0000  
+
+  >>> Recommended T2 config for 'toothbrush':
+      metric=raw_score  threshold=12.6713  recall=1.0000  fpr=1.0000
+
+============================================================
+  transistor
+============================================================
+  [1/100] 000.png       elapsed=1s  ETA=137s    [2/100] 001.png       elapsed=3s  ETA=131s    [3/100] 002.png       elapsed=4s  ETA=125s    [4/100] 003.png       elapsed=5s  ETA=130s    [5/100] 004.png       elapsed=7s  ETA=131s    [6/100] 005.png       elapsed=8s  ETA=131s    [7/100] 006.png       elapsed=10s  ETA=131s    [8/100] 007.png       elapsed=11s  ETA=128s    [9/100] 008.png       elapsed=13s  ETA=127s    [10/100] 009.png       elapsed=14s  ETA=125s  
+  bent_lead             n=  10  raw_score mean=  408.97  max=  510.90
+  [11/100] 000.png       elapsed=15s  ETA=123s    [12/100] 001.png       elapsed=17s  ETA=122s    [13/100] 002.png       elapsed=18s  ETA=122s    [14/100] 003.png       elapsed=19s  ETA=119s    [15/100] 004.png       elapsed=21s  ETA=118s    [16/100] 005.png       elapsed=22s  ETA=117s    [17/100] 006.png       elapsed=24s  ETA=115s    [18/100] 007.png       elapsed=25s  ETA=113s    [19/100] 008.png       elapsed=26s  ETA=112s    [20/100] 009.png       elapsed=27s  ETA=109s  
+  cut_lead              n=  10  raw_score mean=  363.05  max=  442.76
+  [21/100] 000.png       elapsed=29s  ETA=108s    [22/100] 001.png       elapsed=30s  ETA=106s    [23/100] 002.png       elapsed=31s  ETA=105s    [24/100] 003.png       elapsed=33s  ETA=103s    [25/100] 004.png       elapsed=34s  ETA=102s    [26/100] 005.png       elapsed=35s  ETA=101s    [27/100] 006.png       elapsed=37s  ETA=99s    [28/100] 007.png       elapsed=38s  ETA=98s    [29/100] 008.png       elapsed=39s  ETA=96s    [30/100] 009.png       elapsed=41s  ETA=95s  
+  damaged_case          n=  10  raw_score mean=  374.83  max=  436.93
+  [31/100] 000.png       elapsed=42s  ETA=93s    [32/100] 001.png       elapsed=43s  ETA=92s    [33/100] 002.png       elapsed=45s  ETA=90s    [34/100] 003.png       elapsed=46s  ETA=89s    [35/100] 004.png       elapsed=47s  ETA=88s    [36/100] 005.png       elapsed=49s  ETA=87s    [37/100] 006.png       elapsed=50s  ETA=85s    [38/100] 007.png       elapsed=52s  ETA=84s    [39/100] 008.png       elapsed=53s  ETA=83s    [40/100] 009.png       elapsed=54s  ETA=82s    [41/100] 010.png       elapsed=56s  ETA=80s    [42/100] 011.png       elapsed=57s  ETA=79s    [43/100] 012.png       elapsed=58s  ETA=77s    [44/100] 013.png       elapsed=60s  ETA=76s    [45/100] 014.png       elapsed=61s  ETA=75s    [46/100] 015.png       elapsed=63s  ETA=73s    [47/100] 016.png       elapsed=64s  ETA=72s    [48/100] 017.png       elapsed=66s  ETA=71s    [49/100] 018.png       elapsed=67s  ETA=70s    [50/100] 019.png       elapsed=68s  ETA=68s    [51/100] 020.png       elapsed=70s  ETA=67s    [52/100] 021.png       elapsed=71s  ETA=66s    [53/100] 022.png       elapsed=72s  ETA=64s    [54/100] 023.png       elapsed=74s  ETA=63s    [55/100] 024.png       elapsed=75s  ETA=61s    [56/100] 025.png       elapsed=76s  ETA=60s    [57/100] 026.png       elapsed=77s  ETA=58s    [58/100] 027.png       elapsed=79s  ETA=57s    [59/100] 028.png       elapsed=80s  ETA=56s    [60/100] 029.png       elapsed=81s  ETA=54s    [61/100] 030.png       elapsed=83s  ETA=53s    [62/100] 031.png       elapsed=84s  ETA=51s    [63/100] 032.png       elapsed=85s  ETA=50s    [64/100] 033.png       elapsed=87s  ETA=49s    [65/100] 034.png       elapsed=88s  ETA=47s    [66/100] 035.png       elapsed=89s  ETA=46s    [67/100] 036.png       elapsed=91s  ETA=45s    [68/100] 037.png       elapsed=92s  ETA=43s    [69/100] 038.png       elapsed=94s  ETA=42s    [70/100] 039.png       elapsed=95s  ETA=41s    [71/100] 040.png       elapsed=96s  ETA=39s    [72/100] 041.png       elapsed=98s  ETA=38s    [73/100] 042.png       elapsed=99s  ETA=37s    [74/100] 043.png       elapsed=100s  ETA=35s    [75/100] 044.png       elapsed=102s  ETA=34s    [76/100] 045.png       elapsed=103s  ETA=33s    [77/100] 046.png       elapsed=105s  ETA=31s    [78/100] 047.png       elapsed=106s  ETA=30s    [79/100] 048.png       elapsed=107s  ETA=29s    [80/100] 049.png       elapsed=109s  ETA=27s    [81/100] 050.png       elapsed=110s  ETA=26s    [82/100] 051.png       elapsed=111s  ETA=24s    [83/100] 052.png       elapsed=113s  ETA=23s    [84/100] 053.png       elapsed=114s  ETA=22s    [85/100] 054.png       elapsed=116s  ETA=20s    [86/100] 055.png       elapsed=117s  ETA=19s    [87/100] 056.png       elapsed=119s  ETA=18s    [88/100] 057.png       elapsed=120s  ETA=16s    [89/100] 058.png       elapsed=122s  ETA=15s    [90/100] 059.png       elapsed=123s  ETA=14s  
+  good                  n=  60  raw_score mean=  454.72  max=  902.80
+  [91/100] 000.png       elapsed=125s  ETA=12s    [92/100] 001.png       elapsed=126s  ETA=11s    [93/100] 002.png       elapsed=128s  ETA=10s    [94/100] 003.png       elapsed=130s  ETA=8s    [95/100] 004.png       elapsed=131s  ETA=7s    [96/100] 005.png       elapsed=133s  ETA=6s    [97/100] 006.png       elapsed=135s  ETA=4s    [98/100] 007.png       elapsed=136s  ETA=3s    [99/100] 008.png       elapsed=138s  ETA=1s    [100/100] 009.png       elapsed=140s  ETA=0s  
+  misplaced             n=  10  raw_score mean=  451.43  max=  697.92
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD     234.56    445.07    584.75    631.49    761.90    902.80
+  raw_score       DEFECT    264.67    398.15    482.52    517.70    677.28    697.92
+  map_max          GOOD     234.56    445.07    584.75    631.49    761.90    902.80
+  map_max         DEFECT    264.67    398.15    482.52    517.70    677.28    697.92
+  map_mean         GOOD      37.55     52.01     61.80     64.34     71.71     77.28
+  map_mean        DEFECT     34.45     45.10     60.09     67.15     71.93     72.48
+  map_top1         GOOD     170.12    322.03    399.96    424.86    507.12    569.11
+  map_top1        DEFECT    186.28    259.11    342.34    410.83    497.91    508.90
+  map_top01        GOOD     214.22    406.54    514.60    543.67    688.36    793.30
+  map_top01       DEFECT    225.82    349.47    423.27    487.75    602.30    611.99
+
+  AUROC:
+    raw_score     0.3304
+    map_max       0.3304
+    map_mean      0.2983
+    map_top1      0.2983
+    map_top01     0.3079
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score         268.14    0.9750    0.9667  
+  map_max           268.14    0.9750    0.9667  
+  map_mean           38.97    0.9500    0.9667  
+  map_top1          198.19    0.9500    0.9667  
+  map_top01         254.96    0.9500    0.9500  
+
+  >>> Recommended T2 config for 'transistor':
+      metric=map_top01  threshold=254.9641  recall=0.9500  fpr=0.9500
+
+============================================================
+  wood
+============================================================
+  [1/79] 000.png       elapsed=3s  ETA=268s    [2/79] 001.png       elapsed=6s  ETA=240s    [3/79] 002.png       elapsed=9s  ETA=226s    [4/79] 003.png       elapsed=12s  ETA=216s    [5/79] 004.png       elapsed=15s  ETA=215s    [6/79] 005.png       elapsed=17s  ETA=208s    [7/79] 006.png       elapsed=20s  ETA=203s    [8/79] 007.png       elapsed=22s  ETA=197s  
+  color                 n=   8  raw_score mean=  553.37  max= 1030.13
+  [9/79] 000.png       elapsed=25s  ETA=193s    [10/79] 001.png       elapsed=28s  ETA=191s    [11/79] 002.png       elapsed=30s  ETA=187s    [12/79] 003.png       elapsed=33s  ETA=184s    [13/79] 004.png       elapsed=36s  ETA=181s    [14/79] 005.png       elapsed=38s  ETA=178s    [15/79] 006.png       elapsed=41s  ETA=176s    [16/79] 007.png       elapsed=44s  ETA=172s    [17/79] 008.png       elapsed=47s  ETA=171s    [18/79] 009.png       elapsed=50s  ETA=168s    [19/79] 010.png       elapsed=52s  ETA=165s  
+  combined              n=  11  raw_score mean=  516.36  max=  789.11
+  [20/79] 000.png       elapsed=55s  ETA=163s    [21/79] 001.png       elapsed=58s  ETA=160s    [22/79] 002.png       elapsed=61s  ETA=157s    [23/79] 003.png       elapsed=63s  ETA=154s    [24/79] 004.png       elapsed=66s  ETA=151s    [25/79] 005.png       elapsed=69s  ETA=148s    [26/79] 006.png       elapsed=72s  ETA=146s    [27/79] 007.png       elapsed=75s  ETA=144s    [28/79] 008.png       elapsed=77s  ETA=141s    [29/79] 009.png       elapsed=80s  ETA=138s    [30/79] 010.png       elapsed=83s  ETA=135s    [31/79] 011.png       elapsed=86s  ETA=133s    [32/79] 012.png       elapsed=89s  ETA=130s    [33/79] 013.png       elapsed=91s  ETA=128s    [34/79] 014.png       elapsed=94s  ETA=124s    [35/79] 015.png       elapsed=97s  ETA=122s    [36/79] 016.png       elapsed=100s  ETA=119s    [37/79] 017.png       elapsed=103s  ETA=117s    [38/79] 018.png       elapsed=106s  ETA=114s  
+  good                  n=  19  raw_score mean=  540.35  max=  826.67
+  [39/79] 000.png       elapsed=109s  ETA=112s    [40/79] 001.png       elapsed=112s  ETA=109s    [41/79] 002.png       elapsed=114s  ETA=106s    [42/79] 003.png       elapsed=117s  ETA=103s    [43/79] 004.png       elapsed=120s  ETA=100s    [44/79] 005.png       elapsed=123s  ETA=98s    [45/79] 006.png       elapsed=125s  ETA=95s    [46/79] 007.png       elapsed=128s  ETA=92s    [47/79] 008.png       elapsed=131s  ETA=89s    [48/79] 009.png       elapsed=134s  ETA=86s  
+  hole                  n=  10  raw_score mean=  504.11  max=  723.49
+  [49/79] 000.png       elapsed=137s  ETA=84s    [50/79] 001.png       elapsed=140s  ETA=81s    [51/79] 002.png       elapsed=143s  ETA=78s    [52/79] 003.png       elapsed=145s  ETA=75s    [53/79] 004.png       elapsed=148s  ETA=73s    [54/79] 005.png       elapsed=150s  ETA=70s    [55/79] 006.png       elapsed=153s  ETA=67s    [56/79] 007.png       elapsed=156s  ETA=64s    [57/79] 008.png       elapsed=159s  ETA=61s    [58/79] 009.png       elapsed=162s  ETA=59s  
+  liquid                n=  10  raw_score mean=  482.42  max=  586.24
+  [59/79] 000.png       elapsed=165s  ETA=56s    [60/79] 001.png       elapsed=168s  ETA=53s    [61/79] 002.png       elapsed=171s  ETA=50s    [62/79] 003.png       elapsed=173s  ETA=48s    [63/79] 004.png       elapsed=176s  ETA=45s    [64/79] 005.png       elapsed=179s  ETA=42s    [65/79] 006.png       elapsed=181s  ETA=39s    [66/79] 007.png       elapsed=184s  ETA=36s    [67/79] 008.png       elapsed=187s  ETA=33s    [68/79] 009.png       elapsed=190s  ETA=31s    [69/79] 010.png       elapsed=192s  ETA=28s    [70/79] 011.png       elapsed=195s  ETA=25s    [71/79] 012.png       elapsed=198s  ETA=22s    [72/79] 013.png       elapsed=201s  ETA=19s    [73/79] 014.png       elapsed=204s  ETA=17s    [74/79] 015.png       elapsed=206s  ETA=14s    [75/79] 016.png       elapsed=209s  ETA=11s    [76/79] 017.png       elapsed=211s  ETA=8s    [77/79] 018.png       elapsed=214s  ETA=6s    [78/79] 019.png       elapsed=217s  ETA=3s    [79/79] 020.png       elapsed=220s  ETA=0s  
+  scratch               n=  21  raw_score mean=  440.96  max=  624.37
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD     411.57    474.54    779.90    809.25    823.19    826.67
+  raw_score       DEFECT    279.10    467.29    624.59    691.96    887.93   1030.13
+  map_max          GOOD     411.57    474.54    779.90    809.25    823.19    826.67
+  map_max         DEFECT    279.10    467.29    624.59    691.96    887.93   1030.13
+  map_mean         GOOD     247.49    306.99    440.57    446.54    447.76    448.06
+  map_mean        DEFECT    145.79    253.80    308.13    330.20    338.29    341.20
+  map_top1         GOOD     403.40    464.51    758.35    771.18    786.78    790.69
+  map_top1        DEFECT    261.68    441.32    584.68    620.73    762.75    861.81
+  map_top01        GOOD     410.39    472.21    776.87    803.68    815.91    818.97
+  map_top01       DEFECT    275.64    462.19    614.59    683.13    859.18   1010.46
+
+  AUROC:
+    raw_score     0.4167
+    map_max       0.4167
+    map_mean      0.1965
+    map_top1      0.3649
+    map_top01     0.4035
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score         331.94    0.9500    1.0000  
+  map_max           331.94    0.9500    1.0000  
+  map_mean          153.38    0.9667    1.0000  
+  map_top1          303.90    0.9500    1.0000  
+  map_top01         319.95    0.9500    1.0000  
+
+  >>> Recommended T2 config for 'wood':
+      metric=raw_score  threshold=331.9379  recall=0.9500  fpr=1.0000
+
+============================================================
+  zipper
+============================================================
+  [1/151] 000.png       elapsed=1s  ETA=117s    [2/151] 001.png       elapsed=2s  ETA=132s    [3/151] 002.png       elapsed=3s  ETA=134s    [4/151] 003.png       elapsed=4s  ETA=138s    [5/151] 004.png       elapsed=4s  ETA=131s    [6/151] 005.png       elapsed=5s  ETA=131s    [7/151] 006.png       elapsed=6s  ETA=133s    [8/151] 007.png       elapsed=8s  ETA=134s    [9/151] 008.png       elapsed=8s  ETA=130s    [10/151] 009.png       elapsed=9s  ETA=129s    [11/151] 010.png       elapsed=10s  ETA=128s    [12/151] 011.png       elapsed=11s  ETA=127s    [13/151] 012.png       elapsed=12s  ETA=127s    [14/151] 013.png       elapsed=13s  ETA=124s    [15/151] 014.png       elapsed=13s  ETA=122s    [16/151] 015.png       elapsed=14s  ETA=121s    [17/151] 016.png       elapsed=15s  ETA=120s    [18/151] 017.png       elapsed=16s  ETA=120s    [19/151] 018.png       elapsed=17s  ETA=119s  
+  broken_teeth          n=  19  raw_score mean=   33.06  max=   40.15
+  [20/151] 000.png       elapsed=18s  ETA=118s    [21/151] 001.png       elapsed=19s  ETA=118s    [22/151] 002.png       elapsed=20s  ETA=117s    [23/151] 003.png       elapsed=21s  ETA=116s    [24/151] 004.png       elapsed=22s  ETA=116s    [25/151] 005.png       elapsed=23s  ETA=116s    [26/151] 006.png       elapsed=24s  ETA=115s    [27/151] 007.png       elapsed=25s  ETA=114s    [28/151] 008.png       elapsed=26s  ETA=113s    [29/151] 009.png       elapsed=27s  ETA=113s    [30/151] 010.png       elapsed=28s  ETA=113s    [31/151] 011.png       elapsed=29s  ETA=111s    [32/151] 012.png       elapsed=30s  ETA=111s    [33/151] 013.png       elapsed=31s  ETA=110s    [34/151] 014.png       elapsed=32s  ETA=109s    [35/151] 015.png       elapsed=33s  ETA=108s  
+  combined              n=  16  raw_score mean=   32.90  max=   38.83
+  [36/151] 000.png       elapsed=33s  ETA=107s    [37/151] 001.png       elapsed=34s  ETA=106s    [38/151] 002.png       elapsed=35s  ETA=105s    [39/151] 003.png       elapsed=36s  ETA=104s    [40/151] 004.png       elapsed=37s  ETA=104s    [41/151] 005.png       elapsed=38s  ETA=102s    [42/151] 006.png       elapsed=39s  ETA=102s    [43/151] 007.png       elapsed=40s  ETA=101s    [44/151] 008.png       elapsed=41s  ETA=100s    [45/151] 009.png       elapsed=42s  ETA=99s    [46/151] 010.png       elapsed=43s  ETA=98s    [47/151] 011.png       elapsed=44s  ETA=97s    [48/151] 012.png       elapsed=45s  ETA=96s    [49/151] 013.png       elapsed=46s  ETA=95s    [50/151] 014.png       elapsed=47s  ETA=95s    [51/151] 015.png       elapsed=48s  ETA=94s    [52/151] 016.png       elapsed=49s  ETA=93s  
+  fabric_border         n=  17  raw_score mean=   32.50  max=   36.75
+  [53/151] 000.png       elapsed=50s  ETA=92s    [54/151] 001.png       elapsed=51s  ETA=91s    [55/151] 002.png       elapsed=52s  ETA=90s    [56/151] 003.png       elapsed=53s  ETA=90s    [57/151] 004.png       elapsed=54s  ETA=89s    [58/151] 005.png       elapsed=55s  ETA=88s    [59/151] 006.png       elapsed=56s  ETA=88s    [60/151] 007.png       elapsed=57s  ETA=87s    [61/151] 008.png       elapsed=58s  ETA=86s    [62/151] 009.png       elapsed=59s  ETA=85s    [63/151] 010.png       elapsed=60s  ETA=84s    [64/151] 011.png       elapsed=61s  ETA=83s    [65/151] 012.png       elapsed=62s  ETA=82s    [66/151] 013.png       elapsed=64s  ETA=82s    [67/151] 014.png       elapsed=65s  ETA=81s    [68/151] 015.png       elapsed=65s  ETA=80s  
+  fabric_interior       n=  16  raw_score mean=   33.85  max=   37.68
+  [69/151] 000.png       elapsed=66s  ETA=79s    [70/151] 001.png       elapsed=67s  ETA=78s    [71/151] 002.png       elapsed=68s  ETA=77s    [72/151] 003.png       elapsed=69s  ETA=76s    [73/151] 004.png       elapsed=70s  ETA=75s    [74/151] 005.png       elapsed=71s  ETA=74s    [75/151] 006.png       elapsed=72s  ETA=73s    [76/151] 007.png       elapsed=73s  ETA=72s    [77/151] 008.png       elapsed=74s  ETA=71s    [78/151] 009.png       elapsed=75s  ETA=70s    [79/151] 010.png       elapsed=76s  ETA=69s    [80/151] 011.png       elapsed=77s  ETA=68s    [81/151] 012.png       elapsed=78s  ETA=67s    [82/151] 013.png       elapsed=79s  ETA=66s    [83/151] 014.png       elapsed=80s  ETA=66s    [84/151] 015.png       elapsed=81s  ETA=64s    [85/151] 016.png       elapsed=82s  ETA=64s    [86/151] 017.png       elapsed=83s  ETA=63s    [87/151] 018.png       elapsed=84s  ETA=62s    [88/151] 019.png       elapsed=85s  ETA=61s    [89/151] 020.png       elapsed=86s  ETA=60s    [90/151] 021.png       elapsed=87s  ETA=59s    [91/151] 022.png       elapsed=87s  ETA=58s    [92/151] 023.png       elapsed=89s  ETA=57s    [93/151] 024.png       elapsed=90s  ETA=56s    [94/151] 025.png       elapsed=91s  ETA=55s    [95/151] 026.png       elapsed=91s  ETA=54s    [96/151] 027.png       elapsed=92s  ETA=53s    [97/151] 028.png       elapsed=93s  ETA=52s    [98/151] 029.png       elapsed=94s  ETA=51s    [99/151] 030.png       elapsed=95s  ETA=50s    [100/151] 031.png       elapsed=97s  ETA=49s  
+  good                  n=  32  raw_score mean=   33.25  max=   38.19
+  [101/151] 000.png       elapsed=98s  ETA=48s    [102/151] 001.png       elapsed=99s  ETA=47s    [103/151] 002.png       elapsed=100s  ETA=46s    [104/151] 003.png       elapsed=100s  ETA=45s    [105/151] 004.png       elapsed=101s  ETA=44s    [106/151] 005.png       elapsed=102s  ETA=43s    [107/151] 006.png       elapsed=104s  ETA=43s    [108/151] 007.png       elapsed=105s  ETA=42s    [109/151] 008.png       elapsed=106s  ETA=41s    [110/151] 009.png       elapsed=107s  ETA=40s    [111/151] 010.png       elapsed=108s  ETA=39s    [112/151] 011.png       elapsed=109s  ETA=38s    [113/151] 012.png       elapsed=110s  ETA=37s    [114/151] 013.png       elapsed=111s  ETA=36s    [115/151] 014.png       elapsed=112s  ETA=35s    [116/151] 015.png       elapsed=113s  ETA=34s    [117/151] 016.png       elapsed=114s  ETA=33s  
+  rough                 n=  17  raw_score mean=   33.58  max=   38.47
+  [118/151] 000.png       elapsed=115s  ETA=32s    [119/151] 001.png       elapsed=117s  ETA=31s    [120/151] 002.png       elapsed=118s  ETA=30s    [121/151] 003.png       elapsed=119s  ETA=29s    [122/151] 004.png       elapsed=120s  ETA=28s    [123/151] 005.png       elapsed=121s  ETA=27s    [124/151] 006.png       elapsed=122s  ETA=27s    [125/151] 007.png       elapsed=123s  ETA=26s    [126/151] 008.png       elapsed=124s  ETA=25s    [127/151] 009.png       elapsed=125s  ETA=24s    [128/151] 010.png       elapsed=126s  ETA=23s    [129/151] 011.png       elapsed=127s  ETA=22s    [130/151] 012.png       elapsed=128s  ETA=21s    [131/151] 013.png       elapsed=129s  ETA=20s    [132/151] 014.png       elapsed=131s  ETA=19s    [133/151] 015.png       elapsed=132s  ETA=18s    [134/151] 016.png       elapsed=133s  ETA=17s    [135/151] 017.png       elapsed=134s  ETA=16s  
+  split_teeth           n=  18  raw_score mean=   33.67  max=   40.81
+  [136/151] 000.png       elapsed=135s  ETA=15s    [137/151] 001.png       elapsed=136s  ETA=14s    [138/151] 002.png       elapsed=137s  ETA=13s    [139/151] 003.png       elapsed=138s  ETA=12s    [140/151] 004.png       elapsed=139s  ETA=11s    [141/151] 005.png       elapsed=141s  ETA=10s    [142/151] 006.png       elapsed=141s  ETA=9s    [143/151] 007.png       elapsed=142s  ETA=8s    [144/151] 008.png       elapsed=143s  ETA=7s    [145/151] 009.png       elapsed=144s  ETA=6s    [146/151] 010.png       elapsed=145s  ETA=5s    [147/151] 011.png       elapsed=146s  ETA=4s    [148/151] 012.png       elapsed=147s  ETA=3s    [149/151] 013.png       elapsed=148s  ETA=2s    [150/151] 014.png       elapsed=149s  ETA=1s    [151/151] 015.png       elapsed=150s  ETA=0s  
+  squeezed_teeth        n=  16  raw_score mean=   32.63  max=   39.88
+
+  Metric                       min       p50       p90       p95       p99       max
+  --------------------------------------------------------------------------------
+  raw_score        GOOD      29.27     33.52     35.59     36.42     37.69     38.19
+  raw_score       DEFECT     27.49     32.90     36.48     37.76     40.10     40.81
+  map_max          GOOD      29.27     33.52     35.59     36.42     37.69     38.19
+  map_max         DEFECT     27.49     32.90     36.48     37.76     40.10     40.81
+  map_mean         GOOD      13.96     15.05     16.39     16.52     16.81     16.92
+  map_mean        DEFECT     12.51     14.28     16.00     16.44     16.77     17.24
+  map_top1         GOOD      27.51     30.08     33.16     33.26     34.40     34.89
+  map_top1        DEFECT     25.44     30.18     33.15     34.04     35.16     35.92
+  map_top01        GOOD      28.44     32.65     34.65     35.01     36.29     36.74
+  map_top01       DEFECT     26.49     31.85     35.23     37.09     37.95     38.69
+
+  AUROC:
+    raw_score     0.4764
+    map_max       0.4764
+    map_mean      0.2684
+    map_top1      0.4325
+    map_top01     0.4480
+
+  T2 High-Recall Recommendations (target recall >= 0.95):
+  Metric         Threshold    Recall       FPR  Note
+  ------------------------------------------------------------
+  raw_score          29.43    0.9580    0.9688  
+  map_max            29.43    0.9580    0.9688  
+  map_mean           12.96    0.9580    1.0000  
+  map_top1           27.28    0.9580    1.0000  
+  map_top01          28.33    0.9580    1.0000  
+
+  >>> Recommended T2 config for 'zipper':
+      metric=raw_score  threshold=29.4267  recall=0.9580  fpr=0.9688
+
+CSV written to: results/phase8_threshold_calibration/onnx_scores_15cls.csv
+
+Summary: PASS=15  FAIL=0  total=15
