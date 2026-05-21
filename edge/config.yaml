@@ -91,7 +91,7 @@ vlm_4b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_lor
 # 4B 运行时 RAM ~8.7 GB，Pipeline 总峰值 ~11.4 GB（16GB 板裕度 ~3.1 GB）
 # 4B 文件来源：Qengineering Sync.com（不自行转换 base 文件）
 # 视觉文件：使用 v1.2.2 版本（v1.2.3 精度存在回退，见 Issue #421）
-vlm_max_new_tokens: 200
+vlm_max_new_tokens: 500
 vlm_max_context: 4096            # 16GB 板约束，上限 4096
 vlm_npu_core_num: 3              # 三核并行
 

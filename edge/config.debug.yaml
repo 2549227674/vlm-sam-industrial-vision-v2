@@ -31,7 +31,7 @@ upload_max_retries: 5
 
 # ── AB 测试 ───────────────────────────────────────
 vlm_variant: "base"
-vlm_model_size: "4B"
+vlm_model_size: "2B"
 
 # ── 取帧模式 ──────────────────────────────────────
 capture_mode: image_loop
@@ -91,7 +91,7 @@ vlm_4b_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_base.rkl
 vlm_4b_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_vision.rknn
 vlm_2b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
 vlm_4b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_lora_15cls.rkllm
-vlm_max_new_tokens: 200
+vlm_max_new_tokens: 500
 vlm_max_context: 4096
 vlm_npu_core_num: 3
 

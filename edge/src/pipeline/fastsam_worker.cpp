@@ -544,6 +544,13 @@ void FastSamWorker::operator()(std::stop_token st) {
                  ead.final_score,
                  ead.inference_ms);
 
+    // Preprocess image (capture orig dimensions for VLM bbox normalization).
+    int orig_w_img = 0, orig_h_img = 0;
+    {
+      std::unique_ptr<Image> tmp_img(Image::load(ead.image_path));
+      if (tmp_img) { orig_w_img = tmp_img->width; orig_h_img = tmp_img->height; }
+    }
+
     // ── Preprocess ─────────────────────────────────────────────────────────
     auto t0 = steady_clock::now();
     int orig_w = 0, orig_h = 0;
@@ -685,6 +692,7 @@ void FastSamWorker::operator()(std::stop_token st) {
     float vlm_confidence = 0.5f;
     std::string vlm_description;
     bool vlm_json_ok = false;
+    bool vlm_severity_corrected = false;
     VlmResult vlm_result;
 
     if (vlm_ready && !bbox_fallback) {
@@ -699,15 +707,28 @@ void FastSamWorker::operator()(std::stop_token st) {
 
       vlm_json_ok = Qwen3VLRunner::extract_json(
           vlm_result.raw_text, ead.category,
-          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description,
+          orig_w_img, orig_h_img, &vlm_severity_corrected);
+
+      if (vlm_severity_corrected) {
+        std::fprintf(stderr, "[T3] severity_corrected=true\n");
+      }
+
+      // Parse VLM bboxes from JSON raw_text.
+      if (vlm_json_ok) {
+        vlm_result.vlm_bboxes = Qwen3VLRunner::parse_vlm_bboxes(
+            vlm_result.raw_text, orig_w_img, orig_h_img);
+      }
 
       if (!vlm_json_ok) {
         // Fallback: use rule-based JSON.
         std::string fb = Qwen3VLRunner::build_fallback_json(
             ead.category, ead.final_score, "invalid VLM JSON");
+        bool tmp_sc = false;
         vlm_json_ok = Qwen3VLRunner::extract_json(
             fb, ead.category,
-            vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+            vlm_defect_type, vlm_severity, vlm_confidence, vlm_description,
+            0, 0, &tmp_sc);
         vlm_description = "fallback: invalid VLM JSON";
         std::fprintf(stderr, "[T3] VLM JSON parse failed, using fallback\n");
       }
@@ -715,21 +736,75 @@ void FastSamWorker::operator()(std::stop_token st) {
       // VLM not available — use rule-based fallback.
       std::string fb = Qwen3VLRunner::build_fallback_json(
           ead.category, ead.final_score, "VLM not initialized");
+      bool tmp_sc = false;
       Qwen3VLRunner::extract_json(
           fb, ead.category,
-          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description,
+          0, 0, &tmp_sc);
       vlm_description = "fallback: VLM not initialized";
     } else {
       // bbox_fallback — use rule-based.
       std::string fb = Qwen3VLRunner::build_fallback_json(
           ead.category, ead.final_score, "no valid FastSAM bbox");
+      bool tmp_sc = false;
       Qwen3VLRunner::extract_json(
           fb, ead.category,
-          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description,
+          0, 0, &tmp_sc);
       vlm_description = "fallback: no valid FastSAM bbox";
     }
 
     float vlm_total_ms = duration<float, std::milli>(steady_clock::now() - t_vlm).count();
+
+    // ── VLM bbox fusion (conservative: prefer FastSAM) ─────────────────────
+    std::string bbox_source = "fastsam";
+    std::string bbox_merge_reason = "default: FastSAM bboxes";
+    {
+      const auto& vlm_bboxes_parsed = vlm_result.vlm_bboxes;
+      std::fprintf(stderr, "  [T3] vlm_bbox_raw: parsed %zu bboxes from VLM\n",
+                   vlm_bboxes_parsed.size());
+      for (size_t bi = 0; bi < vlm_bboxes_parsed.size(); ++bi) {
+        const auto& vb = vlm_bboxes_parsed[bi];
+        std::fprintf(stderr, "    vlm_bbox_normalized[%zu]: x=%.4f y=%.4f w=%.4f h=%.4f\n",
+                     bi, vb[0], vb[1], vb[2], vb[3]);
+      }
+
+      if (!vlm_bboxes_parsed.empty() && !bbox_fallback) {
+        // Check if any VLM bbox has IoU > 0.3 with any FastSAM bbox.
+        bool vlm_aligned = false;
+        for (const auto& vb : vlm_bboxes_parsed) {
+          for (const auto& fb : bboxes) {
+            if (iou_xywh(vb[0], vb[1], vb[2], vb[3],
+                         fb.x, fb.y, fb.w, fb.h) > 0.3f) {
+              vlm_aligned = true;
+              break;
+            }
+          }
+          if (vlm_aligned) break;
+        }
+
+        if (vlm_aligned) {
+          // VLM bboxes valid and aligned with FastSAM — use them.
+          std::vector<VlmReport::BBox> vlm_bb;
+          for (const auto& vb : vlm_bboxes_parsed) {
+            vlm_bb.push_back({clamp01(vb[0]), clamp01(vb[1]),
+                              clamp01(vb[2]), clamp01(vb[3])});
+          }
+          bboxes = std::move(vlm_bb);
+          bbox_source = "vlm";
+          bbox_merge_reason = "VLM bbox aligned with FastSAM (IoU>0.3)";
+          std::fprintf(stderr, "  [T3] bbox_source=vlm\n");
+        } else {
+          bbox_source = "fastsam_fallback";
+          bbox_merge_reason = "VLM bbox not aligned with FastSAM (IoU<0.3)";
+          std::fprintf(stderr,
+                       "  [T3] bbox_source=fastsam_fallback "
+                       "(VLM bbox IoU<0.3 with FastSAM)\n");
+        }
+      }
+      std::fprintf(stderr, "  [T3] bbox_merge_reason: %s\n",
+                   bbox_merge_reason.c_str());
+    }
 
     float total_ms = duration<float, std::milli>(steady_clock::now() - t_frame).count();
 
@@ -755,6 +830,13 @@ void FastSamWorker::operator()(std::stop_token st) {
     std::fprintf(stderr, "     [stats] total_frames=%zu fallback_frames=%zu\n",
                  static_cast<size_t>(total_frames),
                  static_cast<size_t>(fallback_frames));
+
+    // Output tokens warning.
+    if (vlm_result.output_tokens > 120) {
+      std::fprintf(stderr, "  [T3] WARNING: output_tokens=%d > 120, "
+                   "consider shortening prompt/description\n",
+                   vlm_result.output_tokens);
+    }
 
     // ── Build VlmReport ────────────────────────────────────────────────────
     VlmReport report;

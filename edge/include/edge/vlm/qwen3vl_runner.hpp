@@ -31,6 +31,7 @@ struct VlmResult {
   std::string error_message;
   float       vision_ms{0.0f};
   float       llm_ms{0.0f};
+  std::vector<std::array<float,4>> vlm_bboxes;  // Parsed VLM bboxes [0,1].
 };
 
 class Qwen3VLRunner {
@@ -67,12 +68,22 @@ class Qwen3VLRunner {
                            std::string& out_defect_type,
                            std::string& out_severity,
                            float& out_confidence,
-                           std::string& out_description);
+                           std::string& out_description,
+                           int orig_w = 0,
+                           int orig_h = 0,
+                           bool* severity_corrected = nullptr);
 
   // Build a rule-based fallback VLM result when JSON extraction fails.
   static std::string build_fallback_json(const std::string& category,
                                          float final_score,
                                          const std::string& reason);
+
+  // Parse VLM bbox array from JSON text.
+  // Handles [[x,y,w,h]] compact format, single and multi-bbox.
+  // Detects pixel vs normalized coordinates and normalizes to [0,1].
+  static std::vector<std::array<float,4>> parse_vlm_bboxes(
+      const std::string& json_str,
+      int orig_w, int orig_h);
 
  private:
   // Preprocess image: decode + expand-to-square + resize to 448x448.

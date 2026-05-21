@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstdio>
+#include <cstring>
 #include <string>
 
 namespace vlm_industrial::edge {
@@ -163,6 +164,30 @@ void UploadWorker::operator()(std::stop_token st) {
 
     std::string meta_json = build_meta_json(report);
 
+    // Append upload trace event placeholder to existing trace_events array.
+    {
+      // Find "trace_events":[ in the JSON and insert before the closing ].
+      auto te_key = meta_json.rfind("\"trace_events\":[");
+      if (te_key != std::string::npos) {
+        // Find the matching ']' for the array.
+        size_t arr_start = te_key + strlen("\"trace_events\":[");
+        int depth = 1;
+        size_t pos = arr_start;
+        while (pos < meta_json.size() && depth > 0) {
+          if (meta_json[pos] == '[') ++depth;
+          else if (meta_json[pos] == ']') --depth;
+          if (depth > 0) ++pos;
+        }
+        // pos now points to closing ']'.
+        if (depth == 0) {
+          std::string te = ",{\"name\":\"upload\",\"ts\":0.0,"
+                           "\"dur\":0.0,\"tid\":\"T4.upload\","
+                           "\"ph\":\"X\",\"cat\":\"upload\"}";
+          meta_json.insert(pos, te);
+        }
+      }
+    }
+
     // Log meta JSON for the first frame (verify construction).
     static bool first_frame = true;
     if (first_frame) {
@@ -171,12 +196,16 @@ void UploadWorker::operator()(std::stop_token st) {
       first_frame = false;
     }
 
+    // Time the upload.
+    auto t_upload_start = std::chrono::steady_clock::now();
     long status = http_.post_report(
         upload_url,
         report.image_path,
         meta_json,
         cfg_.upload_max_retries,
         cfg_.upload_timeout_s);
+    float upload_ms = std::chrono::duration<float, std::milli>(
+        std::chrono::steady_clock::now() - t_upload_start).count();
 
     if (status == 200) {
       m_.upload_count.fetch_add(1, std::memory_order_relaxed);
@@ -185,6 +214,7 @@ void UploadWorker::operator()(std::stop_token st) {
       std::fprintf(stderr, "[T4] upload failed: HTTP %ld (frame from %s)\n",
                    status, report.category.c_str());
     }
+    std::fprintf(stderr, "[T4] upload_ms=%.1f\n", upload_ms);
   }
 
   std::fprintf(stderr, "[T4] stopped\n");

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线完成（Prompt 2B + 2C + 2C-Fix + 2D）**
+**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线完成（Prompt 2B + 2C + 2C-Fix + 2D + 2D-Fix）**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -98,8 +98,20 @@ Phase 7 Prompt 2D completed:
 - Rule-based fallback 在 VLM init 失败或 JSON 提取失败时自动启用
 - 需要 RKLLM runtime >= 1.2.3（板上 /usr/lib/librkllmrt.so 已更新）
 
+Phase 7 Prompt 2D-Fix completed:
+- VLM bbox 解析、归一化（像素→[0,1]）与保守融合策略（FastSAM 优先，VLM bbox IoU>0.3 才替换）
+- severity 白名单统一为 low/medium/high（移除 critical）
+- LoRA/variant 路径选择：2B base / 2B lora 通过 config 切换，4B 保留 TODO
+- LoRA 模型文件缺失时 init 失败并报错（不静默回退）
+- prompt 限制 description ≤ 20 words，output_tokens > 120 打印 warning
+- upload trace_event 追加到 trace_events 数组（第 6 个事件）
+- vlm_max_new_tokens 从 200 提升到 500
+- 2B base smoke test: 23/23 json_ok=1 (100%), 0 fallback, 0 critical, output_tokens 52-79
+- 2B lora smoke test: 13/13 json_ok=1, 1 fallback, output_tokens warning 1 (499>120)
+- 详见 `docs/experiments/phase7_prompt2d_fix_report.md`
+
 下一步：
-- Phase 7 Prompt 2D-Fix：优化 VLM 输出质量、调试 JSON 提取稳定性、考虑 LoRA 模型接入
+- Phase 7 Prompt 2E：队列节拍验证、4B 模型验证、enable_thinking 评估
 
 ## 一句话定义
 

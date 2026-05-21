@@ -1,0 +1,54 @@
+# ── edge/config.debug.lora.yaml ─────────────────────────────────
+# Debug config for 2B LoRA smoke test (Prompt 2D-Fix).
+#
+# Usage:
+#   timeout 240 ./edge/build/edge_pipeline /tmp/config_bottle_raw_debug_lora.yaml \
+#     2>&1 | tee /tmp/phase7_2d_fix_lora_smoke.log
+
+# ── Device ─────────────────────────────────────────
+device_id: rk3588-line-A-cam01
+line_id: "L1"
+
+# ── Backend ────────────────────────────────────────
+backend_url: http://192.168.1.100:8000
+upload_timeout_s: 30
+upload_max_retries: 5
+
+# ── AB test: 2B LoRA ──────────────────────────────
+vlm_variant: "lora"
+vlm_model_size: "2B"
+
+# ── Capture ────────────────────────────────────────
+capture_mode: image_loop
+image_loop_dir: /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
+image_loop_categories:
+  - bottle
+image_loop_beat_ms: 1500
+image_loop_jitter_ms: 200
+
+# ── Stage 1: EfficientAD-S ─────────────────────────
+efficientad_model_dir: /home/orangepi/models/efficientad_models
+efficientad_threshold: 0.5
+efficientad_input_size: 256
+efficientad_threshold_default: 0.50
+efficientad_score_mode: map_mean
+efficientad_gate_mode: pass_all
+
+# ── Stage 2: FastSAM ───────────────────────────────
+fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s.rknn
+fastsam_input_size: 640
+fastsam_conf: 0.5
+
+# ── Stage 3: Qwen3-VL 2B LoRA ─────────────────────
+vlm_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+vlm_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+vlm_2b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+vlm_4b_model_path: ""
+vlm_4b_vision_model_path: ""
+vlm_4b_lora_model_path: ""
+vlm_max_new_tokens: 500
+vlm_max_context: 4096
+vlm_npu_core_num: 3
+
+# ── Image output ───────────────────────────────────
+jpeg_quality: 85

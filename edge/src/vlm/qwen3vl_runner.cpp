@@ -122,28 +122,60 @@ Qwen3VLRunner::~Qwen3VLRunner() {
 // ── init ─────────────────────────────────────────────────────────────────────
 
 bool Qwen3VLRunner::init() {
-  // Select model paths based on config (2B base only in this round).
+  // Select model paths based on config.
   std::string llm_path;
   std::string vision_path;
 
   if (cfg_.vlm_model_size == "2B" && cfg_.vlm_variant == "base") {
     llm_path = cfg_.vlm_model_path;
     vision_path = cfg_.vlm_vision_model_path;
-  } else {
-    // For now, only 2B base is supported.
+  } else if (cfg_.vlm_model_size == "2B" && cfg_.vlm_variant == "lora") {
+    llm_path = cfg_.vlm_2b_lora_model_path;
+    vision_path = cfg_.vlm_vision_model_path;
+    if (llm_path.empty()) {
+      std::fprintf(stderr,
+                   "[VLM] ERROR: vlm_variant=lora but vlm_2b_lora_model_path is empty\n");
+      return false;
+    }
+    if (!fs::exists(llm_path)) {
+      std::fprintf(stderr,
+                   "[VLM] ERROR: LoRA model file not found: %s\n",
+                   llm_path.c_str());
+      return false;
+    }
+  } else if (cfg_.vlm_model_size == "4B") {
+    // TODO(Phase 7): 4B support — models exist on board but not yet validated.
     std::fprintf(stderr,
-                 "[VLM] WARNING: vlm_model_size=%s vlm_variant=%s not yet supported, "
+                 "[VLM] WARNING: 4B variant not yet implemented in this build, "
+                 "falling back to 2B base\n");
+    llm_path = cfg_.vlm_model_path;
+    vision_path = cfg_.vlm_vision_model_path;
+  } else {
+    std::fprintf(stderr,
+                 "[VLM] WARNING: vlm_model_size=%s vlm_variant=%s not recognized, "
                  "falling back to 2B base\n",
                  cfg_.vlm_model_size.c_str(), cfg_.vlm_variant.c_str());
     llm_path = cfg_.vlm_model_path;
     vision_path = cfg_.vlm_vision_model_path;
   }
 
+  // Validate file existence.
+  if (!fs::exists(llm_path)) {
+    std::fprintf(stderr, "[VLM] ERROR: LLM model not found: %s\n",
+                 llm_path.c_str());
+    return false;
+  }
+  if (!fs::exists(vision_path)) {
+    std::fprintf(stderr, "[VLM] ERROR: vision model not found: %s\n",
+                 vision_path.c_str());
+    return false;
+  }
+
   std::fprintf(stderr,
                "[VLM] Initializing Qwen3-VL\n"
-               "  vlm_model_size=%s  vlm_variant=%s\n"
-               "  llm_path=%s\n"
-               "  vision_path=%s\n"
+               "  selected_model_size=%s  selected_variant=%s\n"
+               "  selected_llm_path=%s\n"
+               "  selected_vision_path=%s\n"
                "  max_context=%d  max_new_tokens=%d\n",
                cfg_.vlm_model_size.c_str(), cfg_.vlm_variant.c_str(),
                llm_path.c_str(), vision_path.c_str(),
@@ -361,10 +393,10 @@ std::string Qwen3VLRunner::build_prompt(
   ss << "Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.\n"
      << "Use this exact format: {\"category\":\"" << category
      << "\",\"defect_type\":\"string\",\"severity\":\"low|medium|high\""
-     << ",\"confidence\":0.0,\"bboxes\":[[x,y,w,h]],\"description\":\"string\"}\n"
-     << "Rules: category=\"" << category << "\", severity=low/medium/high, "
+     << ",\"confidence\":0.0,\"bboxes\":[[x,y,w,h]],\"description\":\"max 20 words\"}\n"
+     << "Rules: category=\"" << category << "\", severity=low/medium/high ONLY (no critical), "
      << "confidence in [0,1], bboxes from FastSAM regions above, "
-     << "use \"anomaly\" if unsure about defect_type.\n";
+     << "description max 20 words, use \"anomaly\" if unsure about defect_type.\n";
 
   return ss.str();
 }
@@ -472,6 +504,11 @@ VlmResult Qwen3VLRunner::infer(
                result.ttft_ms, result.decode_tps,
                result.prefill_tokens, result.output_tokens, result.rss_mb);
 
+  if (result.output_tokens > 120) {
+    std::fprintf(stderr, "[VLM] WARNING: output_tokens=%d > 120\n",
+                 result.output_tokens);
+  }
+
   return result;
 }
 
@@ -486,7 +523,10 @@ bool Qwen3VLRunner::extract_json(
     std::string& out_defect_type,
     std::string& out_severity,
     float& out_confidence,
-    std::string& out_description) {
+    std::string& out_description,
+    int orig_w, int orig_h,
+    bool* severity_corrected) {
+  if (severity_corrected) *severity_corrected = false;
   if (raw_text.empty()) return false;
 
   // Strip thinking tags.
@@ -556,16 +596,19 @@ bool Qwen3VLRunner::extract_json(
   if (out_defect_type.empty()) out_defect_type = "anomaly";
   if (out_severity.empty() ||
       (out_severity != "low" && out_severity != "medium" &&
-       out_severity != "high" && out_severity != "critical")) {
+       out_severity != "high")) {
     out_severity = "medium";
+    if (severity_corrected) *severity_corrected = true;
   }
   if (out_confidence < 0.0f || out_confidence > 1.0f) {
     out_confidence = 0.5f;
   }
 
   std::fprintf(stderr,
-               "[VLM] JSON extracted: defect_type=%s severity=%s conf=%.2f\n",
-               out_defect_type.c_str(), out_severity.c_str(), out_confidence);
+               "[VLM] JSON extracted: defect_type=%s severity=%s conf=%.2f"
+               "%s\n",
+               out_defect_type.c_str(), out_severity.c_str(), out_confidence,
+               (severity_corrected && *severity_corrected) ? " severity_corrected=true" : "");
 
   return true;
 }
@@ -592,6 +635,89 @@ std::string Qwen3VLRunner::build_fallback_json(
      << ",\"confidence\":" << conf
      << ",\"description\":\"fallback: " << reason << "\"}";
   return ss.str();
+}
+
+// ── parse_vlm_bboxes ────────────────────────────────────────────────────────
+// Parse VLM bbox array from JSON text.
+// Supports: [[x,y,w,h]], single [x,y,w,h], multiple [[x,y,w,h],[x,y,w,h]].
+// Detects pixel vs normalized coordinates and normalizes to [0,1].
+
+std::vector<std::array<float,4>> Qwen3VLRunner::parse_vlm_bboxes(
+    const std::string& json_str,
+    int orig_w, int orig_h) {
+  std::vector<std::array<float,4>> result;
+
+  // Find "bboxes" key.
+  auto bbox_pos = json_str.find("\"bboxes\"");
+  if (bbox_pos == std::string::npos) return result;
+
+  // Find the opening [ after "bboxes":
+  auto bracket_start = json_str.find('[', bbox_pos);
+  if (bracket_start == std::string::npos) return result;
+
+  // Extract all numeric values between [ ... ].
+  std::vector<float> values;
+  size_t pos = bracket_start + 1;
+  while (pos < json_str.size()) {
+    if (json_str[pos] == ']') break;
+    if (json_str[pos] == '[') { ++pos; continue; }
+    if (json_str[pos] == ']' ) { ++pos; continue; }
+    if (std::isdigit(json_str[pos]) || json_str[pos] == '-' || json_str[pos] == '.') {
+      char* end_ptr = nullptr;
+      float val = std::strtof(json_str.c_str() + pos, &end_ptr);
+      values.push_back(val);
+      pos = end_ptr - json_str.c_str();
+    } else {
+      ++pos;
+    }
+  }
+
+  if (values.empty() || values.size() % 4 != 0) return result;
+
+  // Detect coordinate type: if all values in [0,1], already normalized.
+  bool is_pixel = false;
+  for (float v : values) {
+    if (v > 2.0f) { is_pixel = true; break; }
+  }
+
+  int norm_w = orig_w;
+  int norm_h = orig_h;
+  if (is_pixel && (norm_w <= 0 || norm_h <= 0)) {
+    norm_w = 448;
+    norm_h = 448;
+    std::fprintf(stderr, "[VLM] WARNING: orig image size unknown, "
+                 "normalizing pixel bbox by 448x448\n");
+  }
+
+  for (size_t i = 0; i + 3 < values.size(); i += 4) {
+    float x = values[i];
+    float y = values[i + 1];
+    float w = values[i + 2];
+    float h = values[i + 3];
+
+    if (is_pixel && norm_w > 0 && norm_h > 0) {
+      x /= static_cast<float>(norm_w);
+      y /= static_cast<float>(norm_h);
+      w /= static_cast<float>(norm_w);
+      h /= static_cast<float>(norm_h);
+    }
+
+    x = std::max(0.0f, std::min(1.0f, x));
+    y = std::max(0.0f, std::min(1.0f, y));
+    w = std::max(0.0f, std::min(1.0f, w));
+    h = std::max(0.0f, std::min(1.0f, h));
+
+    if (w > 0.001f && h > 0.001f && (w * h) < 0.95f && (w * h) > 0.0001f) {
+      result.push_back({x, y, w, h});
+    }
+  }
+
+  if (!result.empty()) {
+    std::fprintf(stderr, "[VLM] vlm_bbox_normalized: %zu valid bboxes (is_pixel=%d)\n",
+                 result.size(), is_pixel ? 1 : 0);
+  }
+
+  return result;
 }
 
 }  // namespace vlm_industrial::edge
