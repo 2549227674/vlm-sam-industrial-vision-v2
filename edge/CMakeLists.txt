@@ -52,13 +52,14 @@ set(COMMON_SOURCES
     src/common/image_utils.cpp
 )
 
-# -- Worker sources (Prompt 2C: T1 + T2 EfficientAD + T3 FastSAM + T4) --
+# -- Worker sources (Prompt 2D: T1 + T2 EfficientAD + T3 FastSAM+VLM + T4) --
 set(WORKER_SOURCES
     src/capture/capture_worker.cpp
     src/pipeline/ead_worker.cpp
-    src/pipeline/fastsam_worker.cpp       # Prompt 2C: real FastSAM T3
+    src/pipeline/fastsam_worker.cpp       # Prompt 2D: real FastSAM + VLM T3
     src/pipeline/mock_vlm_worker.cpp      # kept for reference; not used in main
     src/upload/upload_worker.cpp
+    src/vlm/qwen3vl_runner.cpp            # Prompt 2D: Qwen3-VL RKLLM runner
 )
 
 # -- Main executable --

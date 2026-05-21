@@ -98,7 +98,7 @@ FastSamWorker::FastSamWorker(const common::Config& cfg,
                              common::BoundedQueue<EadResult>& in,
                              common::BoundedQueue<VlmReport>& out,
                              common::PipelineMetrics& m)
-    : cfg_(cfg), in_(in), out_(out), m_(m) {}
+    : cfg_(cfg), in_(in), out_(out), m_(m), vlm_runner_(cfg) {}
 
 // ── load_model ────────────────────────────────────────────────────────────────
 
@@ -509,6 +509,12 @@ void FastSamWorker::operator()(std::stop_token st) {
     return;
   }
 
+  // Init Qwen3-VL runner (Prompt 2D).
+  bool vlm_ready = vlm_runner_.init();
+  if (!vlm_ready) {
+    std::fprintf(stderr, "[T3] WARNING: Qwen3-VL init failed, VLM will use fallback JSON\n");
+  }
+
   std::fprintf(stderr,
                "[T3] FastSamWorker started | model=%s input_size=%d conf=%.2f\n",
                cfg_.fastsam_model_path.c_str(),
@@ -672,15 +678,75 @@ void FastSamWorker::operator()(std::stop_token st) {
       ++fallback_frames;
     }
 
+    // ── Qwen3-VL inference (Prompt 2D) ─────────────────────────────────────
+    auto t_vlm = steady_clock::now();
+    std::string vlm_defect_type = "anomaly";
+    std::string vlm_severity = "medium";
+    float vlm_confidence = 0.5f;
+    std::string vlm_description;
+    bool vlm_json_ok = false;
+    VlmResult vlm_result;
+
+    if (vlm_ready && !bbox_fallback) {
+      // Convert bboxes to VLM input format.
+      std::vector<std::array<float,4>> vlm_bboxes;
+      for (const auto& b : bboxes) {
+        vlm_bboxes.push_back({b.x, b.y, b.w, b.h});
+      }
+
+      vlm_result = vlm_runner_.infer(
+          ead.image_path, ead.category, ead.final_score, vlm_bboxes);
+
+      vlm_json_ok = Qwen3VLRunner::extract_json(
+          vlm_result.raw_text, ead.category,
+          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+
+      if (!vlm_json_ok) {
+        // Fallback: use rule-based JSON.
+        std::string fb = Qwen3VLRunner::build_fallback_json(
+            ead.category, ead.final_score, "invalid VLM JSON");
+        vlm_json_ok = Qwen3VLRunner::extract_json(
+            fb, ead.category,
+            vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+        vlm_description = "fallback: invalid VLM JSON";
+        std::fprintf(stderr, "[T3] VLM JSON parse failed, using fallback\n");
+      }
+    } else if (!vlm_ready) {
+      // VLM not available — use rule-based fallback.
+      std::string fb = Qwen3VLRunner::build_fallback_json(
+          ead.category, ead.final_score, "VLM not initialized");
+      Qwen3VLRunner::extract_json(
+          fb, ead.category,
+          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+      vlm_description = "fallback: VLM not initialized";
+    } else {
+      // bbox_fallback — use rule-based.
+      std::string fb = Qwen3VLRunner::build_fallback_json(
+          ead.category, ead.final_score, "no valid FastSAM bbox");
+      Qwen3VLRunner::extract_json(
+          fb, ead.category,
+          vlm_defect_type, vlm_severity, vlm_confidence, vlm_description);
+      vlm_description = "fallback: no valid FastSAM bbox";
+    }
+
+    float vlm_total_ms = duration<float, std::milli>(steady_clock::now() - t_vlm).count();
+
     float total_ms = duration<float, std::milli>(steady_clock::now() - t_frame).count();
 
     // ── Log summary ────────────────────────────────────────────────────────
     std::fprintf(stderr,
-                 "     postprocess_ms=%.1f  bbox_count=%zu%s  total_ms=%.1f\n",
+                 "     postprocess_ms=%.1f  bbox_count=%zu%s  total_ms=%.1f\n"
+                 "     vlm: defect_type=%s severity=%s conf=%.2f json_ok=%d\n"
+                 "     vlm: vision_ms=%.1f llm_ms=%.1f vlm_total_ms=%.1f\n"
+                 "     vlm: raw_text(%.300s)\n",
                  postprocess_ms,
                  bboxes.size(),
                  bbox_fallback ? " (EMERGENCY_FALLBACK)" : "",
-                 total_ms);
+                 total_ms,
+                 vlm_defect_type.c_str(), vlm_severity.c_str(),
+                 vlm_confidence, vlm_json_ok,
+                 vlm_result.vision_ms, vlm_result.llm_ms, vlm_total_ms,
+                 vlm_result.raw_text.c_str());
     for (size_t i = 0; i < bboxes.size(); ++i) {
       std::fprintf(stderr,
                    "     bbox[%zu] x=%.3f y=%.3f w=%.3f h=%.3f\n",
@@ -690,24 +756,15 @@ void FastSamWorker::operator()(std::stop_token st) {
                  static_cast<size_t>(total_frames),
                  static_cast<size_t>(fallback_frames));
 
-    // ── Derive severity from EfficientAD final_score ───────────────────────
-    const char* severity = "medium";
-    {
-      float ratio = (ead.threshold > 0.0f) ? (ead.final_score / ead.threshold) : 1.0f;
-      if (ratio < 1.5f)      severity = "low";
-      else if (ratio < 3.0f) severity = "medium";
-      else                   severity = "high";
-    }
-
     // ── Build VlmReport ────────────────────────────────────────────────────
     VlmReport report;
     report.image_path         = ead.image_path;
     report.device_id          = ead.device_id;
     report.line_id            = ead.line_id;
     report.category           = ead.category;
-    report.defect_type        = "anomaly";          // TODO(2D): from VLM JSON
-    report.severity           = severity;
-    report.confidence         = ead.final_score;
+    report.defect_type        = vlm_defect_type;
+    report.severity           = vlm_severity;
+    report.confidence         = vlm_confidence;
     report.anomaly_score      = ead.final_score;
     report.variant            = cfg_.vlm_model_size + "_" + cfg_.vlm_variant;
     report.frame_timestamp_us = ead.frame_timestamp_us;
@@ -715,15 +772,14 @@ void FastSamWorker::operator()(std::stop_token st) {
 
     report.pipeline_ms.efficientad = ead.inference_ms;
     report.pipeline_ms.fastsam     = preprocess_ms + infer_ms + postprocess_ms;
-    report.pipeline_ms.qwen3vl     = 0.0f;
+    report.pipeline_ms.qwen3vl     = vlm_total_ms;
 
-    // Mock VLM metrics — TODO(Prompt-2D): replace with real RKLLM output.
-    report.vlm_metrics.ttft_ms       = 0.0f;
-    report.vlm_metrics.decode_tps    = 0.0f;
-    report.vlm_metrics.prompt_tokens = 0;
-    report.vlm_metrics.output_tokens = 0;
-    report.vlm_metrics.rss_mb        = 0.0f;
-    report.vlm_metrics.json_parse_ok = !bbox_fallback;
+    report.vlm_metrics.ttft_ms       = vlm_result.ttft_ms;
+    report.vlm_metrics.decode_tps    = vlm_result.decode_tps;
+    report.vlm_metrics.prompt_tokens = vlm_result.prefill_tokens;
+    report.vlm_metrics.output_tokens = vlm_result.output_tokens;
+    report.vlm_metrics.rss_mb        = vlm_result.rss_mb;
+    report.vlm_metrics.json_parse_ok = vlm_json_ok;
 
     // Trace events.
     float ts = 0.0f;
@@ -742,6 +798,10 @@ void FastSamWorker::operator()(std::stop_token st) {
     report.trace_events.push_back(
         {"fastsam_postprocess", ts, postprocess_ms * 1000.0f,
          "T3.fastsam", 'X', "pipeline"});
+    ts += postprocess_ms * 1000.0f;
+    report.trace_events.push_back(
+        {"qwen3vl_generate", ts, vlm_total_ms * 1000.0f,
+         "T3.vlm", 'X', "vlm"});
 
     out_.push_drop_oldest(std::move(report));
     m_.vlm_count.fetch_add(1, std::memory_order_relaxed);

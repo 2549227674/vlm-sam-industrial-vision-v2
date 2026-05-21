@@ -1,9 +1,7 @@
 #pragma once
 
-// T3 Worker — Prompt 2C-Fix: FastSAM bbox extraction with 5-level cleanup.
+// T3 Worker — Prompt 2D: FastSAM bbox extraction + Qwen3-VL RKLLM inference.
 // output1 prototype mask decode is NOT implemented (see decode_bboxes TODO).
-// Qwen3-VL is NOT called in this phase; VLM fields remain mocked.
-// TODO(Prompt-2D): Replace mock VLM section with real RKLLM inference.
 
 #include <stop_token>
 #include <vector>
@@ -15,6 +13,7 @@
 #include "edge/common/metrics.hpp"
 #include "edge/common/types.hpp"
 #include "edge/common/unique_rknn.hpp"
+#include "edge/vlm/qwen3vl_runner.hpp"
 
 namespace vlm_industrial::edge {
 
@@ -81,6 +80,9 @@ class FastSamWorker {
 
   // Index of the detection output (shape [1,37,8400]); resolved in load_model.
   int det_out_idx_{-1};
+
+  // Qwen3-VL RKLLM runner (Prompt 2D).
+  Qwen3VLRunner vlm_runner_;
 };
 
 }  // namespace vlm_industrial::edge
