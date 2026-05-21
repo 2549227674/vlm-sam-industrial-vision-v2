@@ -60,7 +60,10 @@ def compute_auroc(good_vals: np.ndarray, defect_vals: np.ndarray) -> float:
 
 def find_best_f1(good_vals: np.ndarray, defect_vals: np.ndarray,
                  n_steps: int = 2000) -> tuple[float, float]:
-    """Find threshold that maximizes F1. Returns (threshold, f1)."""
+    """Find threshold that maximizes F1. Returns (threshold, f1).
+
+    Edge runtime uses score > threshold, so we use strict > here.
+    """
     all_vals = np.concatenate([good_vals, defect_vals])
     lo, hi = float(all_vals.min()), float(all_vals.max())
     if lo == hi:
@@ -71,9 +74,9 @@ def find_best_f1(good_vals: np.ndarray, defect_vals: np.ndarray,
     best_thr = lo
 
     for thr in thresholds:
-        tp = np.sum(defect_vals >= thr)
-        fp = np.sum(good_vals >= thr)
-        fn = np.sum(defect_vals < thr)
+        tp = np.sum(defect_vals > thr)
+        fp = np.sum(good_vals > thr)
+        fn = np.sum(defect_vals <= thr)
         prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
         rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
         f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
@@ -85,39 +88,51 @@ def find_best_f1(good_vals: np.ndarray, defect_vals: np.ndarray,
 
 
 def find_recall_at_fpr_fixed(good_vals: np.ndarray, defect_vals: np.ndarray,
-                              target_fpr: float, n_steps: int = 2000) -> tuple[float, float]:
+                              target_fpr: float) -> tuple[float, float]:
     """Find maximum recall achievable while keeping FPR <= target_fpr.
 
-    FIXED VERSION: searches ALL thresholds meeting the FPR constraint,
-    picks the one with highest recall. This correctly handles both
-    normal (AUROC>0.5) and inverted (AUROC<0.5) score distributions.
+    FIXED VERSION 2: enumerates thresholds at every unique score value
+    (where FPR/recall actually change) instead of a linspace grid.
+    This guarantees monotonicity: recall@FPR=5% >= recall@FPR=1%.
+
+    For each candidate threshold, predicted_anomaly = (score > threshold).
+    Among all thresholds satisfying FPR <= target_fpr, picks max recall.
 
     Returns (threshold, recall).
     """
-    all_vals = np.concatenate([good_vals, defect_vals])
-    lo, hi = float(all_vals.min()), float(all_vals.max())
-    if lo == hi:
-        return lo, 0.0
+    if len(good_vals) == 0 or len(defect_vals) == 0:
+        return 0.0, 0.0
 
-    thresholds = np.linspace(lo, hi, n_steps)
+    # Build candidate thresholds at every unique score boundary.
+    # FPR and recall change only when threshold crosses an actual score value.
+    all_scores = np.unique(np.concatenate([good_vals, defect_vals]))
+    # Add a point below min (everything above) and above max (nothing above).
+    epsilon = (all_scores[1] - all_scores[0]) * 0.5 if len(all_scores) > 1 else 1e-9
+    candidates = np.concatenate([
+        [all_scores[0] - epsilon],
+        all_scores,
+        [all_scores[-1] + epsilon],
+    ])
 
+    n_good = float(len(good_vals))
+    n_defect = float(len(defect_vals))
     best_recall = -1.0
-    best_thr = lo
+    best_thr = candidates[0]
 
-    for thr in thresholds:
-        fpr = float(np.mean(good_vals >= thr))
+    for thr in candidates:
+        fpr = float(np.sum(good_vals > thr)) / n_good
         if fpr <= target_fpr:
-            recall = float(np.mean(defect_vals >= thr))
+            recall = float(np.sum(defect_vals > thr)) / n_defect
             if recall > best_recall:
                 best_recall = recall
                 best_thr = float(thr)
 
     if best_recall < 0:
-        # No threshold meets FPR constraint — use lowest threshold
-        best_recall = float(np.mean(defect_vals >= thresholds[0]))
-        best_thr = float(thresholds[0])
+        # No threshold meets FPR constraint — use lowest threshold (highest FPR)
+        best_recall = float(np.sum(defect_vals > candidates[0])) / n_defect
+        best_thr = float(candidates[0])
 
-    return best_thr, best_recall
+    return best_thr, max(0.0, best_recall)
 
 
 def analyze_score_mode(category: str, score_mode: str,
@@ -148,9 +163,16 @@ def analyze_score_mode(category: str, score_mode: str,
     # Best F1
     best_f1_thr, best_f1 = find_best_f1(good_vals, defect_vals)
 
-    # Recall at FPR targets (FIXED)
+    # Recall at FPR targets (FIXED v2 — unique-value thresholds, strict >)
     _, recall_fpr1 = find_recall_at_fpr_fixed(good_vals, defect_vals, 0.01)
     _, recall_fpr5 = find_recall_at_fpr_fixed(good_vals, defect_vals, 0.05)
+
+    # Monotonicity assertion: recall@FPR=5% >= recall@FPR=1%
+    # The 5% set is a superset of valid thresholds, so max recall cannot decrease.
+    if recall_fpr5 < recall_fpr1 - 1e-9:
+        raise AssertionError(
+            f"Monotonicity violation: {category}/{score_mode}: "
+            f"recall@FPR=1%={recall_fpr1:.6f} > recall@FPR=5%={recall_fpr5:.6f}")
 
     # Overlap flag
     overlap = "YES" if (auroc < 0.80 or good_p99 >= defect_p5) else "no"
@@ -204,7 +226,7 @@ def write_comparison_md(results: list[dict], output_path: Path,
     lines = []
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    lines.append("# Phase 8A-Fix: EfficientAD Score Mode Comparison Report")
+    lines.append("# Phase 8A-Fix-Fix: EfficientAD Score Mode Comparison Report")
     lines.append("")
     lines.append(f"Generated: {now}")
     lines.append("")
@@ -217,9 +239,11 @@ def write_comparison_md(results: list[dict], output_path: Path,
     lines.append("  AUROC > 0.5 means defects score higher (normal); < 0.5 means inverted.")
     lines.append("- **F1**, **recall@FPR**, and **recommended threshold** are threshold-dependent")
     lines.append("  engineering metrics.")
-    lines.append("- **recall@FPR** is computed by searching ALL thresholds that satisfy the FPR")
-    lines.append("  constraint and selecting the one maximizing recall. This correctly handles")
-    lines.append("  both normal and inverted score distributions.")
+    lines.append("- **recall@FPR** is computed by enumerating thresholds at every unique score")
+    lines.append("  value (where FPR/recall actually change) and selecting the one maximizing")
+    lines.append("  recall while FPR <= target. This guarantees monotonicity:")
+    lines.append("  recall@FPR=5% >= recall@FPR=1%. Edge runtime uses `score > threshold`")
+    lines.append("  (strict greater-than), matching the metric computation.")
     lines.append("- This analysis is based on MVTec AD test split only. It is an engineering")
     lines.append("  diagnostic, NOT an external independent generalization validation.")
     lines.append("- Do NOT claim production-grade detection accuracy from these results.")
@@ -288,7 +312,11 @@ def write_comparison_md(results: list[dict], output_path: Path,
     lines.append("")
 
     # Section 4: recall@FPR comparison
-    lines.append("## 4. Recall@FPR Comparison (FIXED)")
+    lines.append("## 4. Recall@FPR Comparison (FIXED v2)")
+    lines.append("")
+    lines.append("Monotonicity enforced: recall@FPR=5% >= recall@FPR=1% by construction.")
+    lines.append("Thresholds enumerated at unique score values; edge runtime uses `score > threshold`.")
+    lines.append("")
     lines.append("")
     lines.append("### 4.1 recall@FPR=1%")
     lines.append("")
@@ -453,7 +481,7 @@ def write_comparison_md(results: list[dict], output_path: Path,
     # Q5/Q6: Per-category thresholds or load shedding
     lines.append("### Q5-Q6: Config update and T2 gate purpose")
     lines.append("")
-    lines.append("Given that all 15 categories have AUROC < 0.80 (most < 0.55), the T2 gate")
+    lines.append("Given that all 14 non-tile categories have AUROC < 0.80, the T2 gate")
     lines.append("should be understood as a **load shedding gate**, not a detection gate:")
     lines.append("")
     lines.append("- **Purpose**: Reduce T3 (FastSAM + Qwen3-VL) workload by dropping frames")
@@ -462,35 +490,51 @@ def write_comparison_md(results: list[dict], output_path: Path,
     lines.append("- **Threshold strategy**: Set at good_p95 to control ~5% false trigger rate,")
     lines.append("  allowing most frames through for VLM analysis.")
     lines.append("")
+    lines.append("Phase 8A-Fix-Fix keeps a single global `efficientad_score_mode=raw_score`.")
+    lines.append("All per_category_threshold values are raw_score good_p95 on MVTec AD test split.")
+    lines.append("T2 gate is a load shedding gate, not a detection gate.")
+    lines.append("Thresholds are engineering starting values, not production-certified.")
+    lines.append("")
 
     if best_overall != "map_mean" and mean_aurocs[best_overall] - mean_aurocs["map_mean"] > 0.02:
-        # Recommend per-category best score mode
-        lines.append("### Recommended per-category config (if updating):")
+        # Recommend global best score mode with consistent thresholds
+        lines.append(f"### Recommended config (Phase 8A-Fix-Fix):")
+        lines.append("")
+        lines.append(f"Runtime uses a single global `efficientad_score_mode={best_overall}`.")
+        lines.append(f"All per_category_threshold values MUST use {best_overall} good_p95 to")
+        lines.append("maintain scale consistency. Mixing thresholds from different score modes")
+        lines.append("is incorrect because the runtime applies one score_mode globally.")
         lines.append("")
         lines.append("```yaml")
         lines.append(f"efficientad_score_mode: {best_overall}  # best average AUROC")
-        lines.append("# Per-category thresholds from best score mode per category:")
+        lines.append("# All per_category_threshold values are raw_score good_p95 on MVTec AD test split.")
+        lines.append("# T2 gate is a load shedding gate, not a detection gate.")
+        lines.append("# Thresholds are engineering starting values, not production-certified.")
         lines.append("per_category_threshold:")
         for cat in CATEGORIES:
-            best_sm = SCORE_MODES[0]
-            best_a = 0.0
-            for sm in SCORE_MODES:
-                r = lookup.get((cat, sm))
-                if r and not np.isnan(r["auroc"]) and r["auroc"] > best_a:
-                    best_a = r["auroc"]
-                    best_sm = sm
-            r = lookup.get((cat, best_sm))
-            if r:
-                lines.append(f"  {cat}: {r['good_p95']:.2f}  # {best_sm}, AUROC={r['auroc']:.4f}")
+            r = lookup.get((cat, best_overall))
+            if r and not np.isnan(r["good_p95"]):
+                lines.append(f"  {cat}: {r['good_p95']:.2f}  # {best_overall} good_p95, AUROC={r['auroc']:.4f}")
         lines.append("```")
     else:
-        lines.append("**Recommendation**: Keep config.yaml unchanged.")
-        lines.append("T2 gate is a load shedding gate with map_mean score mode.")
-        lines.append("Per-category thresholds from Phase 8A (good_p95) remain valid.")
+        lines.append(f"**Recommendation**: Keep config.yaml unchanged.")
+        lines.append(f"T2 gate is a load shedding gate with {best_overall} score mode.")
+        lines.append("Per-category thresholds from raw_score good_p95 remain valid.")
     lines.append("")
 
     # Methodology disclaimer
-    lines.append("## 7. Methodology Disclaimer")
+    lines.append("## 7. Config.yaml Fix (Phase 8A-Fix-Fix)")
+    lines.append("")
+    lines.append("Phase 8A-Fix had a scale inconsistency: `efficientad_score_mode=raw_score`")
+    lines.append("but 3 of 15 per_category_threshold values were from other score modes")
+    lines.append("(metal_nut from map_top01, screw from map_top1, tile from map_top1).")
+    lines.append("")
+    lines.append("Phase 8A-Fix-Fix corrects this:")
+    lines.append("- All 15 per_category_threshold values are now raw_score good_p95.")
+    lines.append("- Comments no longer claim per-category uses best mode for that category.")
+    lines.append("- Runtime applies a single global score_mode; thresholds must match.")
+    lines.append("")
+    lines.append("## 8. Methodology Disclaimer")
     lines.append("")
     lines.append("1. This analysis is based on MVTec AD test split (1725 images, 15 classes).")
     lines.append("2. It is an engineering diagnostic, NOT external independent generalization validation.")
@@ -498,6 +542,7 @@ def write_comparison_md(results: list[dict], output_path: Path,
     lines.append("4. F1, recall@FPR, and recommended thresholds are threshold-dependent engineering metrics.")
     lines.append("5. These results do NOT constitute production-grade detection accuracy claims.")
     lines.append("6. Real production calibration requires data from the actual inspection environment.")
+    lines.append("7. recall@FPR monotonicity is guaranteed by enumerating unique score values as thresholds.")
     lines.append("")
 
     with open(output_path, "w") as f:
