@@ -1,5 +1,7 @@
 // edge/src/pipeline/fastsam_worker.cpp
-// Prompt 2C: T3 FastSAM real bbox extraction, mock VLM JSON.
+// Prompt 2C-Fix: T3 FastSAM real bbox extraction with 5-level cleanup, mock VLM JSON.
+// output1 mask decode is NOT implemented — see TODO at end of decode_bboxes.
+// Qwen3-VL is NOT called in this phase; VLM fields remain mocked.
 
 #include "edge/pipeline/fastsam_worker.hpp"
 
@@ -9,6 +11,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <numeric>
 #include <vector>
 
 #include "rknn_api.h"
@@ -18,24 +21,34 @@ namespace vlm_industrial::edge {
 using std::chrono::steady_clock;
 using std::chrono::duration;
 
+// ── constants ────────────────────────────────────────────────────────────────
+
+static constexpr uint32_t kAnchors  = 8400u;   // YOLOv8 detection anchors
+static constexpr uint32_t kChannels = 37u;      // 4(bbox) + 1(conf) + 32(mask)
+static constexpr uint32_t kDetElems = kChannels * kAnchors;
+
+static constexpr float kNmsIouThreshold = 0.45f;
+
+// 5-level cleanup constants
+static constexpr size_t kMaxBboxes       = 5;
+static constexpr float  kMinAreaRatio    = 0.001f;   // 0.1% of image
+static constexpr float  kMaxAreaRatio    = 0.95f;    // 95% of image
+static constexpr float  kDedupIouThresh  = 0.7f;     // merge highly overlapping
+
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 static bool is_quantized_type(rknn_tensor_type t) {
   return t == RKNN_TENSOR_INT8 || t == RKNN_TENSOR_UINT8;
 }
 
-// Dequantize a single INT8 value using this output's own scale/zp.
-// MUST NOT use another output's zp/scale.
 static float dequant_int8(int8_t raw, int32_t zp, float scale) {
   return (static_cast<float>(raw) - static_cast<float>(zp)) * scale;
 }
 
-// Sigmoid helper.
 static float sigmoid(float x) {
   return 1.0f / (1.0f + std::exp(-x));
 }
 
-// IoU of two boxes in xywh format (all values in same coordinate space).
 static float iou_xywh(float ax, float ay, float aw, float ah,
                        float bx, float by, float bw, float bh) {
   float ax2 = ax + aw, ay2 = ay + ah;
@@ -50,6 +63,33 @@ static float iou_xywh(float ax, float ay, float aw, float ah,
 
 static float clamp01(float v) {
   return std::max(0.0f, std::min(1.0f, v));
+}
+
+// Print top-N values from a float array (descending).
+static void print_top_n(const float* arr, uint32_t n, int top_n,
+                        const char* label) {
+  if (n == 0) return;
+  std::vector<float> sorted(arr, arr + n);
+  std::sort(sorted.begin(), sorted.end(), std::greater<float>());
+  int count = std::min(top_n, static_cast<int>(sorted.size()));
+  std::fprintf(stderr, "  [T3] %s top-%d:", label, count);
+  for (int i = 0; i < count; ++i)
+    std::fprintf(stderr, " %.4f", sorted[i]);
+  std::fprintf(stderr, "\n");
+}
+
+// Print min/max/mean of a float array.
+static void print_stats(const float* arr, uint32_t n, const char* label) {
+  if (n == 0) return;
+  float mn = arr[0], mx = arr[0];
+  double sum = 0.0;
+  for (uint32_t i = 0; i < n; ++i) {
+    if (arr[i] < mn) mn = arr[i];
+    if (arr[i] > mx) mx = arr[i];
+    sum += arr[i];
+  }
+  std::fprintf(stderr, "  [T3] %s min=%.4f max=%.4f mean=%.4f (n=%u)\n",
+               label, mn, mx, sum / n, n);
 }
 
 // ── constructor ───────────────────────────────────────────────────────────────
@@ -74,7 +114,6 @@ bool FastSamWorker::load_model() {
   }
   ctx_.reset(ctx);
 
-  // Query n_inputs / n_outputs.
   rknn_input_output_num io{};
   rknn_query(ctx_.get(), RKNN_QUERY_IN_OUT_NUM, &io, sizeof(io));
   n_input_  = io.n_input;
@@ -82,28 +121,24 @@ bool FastSamWorker::load_model() {
   std::fprintf(stderr, "[T3] FastSAM loaded: %u inputs, %u outputs\n",
                n_input_, n_output_);
 
-  // Print input attrs.
   for (uint32_t i = 0; i < n_input_; ++i) {
     rknn_tensor_attr a{};
     a.index = i;
     rknn_query(ctx_.get(), RKNN_QUERY_INPUT_ATTR, &a, sizeof(a));
     std::fprintf(stderr,
                  "  input[%u]: name='%s' dims=[%u,%u,%u,%u] "
-                 "type=%d fmt=%d qnt_type=%d zp=%d scale=%.6f\n",
+                 "type=%s(%d) fmt=%d qnt_type=%d zp=%d scale=%.6f\n",
                  i, a.name,
                  a.n_dims > 0 ? a.dims[0] : 0,
                  a.n_dims > 1 ? a.dims[1] : 0,
                  a.n_dims > 2 ? a.dims[2] : 0,
                  a.n_dims > 3 ? a.dims[3] : 0,
-                 a.type, a.fmt, a.qnt_type, a.zp, a.scale);
+                 get_type_string(a.type), a.type,
+                 a.fmt, a.qnt_type, a.zp, a.scale);
   }
 
-  // Print output attrs and find detection output.
-  // Detection output: [1, 37, 8400] -> n_elems = 37 * 8400 = 310800.
-  // Prototype output: [1, 32, 160, 160] -> n_elems = 819200.
-  // We identify by n_elems == 310800. Fallback to index 0.
-  constexpr uint32_t kDetElems = 37u * 8400u;
-
+  // Identify detection output by n_elems == 37 * 8400.
+  // output1 (prototype masks) n_elems == 32 * 160 * 160 = 819200.
   for (uint32_t i = 0; i < n_output_; ++i) {
     rknn_tensor_attr a{};
     a.index = i;
@@ -132,6 +167,8 @@ bool FastSamWorker::load_model() {
     det_out_idx_ = 0;
   }
   std::fprintf(stderr, "[T3] detection output index: %d\n", det_out_idx_);
+  std::fprintf(stderr, "[T3] prototype output index: %d (mask decode TODO)\n",
+               1 - det_out_idx_);
 
   model_loaded_ = true;
   return true;
@@ -148,11 +185,11 @@ std::unique_ptr<uint8_t[]> FastSamWorker::preprocess(const std::string& image_pa
   out_orig_w = img->width;
   out_orig_h = img->height;
 
-  int target = cfg_.fastsam_input_size;  // 640
+  int target = cfg_.fastsam_input_size;
 
   // MVTec AD images are 900x900 (square), so simple resize == letterbox.
-  // TODO(Prompt-2C-Fix): add proper letterbox + grey padding for non-square
-  // images, and thread scale/pad_x/pad_y into decode_bboxes for exact coords.
+  // TODO: add proper letterbox + grey padding for non-square inputs,
+  //       and thread scale/pad_x/pad_y into decode_bboxes for coord recovery.
   if (img->width == target && img->height == target) {
     return std::move(img->data);
   }
@@ -171,10 +208,6 @@ std::vector<VlmReport::BBox> FastSamWorker::decode_bboxes(
     int32_t zp_q,
     float scale_q) {
 
-  // Expected: n_elems == 37 * 8400.
-  constexpr uint32_t kAnchors  = 8400u;
-  constexpr uint32_t kChannels = 37u;
-
   if (n_elems != kChannels * kAnchors) {
     std::fprintf(stderr,
                  "[T3] decode_bboxes: unexpected n_elems=%u (expected %u)\n",
@@ -182,37 +215,58 @@ std::vector<VlmReport::BBox> FastSamWorker::decode_bboxes(
     return {};
   }
 
-  // ── Step 1: dequant output0 into float buffer.
-  //   Layout (channel-first / NCHW, batch=1):
-  //     data[ch * kAnchors + j]  -> channel ch, anchor j
-  //   ch 0: cx, ch 1: cy, ch 2: w, ch 3: h  (in 640-pixel space)
-  //   ch 4: class confidence
-  //   ch 5-36: mask coefficients (TODO: Prompt 2C-Fix)
+  // Step 1: convert output0 to float buffer.
+  // Layout (NCHW): data[ch * kAnchors + j] -> channel ch, anchor j
+  //   ch 0-3: cx, cy, w, h (640-pixel space)
+  //   ch 4:   class/object confidence
+  //   ch 5-36: mask coefficients (unused — see TODO below)
   //
-  // IMPORTANT: zp_q and scale_q are output0's EXCLUSIVE params, NOT output1's.
+  // CRITICAL: zp_q / scale_q are output0's EXCLUSIVE params.
   std::vector<float> fdata(n_elems);
 
   if (is_quantized_type(out_type)) {
-    // INT8: manual dequant using output0's own zp/scale.
     const auto* src = static_cast<const int8_t*>(buf);
     for (uint32_t i = 0; i < n_elems; ++i) {
       fdata[i] = dequant_int8(src[i], zp_q, scale_q);
     }
     std::fprintf(stderr,
-                 "  [T3] det dequant INT8: zp=%d scale=%.6f "
-                 "(NOTE: per-tensor quant may reduce conf precision)\n",
+                 "  [T3] output0 INT8 dequant: zp=%d scale=%.6f\n",
                  zp_q, scale_q);
   } else {
-    // FLOAT16/FLOAT32: runtime already converted (want_float=1).
+    // FP16/FP32: want_float=1 already converted to FP32 by RKNN runtime.
     const auto* src = static_cast<const float*>(buf);
     std::memcpy(fdata.data(), src, n_elems * sizeof(float));
+    std::fprintf(stderr, "  [T3] output0 FP32 (want_float=1)\n");
   }
 
-  // ── Step 2: extract candidates above conf threshold.
-  //   Confidence at ch 4: Ultralytics ONNX export typically already applies
-  //   sigmoid, so values are in [0,1]. If values are logits (|val|>>1), apply
-  //   sigmoid. We detect this heuristically.
+  // Step 2: diagnostics — conf channel stats and top-10 values.
+  const float* conf_ptr = fdata.data() + 4 * kAnchors;
+  print_stats(conf_ptr, kAnchors, "conf_channel");
+  print_top_n(conf_ptr, kAnchors, 10, "conf_channel");
+
+  // Determine if sigmoid is needed (Ultralytics ONNX may already apply it).
+  bool need_sigmoid = false;
+  {
+    float max_abs = 0.0f;
+    for (uint32_t j = 0; j < std::min(kAnchors, 100u); ++j) {
+      float c = std::abs(conf_ptr[j]);
+      if (c > max_abs) max_abs = c;
+    }
+    need_sigmoid = (max_abs > 4.0f);
+    if (need_sigmoid) {
+      std::fprintf(stderr,
+                   "  [T3] max_abs_conf=%.3f > 4.0 -> applying sigmoid\n",
+                   max_abs);
+    } else {
+      std::fprintf(stderr,
+                   "  [T3] max_abs_conf=%.3f <= 4.0 -> values already in [0,1]\n",
+                   max_abs);
+    }
+  }
+
+  // Step 3: extract candidates above conf threshold.
   float conf_threshold = cfg_.fastsam_conf;
+  float input_sz = static_cast<float>(cfg_.fastsam_input_size);
 
   struct Candidate {
     float x, y, w, h;  // normalized [0,1]
@@ -220,29 +274,9 @@ std::vector<VlmReport::BBox> FastSamWorker::decode_bboxes(
   };
   std::vector<Candidate> candidates;
 
-  // Peek at a few confidence values to decide sigmoid needed.
-  bool need_sigmoid = false;
-  {
-    float max_conf_raw = 0.0f;
-    for (uint32_t j = 0; j < std::min(kAnchors, 100u); ++j) {
-      float c = fdata[4 * kAnchors + j];
-      if (std::abs(c) > max_conf_raw) max_conf_raw = std::abs(c);
-    }
-    // If max raw conf > 4.0, assume logits and apply sigmoid.
-    need_sigmoid = (max_conf_raw > 4.0f);
-    if (need_sigmoid) {
-      std::fprintf(stderr,
-                   "  [T3] max_conf_raw=%.3f > 4.0 -> applying sigmoid\n",
-                   max_conf_raw);
-    }
-  }
-
-  float input_sz = static_cast<float>(cfg_.fastsam_input_size);  // 640.0
-
   for (uint32_t j = 0; j < kAnchors; ++j) {
-    float raw_conf = fdata[4 * kAnchors + j];
+    float raw_conf = conf_ptr[j];
     float conf = need_sigmoid ? sigmoid(raw_conf) : raw_conf;
-
     if (conf < conf_threshold) continue;
 
     float cx = fdata[0 * kAnchors + j];
@@ -250,42 +284,43 @@ std::vector<VlmReport::BBox> FastSamWorker::decode_bboxes(
     float bw = fdata[2 * kAnchors + j];
     float bh = fdata[3 * kAnchors + j];
 
-    // Convert cx,cy,w,h (640-pixel space) -> normalized [0,1] xywh.
     float x = clamp01((cx - bw * 0.5f) / input_sz);
     float y = clamp01((cy - bh * 0.5f) / input_sz);
     float w = clamp01(bw / input_sz);
     float h = clamp01(bh / input_sz);
 
-    // Discard degenerate boxes.
     if (w < 0.001f || h < 0.001f) continue;
-
     candidates.push_back({x, y, w, h, conf});
   }
 
-  std::fprintf(stderr,
-               "  [T3] raw candidates after conf>%.2f: %zu\n",
-               conf_threshold, candidates.size());
+  uint32_t raw_candidate_count = static_cast<uint32_t>(candidates.size());
+  std::fprintf(stderr, "  [T3] raw candidates after conf>%.2f: %u\n",
+               conf_threshold, raw_candidate_count);
 
-  // ── Step 3: if no candidates from conf filter, fall back to top-5 by conf.
-  //   This handles the INT8 per-tensor precision issue gracefully.
+  // Step 3b: if 0 candidates, diagnose and fall back to top-5.
+  bool used_top5_fallback = false;
   if (candidates.empty()) {
-    std::fprintf(stderr,
-                 "  [T3] WARNING: 0 candidates above conf threshold %.2f\n"
-                 "  [T3]   Possible cause: INT8 per-tensor scale=%.6f "
-                 "quantizes conf values to near-zero.\n"
-                 "  [T3]   Falling back to top-5 anchors by raw conf score.\n",
-                 conf_threshold, scale_q);
+    // Print bbox channel stats for diagnosis.
+    print_stats(fdata.data() + 0 * kAnchors, kAnchors, "cx_channel");
+    print_stats(fdata.data() + 1 * kAnchors, kAnchors, "cy_channel");
+    print_stats(fdata.data() + 2 * kAnchors, kAnchors, "w_channel");
+    print_stats(fdata.data() + 3 * kAnchors, kAnchors, "h_channel");
 
-    // Collect all with w>0, h>0 and find top-5 by raw conf.
+    std::fprintf(stderr,
+                 "  [T3] WARNING: 0 candidates above conf %.2f\n"
+                 "  [T3]   Decode assumption may be wrong — check output layout.\n"
+                 "  [T3]   Falling back to top-5 anchors by raw conf.\n",
+                 conf_threshold);
+
     struct RawCand { uint32_t j; float conf; };
     std::vector<RawCand> all_raw;
     all_raw.reserve(kAnchors);
     for (uint32_t j = 0; j < kAnchors; ++j) {
-      float raw_conf = fdata[4 * kAnchors + j];
+      float raw_conf = conf_ptr[j];
       float conf = need_sigmoid ? sigmoid(raw_conf) : raw_conf;
       float bw = fdata[2 * kAnchors + j];
       float bh = fdata[3 * kAnchors + j];
-      if (bw > 1.0f && bh > 1.0f) {  // at least 1px
+      if (bw > 1.0f && bh > 1.0f) {
         all_raw.push_back({j, conf});
       }
     }
@@ -310,26 +345,22 @@ std::vector<VlmReport::BBox> FastSamWorker::decode_bboxes(
         candidates.push_back({x, y, w, h, all_raw[i].conf});
       }
     }
+    used_top5_fallback = true;
     std::fprintf(stderr, "  [T3]   top-5 fallback produced %zu candidates\n",
                  candidates.size());
   }
 
-  // ── Step 4: greedy NMS (IoU threshold = 0.45, standard YOLOv8).
-  constexpr float kNmsIouThreshold = 0.45f;
-  constexpr size_t kMaxBboxes = 10;
-
-  // Sort by conf descending.
+  // Step 4: greedy NMS.
   std::sort(candidates.begin(), candidates.end(),
             [](const Candidate& a, const Candidate& b){ return a.conf > b.conf; });
 
   std::vector<bool> suppressed(candidates.size(), false);
-  std::vector<VlmReport::BBox> result;
+  std::vector<VlmReport::BBox> nms_result;
 
-  for (size_t i = 0; i < candidates.size() && result.size() < kMaxBboxes; ++i) {
+  for (size_t i = 0; i < candidates.size() && nms_result.size() < kMaxBboxes; ++i) {
     if (suppressed[i]) continue;
     const auto& ca = candidates[i];
-    result.push_back({ca.x, ca.y, ca.w, ca.h});
-
+    nms_result.push_back({ca.x, ca.y, ca.w, ca.h});
     for (size_t k = i + 1; k < candidates.size(); ++k) {
       if (suppressed[k]) continue;
       const auto& ck = candidates[k];
@@ -339,15 +370,105 @@ std::vector<VlmReport::BBox> FastSamWorker::decode_bboxes(
       }
     }
   }
+  std::fprintf(stderr, "  [T3] after NMS (iou=%.2f): %zu bboxes\n",
+               kNmsIouThreshold, nms_result.size());
 
-  std::fprintf(stderr,
-               "  [T3] after NMS (iou=%.2f): %zu bboxes\n",
-               kNmsIouThreshold, result.size());
+  // Step 5: 5-level bbox cleanup.
+  auto cleanup_result = cleanup_bboxes(nms_result, used_top5_fallback);
+  return cleanup_result;
+}
 
-  // TODO(Prompt-2C-Fix): decode output1 mask prototypes to produce full SAM
-  // masks and refine bbox coords from mask bounding boxes.
+// ── cleanup_bboxes ────────────────────────────────────────────────────────────
+// 5-level cleanup per vlm_bbox_ref.py:
+//   1. Remove out-of-bounds (clamp to [0,1])
+//   2. Remove too-small area
+//   3. Remove too-large area
+//   4. Deduplicate high-overlap bboxes
+//   5. Limit max count
 
-  return result;
+std::vector<VlmReport::BBox> FastSamWorker::cleanup_bboxes(
+    std::vector<VlmReport::BBox> bboxes,
+    bool from_fallback) const {
+
+  size_t input_count = bboxes.size();
+
+  // Level 1: clamp to [0,1] and remove degenerate.
+  {
+    std::vector<VlmReport::BBox> valid;
+    for (auto& b : bboxes) {
+      b.x = clamp01(b.x);
+      b.y = clamp01(b.y);
+      b.w = clamp01(b.w);
+      b.h = clamp01(b.h);
+      if (b.w > 0.0f && b.h > 0.0f) valid.push_back(b);
+    }
+    bboxes = std::move(valid);
+  }
+  std::fprintf(stderr, "  [T3] cleanup L1 bounds: %zu -> %zu\n",
+               input_count, bboxes.size());
+
+  // Level 2: remove too-small (< 0.1% of image area).
+  {
+    std::vector<VlmReport::BBox> valid;
+    for (const auto& b : bboxes) {
+      float area = b.w * b.h;
+      if (area >= kMinAreaRatio) valid.push_back(b);
+    }
+    std::fprintf(stderr, "  [T3] cleanup L2 min_area(%.3f): %zu -> %zu\n",
+                 kMinAreaRatio, bboxes.size(), valid.size());
+    bboxes = std::move(valid);
+  }
+
+  // Level 3: remove too-large (> 95% of image area).
+  {
+    std::vector<VlmReport::BBox> valid;
+    for (const auto& b : bboxes) {
+      float area = b.w * b.h;
+      if (area <= kMaxAreaRatio) valid.push_back(b);
+    }
+    std::fprintf(stderr, "  [T3] cleanup L3 max_area(%.2f): %zu -> %zu\n",
+                 kMaxAreaRatio, bboxes.size(), valid.size());
+    bboxes = std::move(valid);
+  }
+
+  // Level 4: deduplicate high-overlap bboxes (greedy by area descending).
+  {
+    std::sort(bboxes.begin(), bboxes.end(),
+              [](const VlmReport::BBox& a, const VlmReport::BBox& b) {
+                return (a.w * a.h) > (b.w * b.h);
+              });
+    std::vector<bool> sup(bboxes.size(), false);
+    std::vector<VlmReport::BBox> deduped;
+    for (size_t i = 0; i < bboxes.size(); ++i) {
+      if (sup[i]) continue;
+      deduped.push_back(bboxes[i]);
+      for (size_t k = i + 1; k < bboxes.size(); ++k) {
+        if (sup[k]) continue;
+        if (iou_xywh(bboxes[i].x, bboxes[i].y, bboxes[i].w, bboxes[i].h,
+                     bboxes[k].x, bboxes[k].y, bboxes[k].w, bboxes[k].h)
+            > kDedupIouThresh) {
+          sup[k] = true;
+        }
+      }
+    }
+    std::fprintf(stderr, "  [T3] cleanup L4 dedup(iou=%.2f): %zu -> %zu\n",
+                 kDedupIouThresh, bboxes.size(), deduped.size());
+    bboxes = std::move(deduped);
+  }
+
+  // Level 5: limit max count.
+  if (bboxes.size() > kMaxBboxes) {
+    std::fprintf(stderr, "  [T3] cleanup L5 max_count(%zu): %zu -> %zu\n",
+                 kMaxBboxes, bboxes.size(), kMaxBboxes);
+    bboxes.resize(kMaxBboxes);
+  }
+
+  // Log final summary.
+  std::fprintf(stderr, "  [T3] after_cleanup: %zu bboxes%s\n",
+               bboxes.size(),
+               from_fallback ? " (from top-5 fallback — NOT valid detections)" : "");
+
+  return bboxes;
 }
 
 // ── make_fallback_report ──────────────────────────────────────────────────────
@@ -379,7 +500,6 @@ VlmReport FastSamWorker::make_fallback_report(const EadResult& ead,
 void FastSamWorker::operator()(std::stop_token st) {
   if (!load_model()) {
     std::fprintf(stderr, "[T3] FastSamWorker: model load failed, thread exits\n");
-    // Drain Q2 to prevent T2 from stalling on Q2 push.
     while (!st.stop_requested()) {
       auto ead_opt = in_.pop(st);
       if (!ead_opt) break;
@@ -395,12 +515,15 @@ void FastSamWorker::operator()(std::stop_token st) {
                cfg_.fastsam_input_size,
                cfg_.fastsam_conf);
 
-  bool first_frame = true;  // print output attrs on first real frame
+  bool first_frame = true;
+  uint64_t total_frames = 0;
+  uint64_t fallback_frames = 0;
 
   while (!st.stop_requested()) {
     auto ead_opt = in_.pop(st);
     if (!ead_opt) break;
     const auto& ead = *ead_opt;
+    ++total_frames;
 
     auto t_frame = steady_clock::now();
 
@@ -425,6 +548,7 @@ void FastSamWorker::operator()(std::stop_token st) {
       std::fprintf(stderr, "[T3] preprocess failed: %s\n", ead.image_path.c_str());
       out_.push_drop_oldest(make_fallback_report(ead, "preprocess_failed"));
       m_.vlm_count.fetch_add(1, std::memory_order_relaxed);
+      ++fallback_frames;
       continue;
     }
 
@@ -433,6 +557,9 @@ void FastSamWorker::operator()(std::stop_token st) {
                  orig_w, orig_h, cfg_.fastsam_input_size, preprocess_ms);
 
     // ── Set input ──────────────────────────────────────────────────────────
+    // Task 2: pass_through=0 with UINT8 input — RKNN driver handles
+    // uint8->model_input_type conversion with mean/std normalization.
+    // This works for both INT8 (quantized) and FP16 (no-quant) models.
     uint32_t input_bytes = static_cast<uint32_t>(
         cfg_.fastsam_input_size * cfg_.fastsam_input_size * 3);
 
@@ -440,7 +567,7 @@ void FastSamWorker::operator()(std::stop_token st) {
     inputs[0].index        = 0;
     inputs[0].buf          = rgb_data.get();
     inputs[0].size         = input_bytes;
-    inputs[0].pass_through = 0;          // driver handles uint8->INT8 conversion
+    inputs[0].pass_through = 0;
     inputs[0].type         = RKNN_TENSOR_UINT8;
     inputs[0].fmt          = RKNN_TENSOR_NHWC;
 
@@ -449,6 +576,7 @@ void FastSamWorker::operator()(std::stop_token st) {
       std::fprintf(stderr, "[T3] rknn_inputs_set failed: %d\n", ret);
       out_.push_drop_oldest(make_fallback_report(ead, "rknn_inputs_set_failed"));
       m_.vlm_count.fetch_add(1, std::memory_order_relaxed);
+      ++fallback_frames;
       continue;
     }
 
@@ -461,6 +589,7 @@ void FastSamWorker::operator()(std::stop_token st) {
       std::fprintf(stderr, "[T3] rknn_run failed: %d\n", ret);
       out_.push_drop_oldest(make_fallback_report(ead, "rknn_run_failed"));
       m_.vlm_count.fetch_add(1, std::memory_order_relaxed);
+      ++fallback_frames;
       continue;
     }
     std::fprintf(stderr, "     infer_ms=%.1f\n", infer_ms);
@@ -475,12 +604,11 @@ void FastSamWorker::operator()(std::stop_token st) {
       out_info[i].attr.index = i;
       rknn_query(ctx_.get(), RKNN_QUERY_OUTPUT_ATTR,
                  &out_info[i].attr, sizeof(rknn_tensor_attr));
-      // Quantized -> want_float=0 (manual dequant with this output's own scale/zp).
-      // Float     -> want_float=1 (runtime converts FP16->FP32 for us).
+      // Quantized -> want_float=0 (manual dequant per output).
+      // Float (FP16/FP32) -> want_float=1 (runtime converts to FP32).
       out_info[i].want_float = is_quantized_type(out_info[i].attr.type) ? 0 : 1;
     }
 
-    // Print on first frame so we can verify attrs in the log.
     if (first_frame) {
       for (uint32_t i = 0; i < n_output_; ++i) {
         const auto& a = out_info[i].attr;
@@ -490,7 +618,7 @@ void FastSamWorker::operator()(std::stop_token st) {
                      "want_float=%d  <- %s output\n",
                      i, a.name, get_type_string(a.type), a.zp, a.scale,
                      a.n_elems, out_info[i].want_float,
-                     (static_cast<int>(i) == det_out_idx_) ? "DETECTION" : "prototype/other");
+                     (static_cast<int>(i) == det_out_idx_) ? "DETECTION" : "prototype(mask TODO)");
       }
       first_frame = false;
     }
@@ -509,6 +637,7 @@ void FastSamWorker::operator()(std::stop_token st) {
       std::fprintf(stderr, "[T3] rknn_outputs_get failed: %d\n", ret);
       out_.push_drop_oldest(make_fallback_report(ead, "rknn_outputs_get_failed"));
       m_.vlm_count.fetch_add(1, std::memory_order_relaxed);
+      ++fallback_frames;
       continue;
     }
 
@@ -519,30 +648,28 @@ void FastSamWorker::operator()(std::stop_token st) {
     const int di = det_out_idx_;
     if (di >= 0 && static_cast<uint32_t>(di) < n_output_ && outputs[di].buf) {
       const auto& da = out_info[di].attr;
-      // CRITICAL: pass output[di]'s own zp/scale — NOT output[1-di]'s.
-      bboxes = decode_bboxes(
-          outputs[di].buf,
-          da.n_elems,
-          da.type,
-          da.zp,
-          da.scale);
+      bboxes = decode_bboxes(outputs[di].buf, da.n_elems, da.type, da.zp, da.scale);
     } else {
       std::fprintf(stderr, "[T3] detection output %d unavailable\n", di);
     }
 
-    // TODO(Prompt-2C-Fix): decode outputs[1-di] (prototype masks) to refine bboxes.
+    // output1 (prototype masks): NOT decoded in this phase.
+    // output1 attrs: [1,32,160,160] — 32 mask prototypes at 1/4 input res.
+    // Mask decode would combine output1 with output0 ch 5-36 mask coefficients
+    // to produce per-instance segmentation masks. Deferred to future work.
 
     rknn_outputs_release(ctx_.get(), n_output_, outputs.data());
 
     float postprocess_ms = duration<float, std::milli>(steady_clock::now() - t2).count();
 
-    // ── No-bbox fallback ───────────────────────────────────────────────────
+    // ── No-bbox fallback (emergency only) ──────────────────────────────────
     bool bbox_fallback = false;
     if (bboxes.empty()) {
       std::fprintf(stderr,
-                   "  [T3] no bbox from FastSAM -> using center placeholder\n");
+                   "  [T3] NO VALID BBOX after cleanup -> using center placeholder\n");
       bboxes.push_back({0.3f, 0.3f, 0.4f, 0.4f});
       bbox_fallback = true;
+      ++fallback_frames;
     }
 
     float total_ms = duration<float, std::milli>(steady_clock::now() - t_frame).count();
@@ -552,16 +679,18 @@ void FastSamWorker::operator()(std::stop_token st) {
                  "     postprocess_ms=%.1f  bbox_count=%zu%s  total_ms=%.1f\n",
                  postprocess_ms,
                  bboxes.size(),
-                 bbox_fallback ? " (fallback)" : "",
+                 bbox_fallback ? " (EMERGENCY_FALLBACK)" : "",
                  total_ms);
     for (size_t i = 0; i < bboxes.size(); ++i) {
       std::fprintf(stderr,
                    "     bbox[%zu] x=%.3f y=%.3f w=%.3f h=%.3f\n",
                    i, bboxes[i].x, bboxes[i].y, bboxes[i].w, bboxes[i].h);
     }
+    std::fprintf(stderr, "     [stats] total_frames=%zu fallback_frames=%zu\n",
+                 static_cast<size_t>(total_frames),
+                 static_cast<size_t>(fallback_frames));
 
     // ── Derive severity from EfficientAD final_score ───────────────────────
-    // Placeholder: Phase 8 will calibrate per-category thresholds.
     const char* severity = "medium";
     {
       float ratio = (ead.threshold > 0.0f) ? (ead.final_score / ead.threshold) : 1.0f;
@@ -584,10 +713,9 @@ void FastSamWorker::operator()(std::stop_token st) {
     report.frame_timestamp_us = ead.frame_timestamp_us;
     report.bboxes             = std::move(bboxes);
 
-    // Pipeline timing (ms).
     report.pipeline_ms.efficientad = ead.inference_ms;
     report.pipeline_ms.fastsam     = preprocess_ms + infer_ms + postprocess_ms;
-    report.pipeline_ms.qwen3vl     = 0.0f;  // no VLM in Prompt 2C
+    report.pipeline_ms.qwen3vl     = 0.0f;
 
     // Mock VLM metrics — TODO(Prompt-2D): replace with real RKLLM output.
     report.vlm_metrics.ttft_ms       = 0.0f;
@@ -619,7 +747,10 @@ void FastSamWorker::operator()(std::stop_token st) {
     m_.vlm_count.fetch_add(1, std::memory_order_relaxed);
   }
 
-  std::fprintf(stderr, "[T3] FastSamWorker stopped\n");
+  std::fprintf(stderr,
+               "[T3] FastSamWorker stopped | total_frames=%zu fallback_frames=%zu\n",
+               static_cast<size_t>(total_frames),
+               static_cast<size_t>(fallback_frames));
 }
 
 }  // namespace vlm_industrial::edge

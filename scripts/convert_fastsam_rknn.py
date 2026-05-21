@@ -108,37 +108,60 @@ def parse_accuracy_report(analysis_dir: Path) -> tuple[float, bool]:
     return min_cosine, all_pass
 
 
-def convert_fastsam(calib_samples: int, skip_accuracy_analysis: bool = False) -> bool:
+def convert_fastsam(calib_samples: int, skip_accuracy_analysis: bool = False,
+                    no_quant: bool = False) -> bool:
     """Convert FastSAM-s ONNX to RKNN. Returns True on success.
 
     Order: config → load → build → export → accuracy_analysis (optional).
     A failure in accuracy_analysis does NOT invalidate an already-exported model.
+    When no_quant=True: FP16 (no INT8 quantization), no calibration, output to
+    fastsam_s_noquant.rknn (does NOT overwrite fastsam_s.rknn).
     """
     from rknn.api import RKNN
 
     onnx_path = FASTSAM_DIR / "fastsam_s.onnx"
-    rknn_path = FASTSAM_DIR / "fastsam_s.rknn"
+    if no_quant:
+        rknn_path = FASTSAM_DIR / "fastsam_s_noquant.rknn"
+    else:
+        rknn_path = FASTSAM_DIR / "fastsam_s.rknn"
 
     if not onnx_path.exists():
         print(f"  [SKIP] ONNX not found: {onnx_path}")
         return False
 
-    total_steps = 4 if skip_accuracy_analysis else 5
+    if no_quant:
+        total_steps = 4  # config, load, build (no quant), export
+    elif skip_accuracy_analysis:
+        total_steps = 4
+    else:
+        total_steps = 5
+
     print(f"\n{'=' * 50}")
     print("  Converting: FastSAM-s")
     print(f"{'=' * 50}")
+    print(f"  no_quant={no_quant}")
+    print(f"  onnx_path={onnx_path}")
+    print(f"  rknn_output_path={rknn_path}")
 
     rknn = RKNN(verbose=False)
 
     try:
-        # 1. Config — YOLOv8 normalization, INT8, rk3588
-        print(f"  [1/{total_steps}] Config (INT8, rk3588)...")
-        ret = rknn.config(
-            mean_values=MEAN_VALUES,
-            std_values=STD_VALUES,
-            target_platform="rk3588",
-            quantized_dtype="asymmetric_quantized-8",
-        )
+        # 1. Config
+        if no_quant:
+            print(f"  [1/{total_steps}] Config (FP16 no-quant, rk3588)...")
+            ret = rknn.config(
+                mean_values=MEAN_VALUES,
+                std_values=STD_VALUES,
+                target_platform="rk3588",
+            )
+        else:
+            print(f"  [1/{total_steps}] Config (INT8, rk3588)...")
+            ret = rknn.config(
+                mean_values=MEAN_VALUES,
+                std_values=STD_VALUES,
+                target_platform="rk3588",
+                quantized_dtype="asymmetric_quantized-8",
+            )
         if ret != 0:
             print("  FAIL: config()")
             return False
@@ -154,16 +177,19 @@ def convert_fastsam(calib_samples: int, skip_accuracy_analysis: bool = False) ->
             print("  FAIL: load_onnx()")
             return False
 
-        # 3. Build INT8 quantized model
-        print(f"  [3/{total_steps}] Build INT8 (calib={calib_samples} samples)...")
-        calib_file = create_calib_list(calib_samples)
-        ret = rknn.build(do_quantization=True, dataset=calib_file)
+        # 3. Build — FP16 (no quant) or INT8 (with calibration)
+        if no_quant:
+            print(f"  [3/{total_steps}] Build FP16 (no quantization)...")
+            ret = rknn.build(do_quantization=False)
+        else:
+            print(f"  [3/{total_steps}] Build INT8 (calib={calib_samples} samples)...")
+            calib_file = create_calib_list(calib_samples)
+            ret = rknn.build(do_quantization=True, dataset=calib_file)
         if ret != 0:
             print("  FAIL: build()")
             return False
 
-        # 4. Export — must happen before accuracy_analysis so the .rknn
-        #    file is safe even if accuracy_analysis crashes.
+        # 4. Export
         print(f"  [4/{total_steps}] Export RKNN...")
         ret = rknn.export_rknn(str(rknn_path))
         if ret != 0:
@@ -172,8 +198,9 @@ def convert_fastsam(calib_samples: int, skip_accuracy_analysis: bool = False) ->
 
         print(f"  OK: {rknn_path}")
 
-        if skip_accuracy_analysis:
-            print("  Accuracy analysis: SKIPPED (--skip-accuracy-analysis)")
+        if no_quant or skip_accuracy_analysis:
+            reason = "no-quant mode" if no_quant else "--skip-accuracy-analysis"
+            print(f"  Accuracy analysis: SKIPPED ({reason})")
             return True
 
         # 5. Accuracy analysis (optional, failure non-fatal)
@@ -182,7 +209,7 @@ def convert_fastsam(calib_samples: int, skip_accuracy_analysis: bool = False) ->
 
         print(f"  [5/{total_steps}] Accuracy analysis...")
         try:
-            with open(calib_file) as f:
+            with open(FASTSAM_DIR / "calib_dataset.txt") as f:
                 first_image = f.readline().strip()
             rknn.accuracy_analysis(inputs=[first_image], output_dir=str(analysis_dir))
 
@@ -201,23 +228,28 @@ def convert_fastsam(calib_samples: int, skip_accuracy_analysis: bool = False) ->
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="FastSAM-s ONNX -> RKNN INT8")
+    parser = argparse.ArgumentParser(description="FastSAM-s ONNX -> RKNN INT8/FP16")
     parser.add_argument("--calib-samples", type=int, default=100,
                         help="Number of good/ images for INT8 calibration")
     parser.add_argument("--skip-accuracy-analysis", action="store_true",
                         help="Skip accuracy_analysis after export (faster, .rknn still valid)")
+    parser.add_argument("--no-quant", action="store_true",
+                        help="Build without INT8 quantization (FP16). "
+                             "Output: fastsam_s_noquant.rknn (does not overwrite fastsam_s.rknn)")
     args = parser.parse_args()
 
     try:
-        ok = convert_fastsam(args.calib_samples, args.skip_accuracy_analysis)
+        ok = convert_fastsam(args.calib_samples, args.skip_accuracy_analysis,
+                             no_quant=args.no_quant)
     except Exception as e:
         print(f"  ERROR: {e}")
         ok = False
 
     print(f"\n{'=' * 50}")
     status = "PASS" if ok else "FAIL"
-    print(f"  FastSAM-s  {status}  (cosine >= {COSINE_THRESHOLD})")
-    if args.skip_accuracy_analysis:
+    mode = "FP16-no-quant" if args.no_quant else f"INT8 (cosine >= {COSINE_THRESHOLD})"
+    print(f"  FastSAM-s  {status}  {mode}")
+    if args.skip_accuracy_analysis and not args.no_quant:
         print("  Accuracy analysis: SKIPPED")
     print(f"{'=' * 50}")
 

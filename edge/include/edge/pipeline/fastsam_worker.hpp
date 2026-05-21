@@ -1,6 +1,7 @@
 #pragma once
 
-// T3 Worker — Prompt 2C: FastSAM real bbox extraction + mock VLM JSON.
+// T3 Worker — Prompt 2C-Fix: FastSAM bbox extraction with 5-level cleanup.
+// output1 prototype mask decode is NOT implemented (see decode_bboxes TODO).
 // Qwen3-VL is NOT called in this phase; VLM fields remain mocked.
 // TODO(Prompt-2D): Replace mock VLM section with real RKLLM inference.
 
@@ -46,12 +47,23 @@ class FastSamWorker {
   // They MUST NOT be shared with output1's parameters.
   //
   // Returns normalized [0,1] bboxes after conf filter + greedy NMS.
+  // Calls cleanup_bboxes internally for 5-level bbox refinement.
   std::vector<VlmReport::BBox> decode_bboxes(
       const void* buf,
       uint32_t n_elems,
       rknn_tensor_type out_type,
       int32_t zp_q,
       float scale_q);
+
+  // 5-level bbox cleanup (per vlm_bbox_ref.py):
+  //   1. Clamp to [0,1] + remove degenerate
+  //   2. Remove too-small area (< kMinAreaRatio)
+  //   3. Remove too-large area (> kMaxAreaRatio)
+  //   4. Deduplicate high-overlap (IoU > kDedupIouThresh)
+  //   5. Limit max count (kMaxBboxes)
+  std::vector<VlmReport::BBox> cleanup_bboxes(
+      std::vector<VlmReport::BBox> bboxes,
+      bool from_fallback) const;
 
   // Build a fallback VlmReport when inference or decode fails.
   VlmReport make_fallback_report(const EadResult& ead,
