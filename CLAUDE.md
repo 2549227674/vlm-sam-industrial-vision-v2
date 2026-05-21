@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线进行中（Prompt 2B 代表类验证完成）**
+**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线进行中（Prompt 2B + 2C + 2C-Fix 完成，待 Prompt 2D）**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -80,9 +80,18 @@ Phase 7 Prompt 2B completed:
 - 代表类 bottle / metal_nut / pill / screw FP16/no-quant raw RKNN 工程验证通过
 - 详见 `docs/experiments/phase7_prompt2b_efficientad_edge_report.md`
 
+Phase 7 Prompt 2C completed:
+- T3 FastSamWorker 已从 MockVlmWorker 替换为真实 FastSAM RKNN 推理
+- 发现 INT8 per-tensor quantization scale=2.82 导致 confidence 近零（raw candidates=0，100% fallback）
+- 解决方案：FP16/no-quant RKNN（do_quantization=False），conf 恢复 0.7~0.88，0% fallback
+- 新增 `--no-quant` 到 `scripts/convert_fastsam_rknn.py`，输出 `fastsam_s_noquant.rknn`（26MB）
+- C++ FastSamWorker 支持 INT8/FP16 类型自适应输入输出
+- 5 级 bbox 净化：边界裁剪、面积过滤、IoU 去重、数量限制
+- output1 prototype mask decode 保留 TODO
+- 详见 `docs/experiments/phase7_prompt2c_fastsam_edge_report.md`
+
 下一步：
-- Phase 7 批量 15 类 FP16/no-quant raw RKNN 转换、上传、smoke test
-- Phase 7 Prompt 2C：FastSAM + Qwen3-VL T3 实现
+- Phase 7 Prompt 2D：Qwen3-VL 真实 RKLLM 推理接入 T3
 
 ## 一句话定义
 
@@ -95,7 +104,7 @@ Phase 7 Prompt 2B completed:
 | 边缘端硬件 | **RK3588 16GB**（Orange Pi 5 Plus 16GB） | 6 TOPS NPU，三核并行 |
 | 边缘端运行时 | C++17/20、librknnrt、librkllmrt、librga、libcurl、V4L2 | rknn-llm v1.2.3+、rknn-toolkit2 v2.2+、GCC ≥ 11 |
 | Stage 1 异常检测 | EfficientAD-S（PDN, 256×256, INT8） | Anomalib 2.x → 单一 ONNX → 单个 RKNN |
-| Stage 2 分割 | FastSAM-s（640×640, INT8） | YOLOv8-seg 衍生 |
+| Stage 2 分割 | FastSAM-s（640×640, FP16 no-quant） | YOLOv8-seg 衍生 |
 | Stage 3 VLM | Qwen3-VL-2B/4B-Instruct W8A8 | airockchip 官方 + Qengineering 镜像 |
 | 后端 | Python 3.12、FastAPI 0.115+、SQLAlchemy 2.0 async、aiosqlite、Pydantic v2 | 生产单 worker（ConnectionManager 进程内单例）|
 | 前端 | Next.js 15 App Router（`output: 'export'` 纯静态导出）、React 19、Tailwind v4、shadcn/ui | sonner / TanStack Table v8 / v4/ 原生 SVG 组件 |
