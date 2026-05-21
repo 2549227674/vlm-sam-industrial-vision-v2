@@ -106,6 +106,75 @@ Phase 7 上板实测后，EfficientAD-S 不再直接使用 Anomalib ONNX 的 pos
 - 原始 INT8 量化 RKNN（Phase 6 产出的 `model.rknn`）仍保留，但当前 T2 主路线使用 FP16/no-quant `model_raw_noquant.rknn`。
 - 详细排错过程见 `docs/experiments/phase7_prompt2b_efficientad_edge_report.md`。
 
+#### FastSAM FP16/no-quant Deployment（Phase 7 Prompt 2C/2C-Fix）
+
+Phase 7 Prompt 2C 发现 FastSAM-s INT8 量化存在严重精度问题：
+
+- INT8 per-tensor quantization（scale=2.82, zp=-119）将 YOLOv8 置信度压缩到近零范围。
+- INT8 模式下 8400 个 anchor 全部 conf < 0.25，raw candidates=0，100% fallback。
+- FP16 top-1 conf = 0.8794，INT8 top-1 conf ≈ 0.003。
+
+解决方案：`do_quantization=False` 导出 FP16/no-quant RKNN（`fastsam_s_noquant.rknn`, 26MB）。
+
+Prompt 2C-Fix 新增 5 级 bbox cleanup 管线：
+
+| 级别 | 过滤 | 阈值 |
+|---|---|---|
+| L1 | 边界裁剪 | clamp to [0,1] |
+| L2 | 最小面积 | 0.001 |
+| L3 | 最大面积 | 0.95 |
+| L4 | IoU 去重 | 0.70 |
+| L5 | 数量限制 | max 5 |
+
+FP16 模式 fallback 率：0%（0/31 帧）。
+
+详细报告：`docs/experiments/phase7_prompt2c_fastsam_edge_report.md`
+
+#### Qwen3-VL 2B Base RKLLM Integration（Phase 7 Prompt 2D/2D-Fix）
+
+Qwen3-VL 2B W8A8 base 在 RK3588 上完成 vision encoder + RKLLM 完整链路：
+
+- Vision encoder：448×448 输入，196 image tokens，2048 embed dim，4 头并行输出
+- RKLLM：W8A8 量化，callback 流式输出，enable_thinking=false
+- Compact JSON prompt 设计：`[[x,y,w,h]]` 格式将输出从 196 tokens 降至 ~89 tokens
+- 3 级 fallback：VLM init 失败 → JSON 解析失败 → bbox fallback
+
+Prompt 2D-Fix 修补：
+
+- VLM bbox 归一化（像素坐标 / orig_w × orig_h）+ 保守融合（IoU>0.3 才替换 FastSAM）
+- severity 白名单统一为 low/medium/high（移除 critical）
+- LoRA/variant 路径通过 config 切换（2B base / 2B lora / 4B TODO）
+- upload trace_event 作为第 6 个事件追加到 trace_events 数组
+
+关键性能数据（2B base W8A8）：
+
+| 指标 | 实测值 |
+|---|---|
+| RSS | 3321-3324 MB |
+| Vision encoder | ~2380 ms |
+| TTFT | ~2100 ms |
+| Decode speed | ~10 tok/s |
+| Output tokens | 54-92 |
+| json_parse_ok | 100% |
+
+详细报告：`docs/experiments/phase7_prompt2d_qwen3vl_edge_report.md`、`phase7_prompt2d_fix_report.md`
+
+#### True E2E 与 Threshold 验证（Phase 7 Prompt 2E/2F）
+
+Prompt 2E 完成四线程全链路端到端验收（8 图 4 类，24 帧全部成功上传）。
+Prompt 2F 完成 threshold 模式工程验证（覆盖型 vs 过滤型对比）。
+
+新增 PipelineMetrics 可观测指标：
+
+```cpp
+alignas(kCacheLine) std::atomic<uint64_t> ead_gate_pass{};  // T2 推入 Q2
+alignas(kCacheLine) std::atomic<uint64_t> ead_gate_drop{};  // T2 阈值拦截
+```
+
+queue dropped_count 语义：退出前收集 q1+q2+q3 的 `dropped()` 总和。
+
+详细报告：`docs/experiments/phase7_prompt2e_e2e_acceptance_report.md`、`phase7_prompt2f_threshold_report.md`
+
 **Qwen3-VL 降级备选**（部署失败时按此顺序，**只改 `edge/config.yaml`，不改 C++ 代码**）：
 
 | 优先级 | 模型 | 推荐场景 | 预期 tps | RAM | 备注 |
@@ -271,31 +340,32 @@ Phase 5 v2 重做采用双轨评估，两条线路目标不同、产出不同：
 
 ## 8. 性能预算（RK3588 16GB）
 
+> 以下实测数据来自 Phase 7 Prompt 2E/2F（Orange Pi 5 16GB，2B base W8A8）。
+
 ### 8.1 延迟预算
 
-| 阶段 | 目标 | 实测 / 估算来源 |
-|---|---|---|
-| V4L2 取帧 | < 5 ms | dma_buf 零拷贝 |
-| RGA resize | < 3 ms | RGA3 双核 |
-| EfficientAD-S | 6–12 ms（单核）/ 3–5 ms（三核） | TBD，类比 ResNet18 INT8 ≈ 4 ms |
-| FastSAM-s | 30–60 ms | 类比 YOLOv8 INT8（640 输入） |
-| Qwen3-VL-2B TTFT | 2–3 s（cache 命中后 ~1 s） | Qengineering benchmark + cache preload 推算 |
-| Qwen3-VL decode | ~11.5 tokens/s | Qengineering 实测 |
-| HTTP 上传 | < 200 ms（局域网） | libcurl HTTP/2 |
-| **端到端（异常帧）** | **2.5–4 s（首帧）** | 节拍以 EfficientAD 为准（~10 ms），VLM 异步 |
+| 阶段 | 目标 | 实测（Phase 7） | 备注 |
+|---|---|---|---|
+| EfficientAD-S (T2) | 6–12 ms（单核） | **avg 350 ms**（含预处理 + RKNN 推理 + 后处理） | FP16/no-quant raw RKNN，map_mean 模式 |
+| FastSAM-s (T3 pre) | 30–60 ms | **avg 250 ms**（preprocess ~95ms + infer ~140ms + post ~7ms） | FP16/no-quant，640×640 |
+| Qwen3-VL-2B Vision | — | **avg 2380 ms** | 448×448，4 头并行输出 |
+| Qwen3-VL-2B TTFT | 2–3 s | **avg 2174 ms** | W8A8，max_context=4096 |
+| Qwen3-VL-2B decode | ~11.5 tokens/s | **avg 9.97 tok/s** | 实测略低于 benchmark |
+| Qwen3-VL-2B total | — | **avg 11350 ms** | 含 vision + LLM 全链路 |
+| HTTP 上传 (T4) | < 200 ms | **16–47 ms** | 局域网，libcurl multipart |
+| 端到端（单帧） | — | **~12 s**（T2+T3+T4） | 节拍以 VLM 为准 |
 
 ### 8.2 内存预算（16GB 板）
 
-| 项目 | 占用 | 备注 |
-|---|---|---|
-| OS + 系统服务 | ~1.5 GB | Ubuntu 22.04 minimal |
-| EfficientAD-S RKNN | ~50 MB | 模型 + 工作内存 |
-| FastSAM RKNN | ~80 MB | |
-| Qwen3-VL-2B RKLLM + Vision | ~3.1 GB | LLM 1.9 GB + Vision 0.4 GB + KV (max_context=4096) |
-| C++ 进程其他 | ~250 MB | 队列、线程栈、libcurl、JPEG buffer |
-| 缓冲帧（Q1/Q2/Q3） | ~50 MB | 4+2+4 帧 × ~5 MB |
-| **总计（2B）** | **~5.0 GB / 16 GB** | 余量 ~11 GB，充裕 |
-| **总计（含 4B）** | **~11.4 GB / 16 GB** | 余量 ~3.1 GB，Qwen3-VL-4B 替换 2B 后；**禁止**同时加载 2B 和 4B |
+| 项目 | 目标 | 实测（Phase 7） | 备注 |
+|---|---|---|---|
+| OS + 系统服务 | ~1.5 GB | — | Ubuntu 22.04 |
+| EfficientAD-S RKNN | ~50 MB | ~50 MB | 每次切换类别重新加载 |
+| FastSAM RKNN | ~80 MB | ~80 MB | 常驻 |
+| Qwen3-VL-2B RKLLM + Vision | ~3.1 GB | **3324 MB** | LLM + Vision + KV cache |
+| C++ 进程其他 | ~250 MB | — | 队列、线程栈、libcurl、JPEG buffer |
+| **总计（2B）** | **~5.0 GB** | **~3.4 GB RSS**（不含 OS） | 余量 ~12.6 GB |
+| **总计（含 4B）** | **~11.4 GB** | — | 余量 ~3.1 GB；**禁止**同时加载 2B 和 4B |
 
 > **备注**：实际硬件为 16GB 版香橙派 5。2B 方案余量 ~11 GB，`max_context` 可放开至 4096，无需配置 zram swap。4B 方案余量 ~3.1 GB，`max_context` 固定 4096，需严格控制其他内存占用。
 

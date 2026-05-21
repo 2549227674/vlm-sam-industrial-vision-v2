@@ -129,6 +129,8 @@ Phase 7 Prompt 2F completed (threshold 模式与节拍验证):
 - 本轮阈值为工程占位值，最终 per-category threshold 留到 Phase 8 校准
 - 详见 `docs/experiments/phase7_prompt2f_threshold_report.md`
 
+Phase 7 总结报告：`docs/experiments/phase7_edge_pipeline_report.md`
+
 下一步：
 - Phase 8：per-category threshold 校准（全量 MVTec 15 类）、4B 模型验证、enable_thinking 评估
 

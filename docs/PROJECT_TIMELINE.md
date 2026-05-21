@@ -1165,36 +1165,55 @@ scp -r models/ ubuntu@<rk3588-ip>:/home/ubuntu/models/
 
 ---
 
-## 阶段 7：轨道B — C++ 四线程流水线 ⬅️ 进行中（Prompt 2B 完成）
+## 阶段 7：轨道B — C++ 四线程流水线 ✅ 工程验证通过（Prompt 2B ~ 2F 完成）
 
 **时间预估**：5-10 天（最复杂的阶段）
+**实际耗时**：约 7 天（Prompt 2B ~ 2F）
 **前置依赖**：阶段 4（后端可用）+ 阶段 6（模型在板子上）
 **文档依据**：SKILL.md 全文、ARCHITECTURE.md §3/§11、CLAUDE.md 轨道B
 
-**此时安装 `clangd-lsp` 插件**。
+**总报告**：`docs/experiments/phase7_edge_pipeline_report.md`
 
-### 7.x Prompt 2B 实际执行记录（EfficientAD T2）
+### 7.x 子阶段完成记录
 
-> 完整报告：`docs/experiments/phase7_prompt2b_efficientad_edge_report.md`
+| 子阶段 | 状态 | 核心成果 | 详细报告 |
+|---|---|---|---|
+| Prompt 2B | ✅ | EfficientAD FP16/no-quant raw RKNN 工程验证 | `phase7_prompt2b_efficientad_edge_report.md` |
+| Prompt 2C | ✅ | FastSAM FP16/no-quant 接入，INT8 conf 精度问题定位 | `phase7_prompt2c_fastsam_edge_report.md` |
+| Prompt 2C-Fix | ✅ | 5 级 bbox cleanup，0% fallback（31/31 帧） | 同上 |
+| Prompt 2D | ✅ | Qwen3-VL 2B base RKLLM 真实推理接入 | `phase7_prompt2d_qwen3vl_edge_report.md` |
+| Prompt 2D-Fix | ✅ | VLM bbox 融合、severity 白名单、LoRA path、upload trace | `phase7_prompt2d_fix_report.md` |
+| Prompt 2E | ✅ | True E2E PASS，24/24 upload_ok，Backend 24 条可查 | `phase7_prompt2e_e2e_acceptance_report.md` |
+| Prompt 2F | ✅ | threshold 模式工程验证，ead_gate_pass/drop 可观测 | `phase7_prompt2f_threshold_report.md` |
 
-实际执行中，T2 EfficientAD 路线相对原规划发生调整：
+### 7.x 默认稳定链路
 
-- 原始 Anomalib ONNX 的 `pred_score/anomaly_map` 是 post_processor 后的 Clip 输出，不适合作为 raw gate。
-- 原始 RKNN 若保留 `pred_label/pred_mask`，板端 `rknn_run` 会触发 `Greater` INT8/FLOAT 类型不支持。
-- 已通过 ONNX trace 找到 post_processor 前的 raw tensors：
-  - `/model/ReduceMax_output_0` → `raw_score`
-  - `/model/Add_output_0` → `raw_anomaly_map`
-- 已新增 raw ONNX 导出和 raw RKNN 转换流程。
-- raw INT8 RKNN 板端分布失真，不作为当前主路线。
-- 当前推荐路线：
-  `model_raw.onnx → model_raw_noquant.rknn → C++ FP16 parse_mode=fp16_want_float`
-- C++ T2 已支持：
-  - `efficientad_score_mode`（raw_score / map_max / map_mean / map_top1 / map_top01）
-  - `efficientad_gate_mode`（threshold / pass_all）
-- `pass_all` 仅 debug，正式默认仍为 `threshold`。
-- `efficientad_threshold_default: 0.50` 是旧 post_processor 输出 [0,1] 尺度的占位值，不适用于 raw output。per-category raw threshold 需在 Phase 8 系统校准。
-- Prompt 2B 当前冻结点：bottle / metal_nut / pill / screw 代表类 FP16/no-quant raw RKNN 工程验证通过。
-- 下一步：批量 15 类 FP16/no-quant raw RKNN 转换、上传和 smoke test，然后进入 Prompt 2C。
+```text
+T1 image_loop / V4L2
+  → T2 EfficientAD FP16/no-quant raw RKNN (score_mode=map_mean, gate_mode=threshold)
+  → T3 FastSAM FP16/no-quant + Qwen3-VL 2B base W8A8 RKLLM
+  → T4 libcurl multipart upload
+  → Backend FastAPI 入库/落盘/广播
+```
+
+### 7.x 当前冻结点
+
+```text
+Phase 7 四线程流水线工程验证通过。
+2B base 全链路稳定：json_parse_ok=100%, RSS=3324MB, decode_tps=9.97。
+threshold gate 可观测（ead_gate_pass/drop），T3 压力可按阈值调控。
+本轮阈值为工程占位值，最终 per-category threshold 留到 Phase 8 校准。
+```
+
+### 7.x 未完成项（留到 Phase 8）
+
+- 15 类 raw threshold calibration（当前仅 4 类占位值）
+- 4B 模型验证（代码路径存在但回退到 2B base）
+- 2B LoRA / 4B LoRA 质量对比（LoRA 路径选择功能正常，模型质量独立问题）
+- FastSAM mask decode 未实现（仅 bbox）
+- 非方形输入 letterbox 待完善
+- vision embedding cache 未实现
+- enable_thinking 评估未执行
 
 ### 7.1 CMake 项目搭建
 
