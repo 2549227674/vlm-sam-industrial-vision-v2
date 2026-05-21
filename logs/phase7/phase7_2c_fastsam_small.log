@@ -1,0 +1,772 @@
+device_id:         rk3588-line-A-cam01
+line_id:           L1
+backend_url:       http://192.168.137.66:8000
+vlm_variant:       base
+vlm_model_size:    2B
+capture_mode:      image_loop
+image_loop_dir:    /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
+categories (4):  bottle metal_nut pill screw 
+beat_ms:           2000
+jitter_ms:         200
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 0.50
+ead_score_mode:    map_mean
+ead_gate_mode:     pass_all
+fastsam_model:     /home/orangepi/models/fastsam_models/fastsam_s.rknn
+fastsam_input_sz:  640
+fastsam_conf:      0.25
+model_variant:     2B_base
+
+--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---
+[T2] EadWorker started | score_mode=map_mean gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T3] loading FastSAM RKNN: /home/orangepi/models/fastsam_models/fastsam_s.rknn
+[T4] uploading to http://192.168.137.66:8000/api/edge/report
+[T1] scanned 525 images across 4 categories
+[T3] FastSAM loaded: 1 inputs, 2 outputs
+  input[0]: name='images' dims=[1,640,640,3] type=2 fmt=1 qnt_type=2 zp=-128 scale=0.003922
+  output[0]: name='output0' dims=[1,37,8400,0] type=INT8(2) qnt_type=2 zp=-119 scale=2.820890 n_elems=310800 size=310800
+  output[1]: name='output1' dims=[1,32,160,160] type=INT8(2) qnt_type=2 zp=-123 scale=0.059204 n_elems=819200 size=819200
+[T3] detection output index: 0
+[T3] FastSamWorker started | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn input_size=640 conf=0.25
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 0 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.00 map_max=35.00 map_mean=12.01 map_top1=26.48 map_top01=32.99
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=406.8
+[T3] frame 0 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/006.png
+     ead_final_score=12.008 ead_infer_ms=406.8
+     orig_size=900x900  input_size=640  preprocess_ms=107.0
+     infer_ms=59.3
+  [T3][first_frame] output[0] name='output0' type=INT8 zp=-119 scale=2.820890 n_elems=310800 want_float=0  <- DETECTION output
+  [T3][first_frame] output[1] name='output1' type=INT8 zp=-123 scale=0.059204 n_elems=819200 want_float=0  <- prototype/other output
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=16.5  bbox_count=5  total_ms=186.9
+     bbox[0] x=0.009 y=0.002 w=0.079 h=0.066
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.007 y=0.002 w=0.013 h=0.022
+     bbox[4] x=0.007 y=0.000 w=0.031 h=0.066
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"bottle","defect_type":"anomaly","severity":"high","confidence":12.0084,"anomaly_score":12.0084,"bboxes":[{"x":0.0088,"y":0.0022,"w":0.0793,"h":0.0661},{"x":0.0507,"y":0.0022,"w":0.0309,"h":0.0132},{"x":0.0022,"y":0.0022,"w":0.0220,"h":0.0132},{"x":0.0066,"y":0.0022,"w":0.0132,"h":0.0220},{"x":0.0066,"y":0.0000,"w":0.0309,"h":0.0661}],"description":"","variant":"2B_base","edge_ts":"2026-05-21T08:09:02Z","pipeline_ms":{"efficientad":406.8,"fastsam":182.8,"qwen3vl":0.0},"vlm_metrics":{"ttft_ms":0.0,"decode_tps":0.0,"prompt_tokens":0,"output_tokens":0,"rss_mb":0.0,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":406751.3,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"fastsam_preprocess","ts":406751.3,"dur":106978.6,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_infer","ts":513729.9,"dur":59301.5,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_postprocess","ts":573031.5,"dur":16523.5,"tid":"T3.fastsam","ph":"X","cat":"pipeline"}],"schema_version":"v1"}
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 1 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.06 map_max=33.06 map_mean=11.77 map_top1=26.20 map_top01=31.03
+     final_score=11.77 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.5
+[T3] frame 1 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/005.png
+     ead_final_score=11.770 ead_infer_ms=297.5
+     orig_size=900x900  input_size=640  preprocess_ms=104.5
+     infer_ms=63.8
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=14.4  bbox_count=5  total_ms=184.3
+     bbox[0] x=0.002 y=0.000 w=0.093 h=0.066
+     bbox[1] x=0.048 y=0.000 w=0.035 h=0.018
+     bbox[2] x=0.000 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.007 y=0.002 w=0.013 h=0.084
+     bbox[4] x=0.000 y=0.002 w=0.044 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 2 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.44 map_max=29.44 map_mean=11.90 map_top1=27.27 map_top01=29.19
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=301.7
+[T3] frame 2 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/008.png
+     ead_final_score=11.901 ead_infer_ms=301.7
+     orig_size=900x900  input_size=640  preprocess_ms=104.5
+     infer_ms=66.0
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=15.0  bbox_count=5  total_ms=187.1
+     bbox[0] x=0.004 y=0.000 w=0.079 h=0.066
+     bbox[1] x=0.051 y=0.000 w=0.031 h=0.018
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.079
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 3 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.42 map_max=26.42 map_mean=11.68 map_top1=23.12 map_top01=25.34
+     final_score=11.68 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=275.0
+[T3] frame 3 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/002.png
+     ead_final_score=11.676 ead_infer_ms=275.0
+     orig_size=900x900  input_size=640  preprocess_ms=108.3
+     infer_ms=51.4
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=13.9  bbox_count=5  total_ms=174.7
+     bbox[0] x=0.002 y=0.000 w=0.093 h=0.066
+     bbox[1] x=0.048 y=0.002 w=0.035 h=0.013
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.000 y=0.002 w=0.018 h=0.075
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4531
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 4 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.45 map_max=28.45 map_mean=11.85 map_top1=24.37 map_top01=26.85
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.5
+[T3] frame 4 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/014.png
+     ead_final_score=11.847 ead_infer_ms=297.5
+     orig_size=900x900  input_size=640  preprocess_ms=104.6
+     infer_ms=66.8
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=15.0  bbox_count=5  total_ms=188.0
+     bbox[0] x=0.007 y=0.000 w=0.084 h=0.066
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.000 w=0.022 h=0.009
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.093
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 5 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.08 map_max=27.08 map_mean=12.05 map_top1=24.93 map_top01=26.60
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=292.1
+[T3] frame 5 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/015.png
+     ead_final_score=12.053 ead_infer_ms=292.1
+     orig_size=900x900  input_size=640  preprocess_ms=111.4
+     infer_ms=65.2
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+     postprocess_ms=14.0  bbox_count=4  total_ms=192.3
+     bbox[0] x=0.007 y=0.002 w=0.093 h=0.066
+     bbox[1] x=0.048 y=0.000 w=0.035 h=0.018
+     bbox[2] x=0.000 y=0.000 w=0.044 h=0.053
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 6 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.41 map_max=30.41 map_mean=12.01 map_top1=25.25 map_top01=28.93
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.4
+[T3] frame 6 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/012.png
+     ead_final_score=12.008 ead_infer_ms=297.4
+     orig_size=900x900  input_size=640  preprocess_ms=103.0
+     infer_ms=50.2
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=12.7  bbox_count=5  total_ms=167.1
+     bbox[0] x=0.007 y=0.002 w=0.084 h=0.066
+     bbox[1] x=0.048 y=0.000 w=0.035 h=0.018
+     bbox[2] x=0.002 y=0.000 w=0.022 h=0.009
+     bbox[3] x=0.007 y=0.000 w=0.013 h=0.018
+     bbox[4] x=0.009 y=0.002 w=0.026 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 7 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.98 map_max=30.98 map_mean=11.66 map_top1=23.63 map_top01=27.84
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.9
+[T3] frame 7 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/020.png
+     ead_final_score=11.656 ead_infer_ms=297.9
+     orig_size=900x900  input_size=640  preprocess_ms=105.1
+     infer_ms=64.8
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=8.8  bbox_count=5  total_ms=180.2
+     bbox[0] x=0.007 y=0.000 w=0.084 h=0.066
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.007 y=0.000 w=0.013 h=0.093
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.5938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 8 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.59 map_max=48.59 map_mean=12.17 map_top1=36.40 map_top01=46.52
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.8
+[T3] frame 8 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/007.png
+     ead_final_score=12.167 ead_infer_ms=300.8
+     orig_size=900x900  input_size=640  preprocess_ms=105.2
+     infer_ms=65.0
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=17.4  bbox_count=5  total_ms=189.2
+     bbox[0] x=0.011 y=0.000 w=0.084 h=0.071
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.000 y=0.002 w=0.018 h=0.040
+     bbox[4] x=0.007 y=0.002 w=0.031 h=0.075
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.8438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 9 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.84 map_max=33.84 map_mean=11.71 map_top1=27.07 map_top01=32.33
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.7
+[T3] frame 9 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/017.png
+     ead_final_score=11.707 ead_infer_ms=300.7
+     orig_size=900x900  input_size=640  preprocess_ms=105.2
+     infer_ms=65.3
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=13.5  bbox_count=5  total_ms=185.6
+     bbox[0] x=0.011 y=0.002 w=0.084 h=0.066
+     bbox[1] x=0.051 y=0.000 w=0.031 h=0.018
+     bbox[2] x=0.002 y=0.000 w=0.022 h=0.009
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.093
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 10 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.14 map_max=30.14 map_mean=12.02 map_top1=24.33 map_top01=29.14
+     final_score=12.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.2
+[T3] frame 10 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/010.png
+     ead_final_score=12.025 ead_infer_ms=300.2
+     orig_size=900x900  input_size=640  preprocess_ms=104.7
+     infer_ms=65.6
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=17.3  bbox_count=5  total_ms=189.2
+     bbox[0] x=0.007 y=0.000 w=0.084 h=0.062
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.000 y=0.002 w=0.026 h=0.040
+     bbox[3] x=0.007 y=0.002 w=0.013 h=0.066
+     bbox[4] x=0.007 y=0.002 w=0.031 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 11 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.81 map_max=35.81 map_mean=12.20 map_top1=28.14 map_top01=33.21
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.1
+[T3] frame 11 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/003.png
+     ead_final_score=12.204 ead_infer_ms=300.1
+     orig_size=900x900  input_size=640  preprocess_ms=105.4
+     infer_ms=65.5
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=17.2  bbox_count=5  total_ms=189.7
+     bbox[0] x=0.011 y=0.000 w=0.084 h=0.062
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.000 w=0.022 h=0.009
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.071
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=130.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 12 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=130.12 map_max=130.12 map_mean=12.66 map_top1=69.49 map_top01=120.16
+     final_score=12.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.5
+[T3] frame 12 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/018.png
+     ead_final_score=12.660 ead_infer_ms=300.5
+     orig_size=900x900  input_size=640  preprocess_ms=104.7
+     infer_ms=64.7
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=16.7  bbox_count=5  total_ms=187.6
+     bbox[0] x=0.011 y=0.000 w=0.075 h=0.066
+     bbox[1] x=0.053 y=0.002 w=0.026 h=0.013
+     bbox[2] x=0.002 y=0.000 w=0.031 h=0.018
+     bbox[3] x=0.007 y=0.000 w=0.013 h=0.053
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7656
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 13 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.77 map_max=30.77 map_mean=11.85 map_top1=25.13 map_top01=29.97
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.4
+[T3] frame 13 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/009.png
+     ead_final_score=11.853 ead_infer_ms=297.4
+     orig_size=900x900  input_size=640  preprocess_ms=107.6
+     infer_ms=66.5
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=16.6  bbox_count=5  total_ms=192.3
+     bbox[0] x=0.002 y=0.000 w=0.093 h=0.066
+     bbox[1] x=0.053 y=0.002 w=0.026 h=0.013
+     bbox[2] x=0.002 y=0.000 w=0.022 h=0.009
+     bbox[3] x=0.007 y=0.002 w=0.013 h=0.022
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.7500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 14 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.75 map_max=32.75 map_mean=12.24 map_top1=26.18 map_top01=31.92
+     final_score=12.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=301.0
+[T3] frame 14 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/013.png
+     ead_final_score=12.243 ead_infer_ms=301.0
+     orig_size=900x900  input_size=640  preprocess_ms=104.9
+     infer_ms=67.5
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+     postprocess_ms=14.0  bbox_count=4  total_ms=188.0
+     bbox[0] x=0.007 y=0.002 w=0.101 h=0.066
+     bbox[1] x=0.044 y=0.000 w=0.044 h=0.018
+     bbox[2] x=0.000 y=0.000 w=0.040 h=0.066
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.106
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 15 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.91 map_max=33.91 map_mean=11.75 map_top1=26.93 map_top01=32.15
+     final_score=11.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=304.0
+[T3] frame 15 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/021.png
+     ead_final_score=11.747 ead_infer_ms=304.0
+     orig_size=900x900  input_size=640  preprocess_ms=105.6
+     infer_ms=66.9
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=13.5  bbox_count=5  total_ms=187.6
+     bbox[0] x=0.007 y=0.000 w=0.093 h=0.048
+     bbox[1] x=0.053 y=0.002 w=0.026 h=0.013
+     bbox[2] x=0.004 y=0.002 w=0.026 h=0.013
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.079
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=64.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 16 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=64.50 map_max=64.50 map_mean=12.20 map_top1=34.29 map_top01=54.55
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.8
+[T3] frame 16 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/004.png
+     ead_final_score=12.201 ead_infer_ms=300.8
+     orig_size=900x900  input_size=640  preprocess_ms=105.6
+     infer_ms=64.8
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=16.8  bbox_count=5  total_ms=188.8
+     bbox[0] x=0.004 y=0.000 w=0.097 h=0.066
+     bbox[1] x=0.048 y=0.000 w=0.035 h=0.018
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.007 y=0.002 w=0.013 h=0.040
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=157.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 17 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=157.88 map_max=157.88 map_mean=12.62 map_top1=50.64 map_top01=127.82
+     final_score=12.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=293.5
+[T3] frame 17 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/001.png
+     ead_final_score=12.622 ead_infer_ms=293.5
+     orig_size=900x900  input_size=640  preprocess_ms=109.4
+     infer_ms=50.7
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=15.3  bbox_count=5  total_ms=176.5
+     bbox[0] x=0.009 y=0.002 w=0.079 h=0.066
+     bbox[1] x=0.048 y=0.002 w=0.035 h=0.013
+     bbox[2] x=0.004 y=0.000 w=0.026 h=0.018
+     bbox[3] x=0.002 y=0.002 w=0.013 h=0.013
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.075
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.1875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 18 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.19 map_max=33.19 map_mean=12.05 map_top1=26.23 map_top01=32.01
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=294.4
+[T3] frame 18 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/019.png
+     ead_final_score=12.052 ead_infer_ms=294.4
+     orig_size=900x900  input_size=640  preprocess_ms=111.2
+     infer_ms=50.9
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=13.5  bbox_count=5  total_ms=176.8
+     bbox[0] x=0.007 y=0.002 w=0.084 h=0.066
+     bbox[1] x=0.048 y=0.000 w=0.035 h=0.018
+     bbox[2] x=0.002 y=0.000 w=0.022 h=0.009
+     bbox[3] x=0.007 y=0.002 w=0.013 h=0.013
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 19 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.53 map_max=32.53 map_mean=12.10 map_top1=24.88 map_top01=30.76
+     final_score=12.10 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.3
+[T3] frame 19 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/011.png
+     ead_final_score=12.098 ead_infer_ms=297.3
+     orig_size=900x900  input_size=640  preprocess_ms=120.9
+     infer_ms=64.3
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=17.0  bbox_count=5  total_ms=203.9
+     bbox[0] x=0.011 y=0.002 w=0.084 h=0.066
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.000 y=0.000 w=0.026 h=0.018
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.106
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 20 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.91 map_max=25.91 map_mean=11.80 map_top1=22.75 map_top01=24.72
+     final_score=11.80 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=432.6
+[T3] frame 20 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/016.png
+     ead_final_score=11.796 ead_infer_ms=432.6
+     orig_size=900x900  input_size=640  preprocess_ms=108.2
+     infer_ms=66.3
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=14.5  bbox_count=5  total_ms=190.6
+     bbox[0] x=0.002 y=0.000 w=0.093 h=0.066
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.000 w=0.022 h=0.009
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.093
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=37.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 21 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=37.34 map_max=37.34 map_mean=11.93 map_top1=28.32 map_top01=35.42
+     final_score=11.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.1
+[T3] frame 21 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/000.png
+     ead_final_score=11.928 ead_infer_ms=299.1
+     orig_size=900x900  input_size=640  preprocess_ms=105.5
+     infer_ms=50.5
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+     postprocess_ms=14.3  bbox_count=4  total_ms=171.5
+     bbox[0] x=0.011 y=0.002 w=0.084 h=0.066
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.6562
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 22 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.66 map_max=40.66 map_mean=12.01 map_top1=29.90 map_top01=37.58
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=291.8
+[T3] frame 22 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/006.png
+     ead_final_score=12.011 ead_infer_ms=291.8
+     orig_size=900x900  input_size=640  preprocess_ms=104.8
+     infer_ms=62.0
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=17.0  bbox_count=5  total_ms=185.2
+     bbox[0] x=0.009 y=0.000 w=0.079 h=0.066
+     bbox[1] x=0.051 y=0.000 w=0.031 h=0.018
+     bbox[2] x=0.002 y=0.007 w=0.022 h=0.004
+     bbox[3] x=0.007 y=0.002 w=0.013 h=0.040
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 23 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.38 map_max=31.38 map_mean=11.66 map_top1=26.41 map_top01=29.81
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=296.2
+[T3] frame 23 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/005.png
+     ead_final_score=11.658 ead_infer_ms=296.2
+     orig_size=900x900  input_size=640  preprocess_ms=104.5
+     infer_ms=65.6
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=16.1  bbox_count=5  total_ms=187.8
+     bbox[0] x=0.009 y=0.002 w=0.071 h=0.066
+     bbox[1] x=0.051 y=0.002 w=0.022 h=0.013
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.000 y=0.002 w=0.018 h=0.040
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.075
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=52.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 24 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=52.94 map_max=52.94 map_mean=12.17 map_top1=32.26 map_top01=44.41
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=301.1
+[T3] frame 24 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/008.png
+     ead_final_score=12.169 ead_infer_ms=301.1
+     orig_size=900x900  input_size=640  preprocess_ms=104.5
+     infer_ms=65.7
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=14.2  bbox_count=5  total_ms=185.9
+     bbox[0] x=0.007 y=0.004 w=0.084 h=0.026
+     bbox[1] x=0.053 y=0.002 w=0.026 h=0.013
+     bbox[2] x=0.004 y=0.002 w=0.026 h=0.013
+     bbox[3] x=0.000 y=0.002 w=0.018 h=0.075
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.071
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.2969
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 25 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.30 map_max=29.30 map_mean=11.67 map_top1=25.11 map_top01=27.83
+     final_score=11.67 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=293.6
+[T3] frame 25 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/002.png
+     ead_final_score=11.667 ead_infer_ms=293.6
+     orig_size=900x900  input_size=640  preprocess_ms=107.5
+     infer_ms=64.6
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=16.9  bbox_count=5  total_ms=190.7
+     bbox[0] x=0.004 y=0.000 w=0.097 h=0.066
+     bbox[1] x=0.048 y=0.002 w=0.035 h=0.013
+     bbox[2] x=0.002 y=0.004 w=0.040 h=0.026
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.106
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=43.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 26 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=43.62 map_max=43.62 map_mean=11.55 map_top1=30.88 map_top01=40.42
+     final_score=11.55 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.8
+[T3] frame 26 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/014.png
+     ead_final_score=11.548 ead_infer_ms=299.8
+     orig_size=900x900  input_size=640  preprocess_ms=104.7
+     infer_ms=65.4
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=13.9  bbox_count=5  total_ms=185.5
+     bbox[0] x=0.007 y=0.002 w=0.093 h=0.066
+     bbox[1] x=0.046 y=0.000 w=0.031 h=0.018
+     bbox[2] x=0.004 y=0.004 w=0.026 h=0.026
+     bbox[3] x=0.000 y=0.002 w=0.018 h=0.084
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.075
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 27 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.42 map_max=28.42 map_mean=11.60 map_top1=23.98 map_top01=26.88
+     final_score=11.60 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=296.2
+[T3] frame 27 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/015.png
+     ead_final_score=11.601 ead_infer_ms=296.2
+     orig_size=900x900  input_size=640  preprocess_ms=104.9
+     infer_ms=66.2
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=17.1  bbox_count=5  total_ms=189.8
+     bbox[0] x=0.011 y=0.002 w=0.084 h=0.066
+     bbox[1] x=0.048 y=0.000 w=0.035 h=0.018
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.031
+     bbox[3] x=0.007 y=0.000 w=0.013 h=0.062
+     bbox[4] x=0.002 y=0.002 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 28 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.31 map_max=32.31 map_mean=11.86 map_top1=26.02 map_top01=30.82
+     final_score=11.86 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=270.4
+[T3] frame 28 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/012.png
+     ead_final_score=11.864 ead_infer_ms=270.4
+     orig_size=900x900  input_size=640  preprocess_ms=110.9
+     infer_ms=65.1
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=14.6  bbox_count=5  total_ms=192.1
+     bbox[0] x=0.002 y=0.000 w=0.093 h=0.062
+     bbox[1] x=0.051 y=0.002 w=0.031 h=0.013
+     bbox[2] x=0.002 y=0.002 w=0.022 h=0.013
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.053
+     bbox[4] x=0.002 y=0.000 w=0.040 h=0.066
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=46.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 29 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=46.94 map_max=46.94 map_mean=11.89 map_top1=33.17 map_top01=44.28
+     final_score=11.89 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=278.8
+[T3] frame 29 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/007.png
+     ead_final_score=11.886 ead_infer_ms=278.8
+     orig_size=900x900  input_size=640  preprocess_ms=105.0
+     infer_ms=65.3
+  [T3] det dequant INT8: zp=-119 scale=2.820890 (NOTE: per-tensor quant may reduce conf precision)
+  [T3] raw candidates after conf>0.25: 0
+  [T3] WARNING: 0 candidates above conf threshold 0.25
+  [T3]   Possible cause: INT8 per-tensor scale=2.820890 quantizes conf values to near-zero.
+  [T3]   Falling back to top-5 anchors by raw conf score.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 5 bboxes
+     postprocess_ms=13.5  bbox_count=5  total_ms=185.4
+     bbox[0] x=0.002 y=0.002 w=0.093 h=0.066
+     bbox[1] x=0.046 y=0.000 w=0.031 h=0.018
+     bbox[2] x=0.002 y=0.000 w=0.031 h=0.048
+     bbox[3] x=0.000 y=0.000 w=0.018 h=0.097
+     bbox[4] x=0.000 y=0.002 w=0.044 h=0.075
+
+--- Shutdown requested ---
+[T4] upload failed: HTTP 0 (frame from bottle)
+[T4] stopped
+[T3] FastSamWorker stopped
+[T2] EadWorker stopped
+[T1] stopped after 30 frames
+
+--- Pipeline Metrics ---
+capture:      30
+ead:          30
+vlm:          30
+upload_ok:    0
+upload_fail:  30
+upload_retry: 0
+dropped:      0
+
+edge_pipeline: clean exit.

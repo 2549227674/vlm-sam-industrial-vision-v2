@@ -1,0 +1,1172 @@
+device_id:         rk3588-line-A-cam01
+line_id:           L1
+backend_url:       http://192.168.137.1:8000
+vlm_variant:       base
+vlm_model_size:    2B
+capture_mode:      image_loop
+image_loop_dir:    /tmp/mvtec_phase7_e2e_small
+categories (4):  bottle metal_nut pill screw 
+beat_ms:           15000
+jitter_ms:         200
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 0.50
+ead_score_mode:    map_mean
+ead_gate_mode:     pass_all
+fastsam_model:     /home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+fastsam_input_sz:  640
+fastsam_conf:      0.50
+model_variant:     2B_base
+
+--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---
+[T2] EadWorker started | score_mode=map_mean gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T3] loading FastSAM RKNN: /home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+[T4] uploading to http://192.168.137.1:8000/api/edge/report
+[T1] scanned 8 images across 4 categories
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+[T3] FastSAM loaded: 1 inputs, 2 outputs
+  input[0]: name='images' dims=[1,640,640,3] type=FP16(1) fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='output0' dims=[1,37,8400,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=310800 size=621600
+  output[1]: name='output1' dims=[1,32,160,160] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=819200 size=1638400
+[T3] detection output index: 0
+[T3] prototype output index: 1 (mask decode TODO)
+[VLM] Initializing Qwen3-VL
+  selected_model_size=2B  selected_variant=base
+  selected_llm_path=/home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+  selected_vision_path=/home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+  max_context=4096  max_new_tokens=500
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 0 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.08 map_max=31.08 map_mean=11.90 map_top1=24.33 map_top01=27.09
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=861.5
+  vision input[0]: name='pixel' dims=[1,448,448,3] type=FP16 fmt=1
+  vision output[0]: name='4820' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[1]: name='1669' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[2]: name='2720' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[3]: name='3771' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision: 448x448  n_image_tokens=196  embed_dim=2048  n_outputs=4
+I rkllm: rkllm-runtime version: 1.2.3, rknpu driver version: 0.9.8, platform: RK3588
+I rkllm: loading rkllm model from /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+I rkllm: rkllm-toolkit version: 1.2.3, max_context_limit: 4096, npu_core_num: 3, target_platform: RK3588, model_dtype: W8A8
+I rkllm: Enabled cpus: [4, 5, 6, 7]
+I rkllm: Enabled cpus num: 4
+I rkllm: Using mrope
+[VLM] rkllm_init success
+[T3] FastSamWorker started | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn input_size=640 conf=0.50
+[T3] frame 0 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/bottle/test/broken_large/000.png
+     ead_final_score=11.902 ead_infer_ms=861.5
+     orig_size=900x900  input_size=640  preprocess_ms=109.7
+     infer_ms=103.8
+  [T3][first_frame] output[0] name='output0' type=FP16 zp=0 scale=1.000000 n_elems=310800 want_float=1  <- DETECTION output
+  [T3][first_frame] output[1] name='output1' type=FP16 zp=0 scale=1.000000 n_elems=819200 want_float=1  <- prototype(mask TODO) output
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7686 mean=0.0024 (n=8400)
+  [T3] conf_channel top-10: 0.7686 0.7637 0.7456 0.7446 0.7417 0.7334 0.7246 0.7212 0.7095 0.6909
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 17
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2250.2 ms, embed size=1605632 floats
+[VLM] prompt (666 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.9016
+FastSAM detected 2 region(s).
+  region 0: x=0.0398437 y=0.0539063 w=0.903125 h=0.930469
+  region 1: x=0.287695 y=0.288867 w=0.440234 h=0.441016
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in va
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 1 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=36.34 map_max=36.34 map_mean=12.05 map_top1=26.56 map_top01=33.94
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=323.3
+[VLM] raw_text (177 chars): {"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0398437,0.0539063,0.903125,0.930469]]],"description":"vertical crack in bottle rim"}
+  ttft=2076.1 ms  decode_tps=9.6  prompt_tokens=447  output_tokens=75  rss=3323 MB
+[VLM] JSON extracted: defect_type=crack severity=high conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0398 y=0.0539 w=0.9031 h=0.9305
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=6.7  bbox_count=1  total_ms=12563.1
+     vlm: defect_type=crack severity=high conf=0.95 json_ok=1
+     vlm: vision_ms=2250.2 llm_ms=9895.2 vlm_total_ms=12240.7
+     vlm: raw_text({"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0398437,0.0539063,0.903125,0.930469]]],"description":"vertical crack in bottle rim"})
+     bbox[0] x=0.040 y=0.054 w=0.903 h=0.930
+     [stats] total_frames=1 fallback_frames=0
+[T3] frame 1 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/bottle/test/good/000.png
+     ead_final_score=12.052 ead_infer_ms=323.3
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"anomaly_score":11.9016,"bboxes":[{"x":0.0398,"y":0.0539,"w":0.9031,"h":0.9305}],"description":"","variant":"2B_base","edge_ts":"2026-05-21T12:23:31Z","pipeline_ms":{"efficientad":861.5,"fastsam":220.2,"qwen3vl":12240.7},"vlm_metrics":{"ttft_ms":2076.1,"decode_tps":9.6,"prompt_tokens":447,"output_tokens":75,"rss_mb":3323.3,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":861523.9,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"fastsam_preprocess","ts":861523.9,"dur":109746.3,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_infer","ts":971270.1,"dur":103767.6,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_postprocess","ts":1075037.8,"dur":6675.3,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"qwen3vl_generate","ts":1081713.0,"dur":12240700.0,"tid":"T3.vlm","ph":"X","cat":"vlm"},{"name":"upload","ts":0.0,"dur":0.0,"tid":"T4.upload","ph":"X","cat":"upload"}],"schema_version":"v1"}
+[T4] upload_ms=43.3
+     orig_size=900x900  input_size=640  preprocess_ms=109.2
+     infer_ms=100.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8418 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.8418 0.8252 0.8193 0.7925 0.7866 0.7798 0.7793 0.7627 0.7554 0.7480
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 15
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2297.5 ms, embed size=1605632 floats
+[VLM] prompt (666 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0515
+FastSAM detected 2 region(s).
+  region 0: x=0.0304688 y=0.0507812 w=0.888281 h=0.939844
+  region 1: x=0.274023 y=0.293555 w=0.441016 h=0.437891
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in va
+{"id":79,"image_url":"/static/defects/20260521/dcb9f109a5bc40d7a4227c2ce25ede1d.jpg","server_ts":"2026-05-21T12:23:47.857161Z"}[VLM] raw_text (171 chars): {"category":"bottle","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[34,48],[961,974]],"description":"minor surface blemish on bottle"}
+  ttft=1979.4 ms  decode_tps=10.0  prompt_tokens=443  output_tokens=54  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface imperfection severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.0  bbox_count=2  total_ms=10119.1
+     vlm: defect_type=surface imperfection severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2297.5 llm_ms=7397.0 vlm_total_ms=9792.5
+     vlm: raw_text({"category":"bottle","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[34,48],[961,974]],"description":"minor surface blemish on bottle"})
+     bbox[0] x=0.030 y=0.051 w=0.888 h=0.940
+     bbox[1] x=0.274 y=0.294 w=0.441 h=0.438
+     [stats] total_frames=2 fallback_frames=0
+[T4] upload_ms=24.9
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 2 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.69 map_max=121.69 map_mean=37.64 map_top1=118.99 map_top01=120.95
+     final_score=37.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=414.2
+[T3] frame 2 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/metal_nut/test/bent/000.png
+     ead_final_score=37.643 ead_infer_ms=414.2
+     orig_size=700x700  input_size=640  preprocess_ms=92.5
+     infer_ms=137.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9258 mean=0.0034 (n=8400)
+  [T3] conf_channel top-10: 0.9258 0.9219 0.9072 0.9038 0.9038 0.9019 0.9014 0.8916 0.8828 0.7295
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2336.5 ms, embed size=1605632 floats
+[VLM] prompt (674 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 37.6431
+FastSAM detected 2 region(s).
+  region 0: x=0.0710938 y=0.065625 w=0.888281 h=0.921875
+  region 1: x=0.341602 y=0.350586 w=0.318359 h=0.312891
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in 
+{"id":80,"image_url":"/static/defects/20260521/87786cbd939543e59b6cb71fbd521f4d.jpg","server_ts":"2026-05-21T12:23:57.845945Z"}[VLM] raw_text (198 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[78.5649,13.5625,94.5351,14.5351],[100.0,100.0,100.0,100.0]],"description":"surface texture irregularity"}
+  ttft=2024.5 ms  decode_tps=10.1  prompt_tokens=446  output_tokens=92  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.00
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1122 y=0.0194 w=0.1351 h=0.0208
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=7.0  bbox_count=2  total_ms=13895.5
+     vlm: defect_type=anomaly severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2336.5 llm_ms=11165.6 vlm_total_ms=13580.7
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[78.5649,13.5625,94.5351,14.5351],[100.0,100.0,100.0,100.0]],"description":"surface texture irregularity"})
+     bbox[0] x=0.071 y=0.066 w=0.888 h=0.922
+     bbox[1] x=0.342 y=0.351 w=0.318 h=0.313
+     [stats] total_frames=3 fallback_frames=0
+[T4] upload_ms=16.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 3 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.25 map_max=116.25 map_mean=41.00 map_top1=114.38 map_top01=115.64
+     final_score=41.00 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.7
+[T3] frame 3 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/metal_nut/test/good/000.png
+     ead_final_score=40.997 ead_infer_ms=279.7
+     orig_size=700x700  input_size=640  preprocess_ms=92.5
+     infer_ms=137.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9316 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.9316 0.9268 0.9126 0.9097 0.9097 0.9019 0.9019 0.8940 0.8882 0.8193
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2290.1 ms, embed size=1605632 floats
+[VLM] prompt (675 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 40.9972
+FastSAM detected 2 region(s).
+  region 0: x=0.0804688 y=0.0953125 w=0.821875 h=0.884375
+  region 1: x=0.340625 y=0.343164 w=0.314844 h=0.318359
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in
+{"id":81,"image_url":"/static/defects/20260521/5934d864cd114d2cbd973449d64051cf.jpg","server_ts":"2026-05-21T12:24:15.748096Z"}[VLM] raw_text (187 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.95,"bboxes":[[84.671875,35.78125,91.40625,40.9972]],"description":"surface discoloration and roughness"}
+  ttft=1992.3 ms  decode_tps=10.0  prompt_tokens=447  output_tokens=76  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=medium conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1210 y=0.0511 w=0.1306 h=0.0586
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=6.7  bbox_count=2  total_ms=12287.0
+     vlm: defect_type=anomaly severity=medium conf=0.95 json_ok=1
+     vlm: vision_ms=2290.1 llm_ms=9588.7 vlm_total_ms=11957.7
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.95,"bboxes":[[84.671875,35.78125,91.40625,40.9972]],"description":"surface discoloration and roughness"})
+     bbox[0] x=0.080 y=0.095 w=0.822 h=0.884
+     bbox[1] x=0.341 y=0.343 w=0.315 h=0.318
+     [stats] total_frames=4 fallback_frames=0
+[T4] upload_ms=24.4
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=84.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 4 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=84.94 map_max=84.94 map_mean=35.26 map_top1=82.23 map_top01=83.51
+     final_score=35.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=418.3
+[T3] frame 4 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/pill/test/color/000.png
+     ead_final_score=35.261 ead_infer_ms=418.3
+     orig_size=800x800  input_size=640  preprocess_ms=111.7
+     infer_ms=155.1
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8120 mean=0.0039 (n=8400)
+  [T3] conf_channel top-10: 0.8120 0.7808 0.7798 0.7617 0.7524 0.7173 0.7046 0.7036 0.6885 0.6685
+  [T3] max_abs_conf=0.026 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 25
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+[VLM] vision encoder: 2431.9 ms, embed size=1605632 floats
+[VLM] prompt (719 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 35.2609
+FastSAM detected 3 region(s).
+  region 0: x=0.0601562 y=0.203125 w=0.858594 h=0.603906
+  region 1: x=0.327441 y=0.255078 w=0.0326172 h=0.0320312
+  region 2: x=0.250977 y=0.522461 w=0.0296875 h=0.0347656
+Output ONLY compac
+{"id":82,"image_url":"/static/defects/20260521/aba96ef2ff9241efa23d57dbedc152e0.jpg","server_ts":"2026-05-21T12:24:28.713291Z"}[VLM] raw_text (170 chars): {"category":"pill","defect_type":"surface speckles","severity":"low","confidence":0.95,"bboxes":[[[64.1,187.3,937.8,820.6]]],"description":"minor surface specks on pill"}
+  ttft=2257.7 ms  decode_tps=9.9  prompt_tokens=490  output_tokens=62  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface speckles severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=6.0  bbox_count=3  total_ms=11466.4
+     vlm: defect_type=surface speckles severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2431.9 llm_ms=8537.2 vlm_total_ms=11067.7
+     vlm: raw_text({"category":"pill","defect_type":"surface speckles","severity":"low","confidence":0.95,"bboxes":[[[64.1,187.3,937.8,820.6]]],"description":"minor surface specks on pill"})
+     bbox[0] x=0.060 y=0.203 w=0.859 h=0.604
+     bbox[1] x=0.327 y=0.255 w=0.033 h=0.032
+     bbox[2] x=0.251 y=0.522 w=0.030 h=0.035
+     [stats] total_frames=5 fallback_frames=0
+[T4] upload_ms=43.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=86.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 5 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=86.56 map_max=86.56 map_mean=35.21 map_top1=83.50 map_top01=85.62
+     final_score=35.21 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=303.9
+[T3] frame 5 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/pill/test/good/000.png
+     ead_final_score=35.211 ead_infer_ms=303.9
+     orig_size=800x800  input_size=640  preprocess_ms=113.6
+     infer_ms=155.3
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8022 mean=0.0047 (n=8400)
+  [T3] conf_channel top-10: 0.8022 0.7910 0.7598 0.7544 0.7515 0.7456 0.7310 0.7065 0.6772 0.6338
+  [T3] max_abs_conf=0.069 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2768.4 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 35.2106
+FastSAM detected 2 region(s).
+  region 0: x=0.0679687 y=0.199805 w=0.874219 h=0.601953
+  region 1: x=0.176758 y=0.340527 w=0.0373047 h=0.0330078
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+{"id":83,"image_url":"/static/defects/20260521/4c7c01b7e940406583210386aef5b369.jpg","server_ts":"2026-05-21T12:24:43.915347Z"}[VLM] raw_text (162 chars): {"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[67.8,143.5,932.2,785.5]],"description":"minor speckling on pill surface"}
+  ttft=1958.5 ms  decode_tps=10.1  prompt_tokens=442  output_tokens=61  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.4  bbox_count=2  total_ms=11282.0
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2768.4 llm_ms=8019.1 vlm_total_ms=10886.9
+     vlm: raw_text({"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[67.8,143.5,932.2,785.5]],"description":"minor speckling on pill surface"})
+     bbox[0] x=0.068 y=0.200 w=0.874 h=0.602
+     bbox[1] x=0.177 y=0.341 w=0.037 h=0.033
+     [stats] total_frames=6 fallback_frames=0
+[T4] upload_ms=42.1
+[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=22.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 6 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=22.81 map_max=22.81 map_mean=11.78 map_top1=21.52 map_top01=22.46
+     final_score=11.78 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=355.1
+[T3] frame 6 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/screw/test/scratch_head/000.png
+     ead_final_score=11.778 ead_infer_ms=355.1
+     orig_size=1024x1024  input_size=640  preprocess_ms=81.2
+     infer_ms=109.9
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.6450 mean=0.0078 (n=8400)
+  [T3] conf_channel top-10: 0.6450 0.6367 0.6206 0.6201 0.5996 0.5796 0.5684 0.5645 0.5625 0.5596
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+[VLM] vision encoder: 2334.6 ms, embed size=1605632 floats
+[VLM] prompt (771 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 11.7777
+FastSAM detected 4 region(s).
+  region 0: x=0.15625 y=0.119141 w=0.71875 h=0.609375
+  region 1: x=0.624219 y=0.622461 w=0.0921875 h=0.122266
+  region 2: x=0.583594 y=0.574414 w=0.0875 h=0.121484
+  region 3: x=0.505078 y=
+{"id":84,"image_url":"/static/defects/20260521/bb09a585af9b4da69ee014357ac9a5ab.jpg","server_ts":"2026-05-21T12:24:58.096711Z"}[VLM] raw_text (168 chars): {"category":"screw","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[163,117],[840,875]],"description":"minor surface wear on screw"}
+  ttft=2471.8 ms  decode_tps=9.9  prompt_tokens=531  output_tokens=54  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface imperfection severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.4  bbox_count=4  total_ms=10647.2
+     vlm: defect_type=surface imperfection severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2334.6 llm_ms=7961.3 vlm_total_ms=10365.7
+     vlm: raw_text({"category":"screw","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[163,117],[840,875]],"description":"minor surface wear on screw"})
+     bbox[0] x=0.156 y=0.119 w=0.719 h=0.609
+     bbox[1] x=0.624 y=0.622 w=0.092 h=0.122
+     bbox[2] x=0.584 y=0.574 w=0.087 h=0.121
+     bbox[3] x=0.505 y=0.480 w=0.079 h=0.112
+     [stats] total_frames=7 fallback_frames=0
+[T4] upload_ms=28.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 7 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.14 map_max=25.14 map_mean=12.30 map_top1=22.89 map_top01=24.59
+     final_score=12.30 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=271.2
+[T3] frame 7 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/screw/test/good/000.png
+     ead_final_score=12.295 ead_infer_ms=271.2
+     orig_size=1024x1024  input_size=640  preprocess_ms=81.8
+     infer_ms=155.4
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7725 mean=0.0082 (n=8400)
+  [T3] conf_channel top-10: 0.7725 0.7310 0.7305 0.7256 0.7158 0.6968 0.6929 0.6890 0.6860 0.6855
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 48
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 5
+  [T3] cleanup L3 max_area(0.95): 5 -> 5
+  [T3] cleanup L4 dedup(iou=0.70): 5 -> 5
+  [T3] after_cleanup: 5 bboxes
+[VLM] vision encoder: 2463.7 ms, embed size=1605632 floats
+[VLM] prompt (829 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 12.2951
+FastSAM detected 5 region(s).
+  region 0: x=0.133496 y=0.158105 w=0.19707 h=0.212695
+  region 1: x=0.615039 y=0.576953 w=0.0730469 h=0.128125
+  region 2: x=0.569141 y=0.534375 w=0.0710938 h=0.125
+  region 3: x=0.521289 y
+{"id":85,"image_url":"/static/defects/20260521/c8c30cfcaf8c436e96eeeb8b60b1b868.jpg","server_ts":"2026-05-21T12:25:12.862080Z"}[VLM] raw_text (187 chars): {"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[133,164,875,845]],"description":"FastSAM detected multiple small regions with irregular shapes."}
+  ttft=2644.6 ms  decode_tps=9.9  prompt_tokens=579  output_tokens=58  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.97
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1299 y=0.1602 w=0.8545 h=0.8252
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=7.5  bbox_count=5  total_ms=11394.5
+     vlm: defect_type=anomaly severity=low conf=0.97 json_ok=1
+     vlm: vision_ms=2463.7 llm_ms=8531.2 vlm_total_ms=11064.7
+     vlm: raw_text({"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[133,164,875,845]],"description":"FastSAM detected multiple small regions with irregular shapes."})
+     bbox[0] x=0.133 y=0.158 w=0.197 h=0.213
+     bbox[1] x=0.615 y=0.577 w=0.073 h=0.128
+     bbox[2] x=0.569 y=0.534 w=0.071 h=0.125
+     bbox[3] x=0.521 y=0.495 w=0.068 h=0.120
+     bbox[4] x=0.720 y=0.670 w=0.060 h=0.112
+     [stats] total_frames=8 fallback_frames=0
+[T4] upload_ms=30.3
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 8 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.08 map_max=31.08 map_mean=11.90 map_top1=24.33 map_top01=27.09
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=373.6
+[T3] frame 8 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/bottle/test/broken_large/000.png
+     ead_final_score=11.902 ead_infer_ms=373.6
+     orig_size=900x900  input_size=640  preprocess_ms=112.3
+     infer_ms=148.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7686 mean=0.0024 (n=8400)
+  [T3] conf_channel top-10: 0.7686 0.7637 0.7456 0.7446 0.7417 0.7334 0.7246 0.7212 0.7095 0.6909
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 17
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2455.4 ms, embed size=1605632 floats
+[VLM] prompt (666 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.9016
+FastSAM detected 2 region(s).
+  region 0: x=0.0398437 y=0.0539063 w=0.903125 h=0.930469
+  region 1: x=0.287695 y=0.288867 w=0.440234 h=0.441016
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in va
+{"id":86,"image_url":"/static/defects/20260521/7e881cd297944746a30787db8526dd6b.jpg","server_ts":"2026-05-21T12:25:28.081575Z"}[VLM] raw_text (177 chars): {"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0398437,0.0539063,0.903125,0.930469]]],"description":"vertical crack in bottle rim"}
+  ttft=1981.4 ms  decode_tps=10.0  prompt_tokens=443  output_tokens=75  rss=3324 MB
+[VLM] JSON extracted: defect_type=crack severity=high conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0398 y=0.0539 w=0.9031 h=0.9305
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=6.8  bbox_count=1  total_ms=12429.6
+     vlm: defect_type=crack severity=high conf=0.95 json_ok=1
+     vlm: vision_ms=2455.4 llm_ms=9494.3 vlm_total_ms=12047.9
+     vlm: raw_text({"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0398437,0.0539063,0.903125,0.930469]]],"description":"vertical crack in bottle rim"})
+     bbox[0] x=0.040 y=0.054 w=0.903 h=0.930
+     [stats] total_frames=9 fallback_frames=0
+[T4] upload_ms=25.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 9 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=36.34 map_max=36.34 map_mean=12.05 map_top1=26.56 map_top01=33.94
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.0
+[T3] frame 9 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/bottle/test/good/000.png
+     ead_final_score=12.052 ead_infer_ms=300.0
+     orig_size=900x900  input_size=640  preprocess_ms=112.2
+     infer_ms=154.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8418 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.8418 0.8252 0.8193 0.7925 0.7866 0.7798 0.7793 0.7627 0.7554 0.7480
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 15
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2419.7 ms, embed size=1605632 floats
+[VLM] prompt (666 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0515
+FastSAM detected 2 region(s).
+  region 0: x=0.0304688 y=0.0507812 w=0.888281 h=0.939844
+  region 1: x=0.274023 y=0.293555 w=0.441016 h=0.437891
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in va
+{"id":87,"image_url":"/static/defects/20260521/25900e479b39412a88abb92a4e78800a.jpg","server_ts":"2026-05-21T12:25:44.124653Z"}[VLM] raw_text (171 chars): {"category":"bottle","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[34,48],[961,974]],"description":"minor surface blemish on bottle"}
+  ttft=1980.8 ms  decode_tps=10.0  prompt_tokens=443  output_tokens=54  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface imperfection severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=6.3  bbox_count=2  total_ms=10325.7
+     vlm: defect_type=surface imperfection severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2419.7 llm_ms=7412.9 vlm_total_ms=9931.0
+     vlm: raw_text({"category":"bottle","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[34,48],[961,974]],"description":"minor surface blemish on bottle"})
+     bbox[0] x=0.030 y=0.051 w=0.888 h=0.940
+     bbox[1] x=0.274 y=0.294 w=0.441 h=0.438
+     [stats] total_frames=10 fallback_frames=0
+[T4] upload_ms=46.6
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 10 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.69 map_max=121.69 map_mean=37.64 map_top1=118.99 map_top01=120.95
+     final_score=37.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=329.1
+[T3] frame 10 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/metal_nut/test/bent/000.png
+     ead_final_score=37.643 ead_infer_ms=329.1
+     orig_size=700x700  input_size=640  preprocess_ms=92.0
+     infer_ms=151.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9258 mean=0.0034 (n=8400)
+  [T3] conf_channel top-10: 0.9258 0.9219 0.9072 0.9038 0.9038 0.9019 0.9014 0.8916 0.8828 0.7295
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2294.5 ms, embed size=1605632 floats
+[VLM] prompt (674 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 37.6431
+FastSAM detected 2 region(s).
+  region 0: x=0.0710938 y=0.065625 w=0.888281 h=0.921875
+  region 1: x=0.341602 y=0.350586 w=0.318359 h=0.312891
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in 
+{"id":88,"image_url":"/static/defects/20260521/66ed8a3c808e4ea3937a27569fca38d8.jpg","server_ts":"2026-05-21T12:25:57.050355Z"}[VLM] raw_text (198 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[78.5649,13.5625,94.5351,14.5351],[100.0,100.0,100.0,100.0]],"description":"surface texture irregularity"}
+  ttft=2013.2 ms  decode_tps=10.0  prompt_tokens=446  output_tokens=92  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.00
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1122 y=0.0194 w=0.1351 h=0.0208
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=7.2  bbox_count=2  total_ms=13972.4
+     vlm: defect_type=anomaly severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2294.5 llm_ms=11248.5 vlm_total_ms=13624.5
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[78.5649,13.5625,94.5351,14.5351],[100.0,100.0,100.0,100.0]],"description":"surface texture irregularity"})
+     bbox[0] x=0.071 y=0.066 w=0.888 h=0.922
+     bbox[1] x=0.342 y=0.351 w=0.318 h=0.313
+     [stats] total_frames=11 fallback_frames=0
+[T4] upload_ms=42.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 11 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.25 map_max=116.25 map_mean=41.00 map_top1=114.38 map_top01=115.64
+     final_score=41.00 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=278.1
+[T3] frame 11 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/metal_nut/test/good/000.png
+     ead_final_score=40.997 ead_infer_ms=278.1
+     orig_size=700x700  input_size=640  preprocess_ms=92.8
+     infer_ms=155.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9316 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.9316 0.9268 0.9126 0.9097 0.9097 0.9019 0.9019 0.8940 0.8882 0.8193
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2337.3 ms, embed size=1605632 floats
+[VLM] prompt (675 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 40.9972
+FastSAM detected 2 region(s).
+  region 0: x=0.0804688 y=0.0953125 w=0.821875 h=0.884375
+  region 1: x=0.340625 y=0.343164 w=0.314844 h=0.318359
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in
+{"id":89,"image_url":"/static/defects/20260521/4b05fe4746b646289efd20bfcac883ad.jpg","server_ts":"2026-05-21T12:26:15.895710Z"}[VLM] raw_text (187 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.95,"bboxes":[[84.671875,35.78125,91.40625,40.9972]],"description":"surface discoloration and roughness"}
+  ttft=2030.3 ms  decode_tps=10.0  prompt_tokens=447  output_tokens=76  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=medium conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1210 y=0.0511 w=0.1306 h=0.0586
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=7.2  bbox_count=2  total_ms=12413.9
+     vlm: defect_type=anomaly severity=medium conf=0.95 json_ok=1
+     vlm: vision_ms=2337.3 llm_ms=9640.0 vlm_total_ms=12057.1
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.95,"bboxes":[[84.671875,35.78125,91.40625,40.9972]],"description":"surface discoloration and roughness"})
+     bbox[0] x=0.080 y=0.095 w=0.822 h=0.884
+     bbox[1] x=0.341 y=0.343 w=0.315 h=0.318
+     [stats] total_frames=12 fallback_frames=0
+[T4] upload_ms=40.6
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=84.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 12 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=84.94 map_max=84.94 map_mean=35.26 map_top1=82.23 map_top01=83.51
+     final_score=35.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=375.0
+[T3] frame 12 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/pill/test/color/000.png
+     ead_final_score=35.261 ead_infer_ms=375.0
+     orig_size=800x800  input_size=640  preprocess_ms=113.6
+     infer_ms=155.1
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8120 mean=0.0039 (n=8400)
+  [T3] conf_channel top-10: 0.8120 0.7808 0.7798 0.7617 0.7524 0.7173 0.7046 0.7036 0.6885 0.6685
+  [T3] max_abs_conf=0.026 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 25
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+[VLM] vision encoder: 2287.4 ms, embed size=1605632 floats
+[VLM] prompt (719 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 35.2609
+FastSAM detected 3 region(s).
+  region 0: x=0.0601562 y=0.203125 w=0.858594 h=0.603906
+  region 1: x=0.327441 y=0.255078 w=0.0326172 h=0.0320312
+  region 2: x=0.250977 y=0.522461 w=0.0296875 h=0.0347656
+Output ONLY compac
+{"id":90,"image_url":"/static/defects/20260521/33cdc111951b4bf689c0f08d69506514.jpg","server_ts":"2026-05-21T12:26:29.547113Z"}[VLM] raw_text (170 chars): {"category":"pill","defect_type":"surface speckles","severity":"low","confidence":0.95,"bboxes":[[[64.1,187.3,937.8,820.6]]],"description":"minor surface specks on pill"}
+  ttft=2277.9 ms  decode_tps=10.0  prompt_tokens=490  output_tokens=62  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface speckles severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=6.5  bbox_count=3  total_ms=11306.0
+     vlm: defect_type=surface speckles severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2287.4 llm_ms=8521.8 vlm_total_ms=10909.7
+     vlm: raw_text({"category":"pill","defect_type":"surface speckles","severity":"low","confidence":0.95,"bboxes":[[[64.1,187.3,937.8,820.6]]],"description":"minor surface specks on pill"})
+     bbox[0] x=0.060 y=0.203 w=0.859 h=0.604
+     bbox[1] x=0.327 y=0.255 w=0.033 h=0.032
+     bbox[2] x=0.251 y=0.522 w=0.030 h=0.035
+     [stats] total_frames=13 fallback_frames=0
+[T4] upload_ms=47.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=86.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 13 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=86.56 map_max=86.56 map_mean=35.21 map_top1=83.50 map_top01=85.62
+     final_score=35.21 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=294.4
+[T3] frame 13 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/pill/test/good/000.png
+     ead_final_score=35.211 ead_infer_ms=294.4
+     orig_size=800x800  input_size=640  preprocess_ms=113.4
+     infer_ms=155.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8022 mean=0.0047 (n=8400)
+  [T3] conf_channel top-10: 0.8022 0.7910 0.7598 0.7544 0.7515 0.7456 0.7310 0.7065 0.6772 0.6338
+  [T3] max_abs_conf=0.069 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2370.7 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 35.2106
+FastSAM detected 2 region(s).
+  region 0: x=0.0679687 y=0.199805 w=0.874219 h=0.601953
+  region 1: x=0.176758 y=0.340527 w=0.0373047 h=0.0330078
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+{"id":91,"image_url":"/static/defects/20260521/36df8d67a6604fee95e03809a0eee9ab.jpg","server_ts":"2026-05-21T12:26:43.159879Z"}[VLM] raw_text (162 chars): {"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[67.8,143.5,932.2,785.5]],"description":"minor speckling on pill surface"}
+  ttft=1984.0 ms  decode_tps=10.1  prompt_tokens=442  output_tokens=61  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.2  bbox_count=2  total_ms=10924.1
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2370.7 llm_ms=8066.2 vlm_total_ms=10538.0
+     vlm: raw_text({"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[67.8,143.5,932.2,785.5]],"description":"minor speckling on pill surface"})
+     bbox[0] x=0.068 y=0.200 w=0.874 h=0.602
+     bbox[1] x=0.177 y=0.341 w=0.037 h=0.033
+     [stats] total_frames=14 fallback_frames=0
+[T4] upload_ms=43.5
+[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=22.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 14 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=22.81 map_max=22.81 map_mean=11.78 map_top1=21.52 map_top01=22.46
+     final_score=11.78 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=348.9
+[T3] frame 14 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/screw/test/scratch_head/000.png
+     ead_final_score=11.778 ead_infer_ms=348.9
+     orig_size=1024x1024  input_size=640  preprocess_ms=81.2
+     infer_ms=152.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.6450 mean=0.0078 (n=8400)
+  [T3] conf_channel top-10: 0.6450 0.6367 0.6206 0.6201 0.5996 0.5796 0.5684 0.5645 0.5625 0.5596
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+[VLM] vision encoder: 2601.0 ms, embed size=1605632 floats
+[VLM] prompt (771 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 11.7777
+FastSAM detected 4 region(s).
+  region 0: x=0.15625 y=0.119141 w=0.71875 h=0.609375
+  region 1: x=0.624219 y=0.622461 w=0.0921875 h=0.122266
+  region 2: x=0.583594 y=0.574414 w=0.0875 h=0.121484
+  region 3: x=0.505078 y=
+{"id":92,"image_url":"/static/defects/20260521/22be683957594209ac9b0d9228a48f55.jpg","server_ts":"2026-05-21T12:26:58.505846Z"}[VLM] raw_text (168 chars): {"category":"screw","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[163,117],[840,875]],"description":"minor surface wear on screw"}
+  ttft=2486.2 ms  decode_tps=9.8  prompt_tokens=531  output_tokens=54  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface imperfection severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=6.7  bbox_count=4  total_ms=10979.6
+     vlm: defect_type=surface imperfection severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2601.0 llm_ms=7985.6 vlm_total_ms=10658.2
+     vlm: raw_text({"category":"screw","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[163,117],[840,875]],"description":"minor surface wear on screw"})
+     bbox[0] x=0.156 y=0.119 w=0.719 h=0.609
+     bbox[1] x=0.624 y=0.622 w=0.092 h=0.122
+     bbox[2] x=0.584 y=0.574 w=0.087 h=0.121
+     bbox[3] x=0.505 y=0.480 w=0.079 h=0.112
+     [stats] total_frames=15 fallback_frames=0
+[T4] upload_ms=31.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 15 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.14 map_max=25.14 map_mean=12.30 map_top1=22.89 map_top01=24.59
+     final_score=12.30 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=275.3
+[T3] frame 15 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/screw/test/good/000.png
+     ead_final_score=12.295 ead_infer_ms=275.3
+     orig_size=1024x1024  input_size=640  preprocess_ms=81.9
+     infer_ms=155.6
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7725 mean=0.0082 (n=8400)
+  [T3] conf_channel top-10: 0.7725 0.7310 0.7305 0.7256 0.7158 0.6968 0.6929 0.6890 0.6860 0.6855
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 48
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 5
+  [T3] cleanup L3 max_area(0.95): 5 -> 5
+  [T3] cleanup L4 dedup(iou=0.70): 5 -> 5
+  [T3] after_cleanup: 5 bboxes
+[VLM] vision encoder: 2319.5 ms, embed size=1605632 floats
+[VLM] prompt (829 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 12.2951
+FastSAM detected 5 region(s).
+  region 0: x=0.133496 y=0.158105 w=0.19707 h=0.212695
+  region 1: x=0.615039 y=0.576953 w=0.0730469 h=0.128125
+  region 2: x=0.569141 y=0.534375 w=0.0710938 h=0.125
+  region 3: x=0.521289 y
+{"id":93,"image_url":"/static/defects/20260521/ebd68e990ecd486ca3d0b56d3786aca4.jpg","server_ts":"2026-05-21T12:27:12.699330Z"}[VLM] raw_text (187 chars): {"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[133,164,875,845]],"description":"FastSAM detected multiple small regions with irregular shapes."}
+  ttft=2622.2 ms  decode_tps=9.8  prompt_tokens=579  output_tokens=58  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.97
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1299 y=0.1602 w=0.8545 h=0.8252
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=5.7  bbox_count=5  total_ms=11253.0
+     vlm: defect_type=anomaly severity=low conf=0.97 json_ok=1
+     vlm: vision_ms=2319.5 llm_ms=8533.1 vlm_total_ms=10921.4
+     vlm: raw_text({"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[133,164,875,845]],"description":"FastSAM detected multiple small regions with irregular shapes."})
+     bbox[0] x=0.133 y=0.158 w=0.197 h=0.213
+     bbox[1] x=0.615 y=0.577 w=0.073 h=0.128
+     bbox[2] x=0.569 y=0.534 w=0.071 h=0.125
+     bbox[3] x=0.521 y=0.495 w=0.068 h=0.120
+     bbox[4] x=0.720 y=0.670 w=0.060 h=0.112
+     [stats] total_frames=16 fallback_frames=0
+[T4] upload_ms=27.1
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 16 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.08 map_max=31.08 map_mean=11.90 map_top1=24.33 map_top01=27.09
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=372.1
+[T3] frame 16 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/bottle/test/broken_large/000.png
+     ead_final_score=11.902 ead_infer_ms=372.1
+     orig_size=900x900  input_size=640  preprocess_ms=112.0
+     infer_ms=155.1
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7686 mean=0.0024 (n=8400)
+  [T3] conf_channel top-10: 0.7686 0.7637 0.7456 0.7446 0.7417 0.7334 0.7246 0.7212 0.7095 0.6909
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 17
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2476.6 ms, embed size=1605632 floats
+[VLM] prompt (666 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.9016
+FastSAM detected 2 region(s).
+  region 0: x=0.0398437 y=0.0539063 w=0.903125 h=0.930469
+  region 1: x=0.287695 y=0.288867 w=0.440234 h=0.441016
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in va
+{"id":94,"image_url":"/static/defects/20260521/7dc74ced29d44fb1b6d9edaec65ffd99.jpg","server_ts":"2026-05-21T12:27:28.816040Z"}[VLM] raw_text (177 chars): {"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0398437,0.0539063,0.903125,0.930469]]],"description":"vertical crack in bottle rim"}
+  ttft=1992.3 ms  decode_tps=10.0  prompt_tokens=443  output_tokens=75  rss=3324 MB
+[VLM] JSON extracted: defect_type=crack severity=high conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0398 y=0.0539 w=0.9031 h=0.9305
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=6.8  bbox_count=1  total_ms=12517.8
+     vlm: defect_type=crack severity=high conf=0.95 json_ok=1
+     vlm: vision_ms=2476.6 llm_ms=9546.3 vlm_total_ms=12121.4
+     vlm: raw_text({"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0398437,0.0539063,0.903125,0.930469]]],"description":"vertical crack in bottle rim"})
+     bbox[0] x=0.040 y=0.054 w=0.903 h=0.930
+     [stats] total_frames=17 fallback_frames=0
+[T4] upload_ms=38.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 17 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=36.34 map_max=36.34 map_mean=12.05 map_top1=26.56 map_top01=33.94
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=307.5
+[T3] frame 17 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/bottle/test/good/000.png
+     ead_final_score=12.052 ead_infer_ms=307.5
+     orig_size=900x900  input_size=640  preprocess_ms=112.1
+     infer_ms=131.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8418 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.8418 0.8252 0.8193 0.7925 0.7866 0.7798 0.7793 0.7627 0.7554 0.7480
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 15
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2386.8 ms, embed size=1605632 floats
+[VLM] prompt (666 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0515
+FastSAM detected 2 region(s).
+  region 0: x=0.0304688 y=0.0507812 w=0.888281 h=0.939844
+  region 1: x=0.274023 y=0.293555 w=0.441016 h=0.437891
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in va
+{"id":95,"image_url":"/static/defects/20260521/c15eae6fa50544cd8de8efbfbe05cecd.jpg","server_ts":"2026-05-21T12:27:44.185960Z"}[VLM] raw_text (171 chars): {"category":"bottle","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[34,48],[961,974]],"description":"minor surface blemish on bottle"}
+  ttft=1995.3 ms  decode_tps=10.1  prompt_tokens=443  output_tokens=54  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface imperfection severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.0  bbox_count=2  total_ms=10197.6
+     vlm: defect_type=surface imperfection severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2386.8 llm_ms=7349.7 vlm_total_ms=9832.7
+     vlm: raw_text({"category":"bottle","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[34,48],[961,974]],"description":"minor surface blemish on bottle"})
+     bbox[0] x=0.030 y=0.051 w=0.888 h=0.940
+     bbox[1] x=0.274 y=0.294 w=0.441 h=0.438
+     [stats] total_frames=18 fallback_frames=0
+[T4] upload_ms=31.5
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=121.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 18 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=121.69 map_max=121.69 map_mean=37.64 map_top1=118.99 map_top01=120.95
+     final_score=37.64 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=348.6
+[T3] frame 18 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/metal_nut/test/bent/000.png
+     ead_final_score=37.643 ead_infer_ms=348.6
+     orig_size=700x700  input_size=640  preprocess_ms=92.3
+     infer_ms=155.3
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9258 mean=0.0034 (n=8400)
+  [T3] conf_channel top-10: 0.9258 0.9219 0.9072 0.9038 0.9038 0.9019 0.9014 0.8916 0.8828 0.7295
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2300.0 ms, embed size=1605632 floats
+[VLM] prompt (674 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 37.6431
+FastSAM detected 2 region(s).
+  region 0: x=0.0710938 y=0.065625 w=0.888281 h=0.921875
+  region 1: x=0.341602 y=0.350586 w=0.318359 h=0.312891
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in 
+{"id":96,"image_url":"/static/defects/20260521/2fcfaa069ac044a5a330fe449f536f21.jpg","server_ts":"2026-05-21T12:27:56.760686Z"}[VLM] raw_text (198 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[78.5649,13.5625,94.5351,14.5351],[100.0,100.0,100.0,100.0]],"description":"surface texture irregularity"}
+  ttft=2034.1 ms  decode_tps=10.0  prompt_tokens=446  output_tokens=92  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.00
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1122 y=0.0194 w=0.1351 h=0.0208
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=6.7  bbox_count=2  total_ms=13960.3
+     vlm: defect_type=anomaly severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2300.0 llm_ms=11229.0 vlm_total_ms=13608.1
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[78.5649,13.5625,94.5351,14.5351],[100.0,100.0,100.0,100.0]],"description":"surface texture irregularity"})
+     bbox[0] x=0.071 y=0.066 w=0.888 h=0.922
+     bbox[1] x=0.342 y=0.351 w=0.318 h=0.313
+     [stats] total_frames=19 fallback_frames=0
+[T4] upload_ms=37.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=116.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 19 | cat=metal_nut | score_mode=map_mean | gate_mode=pass_all
+     raw_score=116.25 map_max=116.25 map_mean=41.00 map_top1=114.38 map_top01=115.64
+     final_score=41.00 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=278.9
+[T3] frame 19 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/metal_nut/test/good/000.png
+     ead_final_score=40.997 ead_infer_ms=278.9
+     orig_size=700x700  input_size=640  preprocess_ms=91.9
+     infer_ms=99.4
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9316 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.9316 0.9268 0.9126 0.9097 0.9097 0.9019 0.9019 0.8940 0.8882 0.8193
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2210.0 ms, embed size=1605632 floats
+[VLM] prompt (675 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 40.9972
+FastSAM detected 2 region(s).
+  region 0: x=0.0804688 y=0.0953125 w=0.821875 h=0.884375
+  region 1: x=0.340625 y=0.343164 w=0.314844 h=0.318359
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in
+{"id":97,"image_url":"/static/defects/20260521/b0eee068bf4e43e1812a4763a1b82c4c.jpg","server_ts":"2026-05-21T12:28:16.384282Z"}[VLM] raw_text (187 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.95,"bboxes":[[84.671875,35.78125,91.40625,40.9972]],"description":"surface discoloration and roughness"}
+  ttft=1997.0 ms  decode_tps=10.1  prompt_tokens=447  output_tokens=76  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=medium conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1210 y=0.0511 w=0.1306 h=0.0586
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=6.8  bbox_count=2  total_ms=12103.6
+     vlm: defect_type=anomaly severity=medium conf=0.95 json_ok=1
+     vlm: vision_ms=2210.0 llm_ms=9524.1 vlm_total_ms=11813.1
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"medium","confidence":0.95,"bboxes":[[84.671875,35.78125,91.40625,40.9972]],"description":"surface discoloration and roughness"})
+     bbox[0] x=0.080 y=0.095 w=0.822 h=0.884
+     bbox[1] x=0.341 y=0.343 w=0.315 h=0.318
+     [stats] total_frames=20 fallback_frames=0
+[T4] upload_ms=42.8
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=84.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 20 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=84.94 map_max=84.94 map_mean=35.26 map_top1=82.23 map_top01=83.51
+     final_score=35.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=378.9
+[T3] frame 20 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/pill/test/color/000.png
+     ead_final_score=35.261 ead_infer_ms=378.9
+     orig_size=800x800  input_size=640  preprocess_ms=114.7
+     infer_ms=155.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8120 mean=0.0039 (n=8400)
+  [T3] conf_channel top-10: 0.8120 0.7808 0.7798 0.7617 0.7524 0.7173 0.7046 0.7036 0.6885 0.6685
+  [T3] max_abs_conf=0.026 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 25
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+[VLM] vision encoder: 2466.7 ms, embed size=1605632 floats
+[VLM] prompt (719 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 35.2609
+FastSAM detected 3 region(s).
+  region 0: x=0.0601562 y=0.203125 w=0.858594 h=0.603906
+  region 1: x=0.327441 y=0.255078 w=0.0326172 h=0.0320312
+  region 2: x=0.250977 y=0.522461 w=0.0296875 h=0.0347656
+Output ONLY compac
+{"id":98,"image_url":"/static/defects/20260521/aadcfb1f6b13442f81fedd26b5c09bea.jpg","server_ts":"2026-05-21T12:28:29.190341Z"}[VLM] raw_text (170 chars): {"category":"pill","defect_type":"surface speckles","severity":"low","confidence":0.95,"bboxes":[[[64.1,187.3,937.8,820.6]]],"description":"minor surface specks on pill"}
+  ttft=2260.0 ms  decode_tps=10.0  prompt_tokens=490  output_tokens=62  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface speckles severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.4  bbox_count=3  total_ms=11452.4
+     vlm: defect_type=surface speckles severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2466.7 llm_ms=8492.0 vlm_total_ms=11058.4
+     vlm: raw_text({"category":"pill","defect_type":"surface speckles","severity":"low","confidence":0.95,"bboxes":[[[64.1,187.3,937.8,820.6]]],"description":"minor surface specks on pill"})
+     bbox[0] x=0.060 y=0.203 w=0.859 h=0.604
+     bbox[1] x=0.327 y=0.255 w=0.033 h=0.032
+     bbox[2] x=0.251 y=0.522 w=0.030 h=0.035
+     [stats] total_frames=21 fallback_frames=0
+[T4] upload_ms=33.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=86.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 21 | cat=pill | score_mode=map_mean | gate_mode=pass_all
+     raw_score=86.56 map_max=86.56 map_mean=35.21 map_top1=83.50 map_top01=85.62
+     final_score=35.21 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=306.2
+[T3] frame 21 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/pill/test/good/000.png
+     ead_final_score=35.211 ead_infer_ms=306.2
+     orig_size=800x800  input_size=640  preprocess_ms=114.2
+     infer_ms=155.7
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8022 mean=0.0047 (n=8400)
+  [T3] conf_channel top-10: 0.8022 0.7910 0.7598 0.7544 0.7515 0.7456 0.7310 0.7065 0.6772 0.6338
+  [T3] max_abs_conf=0.069 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+[VLM] vision encoder: 2718.9 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 35.2106
+FastSAM detected 2 region(s).
+  region 0: x=0.0679687 y=0.199805 w=0.874219 h=0.601953
+  region 1: x=0.176758 y=0.340527 w=0.0373047 h=0.0330078
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+{"id":99,"image_url":"/static/defects/20260521/5b1950e6663a458982cd9c5daf0a19c9.jpg","server_ts":"2026-05-21T12:28:43.925622Z"}[VLM] raw_text (162 chars): {"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[67.8,143.5,932.2,785.5]],"description":"minor speckling on pill surface"}
+  ttft=1977.3 ms  decode_tps=10.0  prompt_tokens=442  output_tokens=61  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.0  bbox_count=2  total_ms=11323.3
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2718.9 llm_ms=8101.4 vlm_total_ms=10920.8
+     vlm: raw_text({"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[67.8,143.5,932.2,785.5]],"description":"minor speckling on pill surface"})
+     bbox[0] x=0.068 y=0.200 w=0.874 h=0.602
+     bbox[1] x=0.177 y=0.341 w=0.037 h=0.033
+     [stats] total_frames=22 fallback_frames=0
+[T4] upload_ms=35.3
+[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=22.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 22 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=22.81 map_max=22.81 map_mean=11.78 map_top1=21.52 map_top01=22.46
+     final_score=11.78 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=356.6
+[T3] frame 22 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/screw/test/scratch_head/000.png
+     ead_final_score=11.778 ead_infer_ms=356.6
+     orig_size=1024x1024  input_size=640  preprocess_ms=82.6
+     infer_ms=155.4
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.6450 mean=0.0078 (n=8400)
+  [T3] conf_channel top-10: 0.6450 0.6367 0.6206 0.6201 0.5996 0.5796 0.5684 0.5645 0.5625 0.5596
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 20
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+[VLM] vision encoder: 2345.6 ms, embed size=1605632 floats
+[VLM] prompt (771 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 11.7777
+FastSAM detected 4 region(s).
+  region 0: x=0.15625 y=0.119141 w=0.71875 h=0.609375
+  region 1: x=0.624219 y=0.622461 w=0.0921875 h=0.122266
+  region 2: x=0.583594 y=0.574414 w=0.0875 h=0.121484
+  region 3: x=0.505078 y=
+{"id":100,"image_url":"/static/defects/20260521/6df33f061e3144c683d073fec4c6752b.jpg","server_ts":"2026-05-21T12:28:58.030032Z"}[VLM] raw_text (168 chars): {"category":"screw","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[163,117],[840,875]],"description":"minor surface wear on screw"}
+  ttft=2468.9 ms  decode_tps=9.9  prompt_tokens=531  output_tokens=54  rss=3324 MB
+[VLM] JSON extracted: defect_type=surface imperfection severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=7.0  bbox_count=4  total_ms=10687.4
+     vlm: defect_type=surface imperfection severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2345.6 llm_ms=7952.8 vlm_total_ms=10366.4
+     vlm: raw_text({"category":"screw","defect_type":"surface imperfection","severity":"low","confidence":0.95,"bboxes":[[[163,117],[840,875]],"description":"minor surface wear on screw"})
+     bbox[0] x=0.156 y=0.119 w=0.719 h=0.609
+     bbox[1] x=0.624 y=0.622 w=0.092 h=0.122
+     bbox[2] x=0.584 y=0.574 w=0.087 h=0.121
+     bbox[3] x=0.505 y=0.480 w=0.079 h=0.112
+     [stats] total_frames=23 fallback_frames=0
+[T4] upload_ms=19.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 23 | cat=screw | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.14 map_max=25.14 map_mean=12.30 map_top1=22.89 map_top01=24.59
+     final_score=12.30 thr=0.35 decision=PASS_ALL_WOULD_UPLOAD infer_ms=269.1
+[T3] frame 23 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/tmp/mvtec_phase7_e2e_small/screw/test/good/000.png
+     ead_final_score=12.295 ead_infer_ms=269.1
+     orig_size=1024x1024  input_size=640  preprocess_ms=81.9
+     infer_ms=153.6
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7725 mean=0.0082 (n=8400)
+  [T3] conf_channel top-10: 0.7725 0.7310 0.7305 0.7256 0.7158 0.6968 0.6929 0.6890 0.6860 0.6855
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 48
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 5
+  [T3] cleanup L3 max_area(0.95): 5 -> 5
+  [T3] cleanup L4 dedup(iou=0.70): 5 -> 5
+  [T3] after_cleanup: 5 bboxes
+[VLM] vision encoder: 2427.8 ms, embed size=1605632 floats
+[VLM] prompt (829 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 12.2951
+FastSAM detected 5 region(s).
+  region 0: x=0.133496 y=0.158105 w=0.19707 h=0.212695
+  region 1: x=0.615039 y=0.576953 w=0.0730469 h=0.128125
+  region 2: x=0.569141 y=0.534375 w=0.0710938 h=0.125
+  region 3: x=0.521289 y
+{"id":101,"image_url":"/static/defects/20260521/0e6f53c46c1e4b05b2dc33ebcadc97ed.jpg","server_ts":"2026-05-21T12:29:13.241058Z"}[VLM] raw_text (187 chars): {"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[133,164,875,845]],"description":"FastSAM detected multiple small regions with irregular shapes."}
+  ttft=2661.9 ms  decode_tps=9.9  prompt_tokens=579  output_tokens=58  rss=3324 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.97
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.1299 y=0.1602 w=0.8545 h=0.8252
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=7.4  bbox_count=5  total_ms=11360.8
+     vlm: defect_type=anomaly severity=low conf=0.97 json_ok=1
+     vlm: vision_ms=2427.8 llm_ms=8545.7 vlm_total_ms=11043.1
+     vlm: raw_text({"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[133,164,875,845]],"description":"FastSAM detected multiple small regions with irregular shapes."})
+     bbox[0] x=0.133 y=0.158 w=0.197 h=0.213
+     bbox[1] x=0.615 y=0.577 w=0.073 h=0.128
+     bbox[2] x=0.569 y=0.534 w=0.071 h=0.125
+     bbox[3] x=0.521 y=0.495 w=0.068 h=0.120
+     bbox[4] x=0.720 y=0.670 w=0.060 h=0.112
+     [stats] total_frames=24 fallback_frames=0
+[T4] upload_ms=22.3
+
+--- Shutdown requested ---
+[T4] stopped
+[T3] FastSamWorker stopped | total_frames=24 fallback_frames=0
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 24 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.08 map_max=31.08 map_mean=11.90 map_top1=24.33 map_top01=27.09
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=839.7
+[T2] EadWorker stopped
+[T1] stopped after 25 frames
+
+--- Pipeline Metrics ---
+capture:      25
+ead:          25
+vlm:          24
+upload_ok:    24
+upload_fail:  0
+upload_retry: 0
+dropped:      0
+
+edge_pipeline: clean exit.
+{"id":102,"image_url":"/static/defects/20260521/4f8327f7204c4d088cc57c14a36591dd.jpg","server_ts":"2026-05-21T12:29:28.261536Z"}

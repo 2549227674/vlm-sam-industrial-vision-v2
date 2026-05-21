@@ -1,0 +1,1855 @@
+device_id:         rk3588-line-A-cam01
+line_id:           L1
+backend_url:       http://192.168.1.100:8000
+vlm_variant:       base
+vlm_model_size:    2B
+capture_mode:      image_loop
+image_loop_dir:    /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
+categories (1):  bottle 
+beat_ms:           1500
+jitter_ms:         200
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 0.50
+ead_score_mode:    map_mean
+ead_gate_mode:     pass_all
+fastsam_model:     /home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+fastsam_input_sz:  640
+fastsam_conf:      0.25
+model_variant:     2B_base
+
+--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---
+[T3] loading FastSAM RKNN: /home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+[T2] EadWorker started | score_mode=map_mean gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T4] uploading to http://192.168.1.100:8000/api/edge/report
+[T1] scanned 83 images across 1 categories
+[T3] FastSAM loaded: 1 inputs, 2 outputs
+  input[0]: name='images' dims=[1,640,640,3] type=FP16(1) fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='output0' dims=[1,37,8400,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=310800 size=621600
+  output[1]: name='output1' dims=[1,32,160,160] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=819200 size=1638400
+[T3] detection output index: 0
+[T3] prototype output index: 1 (mask decode TODO)
+[VLM] Initializing Qwen3-VL
+  selected_model_size=2B  selected_variant=base
+  selected_llm_path=/home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+  selected_vision_path=/home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+  max_context=4096  max_new_tokens=500
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 0 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.00 map_max=35.00 map_mean=12.01 map_top1=26.48 map_top01=32.99
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=923.3
+  vision input[0]: name='pixel' dims=[1,448,448,3] type=FP16 fmt=1
+  vision output[0]: name='4820' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[1]: name='1669' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[2]: name='2720' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[3]: name='3771' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision: 448x448  n_image_tokens=196  embed_dim=2048  n_outputs=4
+I rkllm: rkllm-runtime version: 1.2.3, rknpu driver version: 0.9.8, platform: RK3588
+I rkllm: loading rkllm model from /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+I rkllm: rkllm-toolkit version: 1.2.3, max_context_limit: 4096, npu_core_num: 3, target_platform: RK3588, model_dtype: W8A8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 1 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.06 map_max=33.06 map_mean=11.77 map_top1=26.20 map_top01=31.03
+     final_score=11.77 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=1302.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 2 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.44 map_max=29.44 map_mean=11.90 map_top1=27.27 map_top01=29.19
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=317.7
+I rkllm: Enabled cpus: [4, 5, 6, 7]
+I rkllm: Enabled cpus num: 4
+I rkllm: Using mrope
+[VLM] rkllm_init success
+[T3] FastSamWorker started | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn input_size=640 conf=0.25
+[T3] frame 1 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/005.png
+     ead_final_score=11.770 ead_infer_ms=1302.0
+     orig_size=900x900  input_size=640  preprocess_ms=29.3
+     infer_ms=106.2
+  [T3][first_frame] output[0] name='output0' type=FP16 zp=0 scale=1.000000 n_elems=310800 want_float=1  <- DETECTION output
+  [T3][first_frame] output[1] name='output1' type=FP16 zp=0 scale=1.000000 n_elems=819200 want_float=1  <- prototype(mask TODO) output
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8413 mean=0.0022 (n=8400)
+  [T3] conf_channel top-10: 0.8413 0.7690 0.7451 0.7422 0.7329 0.7231 0.7222 0.7207 0.7168 0.7100
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 3 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.42 map_max=26.42 map_mean=11.68 map_top1=23.12 map_top01=25.34
+     final_score=11.68 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.1
+[VLM] vision encoder: 2504.4 ms, embed size=1605632 floats
+[VLM] prompt (664 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.7695
+FastSAM detected 2 region(s).
+  region 0: x=0.021875 y=0.046875 w=0.874219 h=0.928906
+  region 1: x=0.280469 y=0.288672 w=0.449219 h=0.442187
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in valu
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4531
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 4 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.45 map_max=28.45 map_mean=11.85 map_top1=24.37 map_top01=26.85
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=216.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 5 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.08 map_max=27.08 map_mean=12.05 map_top1=24.93 map_top01=26.60
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=243.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 6 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.41 map_max=30.41 map_mean=12.01 map_top1=25.25 map_top01=28.93
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=234.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 7 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.98 map_max=30.98 map_mean=11.66 map_top1=23.63 map_top01=27.84
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=222.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.5938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 8 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.59 map_max=48.59 map_mean=12.17 map_top1=36.40 map_top01=46.52
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=181.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.8438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 9 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.84 map_max=33.84 map_mean=11.71 map_top1=27.07 map_top01=32.33
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=222.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 10 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.14 map_max=30.14 map_mean=12.02 map_top1=24.33 map_top01=29.14
+     final_score=12.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=221.2
+[VLM] raw_text (177 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[0.021875,0.046875,0.874219,0.928906]],"description":"minor surface scratch on bottle"}
+  ttft=2232.4 ms  decode_tps=9.1  prompt_tokens=445  output_tokens=73  rss=3322 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0219 y=0.0469 w=0.8742 h=0.9289
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=1.4  bbox_count=1  total_ms=12994.4
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2504.4 llm_ms=10278.2 vlm_total_ms=12810.5
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[0.021875,0.046875,0.874219,0.928906]],"description":"minor surface scratch on bottle"})
+     bbox[0] x=0.022 y=0.047 w=0.874 h=0.929
+     [stats] total_frames=1 fallback_frames=0
+[T3] frame 9 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/017.png
+     ead_final_score=11.707 ead_infer_ms=222.1
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"anomaly_score":11.7695,"bboxes":[{"x":0.0219,"y":0.0469,"w":0.8742,"h":0.9289}],"description":"","variant":"2B_base","edge_ts":"2026-05-21T11:00:10Z","pipeline_ms":{"efficientad":1302.0,"fastsam":136.8,"qwen3vl":12810.5},"vlm_metrics":{"ttft_ms":2232.4,"decode_tps":9.1,"prompt_tokens":445,"output_tokens":73,"rss_mb":3321.6,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":1302006.4,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"fastsam_preprocess","ts":1302006.4,"dur":29291.9,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_infer","ts":1331298.2,"dur":106172.1,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_postprocess","ts":1437470.4,"dur":1378.1,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"qwen3vl_generate","ts":1438848.5,"dur":12810534.0,"tid":"T3.vlm","ph":"X","cat":"vlm"}],"schema_version":"v1"}
+     orig_size=900x900  input_size=640  preprocess_ms=29.7
+     infer_ms=107.3
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8662 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.8662 0.8599 0.8535 0.8384 0.8369 0.8262 0.8179 0.8071 0.7998 0.7886
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 29
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 11 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.81 map_max=35.81 map_mean=12.20 map_top1=28.14 map_top01=33.21
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=200.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=130.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 12 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=130.12 map_max=130.12 map_mean=12.66 map_top1=69.49 map_top01=120.16
+     final_score=12.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.2
+[VLM] vision encoder: 2647.2 ms, embed size=1605632 floats
+[VLM] prompt (719 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.707
+FastSAM detected 3 region(s).
+  region 0: x=0.0234375 y=0.0476562 w=0.884375 h=0.932813
+  region 1: x=0.275781 y=0.284375 w=0.438281 h=0.439844
+  region 2: x=0.181982 y=0.392969 w=0.0305664 h=0.075
+Output ONLY compact JS
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7656
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 13 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.77 map_max=30.77 map_mean=11.85 map_top1=25.13 map_top01=29.97
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=230.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.7500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 14 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.75 map_max=32.75 map_mean=12.24 map_top1=26.18 map_top01=31.92
+     final_score=12.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 15 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.91 map_max=33.91 map_mean=11.75 map_top1=26.93 map_top01=32.15
+     final_score=11.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=208.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=64.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 16 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=64.50 map_max=64.50 map_mean=12.20 map_top1=34.29 map_top01=54.55
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=225.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=157.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 17 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=157.88 map_max=157.88 map_mean=12.62 map_top1=50.64 map_top01=127.82
+     final_score=12.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=205.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.1875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 18 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.19 map_max=33.19 map_mean=12.05 map_top1=26.23 map_top01=32.01
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=198.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 19 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.53 map_max=32.53 map_mean=12.10 map_top1=24.88 map_top01=30.76
+     final_score=12.10 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=234.9
+[VLM] raw_text (185 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[[0.0234375,0.0476562,0.884375,0.932813]]],"description":"minor surface scratch on bottle rim"}
+  ttft=2581.5 ms  decode_tps=9.0  prompt_tokens=486  output_tokens=76  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0234 y=0.0477 w=0.8844 h=0.9328
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=0.7  bbox_count=1  total_ms=13915.3
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2647.2 llm_ms=11047.7 vlm_total_ms=13726.5
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[[0.0234375,0.0476562,0.884375,0.932813]]],"description":"minor surface scratch on bottle rim"})
+     bbox[0] x=0.023 y=0.048 w=0.884 h=0.933
+     [stats] total_frames=2 fallback_frames=0
+[T3] frame 18 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/019.png
+     ead_final_score=12.052 ead_infer_ms=198.1
+     orig_size=900x900  input_size=640  preprocess_ms=29.4
+     infer_ms=101.6
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7900 mean=0.0032 (n=8400)
+  [T3] conf_channel top-10: 0.7900 0.7778 0.7734 0.7607 0.7578 0.7559 0.7437 0.7417 0.7334 0.7305
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 28
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 20 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.91 map_max=25.91 map_mean=11.80 map_top1=22.75 map_top01=24.72
+     final_score=11.80 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=383.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=37.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 21 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=37.34 map_max=37.34 map_mean=11.93 map_top1=28.32 map_top01=35.42
+     final_score=11.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=263.5
+[VLM] vision encoder: 2447.4 ms, embed size=1605632 floats
+[VLM] prompt (723 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0522
+FastSAM detected 3 region(s).
+  region 0: x=0.0398437 y=0.0554687 w=0.885156 h=0.932813
+  region 1: x=0.28125 y=0.296875 w=0.446875 h=0.441406
+  region 2: x=0.238965 y=0.655273 w=0.0462891 h=0.0597656
+Output ONLY compac
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.6562
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 22 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.66 map_max=40.66 map_mean=12.01 map_top1=29.90 map_top01=37.58
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 23 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.38 map_max=31.38 map_mean=11.66 map_top1=26.41 map_top01=29.81
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=214.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=52.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 24 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=52.94 map_max=52.94 map_mean=12.17 map_top1=32.26 map_top01=44.41
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.2969
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 25 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.30 map_max=29.30 map_mean=11.67 map_top1=25.11 map_top01=27.83
+     final_score=11.67 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=43.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 26 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=43.62 map_max=43.62 map_mean=11.55 map_top1=30.88 map_top01=40.42
+     final_score=11.55 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=196.2
+[VLM] raw_text (159 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[34,38,961,971]],"description":"minor surface scratch on bottle rim"}
+  ttft=2654.7 ms  decode_tps=9.1  prompt_tokens=490  output_tokens=52  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.6  bbox_count=3  total_ms=11053.0
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2447.4 llm_ms=8395.7 vlm_total_ms=10873.0
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[34,38,961,971]],"description":"minor surface scratch on bottle rim"})
+     bbox[0] x=0.040 y=0.055 w=0.885 h=0.933
+     bbox[1] x=0.281 y=0.297 w=0.447 h=0.441
+     bbox[2] x=0.239 y=0.655 w=0.046 h=0.060
+     [stats] total_frames=3 fallback_frames=0
+[T3] frame 25 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/002.png
+     ead_final_score=11.667 ead_infer_ms=213.0
+     orig_size=900x900  input_size=640  preprocess_ms=29.4
+     infer_ms=95.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8730 mean=0.0018 (n=8400)
+  [T3] conf_channel top-10: 0.8730 0.8706 0.8633 0.8418 0.8408 0.8354 0.8306 0.8291 0.8262 0.8228
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 27 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.42 map_max=28.42 map_mean=11.60 map_top1=23.98 map_top01=26.88
+     final_score=11.60 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 28 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.31 map_max=32.31 map_mean=11.86 map_top1=26.02 map_top01=30.82
+     final_score=11.86 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=202.9
+[VLM] vision encoder: 2576.6 ms, embed size=1605632 floats
+[VLM] prompt (665 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.6665
+FastSAM detected 2 region(s).
+  region 0: x=0.0460938 y=0.0476562 w=0.829687 h=0.921875
+  region 1: x=0.271484 y=0.281641 w=0.44375 h=0.444531
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=46.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 29 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=46.94 map_max=46.94 map_mean=11.89 map_top1=33.17 map_top01=44.28
+     final_score=11.89 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=204.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 30 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=38.81 map_max=38.81 map_mean=11.71 map_top1=26.78 map_top01=36.18
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.6
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 31 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.44 map_max=30.44 map_mean=12.04 map_top1=25.81 map_top01=28.67
+     final_score=12.04 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=235.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 32 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=38.25 map_max=38.25 map_mean=11.97 map_top1=29.53 map_top01=37.16
+     final_score=11.97 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=208.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=41.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 33 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=41.28 map_max=41.28 map_mean=12.02 map_top1=28.37 map_top01=36.97
+     final_score=12.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=212.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 34 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=38.53 map_max=38.53 map_mean=12.29 map_top1=28.58 map_top01=36.53
+     final_score=12.29 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=244.3
+[VLM] raw_text (173 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[46.8,37.1,952.2,952.2]],"description":"dark liquid in bottle with reflective rim"}
+  ttft=2290.1 ms  decode_tps=9.2  prompt_tokens=442  output_tokens=61  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.8  bbox_count=2  total_ms=11713.7
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2576.6 llm_ms=8929.6 vlm_total_ms=11534.6
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[46.8,37.1,952.2,952.2]],"description":"dark liquid in bottle with reflective rim"})
+     bbox[0] x=0.046 y=0.048 w=0.830 h=0.922
+     bbox[1] x=0.271 y=0.282 w=0.444 h=0.445
+     [stats] total_frames=4 fallback_frames=0
+[T3] frame 33 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/018.png
+     ead_final_score=12.020 ead_infer_ms=212.5
+     orig_size=900x900  input_size=640  preprocess_ms=29.3
+     infer_ms=98.4
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8838 mean=0.0018 (n=8400)
+  [T3] conf_channel top-10: 0.8838 0.8735 0.8730 0.8340 0.8330 0.8276 0.8057 0.8052 0.8008 0.7280
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=34.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 35 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=34.91 map_max=34.91 map_mean=11.47 map_top1=26.68 map_top01=33.04
+     final_score=11.47 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=272.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 36 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.31 map_max=31.31 map_mean=12.08 map_top1=26.69 map_top01=30.38
+     final_score=12.08 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=288.7
+[VLM] vision encoder: 2655.6 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0196
+FastSAM detected 2 region(s).
+  region 0: x=0.0257812 y=0.05 w=0.875781 h=0.932031
+  region 1: x=0.281055 y=0.291406 w=0.444141 h=0.439844
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 37 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.00 map_max=27.00 map_mean=11.75 map_top1=23.28 map_top01=25.62
+     final_score=11.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=235.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 38 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.12 map_max=48.12 map_mean=12.35 map_top1=34.29 map_top01=44.86
+     final_score=12.35 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.7500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 39 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.75 map_max=25.75 map_mean=11.71 map_top1=22.73 map_top01=24.95
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 40 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.91 map_max=48.91 map_mean=11.58 map_top1=35.09 map_top01=46.65
+     final_score=11.58 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 41 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=36.34 map_max=36.34 map_mean=12.05 map_top1=26.56 map_top01=33.94
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=219.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=60.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 42 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=60.31 map_max=60.31 map_mean=13.48 map_top1=41.86 map_top01=57.67
+     final_score=13.48 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=216.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=42.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 43 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=42.28 map_max=42.28 map_mean=12.01 map_top1=32.61 map_top01=39.82
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=223.9
+[VLM] raw_text (211 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[[0.0257812,0.05,0.875781,0.932031]]],"description":"FastSAM detected a small region of interest near the bottle's rim."}
+  ttft=2287.7 ms  decode_tps=9.1  prompt_tokens=438  output_tokens=79  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.97
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0258 y=0.0500 w=0.8758 h=0.9320
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=0.6  bbox_count=1  total_ms=13806.7
+     vlm: defect_type=anomaly severity=low conf=0.97 json_ok=1
+     vlm: vision_ms=2655.6 llm_ms=10943.6 vlm_total_ms=13630.1
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[[0.0257812,0.05,0.875781,0.932031]]],"description":"FastSAM detected a small region of interest near the bottle's rim."})
+     bbox[0] x=0.026 y=0.050 w=0.876 h=0.932
+     [stats] total_frames=5 fallback_frames=0
+[T3] frame 42 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_large/006.png
+     ead_final_score=13.476 ead_infer_ms=216.0
+     orig_size=900x900  input_size=640  preprocess_ms=29.6
+     infer_ms=104.6
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8706 mean=0.0026 (n=8400)
+  [T3] conf_channel top-10: 0.8706 0.8677 0.8628 0.8589 0.8579 0.8579 0.8374 0.8301 0.8267 0.8135
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 22
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 44 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.98 map_max=31.98 map_mean=12.30 map_top1=26.70 map_top01=29.60
+     final_score=12.30 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=276.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=42.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 45 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=42.53 map_max=42.53 map_mean=12.92 map_top1=30.82 map_top01=39.67
+     final_score=12.92 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=227.0
+[VLM] vision encoder: 2451.2 ms, embed size=1605632 floats
+[VLM] prompt (722 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 13.4755
+FastSAM detected 3 region(s).
+  region 0: x=0.0460938 y=0.059375 w=0.865625 h=0.914062
+  region 1: x=0.266211 y=0.265625 w=0.462891 h=0.461719
+  region 2: x=0.656055 y=0.248828 w=0.0644531 h=0.096875
+Output ONLY compact
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 46 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.98 map_max=30.98 map_mean=11.48 map_top1=25.40 map_top01=29.54
+     final_score=11.48 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=218.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 47 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.88 map_max=25.88 map_mean=11.95 map_top1=23.50 map_top01=25.25
+     final_score=11.95 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=219.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.3281
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 48 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.33 map_max=27.33 map_mean=11.96 map_top1=23.85 map_top01=26.22
+     final_score=11.96 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=237.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 49 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.62 map_max=32.62 map_mean=12.59 map_top1=28.77 map_top01=31.96
+     final_score=12.59 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=215.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=72.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 50 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=72.50 map_max=72.50 map_mean=12.55 map_top1=38.68 map_top01=61.27
+     final_score=12.55 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=212.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=43.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 51 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=43.50 map_max=43.50 map_mean=13.08 map_top1=33.21 map_top01=41.43
+     final_score=13.08 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=186.0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.0312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 52 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.03 map_max=40.03 map_mean=14.62 map_top1=38.44 map_top01=39.78
+     final_score=14.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=236.9
+[VLM] raw_text (160 chars): {"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.046,0.059,0.866,0.914]]],"description":"major crack on bottle rim"}
+  ttft=2725.0 ms  decode_tps=8.7  prompt_tokens=489  output_tokens=61  rss=3323 MB
+[VLM] JSON extracted: defect_type=crack severity=high conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0460 y=0.0590 w=0.8660 h=0.9140
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=1.0  bbox_count=1  total_ms=12456.7
+     vlm: defect_type=crack severity=high conf=0.95 json_ok=1
+     vlm: vision_ms=2451.2 llm_ms=9785.7 vlm_total_ms=12265.7
+     vlm: raw_text({"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.046,0.059,0.866,0.914]]],"description":"major crack on bottle rim"})
+     bbox[0] x=0.046 y=0.059 w=0.866 h=0.914
+     [stats] total_frames=6 fallback_frames=0
+[T3] frame 51 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_large/010.png
+     ead_final_score=13.084 ead_infer_ms=186.0
+     orig_size=900x900  input_size=640  preprocess_ms=29.1
+     infer_ms=99.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8350 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.8350 0.8062 0.8013 0.7964 0.7949 0.7896 0.7856 0.7837 0.7788 0.7710
+  [T3] max_abs_conf=0.001 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=55.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 53 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=55.62 map_max=55.62 map_mean=13.03 map_top1=35.17 map_top01=50.87
+     final_score=13.03 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=260.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 54 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.34 map_max=29.34 map_mean=12.17 map_top1=25.28 map_top01=27.28
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=255.7
+[VLM] vision encoder: 2624.7 ms, embed size=1605632 floats
+[VLM] prompt (654 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 13.0838
+FastSAM detected 2 region(s).
+  region 0: x=0.0226563 y=0.0375 w=0.925 h=0.95
+  region 1: x=0.266602 y=0.289453 w=0.460547 h=0.4375
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use th
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.0938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 55 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.09 map_max=30.09 map_mean=11.97 map_top1=25.53 map_top01=28.71
+     final_score=11.97 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=223.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=58.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 56 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=58.47 map_max=58.47 map_mean=12.13 map_top1=32.40 map_top01=49.58
+     final_score=12.13 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=220.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 57 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.31 map_max=33.31 map_mean=12.62 map_top1=31.29 map_top01=32.80
+     final_score=12.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=253.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.5938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 58 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.59 map_max=40.59 map_mean=12.07 map_top1=29.47 map_top01=36.69
+     final_score=12.07 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=219.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.2188
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 59 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.22 map_max=32.22 map_mean=12.08 map_top1=26.29 map_top01=30.33
+     final_score=12.08 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=39.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 60 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=39.81 map_max=39.81 map_mean=12.37 map_top1=31.41 map_top01=37.39
+     final_score=12.37 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=236.6
+[VLM] raw_text (161 chars): {"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0226563,0.0375,0.925,0.95]]],"description":"cracked glass near rim"}
+  ttft=2114.5 ms  decode_tps=9.1  prompt_tokens=431  output_tokens=65  rss=3323 MB
+[VLM] JSON extracted: defect_type=crack severity=high conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0227 y=0.0375 w=0.9250 h=0.9500
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=0.6  bbox_count=1  total_ms=12099.0
+     vlm: defect_type=crack severity=high conf=0.95 json_ok=1
+     vlm: vision_ms=2624.7 llm_ms=9268.0 vlm_total_ms=11922.3
+     vlm: raw_text({"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.0226563,0.0375,0.925,0.95]]],"description":"cracked glass near rim"})
+     bbox[0] x=0.023 y=0.038 w=0.925 h=0.950
+     [stats] total_frames=7 fallback_frames=0
+[T3] frame 59 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_large/011.png
+     ead_final_score=12.080 ead_infer_ms=213.2
+     orig_size=900x900  input_size=640  preprocess_ms=29.3
+     infer_ms=100.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8701 mean=0.0037 (n=8400)
+  [T3] conf_channel top-10: 0.8701 0.8691 0.8569 0.8491 0.8462 0.8369 0.8301 0.8203 0.7925 0.7407
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 43
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 5
+  [T3] cleanup L3 max_area(0.95): 5 -> 5
+  [T3] cleanup L4 dedup(iou=0.70): 5 -> 5
+  [T3] after_cleanup: 5 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 61 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.08 map_max=31.08 map_mean=11.90 map_top1=24.33 map_top01=27.09
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=394.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=3056.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 62 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=3056.00 map_max=3056.00 map_mean=211.73 map_top1=2762.66 map_top01=2996.71
+     final_score=211.73 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=392.6
+[VLM] vision encoder: 2655.0 ms, embed size=1605632 floats
+[VLM] prompt (840 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0804
+FastSAM detected 5 region(s).
+  region 0: x=0.0398437 y=0.0554687 w=0.894531 h=0.923437
+  region 1: x=0.285156 y=0.283594 w=0.447656 h=0.439063
+  region 2: x=0.450391 y=0.732617 w=0.0992187 h=0.0832031
+  region 3: x=0.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=340.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 63 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=340.00 map_max=340.00 map_mean=18.70 map_top1=206.38 map_top01=319.01
+     final_score=18.70 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=224.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.8906
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 64 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.89 map_max=27.89 map_mean=11.47 map_top1=23.16 map_top01=26.07
+     final_score=11.47 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=216.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=37.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 65 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=37.00 map_max=37.00 map_mean=12.07 map_top1=26.04 map_top01=34.75
+     final_score=12.07 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=219.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 66 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.47 map_max=32.47 map_mean=12.01 map_top1=24.96 map_top01=30.69
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=212.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.8281
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 67 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.83 map_max=26.83 map_mean=12.10 map_top1=23.35 map_top01=25.90
+     final_score=12.10 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=212.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=1193.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 68 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=1193.00 map_max=1193.00 map_mean=58.20 map_top1=961.67 map_top01=1160.57
+     final_score=58.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=221.3
+[VLM] raw_text (174 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[34,51,967,955]],"description":"Top view of bottle with minor reflection artifacts"}
+  ttft=3143.3 ms  decode_tps=8.8  prompt_tokens=587  output_tokens=54  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.98
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.6  bbox_count=5  total_ms=12127.8
+     vlm: defect_type=anomaly severity=low conf=0.98 json_ok=1
+     vlm: vision_ms=2655.0 llm_ms=9261.3 vlm_total_ms=11947.4
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[34,51,967,955]],"description":"Top view of bottle with minor reflection artifacts"})
+     bbox[0] x=0.040 y=0.055 w=0.895 h=0.923
+     bbox[1] x=0.285 y=0.284 w=0.448 h=0.439
+     bbox[2] x=0.450 y=0.733 w=0.099 h=0.083
+     bbox[3] x=0.602 y=0.663 w=0.079 h=0.046
+     bbox[4] x=0.666 y=0.705 w=0.046 h=0.040
+     [stats] total_frames=8 fallback_frames=0
+[T3] frame 67 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/contamination/015.png
+     ead_final_score=12.099 ead_infer_ms=212.3
+     orig_size=900x900  input_size=640  preprocess_ms=29.5
+     infer_ms=98.1
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7910 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.7910 0.7573 0.7490 0.7358 0.7290 0.7285 0.7246 0.7207 0.6895 0.6846
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=1102.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 69 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=1102.00 map_max=1102.00 map_mean=44.02 map_top1=844.57 map_top01=1055.65
+     final_score=44.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=208.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=1851.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 70 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=1851.00 map_max=1851.00 map_mean=29.06 map_top1=888.61 map_top01=1619.60
+     final_score=29.06 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=225.1
+[VLM] vision encoder: 2478.8 ms, embed size=1605632 floats
+[VLM] prompt (665 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0987
+FastSAM detected 2 region(s).
+  region 0: x=0.0390625 y=0.053125 w=0.890625 h=0.934375
+  region 1: x=0.276563 y=0.285352 w=0.455469 h=0.433984
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 71 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=36.47 map_max=36.47 map_mean=11.95 map_top1=26.87 map_top01=32.12
+     final_score=11.95 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=243.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 72 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.62 map_max=40.62 map_mean=12.26 map_top1=36.19 map_top01=39.71
+     final_score=12.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=228.5
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 73 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.56 map_max=32.56 map_mean=12.24 map_top1=26.58 map_top01=31.20
+     final_score=12.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=217.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=49.6562
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 74 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=49.66 map_max=49.66 map_mean=12.20 map_top1=38.00 map_top01=47.92
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 75 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.53 map_max=27.53 map_mean=11.81 map_top1=24.03 map_top01=26.39
+     final_score=11.81 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=215.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 76 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.31 map_max=27.31 map_mean=12.22 map_top1=24.45 map_top01=26.45
+     final_score=12.22 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=220.6
+[VLM] raw_text (181 chars): {"category":"bottle","defect_type":"surface reflection","severity":"low","confidence":0.95,"bboxes":[[[39.4,18.7],[964.5,924.5]],"description":"mirror-like glare on bottle surface"}
+  ttft=2292.9 ms  decode_tps=9.0  prompt_tokens=442  output_tokens=60  rss=3323 MB
+[VLM] JSON extracted: defect_type=surface reflection severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=1.1  bbox_count=2  total_ms=11672.4
+     vlm: defect_type=surface reflection severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2478.8 llm_ms=8978.5 vlm_total_ms=11486.2
+     vlm: raw_text({"category":"bottle","defect_type":"surface reflection","severity":"low","confidence":0.95,"bboxes":[[[39.4,18.7],[964.5,924.5]],"description":"mirror-like glare on bottle surface"})
+     bbox[0] x=0.039 y=0.053 w=0.891 h=0.934
+     bbox[1] x=0.277 y=0.285 w=0.455 h=0.434
+     [stats] total_frames=9 fallback_frames=0
+[T3] frame 75 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/contamination/009.png
+     ead_final_score=11.812 ead_infer_ms=215.6
+     orig_size=900x900  input_size=640  preprocess_ms=29.3
+     infer_ms=154.6
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9175 mean=0.0035 (n=8400)
+  [T3] conf_channel top-10: 0.9175 0.9102 0.9028 0.8975 0.8843 0.8774 0.8745 0.8745 0.8687 0.8647
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 32
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 77 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.31 map_max=28.31 map_mean=12.22 map_top1=25.34 map_top01=27.59
+     final_score=12.22 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=264.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.9531
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 78 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.95 map_max=26.95 map_mean=11.79 map_top1=24.20 map_top01=25.77
+     final_score=11.79 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=245.5
+[VLM] vision encoder: 2790.9 ms, embed size=1605632 floats
+[VLM] prompt (777 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.8115
+FastSAM detected 4 region(s).
+  region 0: x=0.0234375 y=0.0453125 w=0.88125 h=0.935938
+  region 1: x=0.274219 y=0.28125 w=0.471875 h=0.444531
+  region 2: x=0.351172 y=0.35625 w=0.289062 h=0.284375
+  region 3: x=0.470508
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 79 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.34 map_max=32.34 map_mean=11.94 map_top1=25.64 map_top01=30.97
+     final_score=11.94 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=220.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=753.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 80 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=753.00 map_max=753.00 map_mean=33.30 map_top1=578.26 map_top01=725.54
+     final_score=33.30 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=246.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=207.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 81 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=207.25 map_max=207.25 map_mean=22.66 map_top1=166.09 map_top01=199.70
+     final_score=22.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=239.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 82 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.31 map_max=27.31 map_mean=12.49 map_top1=23.95 map_top01=25.86
+     final_score=12.49 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=219.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 83 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.00 map_max=35.00 map_mean=12.01 map_top1=26.48 map_top01=32.99
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=220.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 84 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.06 map_max=33.06 map_mean=11.77 map_top1=26.20 map_top01=31.03
+     final_score=11.77 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=224.6
+[VLM] raw_text (161 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[34,48,961,971]],"description":"FastSAM detected minor edge artifacts"}
+  ttft=2826.8 ms  decode_tps=8.9  prompt_tokens=534  output_tokens=52  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=1.4  bbox_count=4  total_ms=11771.0
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2790.9 llm_ms=8709.4 vlm_total_ms=11529.7
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[34,48,961,971]],"description":"FastSAM detected minor edge artifacts"})
+     bbox[0] x=0.023 y=0.045 w=0.881 h=0.936
+     bbox[1] x=0.274 y=0.281 w=0.472 h=0.445
+     bbox[2] x=0.351 y=0.356 w=0.289 h=0.284
+     bbox[3] x=0.471 y=0.460 w=0.061 h=0.062
+     [stats] total_frames=10 fallback_frames=0
+[T3] frame 83 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/006.png
+     ead_final_score=12.008 ead_infer_ms=220.9
+     orig_size=900x900  input_size=640  preprocess_ms=29.5
+     infer_ms=100.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8794 mean=0.0025 (n=8400)
+  [T3] conf_channel top-10: 0.8794 0.8628 0.8613 0.8569 0.8481 0.8452 0.8438 0.8335 0.8223 0.7944
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 24
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 85 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.44 map_max=29.44 map_mean=11.90 map_top1=27.27 map_top01=29.19
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=324.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 86 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.42 map_max=26.42 map_mean=11.68 map_top1=23.12 map_top01=25.34
+     final_score=11.68 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=208.2
+[VLM] vision encoder: 2500.2 ms, embed size=1605632 floats
+[VLM] prompt (723 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0084
+FastSAM detected 3 region(s).
+  region 0: x=0.0296875 y=0.0585938 w=0.871875 h=0.932031
+  region 1: x=0.292188 y=0.280469 w=0.444531 h=0.444531
+  region 2: x=0.499023 y=0.203516 w=0.109766 h=0.0882813
+Output ONLY compac
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4531
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 87 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.45 map_max=28.45 map_mean=11.85 map_top1=24.37 map_top01=26.85
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=206.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 88 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.08 map_max=27.08 map_mean=12.05 map_top1=24.93 map_top01=26.60
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=225.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 89 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.41 map_max=30.41 map_mean=12.01 map_top1=25.25 map_top01=28.93
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=201.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 90 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.98 map_max=30.98 map_mean=11.66 map_top1=23.63 map_top01=27.84
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=205.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.5938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 91 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.59 map_max=48.59 map_mean=12.17 map_top1=36.40 map_top01=46.52
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=217.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.8438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 92 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.84 map_max=33.84 map_mean=11.71 map_top1=27.07 map_top01=32.33
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=207.7
+[VLM] raw_text (156 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[[29.6,34.1],[978.5,967.5]],"description":"dark liquid in bottle"}
+  ttft=2603.6 ms  decode_tps=8.9  prompt_tokens=490  output_tokens=58  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.6  bbox_count=3  total_ms=11851.7
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2500.2 llm_ms=9142.9 vlm_total_ms=11673.6
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[[29.6,34.1],[978.5,967.5]],"description":"dark liquid in bottle"})
+     bbox[0] x=0.030 y=0.059 w=0.872 h=0.932
+     bbox[1] x=0.292 y=0.280 w=0.445 h=0.445
+     bbox[2] x=0.499 y=0.204 w=0.110 h=0.088
+     [stats] total_frames=11 fallback_frames=0
+[T3] frame 91 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/007.png
+     ead_final_score=12.167 ead_infer_ms=217.8
+     orig_size=900x900  input_size=640  preprocess_ms=29.5
+     infer_ms=105.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8560 mean=0.0023 (n=8400)
+  [T3] conf_channel top-10: 0.8560 0.8486 0.8438 0.8408 0.8350 0.8311 0.8281 0.8081 0.7681 0.7368
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 23
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 93 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.14 map_max=30.14 map_mean=12.02 map_top1=24.33 map_top01=29.14
+     final_score=12.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=223.1
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 94 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.81 map_max=35.81 map_mean=12.20 map_top1=28.14 map_top01=33.21
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=225.9
+[VLM] vision encoder: 2543.2 ms, embed size=1605632 floats
+[VLM] prompt (663 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.167
+FastSAM detected 2 region(s).
+  region 0: x=0.0242187 y=0.0476562 w=0.8875 h=0.913281
+  region 1: x=0.285742 y=0.273633 w=0.447266 h=0.443359
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in value
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=130.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 95 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=130.12 map_max=130.12 map_mean=12.66 map_top1=69.49 map_top01=120.16
+     final_score=12.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7656
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 96 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.77 map_max=30.77 map_mean=11.85 map_top1=25.13 map_top01=29.97
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.7500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 97 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.75 map_max=32.75 map_mean=12.24 map_top1=26.18 map_top01=31.92
+     final_score=12.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=227.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 98 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.91 map_max=33.91 map_mean=11.75 map_top1=26.93 map_top01=32.15
+     final_score=11.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=218.9
+[VLM] raw_text (145 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[],[]],"description":"FastSAM detected minor artifacts"}
+  ttft=2134.4 ms  decode_tps=8.7  prompt_tokens=440  output_tokens=37  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.00
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.7  bbox_count=2  total_ms=9177.5
+     vlm: defect_type=anomaly severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2543.2 llm_ms=6421.0 vlm_total_ms=8994.7
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[],[]],"description":"FastSAM detected minor artifacts"})
+     bbox[0] x=0.024 y=0.048 w=0.887 h=0.913
+     bbox[1] x=0.286 y=0.274 w=0.447 h=0.443
+     [stats] total_frames=12 fallback_frames=0
+[T3] frame 97 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/013.png
+     ead_final_score=12.243 ead_infer_ms=227.4
+     orig_size=900x900  input_size=640  preprocess_ms=29.4
+     infer_ms=100.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8281 mean=0.0016 (n=8400)
+  [T3] conf_channel top-10: 0.8281 0.8047 0.7910 0.7798 0.7788 0.7661 0.7578 0.7549 0.7402 0.6167
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 15
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=64.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 99 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=64.50 map_max=64.50 map_mean=12.20 map_top1=34.29 map_top01=54.55
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=272.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=157.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 100 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=157.88 map_max=157.88 map_mean=12.62 map_top1=50.64 map_top01=127.82
+     final_score=12.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=333.8
+[VLM] vision encoder: 2439.4 ms, embed size=1605632 floats
+[VLM] prompt (664 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.2428
+FastSAM detected 2 region(s).
+  region 0: x=0.0328125 y=0.05625 w=0.879687 h=0.929688
+  region 1: x=0.282031 y=0.295703 w=0.446875 h=0.448438
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in valu
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.1875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 101 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.19 map_max=33.19 map_mean=12.05 map_top1=26.23 map_top01=32.01
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 102 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.53 map_max=32.53 map_mean=12.10 map_top1=24.88 map_top01=30.76
+     final_score=12.10 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=198.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 103 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.91 map_max=25.91 map_mean=11.80 map_top1=22.75 map_top01=24.72
+     final_score=11.80 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=208.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=37.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 104 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=37.34 map_max=37.34 map_mean=11.93 map_top1=28.32 map_top01=35.42
+     final_score=11.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=180.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.6562
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 105 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.66 map_max=40.66 map_mean=12.01 map_top1=29.90 map_top01=37.58
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=185.3
+[VLM] raw_text (148 chars): {"category":"bottle","defect_type":"crack","severity":"high","confidence":0.97,"bboxes":[[564,183,758,355]],"description":"vertical crack near rim"}
+  ttft=2139.8 ms  decode_tps=8.9  prompt_tokens=441  output_tokens=52  rss=3323 MB
+[VLM] JSON extracted: defect_type=crack severity=high conf=0.97
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.6267 y=0.2033 w=0.8422 h=0.3944
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=0.6  bbox_count=2  total_ms=10629.8
+     vlm: defect_type=crack severity=high conf=0.97 json_ok=1
+     vlm: vision_ms=2439.4 llm_ms=7982.0 vlm_total_ms=10451.3
+     vlm: raw_text({"category":"bottle","defect_type":"crack","severity":"high","confidence":0.97,"bboxes":[[564,183,758,355]],"description":"vertical crack near rim"})
+     bbox[0] x=0.033 y=0.056 w=0.880 h=0.930
+     bbox[1] x=0.282 y=0.296 w=0.447 h=0.448
+     [stats] total_frames=13 fallback_frames=0
+[T3] frame 104 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/000.png
+     ead_final_score=11.928 ead_infer_ms=180.2
+     orig_size=900x900  input_size=640  preprocess_ms=29.4
+     infer_ms=97.6
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8550 mean=0.0025 (n=8400)
+  [T3] conf_channel top-10: 0.8550 0.8359 0.8296 0.8262 0.8076 0.8042 0.7915 0.7812 0.7725 0.7617
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 26
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 106 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.38 map_max=31.38 map_mean=11.66 map_top1=26.41 map_top01=29.81
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=221.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=52.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 107 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=52.94 map_max=52.94 map_mean=12.17 map_top1=32.26 map_top01=44.41
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=347.7
+[VLM] vision encoder: 2544.3 ms, embed size=1605632 floats
+[VLM] prompt (723 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.9278
+FastSAM detected 3 region(s).
+  region 0: x=0.0453125 y=0.0484375 w=0.845312 h=0.921875
+  region 1: x=0.287891 y=0.294141 w=0.44375 h=0.442969
+  region 2: x=0.188037 y=0.636523 w=0.0438477 h=0.0613281
+Output ONLY compac
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.2969
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 108 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.30 map_max=29.30 map_mean=11.67 map_top1=25.11 map_top01=27.83
+     final_score=11.67 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=187.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=43.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 109 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=43.62 map_max=43.62 map_mean=11.55 map_top1=30.88 map_top01=40.42
+     final_score=11.55 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=189.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 110 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.42 map_max=28.42 map_mean=11.60 map_top1=23.98 map_top01=26.88
+     final_score=11.60 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=229.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 111 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.31 map_max=32.31 map_mean=11.86 map_top1=26.02 map_top01=30.82
+     final_score=11.86 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=221.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=46.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 112 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=46.94 map_max=46.94 map_mean=11.89 map_top1=33.17 map_top01=44.28
+     final_score=11.89 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.9
+[VLM] raw_text (153 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[46.8,37.1,952.2,952.2]],"description":"dark liquid in bottle"}
+  ttft=2434.8 ms  decode_tps=8.9  prompt_tokens=490  output_tokens=58  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.6  bbox_count=3  total_ms=11730.2
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2544.3 llm_ms=8983.8 vlm_total_ms=11558.1
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[46.8,37.1,952.2,952.2]],"description":"dark liquid in bottle"})
+     bbox[0] x=0.045 y=0.048 w=0.845 h=0.922
+     bbox[1] x=0.288 y=0.294 w=0.444 h=0.443
+     bbox[2] x=0.188 y=0.637 w=0.044 h=0.061
+     [stats] total_frames=14 fallback_frames=0
+[T3] frame 111 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/012.png
+     ead_final_score=11.864 ead_infer_ms=221.3
+     orig_size=900x900  input_size=640  preprocess_ms=29.8
+     infer_ms=104.1
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8716 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.8716 0.8716 0.8467 0.8403 0.8281 0.8164 0.8149 0.8096 0.8066 0.7539
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 113 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=38.81 map_max=38.81 map_mean=11.71 map_top1=26.78 map_top01=36.18
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=270.6
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 114 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.44 map_max=30.44 map_mean=12.04 map_top1=25.81 map_top01=28.67
+     final_score=12.04 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=222.2
+[VLM] vision encoder: 2509.4 ms, embed size=1605632 floats
+[VLM] prompt (656 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 11.8644
+FastSAM detected 2 region(s).
+  region 0: x=0.028125 y=0.05 w=0.901563 h=0.940625
+  region 1: x=0.289844 y=0.290625 w=0.45 h=0.447656
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use 
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 115 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=38.25 map_max=38.25 map_mean=11.97 map_top1=29.53 map_top01=37.16
+     final_score=11.97 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=223.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=41.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 116 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=41.28 map_max=41.28 map_mean=12.02 map_top1=28.37 map_top01=36.97
+     final_score=12.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=237.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 117 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=38.53 map_max=38.53 map_mean=12.29 map_top1=28.58 map_top01=36.53
+     final_score=12.29 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=216.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=34.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 118 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=34.91 map_max=34.91 map_mean=11.47 map_top1=26.68 map_top01=33.04
+     final_score=11.47 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 119 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.31 map_max=31.31 map_mean=12.08 map_top1=26.69 map_top01=30.38
+     final_score=12.08 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=207.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 120 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.00 map_max=27.00 map_mean=11.75 map_top1=23.28 map_top01=25.62
+     final_score=11.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=192.0
+[VLM] raw_text (185 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[[25.6,31.4],[971.4,967.5]],"description":"spherical object with dark liquid and metallic rim"}
+  ttft=2103.8 ms  decode_tps=8.9  prompt_tokens=433  output_tokens=63  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.98
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.7  bbox_count=2  total_ms=11933.5
+     vlm: defect_type=anomaly severity=low conf=0.98 json_ok=1
+     vlm: vision_ms=2509.4 llm_ms=9212.4 vlm_total_ms=11752.1
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[[25.6,31.4],[971.4,967.5]],"description":"spherical object with dark liquid and metallic rim"})
+     bbox[0] x=0.028 y=0.050 w=0.902 h=0.941
+     bbox[1] x=0.290 y=0.291 w=0.450 h=0.448
+     [stats] total_frames=15 fallback_frames=0
+[T3] frame 119 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/004.png
+     ead_final_score=12.078 ead_infer_ms=207.9
+     orig_size=900x900  input_size=640  preprocess_ms=29.3
+     infer_ms=102.7
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8525 mean=0.0018 (n=8400)
+  [T3] conf_channel top-10: 0.8525 0.8462 0.8379 0.8145 0.8120 0.8027 0.7954 0.7891 0.7642 0.7446
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 20
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 121 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.12 map_max=48.12 map_mean=12.35 map_top1=34.29 map_top01=44.86
+     final_score=12.35 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=215.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.7500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 122 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.75 map_max=25.75 map_mean=11.71 map_top1=22.73 map_top01=24.95
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=221.1
+[VLM] vision encoder: 2559.6 ms, embed size=1605632 floats
+[VLM] prompt (660 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.078
+FastSAM detected 2 region(s).
+  region 0: x=0.0414063 y=0.05 w=0.828906 h=0.928125
+  region 1: x=0.280469 y=0.291406 w=0.445312 h=0.445312
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 123 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.91 map_max=48.91 map_mean=11.58 map_top1=35.09 map_top01=46.65
+     final_score=11.58 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=216.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 124 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=36.34 map_max=36.34 map_mean=12.05 map_top1=26.56 map_top01=33.94
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=60.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 125 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=60.31 map_max=60.31 map_mean=13.48 map_top1=41.86 map_top01=57.67
+     final_score=13.48 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=221.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=42.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 126 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=42.28 map_max=42.28 map_mean=12.01 map_top1=32.61 map_top01=39.82
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=226.0
+[VLM] raw_text (128 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[]],"description":"no visible defects"}
+  ttft=2432.6 ms  decode_tps=9.2  prompt_tokens=437  output_tokens=34  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.00
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.6  bbox_count=2  total_ms=8924.0
+     vlm: defect_type=anomaly severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2559.6 llm_ms=6152.6 vlm_total_ms=8742.8
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[]],"description":"no visible defects"})
+     bbox[0] x=0.041 y=0.050 w=0.829 h=0.928
+     bbox[1] x=0.280 y=0.291 w=0.445 h=0.445
+     [stats] total_frames=16 fallback_frames=0
+[T3] frame 125 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_large/006.png
+     ead_final_score=13.476 ead_infer_ms=221.1
+     orig_size=900x900  input_size=640  preprocess_ms=29.3
+     infer_ms=99.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8706 mean=0.0026 (n=8400)
+  [T3] conf_channel top-10: 0.8706 0.8677 0.8628 0.8589 0.8579 0.8579 0.8374 0.8301 0.8267 0.8135
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 22
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 127 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.98 map_max=31.98 map_mean=12.30 map_top1=26.70 map_top01=29.60
+     final_score=12.30 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=203.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=42.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 128 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=42.53 map_max=42.53 map_mean=12.92 map_top1=30.82 map_top01=39.67
+     final_score=12.92 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=237.8
+[VLM] vision encoder: 2542.2 ms, embed size=1605632 floats
+[VLM] prompt (722 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 13.4755
+FastSAM detected 3 region(s).
+  region 0: x=0.0460938 y=0.059375 w=0.865625 h=0.914062
+  region 1: x=0.266211 y=0.265625 w=0.462891 h=0.461719
+  region 2: x=0.656055 y=0.248828 w=0.0644531 h=0.096875
+Output ONLY compact
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 129 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.98 map_max=30.98 map_mean=11.48 map_top1=25.40 map_top01=29.54
+     final_score=11.48 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 130 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.88 map_max=25.88 map_mean=11.95 map_top1=23.50 map_top01=25.25
+     final_score=11.95 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=215.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.3281
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 131 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.33 map_max=27.33 map_mean=11.96 map_top1=23.85 map_top01=26.22
+     final_score=11.96 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=213.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 132 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.62 map_max=32.62 map_mean=12.59 map_top1=28.77 map_top01=31.96
+     final_score=12.59 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=207.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=72.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 133 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=72.50 map_max=72.50 map_mean=12.55 map_top1=38.68 map_top01=61.27
+     final_score=12.55 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=183.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=43.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 134 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=43.50 map_max=43.50 map_mean=13.08 map_top1=33.21 map_top01=41.43
+     final_score=13.08 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=214.2
+[T4] upload failed: HTTP 0 (frame from bottle)
+[VLM] raw_text (160 chars): {"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.046,0.059,0.866,0.914]]],"description":"major crack on bottle rim"}
+  ttft=2395.4 ms  decode_tps=8.8  prompt_tokens=489  output_tokens=61  rss=3323 MB
+[VLM] JSON extracted: defect_type=crack severity=high conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0460 y=0.0590 w=0.8660 h=0.9140
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=0.6  bbox_count=1  total_ms=12118.0
+     vlm: defect_type=crack severity=high conf=0.95 json_ok=1
+     vlm: vision_ms=2542.2 llm_ms=9367.5 vlm_total_ms=11940.0
+     vlm: raw_text({"category":"bottle","defect_type":"crack","severity":"high","confidence":0.95,"bboxes":[[[0.046,0.059,0.866,0.914]]],"description":"major crack on bottle rim"})
+     bbox[0] x=0.046 y=0.059 w=0.866 h=0.914
+     [stats] total_frames=17 fallback_frames=0
+[T3] frame 133 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_large/017.png
+     ead_final_score=12.546 ead_infer_ms=183.7
+     orig_size=900x900  input_size=640  preprocess_ms=29.4
+     infer_ms=100.9
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8301 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.8301 0.8169 0.8125 0.8091 0.8071 0.7925 0.7876 0.7856 0.7856 0.7739
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 24
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.0312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 135 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.03 map_max=40.03 map_mean=14.62 map_top1=38.44 map_top01=39.78
+     final_score=14.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=226.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=55.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 136 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=55.62 map_max=55.62 map_mean=13.03 map_top1=35.17 map_top01=50.87
+     final_score=13.03 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=198.2
+[VLM] vision encoder: 2474.7 ms, embed size=1605632 floats
+[VLM] prompt (720 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.546
+FastSAM detected 3 region(s).
+  region 0: x=0.0359375 y=0.0515625 w=0.886719 h=0.925
+  region 1: x=0.278711 y=0.270703 w=0.445703 h=0.446094
+  region 2: x=0.540625 y=0.205469 w=0.0757812 h=0.0929687
+Output ONLY compact J
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 137 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.34 map_max=29.34 map_mean=12.17 map_top1=25.28 map_top01=27.28
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=179.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.0938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 138 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.09 map_max=30.09 map_mean=11.97 map_top1=25.53 map_top01=28.71
+     final_score=11.97 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=209.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=58.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 139 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=58.47 map_max=58.47 map_mean=12.13 map_top1=32.40 map_top01=49.58
+     final_score=12.13 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 140 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.31 map_max=33.31 map_mean=12.62 map_top1=31.29 map_top01=32.80
+     final_score=12.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=220.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.5938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 141 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.59 map_max=40.59 map_mean=12.07 map_top1=29.47 map_top01=36.69
+     final_score=12.07 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=218.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.2188
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 142 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.22 map_max=32.22 map_mean=12.08 map_top1=26.29 map_top01=30.33
+     final_score=12.08 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=39.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 143 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=39.81 map_max=39.81 map_mean=12.37 map_top1=31.41 map_top01=37.39
+     final_score=12.37 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=189.9
+[VLM] raw_text (171 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[0.0359375,0.0515625,0.886719,0.925]],"description":"internal scratch on bottle"}
+  ttft=2415.9 ms  decode_tps=8.8  prompt_tokens=487  output_tokens=71  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.97
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0359 y=0.0516 w=0.8867 h=0.9250
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=0.7  bbox_count=1  total_ms=13157.8
+     vlm: defect_type=anomaly severity=low conf=0.97 json_ok=1
+     vlm: vision_ms=2474.7 llm_ms=10473.9 vlm_total_ms=12979.7
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[0.0359375,0.0515625,0.886719,0.925]],"description":"internal scratch on bottle"})
+     bbox[0] x=0.036 y=0.052 w=0.887 h=0.925
+     [stats] total_frames=18 fallback_frames=0
+[T3] frame 142 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_large/011.png
+     ead_final_score=12.080 ead_infer_ms=210.7
+     orig_size=900x900  input_size=640  preprocess_ms=29.4
+     infer_ms=98.4
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8701 mean=0.0037 (n=8400)
+  [T3] conf_channel top-10: 0.8701 0.8691 0.8569 0.8491 0.8462 0.8369 0.8301 0.8203 0.7925 0.7407
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 43
+  [T3] after NMS (iou=0.45): 5 bboxes
+  [T3] cleanup L1 bounds: 5 -> 5
+  [T3] cleanup L2 min_area(0.001): 5 -> 5
+  [T3] cleanup L3 max_area(0.95): 5 -> 5
+  [T3] cleanup L4 dedup(iou=0.70): 5 -> 5
+  [T3] after_cleanup: 5 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 144 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.08 map_max=31.08 map_mean=11.90 map_top1=24.33 map_top01=27.09
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=214.0
+[VLM] vision encoder: 2468.7 ms, embed size=1605632 floats
+[VLM] prompt (840 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0804
+FastSAM detected 5 region(s).
+  region 0: x=0.0398437 y=0.0554687 w=0.894531 h=0.923437
+  region 1: x=0.285156 y=0.283594 w=0.447656 h=0.439063
+  region 2: x=0.450391 y=0.732617 w=0.0992187 h=0.0832031
+  region 3: x=0.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=3056.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 145 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=3056.00 map_max=3056.00 map_mean=211.73 map_top1=2762.66 map_top01=2996.71
+     final_score=211.73 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=242.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=340.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 146 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=340.00 map_max=340.00 map_mean=18.70 map_top1=206.38 map_top01=319.01
+     final_score=18.70 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=184.3
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.8906
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 147 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.89 map_max=27.89 map_mean=11.47 map_top1=23.16 map_top01=26.07
+     final_score=11.47 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=201.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=37.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 148 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=37.00 map_max=37.00 map_mean=12.07 map_top1=26.04 map_top01=34.75
+     final_score=12.07 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=212.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 149 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.47 map_max=32.47 map_mean=12.01 map_top1=24.96 map_top01=30.69
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=254.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.8281
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 150 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.83 map_max=26.83 map_mean=12.10 map_top1=23.35 map_top01=25.90
+     final_score=12.10 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=214.1
+[VLM] raw_text (174 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[34,51,967,955]],"description":"Top view of bottle with minor reflection artifacts"}
+  ttft=3100.4 ms  decode_tps=8.6  prompt_tokens=587  output_tokens=54  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.98
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.6  bbox_count=5  total_ms=12085.0
+     vlm: defect_type=anomaly severity=low conf=0.98 json_ok=1
+     vlm: vision_ms=2468.7 llm_ms=9407.3 vlm_total_ms=11906.4
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[34,51,967,955]],"description":"Top view of bottle with minor reflection artifacts"})
+     bbox[0] x=0.040 y=0.055 w=0.895 h=0.923
+     bbox[1] x=0.285 y=0.284 w=0.448 h=0.439
+     bbox[2] x=0.450 y=0.733 w=0.099 h=0.083
+     bbox[3] x=0.602 y=0.663 w=0.079 h=0.046
+     bbox[4] x=0.666 y=0.705 w=0.046 h=0.040
+     [stats] total_frames=19 fallback_frames=0
+[T3] frame 149 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/contamination/014.png
+     ead_final_score=12.010 ead_infer_ms=254.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=1193.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 151 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=1193.00 map_max=1193.00 map_mean=58.20 map_top1=961.67 map_top01=1160.57
+     final_score=58.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=207.5
+     orig_size=900x900  input_size=640  preprocess_ms=29.6
+     infer_ms=103.1
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8159 mean=0.0024 (n=8400)
+  [T3] conf_channel top-10: 0.8159 0.8057 0.8052 0.8047 0.8027 0.7998 0.7759 0.7700 0.7676 0.7515
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 22
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=1102.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 152 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=1102.00 map_max=1102.00 map_mean=44.02 map_top1=844.57 map_top01=1055.65
+     final_score=44.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.6
+[VLM] vision encoder: 2473.6 ms, embed size=1605632 floats
+[VLM] prompt (722 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0101
+FastSAM detected 3 region(s).
+  region 0: x=0.0429688 y=0.053125 w=0.863281 h=0.939844
+  region 1: x=0.289062 y=0.285156 w=0.44375 h=0.432031
+  region 2: x=0.147559 y=0.616797 w=0.0347656 h=0.0632813
+Output ONLY compact
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=1851.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 153 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=1851.00 map_max=1851.00 map_mean=29.06 map_top1=888.61 map_top01=1619.60
+     final_score=29.06 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=215.5
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 154 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=36.47 map_max=36.47 map_mean=11.95 map_top1=26.87 map_top01=32.12
+     final_score=11.95 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=214.6
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 155 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.62 map_max=40.62 map_mean=12.26 map_top1=36.19 map_top01=39.71
+     final_score=12.26 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=186.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 156 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.56 map_max=32.56 map_mean=12.24 map_top1=26.58 map_top01=31.20
+     final_score=12.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=49.6562
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 157 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=49.66 map_max=49.66 map_mean=12.20 map_top1=38.00 map_top01=47.92
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=190.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 158 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.53 map_max=27.53 map_mean=11.81 map_top1=24.03 map_top01=26.39
+     final_score=11.81 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=207.9
+
+--- Shutdown requested ---
+[VLM] raw_text (145 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[43,51,967,955]],"description":"dark liquid in bottle"}
+  ttft=2659.7 ms  decode_tps=8.7  prompt_tokens=489  output_tokens=50  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.98
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.7  bbox_count=3  total_ms=11109.2
+     vlm: defect_type=anomaly severity=low conf=0.98 json_ok=1
+     vlm: vision_ms=2473.6 llm_ms=8423.9 vlm_total_ms=10928.1
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[43,51,967,955]],"description":"dark liquid in bottle"})
+     bbox[0] x=0.043 y=0.053 w=0.863 h=0.940
+     bbox[1] x=0.289 y=0.285 w=0.444 h=0.432
+     bbox[2] x=0.148 y=0.617 w=0.035 h=0.063
+     [stats] total_frames=20 fallback_frames=0
+[T3] frame 157 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/contamination/018.png
+     ead_final_score=12.204 ead_infer_ms=190.2
+     orig_size=900x900  input_size=640  preprocess_ms=29.4
+     infer_ms=99.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7568 mean=0.0025 (n=8400)
+  [T3] conf_channel top-10: 0.7568 0.7563 0.7354 0.7339 0.7305 0.7139 0.7017 0.6929 0.6924 0.6880
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 27
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 159 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.31 map_max=27.31 map_mean=12.22 map_top1=24.45 map_top01=26.45
+     final_score=12.22 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=291.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 160 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.31 map_max=28.31 map_mean=12.22 map_top1=25.34 map_top01=27.59
+     final_score=12.22 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=210.0
+[VLM] vision encoder: 2614.7 ms, embed size=1605632 floats
+[VLM] prompt (718 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.2035
+FastSAM detected 3 region(s).
+  region 0: x=0.034375 y=0.0546875 w=0.884375 h=0.935938
+  region 1: x=0.274023 y=0.28125 w=0.447266 h=0.4375
+  region 2: x=0.680273 y=0.338965 w=0.189453 h=0.173633
+Output ONLY compact JSO
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.9531
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 161 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.95 map_max=26.95 map_mean=11.79 map_top1=24.20 map_top01=25.77
+     final_score=11.79 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=207.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 162 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.34 map_max=32.34 map_mean=11.94 map_top1=25.64 map_top01=30.97
+     final_score=11.94 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=237.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=753.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 163 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=753.00 map_max=753.00 map_mean=33.30 map_top1=578.26 map_top01=725.54
+     final_score=33.30 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=225.1
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=207.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 164 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=207.25 map_max=207.25 map_mean=22.66 map_top1=166.09 map_top01=199.70
+     final_score=22.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=230.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 165 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.31 map_max=27.31 map_mean=12.49 map_top1=23.95 map_top01=25.86
+     final_score=12.49 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=241.1
+[VLM] raw_text (167 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[34,48,961,971]],"description":"white string protruding from bottle opening"}
+  ttft=2416.5 ms  decode_tps=9.0  prompt_tokens=485  output_tokens=53  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.6  bbox_count=3  total_ms=11157.2
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2614.7 llm_ms=8331.3 vlm_total_ms=10976.1
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[34,48,961,971]],"description":"white string protruding from bottle opening"})
+     bbox[0] x=0.034 y=0.055 w=0.884 h=0.936
+     bbox[1] x=0.274 y=0.281 w=0.447 h=0.438
+     bbox[2] x=0.680 y=0.339 w=0.189 h=0.174
+     [stats] total_frames=21 fallback_frames=0
+[T3] frame 164 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/contamination/016.png
+     ead_final_score=22.663 ead_infer_ms=230.2
+     orig_size=900x900  input_size=640  preprocess_ms=29.5
+     infer_ms=122.4
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9019 mean=0.0022 (n=8400)
+  [T3] conf_channel top-10: 0.9019 0.8994 0.8828 0.8784 0.8765 0.8638 0.8511 0.8467 0.8228 0.8096
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 25
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 166 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.00 map_max=35.00 map_mean=12.01 map_top1=26.48 map_top01=32.99
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 167 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.06 map_max=33.06 map_mean=11.77 map_top1=26.20 map_top01=31.03
+     final_score=11.77 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=231.9
+[VLM] vision encoder: 2556.7 ms, embed size=1605632 floats
+[VLM] prompt (722 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 22.6631
+FastSAM detected 3 region(s).
+  region 0: x=0.04375 y=0.0609375 w=0.840625 h=0.929688
+  region 1: x=0.277148 y=0.294336 w=0.447266 h=0.447266
+  region 2: x=0.184668 y=0.647266 w=0.0455078 h=0.0617188
+Output ONLY compact
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 168 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.44 map_max=29.44 map_mean=11.90 map_top1=27.27 map_top01=29.19
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=219.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 169 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.42 map_max=26.42 map_mean=11.68 map_top1=23.12 map_top01=25.34
+     final_score=11.68 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=224.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4531
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 170 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.45 map_max=28.45 map_mean=11.85 map_top1=24.37 map_top01=26.85
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=187.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 171 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.08 map_max=27.08 map_mean=12.05 map_top1=24.93 map_top01=26.60
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=197.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 172 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.41 map_max=30.41 map_mean=12.01 map_top1=25.25 map_top01=28.93
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=211.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 173 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.98 map_max=30.98 map_mean=11.66 map_top1=23.63 map_top01=27.84
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=188.3
+[VLM] raw_text (157 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[43.75,60.9375,81.25,100.0]],"description":"dark liquid in bottle"}
+  ttft=2387.7 ms  decode_tps=8.6  prompt_tokens=489  output_tokens=62  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.95
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=1)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0486 y=0.0677 w=0.0903 h=0.1111
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=0.6  bbox_count=3  total_ms=12364.0
+     vlm: defect_type=anomaly severity=low conf=0.95 json_ok=1
+     vlm: vision_ms=2556.7 llm_ms=9576.2 vlm_total_ms=12162.7
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.95,"bboxes":[[43.75,60.9375,81.25,100.0]],"description":"dark liquid in bottle"})
+     bbox[0] x=0.044 y=0.061 w=0.841 h=0.930
+     bbox[1] x=0.277 y=0.294 w=0.447 h=0.447
+     bbox[2] x=0.185 y=0.647 w=0.046 h=0.062
+     [stats] total_frames=22 fallback_frames=0
+[T3] frame 172 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/012.png
+     ead_final_score=12.008 ead_infer_ms=211.4
+     orig_size=900x900  input_size=640  preprocess_ms=29.5
+     infer_ms=103.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8027 mean=0.0033 (n=8400)
+  [T3] conf_channel top-10: 0.8027 0.7319 0.7290 0.7188 0.6987 0.6963 0.6904 0.6719 0.6704 0.6450
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 37
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.5938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 174 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.59 map_max=48.59 map_mean=12.17 map_top1=36.40 map_top01=46.52
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=232.7
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.8438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 175 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.84 map_max=33.84 map_mean=11.71 map_top1=27.07 map_top01=32.33
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=279.3
+[T4] upload failed: HTTP 0 (frame from bottle)
+[T4] stopped
+[VLM] vision encoder: 2577.6 ms, embed size=1605632 floats
+[VLM] prompt (775 chars): <image>Inspect this bottle image for defects.
+EfficientAD anomaly score: 12.0079
+FastSAM detected 4 region(s).
+  region 0: x=0.03125 y=0.04375 w=0.914062 h=0.939062
+  region 1: x=0.290625 y=0.275 w=0.447656 h=0.447656
+  region 2: x=0.438477 y=0.709766 w=0.0699219 h=0.0429688
+  region 3: x=0.218262 y
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 176 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.14 map_max=30.14 map_mean=12.02 map_top1=24.33 map_top01=29.14
+     final_score=12.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=232.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 177 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.81 map_max=35.81 map_mean=12.20 map_top1=28.14 map_top01=33.21
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=218.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=130.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 178 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=130.12 map_max=130.12 map_mean=12.66 map_top1=69.49 map_top01=120.16
+     final_score=12.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=226.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7656
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 179 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.77 map_max=30.77 map_mean=11.85 map_top1=25.13 map_top01=29.97
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=207.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.7500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 180 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.75 map_max=32.75 map_mean=12.24 map_top1=26.18 map_top01=31.92
+     final_score=12.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=215.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 181 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.91 map_max=33.91 map_mean=11.75 map_top1=26.93 map_top01=32.15
+     final_score=11.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=218.1
+[VLM] raw_text (145 chars): {"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[34,51,968,951]],"description":"dark liquid in bottle"}
+  ttft=2815.6 ms  decode_tps=8.8  prompt_tokens=532  output_tokens=50  rss=3323 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.97
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=0.7  bbox_count=4  total_ms=11301.5
+     vlm: defect_type=anomaly severity=low conf=0.97 json_ok=1
+     vlm: vision_ms=2577.6 llm_ms=8512.3 vlm_total_ms=11119.5
+     vlm: raw_text({"category":"bottle","defect_type":"anomaly","severity":"low","confidence":0.97,"bboxes":[[34,51,968,951]],"description":"dark liquid in bottle"})
+     bbox[0] x=0.031 y=0.044 w=0.914 h=0.939
+     bbox[1] x=0.291 y=0.275 w=0.448 h=0.448
+     bbox[2] x=0.438 y=0.710 w=0.070 h=0.043
+     bbox[3] x=0.218 y=0.649 w=0.034 h=0.054
+     [stats] total_frames=23 fallback_frames=0
+[T3] FastSamWorker stopped | total_frames=23 fallback_frames=0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=64.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 182 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=64.50 map_max=64.50 map_mean=12.20 map_top1=34.29 map_top01=54.55
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=470.2
+[T2] EadWorker stopped
+[T1] stopped after 183 frames
+
+--- Pipeline Metrics ---
+capture:      183
+ead:          183
+vlm:          23
+upload_ok:    0
+upload_fail:  8
+upload_retry: 0
+dropped:      0
+
+edge_pipeline: clean exit.

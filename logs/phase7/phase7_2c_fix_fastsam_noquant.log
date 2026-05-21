@@ -1,0 +1,862 @@
+device_id:         rk3588-line-A-cam01
+line_id:           L1
+backend_url:       http://192.168.137.66:8000
+vlm_variant:       base
+vlm_model_size:    2B
+capture_mode:      image_loop
+image_loop_dir:    /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
+categories (4):  bottle metal_nut pill screw 
+beat_ms:           2000
+jitter_ms:         200
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 0.50
+ead_score_mode:    map_mean
+ead_gate_mode:     pass_all
+fastsam_model:     /home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+fastsam_input_sz:  640
+fastsam_conf:      0.25
+model_variant:     2B_base
+
+--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---
+[T2] EadWorker started | score_mode=map_mean gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T4] uploading to http://192.168.137.66:8000/api/edge/report
+[T3] loading FastSAM RKNN: /home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+[T1] scanned 525 images across 4 categories
+[T2] model 'bottle' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+[T3] FastSAM loaded: 1 inputs, 2 outputs
+  input[0]: name='images' dims=[1,640,640,3] type=FP16(1) fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='output0' dims=[1,37,8400,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=310800 size=621600
+  output[1]: name='output1' dims=[1,32,160,160] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=819200 size=1638400
+[T3] detection output index: 0
+[T3] prototype output index: 1 (mask decode TODO)
+[T3] FastSamWorker started | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn input_size=640 conf=0.25
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.0000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 0 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.00 map_max=35.00 map_mean=12.01 map_top1=26.48 map_top01=32.99
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=367.4
+[T3] frame 0 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/006.png
+     ead_final_score=12.008 ead_infer_ms=367.4
+     orig_size=900x900  input_size=640  preprocess_ms=105.4
+     infer_ms=155.3
+  [T3][first_frame] output[0] name='output0' type=FP16 zp=0 scale=1.000000 n_elems=310800 want_float=1  <- DETECTION output
+  [T3][first_frame] output[1] name='output1' type=FP16 zp=0 scale=1.000000 n_elems=819200 want_float=1  <- prototype(mask TODO) output
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8794 mean=0.0025 (n=8400)
+  [T3] conf_channel top-10: 0.8794 0.8628 0.8613 0.8569 0.8481 0.8452 0.8438 0.8335 0.8223 0.7944
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 24
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=8.3  bbox_count=3  total_ms=292.2
+     bbox[0] x=0.030 y=0.059 w=0.872 h=0.932
+     bbox[1] x=0.292 y=0.280 w=0.445 h=0.445
+     bbox[2] x=0.499 y=0.204 w=0.110 h=0.088
+     [stats] total_frames=1 fallback_frames=0
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"bottle","defect_type":"anomaly","severity":"high","confidence":12.0084,"anomaly_score":12.0084,"bboxes":[{"x":0.0297,"y":0.0586,"w":0.8719,"h":0.9320},{"x":0.2922,"y":0.2805,"w":0.4445,"h":0.4445},{"x":0.4990,"y":0.2035,"w":0.1098,"h":0.0883}],"description":"","variant":"2B_base","edge_ts":"2026-05-21T08:41:05Z","pipeline_ms":{"efficientad":367.4,"fastsam":269.0,"qwen3vl":0.0},"vlm_metrics":{"ttft_ms":0.0,"decode_tps":0.0,"prompt_tokens":0,"output_tokens":0,"rss_mb":0.0,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":367423.0,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"fastsam_preprocess","ts":367423.0,"dur":105418.2,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_infer","ts":472841.2,"dur":155307.7,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_postprocess","ts":628148.9,"dur":8298.6,"tid":"T3.fastsam","ph":"X","cat":"pipeline"}],"schema_version":"v1"}
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 1 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.06 map_max=33.06 map_mean=11.77 map_top1=26.20 map_top01=31.03
+     final_score=11.77 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=296.8
+[T3] frame 1 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/005.png
+     ead_final_score=11.770 ead_infer_ms=296.8
+     orig_size=900x900  input_size=640  preprocess_ms=105.1
+     infer_ms=155.1
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8413 mean=0.0022 (n=8400)
+  [T3] conf_channel top-10: 0.8413 0.7690 0.7451 0.7422 0.7329 0.7231 0.7222 0.7207 0.7168 0.7100
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.1  bbox_count=2  total_ms=284.0
+     bbox[0] x=0.022 y=0.047 w=0.874 h=0.929
+     bbox[1] x=0.280 y=0.289 w=0.449 h=0.442
+     [stats] total_frames=2 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.4375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 2 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.44 map_max=29.44 map_mean=11.90 map_top1=27.27 map_top01=29.19
+     final_score=11.90 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=296.3
+[T3] frame 2 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/008.png
+     ead_final_score=11.901 ead_infer_ms=296.3
+     orig_size=900x900  input_size=640  preprocess_ms=106.5
+     infer_ms=154.6
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8418 mean=0.0026 (n=8400)
+  [T3] conf_channel top-10: 0.8418 0.8384 0.8354 0.8208 0.8184 0.8149 0.8130 0.8032 0.7998 0.7939
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 26
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+     postprocess_ms=11.8  bbox_count=4  total_ms=293.6
+     bbox[0] x=0.017 y=0.048 w=0.877 h=0.899
+     bbox[1] x=0.292 y=0.286 w=0.440 h=0.433
+     bbox[2] x=0.562 y=0.650 w=0.145 h=0.130
+     bbox[3] x=0.219 y=0.668 w=0.030 h=0.040
+     [stats] total_frames=3 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=26.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 3 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=26.42 map_max=26.42 map_mean=11.68 map_top1=23.12 map_top01=25.34
+     final_score=11.68 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.9
+[T3] frame 3 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/002.png
+     ead_final_score=11.676 ead_infer_ms=300.9
+     orig_size=900x900  input_size=640  preprocess_ms=105.2
+     infer_ms=152.7
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8740 mean=0.0021 (n=8400)
+  [T3] conf_channel top-10: 0.8740 0.8726 0.8652 0.8555 0.8462 0.8335 0.8223 0.8140 0.8086 0.7988
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=5.8  bbox_count=2  total_ms=284.6
+     bbox[0] x=0.036 y=0.054 w=0.880 h=0.935
+     bbox[1] x=0.277 y=0.285 w=0.440 h=0.448
+     [stats] total_frames=4 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4531
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 4 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.45 map_max=28.45 map_mean=11.85 map_top1=24.37 map_top01=26.85
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.8
+[T3] frame 4 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/014.png
+     ead_final_score=11.847 ead_infer_ms=299.8
+     orig_size=900x900  input_size=640  preprocess_ms=105.3
+     infer_ms=155.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8960 mean=0.0024 (n=8400)
+  [T3] conf_channel top-10: 0.8960 0.8926 0.8896 0.8691 0.8657 0.8452 0.8389 0.8110 0.8086 0.7490
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.3  bbox_count=2  total_ms=284.1
+     bbox[0] x=0.025 y=0.051 w=0.850 h=0.934
+     bbox[1] x=0.279 y=0.298 w=0.444 h=0.441
+     [stats] total_frames=5 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.0781
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 5 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=27.08 map_max=27.08 map_mean=12.05 map_top1=24.93 map_top01=26.60
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=276.3
+[T3] frame 5 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/015.png
+     ead_final_score=12.053 ead_infer_ms=276.3
+     orig_size=900x900  input_size=640  preprocess_ms=107.9
+     infer_ms=111.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8291 mean=0.0020 (n=8400)
+  [T3] conf_channel top-10: 0.8291 0.8203 0.8193 0.7949 0.7832 0.7759 0.7729 0.7554 0.7485 0.7285
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.2  bbox_count=2  total_ms=242.0
+     bbox[0] x=0.023 y=0.054 w=0.920 h=0.888
+     bbox[1] x=0.279 y=0.273 w=0.438 h=0.433
+     [stats] total_frames=6 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.4062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 6 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.41 map_max=30.41 map_mean=12.01 map_top1=25.25 map_top01=28.93
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.5
+[T3] frame 6 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/012.png
+     ead_final_score=12.008 ead_infer_ms=297.5
+     orig_size=900x900  input_size=640  preprocess_ms=104.8
+     infer_ms=154.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8027 mean=0.0033 (n=8400)
+  [T3] conf_channel top-10: 0.8027 0.7319 0.7290 0.7188 0.6987 0.6963 0.6904 0.6719 0.6704 0.6450
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 37
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+     postprocess_ms=6.9  bbox_count=4  total_ms=287.6
+     bbox[0] x=0.031 y=0.044 w=0.914 h=0.939
+     bbox[1] x=0.291 y=0.275 w=0.448 h=0.448
+     bbox[2] x=0.438 y=0.710 w=0.070 h=0.043
+     bbox[3] x=0.218 y=0.649 w=0.034 h=0.054
+     [stats] total_frames=7 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.9844
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 7 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.98 map_max=30.98 map_mean=11.66 map_top1=23.63 map_top01=27.84
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.3
+[T3] frame 7 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/020.png
+     ead_final_score=11.656 ead_infer_ms=299.3
+     orig_size=900x900  input_size=640  preprocess_ms=104.5
+     infer_ms=98.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8428 mean=0.0033 (n=8400)
+  [T3] conf_channel top-10: 0.8428 0.8423 0.8345 0.8193 0.8135 0.8110 0.8081 0.7935 0.7935 0.7754
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 32
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=7.1  bbox_count=3  total_ms=226.1
+     bbox[0] x=0.033 y=0.060 w=0.905 h=0.927
+     bbox[1] x=0.269 y=0.293 w=0.442 h=0.436
+     bbox[2] x=0.740 y=0.590 w=0.049 h=0.068
+     [stats] total_frames=8 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=48.5938
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 8 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=48.59 map_max=48.59 map_mean=12.17 map_top1=36.40 map_top01=46.52
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=275.5
+[T3] frame 8 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/007.png
+     ead_final_score=12.167 ead_infer_ms=275.5
+     orig_size=900x900  input_size=640  preprocess_ms=111.3
+     infer_ms=113.9
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8560 mean=0.0023 (n=8400)
+  [T3] conf_channel top-10: 0.8560 0.8486 0.8438 0.8408 0.8350 0.8311 0.8281 0.8081 0.7681 0.7368
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 23
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.2  bbox_count=2  total_ms=253.1
+     bbox[0] x=0.024 y=0.048 w=0.887 h=0.913
+     bbox[1] x=0.286 y=0.274 w=0.447 h=0.443
+     [stats] total_frames=9 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.8438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 9 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.84 map_max=33.84 map_mean=11.71 map_top1=27.07 map_top01=32.33
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=298.8
+[T3] frame 9 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/017.png
+     ead_final_score=11.707 ead_infer_ms=298.8
+     orig_size=900x900  input_size=640  preprocess_ms=105.5
+     infer_ms=153.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8662 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.8662 0.8599 0.8535 0.8384 0.8369 0.8262 0.8179 0.8071 0.7998 0.7886
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 29
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=5.5  bbox_count=3  total_ms=285.1
+     bbox[0] x=0.023 y=0.048 w=0.884 h=0.933
+     bbox[1] x=0.276 y=0.284 w=0.438 h=0.440
+     bbox[2] x=0.182 y=0.393 w=0.031 h=0.075
+     [stats] total_frames=10 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.1406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 10 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.14 map_max=30.14 map_mean=12.02 map_top1=24.33 map_top01=29.14
+     final_score=12.02 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.9
+[T3] frame 10 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/010.png
+     ead_final_score=12.025 ead_infer_ms=299.9
+     orig_size=900x900  input_size=640  preprocess_ms=111.8
+     infer_ms=151.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8516 mean=0.0032 (n=8400)
+  [T3] conf_channel top-10: 0.8516 0.8350 0.8291 0.8096 0.8047 0.7969 0.7852 0.7734 0.7544 0.7539
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 35
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+     postprocess_ms=7.2  bbox_count=4  total_ms=286.7
+     bbox[0] x=0.030 y=0.055 w=0.837 h=0.926
+     bbox[1] x=0.282 y=0.285 w=0.448 h=0.446
+     bbox[2] x=0.564 y=0.242 w=0.103 h=0.108
+     bbox[3] x=0.649 y=0.229 w=0.056 h=0.055
+     [stats] total_frames=11 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=35.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 11 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=35.81 map_max=35.81 map_mean=12.20 map_top1=28.14 map_top01=33.21
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.1
+[T3] frame 11 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/003.png
+     ead_final_score=12.204 ead_infer_ms=299.1
+     orig_size=900x900  input_size=640  preprocess_ms=104.6
+     infer_ms=153.2
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8745 mean=0.0026 (n=8400)
+  [T3] conf_channel top-10: 0.8745 0.8623 0.8550 0.8535 0.8521 0.8467 0.8350 0.8213 0.8198 0.7427
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 25
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+     postprocess_ms=7.1  bbox_count=4  total_ms=280.7
+     bbox[0] x=0.045 y=0.056 w=0.887 h=0.927
+     bbox[1] x=0.283 y=0.301 w=0.441 h=0.435
+     bbox[2] x=0.305 y=0.749 w=0.074 h=0.050
+     bbox[3] x=0.369 y=0.702 w=0.038 h=0.027
+     [stats] total_frames=12 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=130.1250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 12 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=130.12 map_max=130.12 map_mean=12.66 map_top1=69.49 map_top01=120.16
+     final_score=12.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.6
+[T3] frame 12 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/018.png
+     ead_final_score=12.660 ead_infer_ms=297.6
+     orig_size=900x900  input_size=640  preprocess_ms=106.8
+     infer_ms=153.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8359 mean=0.0025 (n=8400)
+  [T3] conf_channel top-10: 0.8359 0.8169 0.8140 0.8071 0.8057 0.8032 0.8022 0.7651 0.7285 0.7266
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 29
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=5.4  bbox_count=3  total_ms=287.1
+     bbox[0] x=0.023 y=0.046 w=0.886 h=0.868
+     bbox[1] x=0.283 y=0.276 w=0.447 h=0.439
+     bbox[2] x=0.339 y=0.656 w=0.118 h=0.125
+     [stats] total_frames=13 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7656
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 13 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=30.77 map_max=30.77 map_mean=11.85 map_top1=25.13 map_top01=29.97
+     final_score=11.85 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.1
+[T3] frame 13 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/009.png
+     ead_final_score=11.853 ead_infer_ms=300.1
+     orig_size=900x900  input_size=640  preprocess_ms=106.0
+     infer_ms=154.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8521 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.8521 0.8252 0.8223 0.8154 0.8140 0.7998 0.7944 0.7832 0.7803 0.7480
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 34
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+     postprocess_ms=5.4  bbox_count=4  total_ms=287.1
+     bbox[0] x=0.033 y=0.050 w=0.883 h=0.930
+     bbox[1] x=0.278 y=0.288 w=0.445 h=0.435
+     bbox[2] x=0.253 y=0.686 w=0.262 h=0.137
+     bbox[3] x=0.379 y=0.769 w=0.043 h=0.031
+     [stats] total_frames=14 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.7500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 14 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.75 map_max=32.75 map_mean=12.24 map_top1=26.18 map_top01=31.92
+     final_score=12.24 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=298.2
+[T3] frame 14 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/013.png
+     ead_final_score=12.243 ead_infer_ms=298.2
+     orig_size=900x900  input_size=640  preprocess_ms=105.4
+     infer_ms=152.7
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8281 mean=0.0016 (n=8400)
+  [T3] conf_channel top-10: 0.8281 0.8047 0.7910 0.7798 0.7788 0.7661 0.7578 0.7549 0.7402 0.6167
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 15
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=43.2  bbox_count=2  total_ms=344.0
+     bbox[0] x=0.033 y=0.056 w=0.880 h=0.930
+     bbox[1] x=0.282 y=0.296 w=0.447 h=0.448
+     [stats] total_frames=15 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 15 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.91 map_max=33.91 map_mean=11.75 map_top1=26.93 map_top01=32.15
+     final_score=11.75 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=294.7
+[T3] frame 15 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/021.png
+     ead_final_score=11.747 ead_infer_ms=294.7
+     orig_size=900x900  input_size=640  preprocess_ms=151.8
+     infer_ms=156.3
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8604 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.8604 0.8584 0.8545 0.8286 0.8154 0.8154 0.8057 0.8003 0.7852 0.7847
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=6.8  bbox_count=2  total_ms=336.1
+     bbox[0] x=0.031 y=0.046 w=0.878 h=0.943
+     bbox[1] x=0.277 y=0.297 w=0.441 h=0.434
+     [stats] total_frames=16 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=64.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 16 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=64.50 map_max=64.50 map_mean=12.20 map_top1=34.29 map_top01=54.55
+     final_score=12.20 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=276.4
+[T3] frame 16 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/004.png
+     ead_final_score=12.201 ead_infer_ms=276.4
+     orig_size=900x900  input_size=640  preprocess_ms=121.3
+     infer_ms=99.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8188 mean=0.0023 (n=8400)
+  [T3] conf_channel top-10: 0.8188 0.8164 0.8120 0.8076 0.8013 0.7949 0.7778 0.7759 0.7681 0.7456
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 16
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.2  bbox_count=2  total_ms=243.7
+     bbox[0] x=0.030 y=0.041 w=0.898 h=0.949
+     bbox[1] x=0.280 y=0.297 w=0.453 h=0.432
+     [stats] total_frames=17 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=157.8750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 17 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=157.88 map_max=157.88 map_mean=12.62 map_top1=50.64 map_top01=127.82
+     final_score=12.62 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.9
+[T3] frame 17 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/001.png
+     ead_final_score=12.622 ead_infer_ms=299.9
+     orig_size=900x900  input_size=640  preprocess_ms=126.5
+     infer_ms=155.4
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8545 mean=0.0028 (n=8400)
+  [T3] conf_channel top-10: 0.8545 0.8486 0.8423 0.8291 0.8262 0.8218 0.8076 0.8037 0.8013 0.7949
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 21
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 4
+  [T3] cleanup L3 max_area(0.95): 4 -> 4
+  [T3] cleanup L4 dedup(iou=0.70): 4 -> 4
+  [T3] after_cleanup: 4 bboxes
+     postprocess_ms=6.5  bbox_count=4  total_ms=309.4
+     bbox[0] x=0.025 y=0.047 w=0.892 h=0.937
+     bbox[1] x=0.292 y=0.282 w=0.443 h=0.443
+     bbox[2] x=0.204 y=0.285 w=0.052 h=0.062
+     bbox[3] x=0.295 y=0.645 w=0.026 h=0.040
+     [stats] total_frames=18 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.1875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 18 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=33.19 map_max=33.19 map_mean=12.05 map_top1=26.23 map_top01=32.01
+     final_score=12.05 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.3
+[T3] frame 18 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/019.png
+     ead_final_score=12.052 ead_infer_ms=297.3
+     orig_size=900x900  input_size=640  preprocess_ms=125.2
+     infer_ms=156.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.7900 mean=0.0032 (n=8400)
+  [T3] conf_channel top-10: 0.7900 0.7778 0.7734 0.7607 0.7578 0.7559 0.7437 0.7417 0.7334 0.7305
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 28
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=5.9  bbox_count=3  total_ms=308.2
+     bbox[0] x=0.040 y=0.055 w=0.885 h=0.933
+     bbox[1] x=0.281 y=0.297 w=0.447 h=0.441
+     bbox[2] x=0.239 y=0.655 w=0.046 h=0.060
+     [stats] total_frames=19 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.5312
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 19 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.53 map_max=32.53 map_mean=12.10 map_top1=24.88 map_top01=30.76
+     final_score=12.10 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=296.4
+[T3] frame 19 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/011.png
+     ead_final_score=12.098 ead_infer_ms=296.4
+     orig_size=900x900  input_size=640  preprocess_ms=109.8
+     infer_ms=154.7
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8408 mean=0.0027 (n=8400)
+  [T3] conf_channel top-10: 0.8408 0.8286 0.8193 0.8027 0.8018 0.7822 0.7817 0.7812 0.7769 0.7617
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 27
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=6.2  bbox_count=3  total_ms=291.6
+     bbox[0] x=0.037 y=0.055 w=0.879 h=0.927
+     bbox[1] x=0.270 y=0.293 w=0.440 h=0.436
+     bbox[2] x=0.229 y=0.517 w=0.056 h=0.083
+     [stats] total_frames=20 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=25.9062
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 20 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=25.91 map_max=25.91 map_mean=11.80 map_top1=22.75 map_top01=24.72
+     final_score=11.80 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=300.5
+[T3] frame 20 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/016.png
+     ead_final_score=11.796 ead_infer_ms=300.5
+     orig_size=900x900  input_size=640  preprocess_ms=104.7
+     infer_ms=156.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8726 mean=0.0021 (n=8400)
+  [T3] conf_channel top-10: 0.8726 0.8467 0.8457 0.8389 0.8364 0.8184 0.8145 0.8062 0.8008 0.7988
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 19
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=6.1  bbox_count=2  total_ms=287.9
+     bbox[0] x=0.030 y=0.048 w=0.852 h=0.927
+     bbox[1] x=0.276 y=0.290 w=0.450 h=0.447
+     [stats] total_frames=21 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=37.3438
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 21 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=37.34 map_max=37.34 map_mean=11.93 map_top1=28.32 map_top01=35.42
+     final_score=11.93 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=299.4
+[T3] frame 21 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/broken_small/000.png
+     ead_final_score=11.928 ead_infer_ms=299.4
+     orig_size=900x900  input_size=640  preprocess_ms=109.8
+     infer_ms=154.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8550 mean=0.0025 (n=8400)
+  [T3] conf_channel top-10: 0.8550 0.8359 0.8296 0.8262 0.8076 0.8042 0.7915 0.7812 0.7725 0.7617
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 26
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=7.3  bbox_count=3  total_ms=287.2
+     bbox[0] x=0.045 y=0.048 w=0.845 h=0.922
+     bbox[1] x=0.288 y=0.294 w=0.444 h=0.443
+     bbox[2] x=0.188 y=0.637 w=0.044 h=0.061
+     [stats] total_frames=22 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=40.6562
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 22 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=40.66 map_max=40.66 map_mean=12.01 map_top1=29.90 map_top01=37.58
+     final_score=12.01 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=296.5
+[T3] frame 22 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/006.png
+     ead_final_score=12.011 ead_infer_ms=296.5
+     orig_size=900x900  input_size=640  preprocess_ms=104.9
+     infer_ms=145.0
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8921 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.8921 0.8789 0.8774 0.8711 0.8652 0.8491 0.8408 0.8320 0.8120 0.7422
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=6.8  bbox_count=2  total_ms=277.5
+     bbox[0] x=0.031 y=0.044 w=0.883 h=0.947
+     bbox[1] x=0.275 y=0.298 w=0.445 h=0.436
+     [stats] total_frames=23 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=31.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 23 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=31.38 map_max=31.38 map_mean=11.66 map_top1=26.41 map_top01=29.81
+     final_score=11.66 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=278.5
+[T3] frame 23 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/005.png
+     ead_final_score=11.658 ead_infer_ms=278.5
+     orig_size=900x900  input_size=640  preprocess_ms=106.8
+     infer_ms=96.9
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.9038 mean=0.0026 (n=8400)
+  [T3] conf_channel top-10: 0.9038 0.8848 0.8696 0.8584 0.8516 0.8462 0.8442 0.8433 0.8403 0.7402
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 30
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=7.1  bbox_count=3  total_ms=226.5
+     bbox[0] x=0.028 y=0.048 w=0.881 h=0.941
+     bbox[1] x=0.281 y=0.284 w=0.446 h=0.439
+     bbox[2] x=0.202 y=0.646 w=0.041 h=0.061
+     [stats] total_frames=24 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=52.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 24 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=52.94 map_max=52.94 map_mean=12.17 map_top1=32.26 map_top01=44.41
+     final_score=12.17 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=283.8
+[T3] frame 24 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/008.png
+     ead_final_score=12.169 ead_infer_ms=283.8
+     orig_size=900x900  input_size=640  preprocess_ms=117.1
+     infer_ms=99.9
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8950 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.8950 0.8916 0.8682 0.8682 0.8594 0.8584 0.8569 0.8301 0.8247 0.7876
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.1  bbox_count=2  total_ms=240.0
+     bbox[0] x=0.030 y=0.047 w=0.869 h=0.900
+     bbox[1] x=0.291 y=0.290 w=0.441 h=0.436
+     [stats] total_frames=25 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=29.2969
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 25 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=29.30 map_max=29.30 map_mean=11.67 map_top1=25.11 map_top01=27.83
+     final_score=11.67 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=379.8
+[T3] frame 25 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/002.png
+     ead_final_score=11.667 ead_infer_ms=379.8
+     orig_size=900x900  input_size=640  preprocess_ms=109.9
+     infer_ms=153.8
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8730 mean=0.0018 (n=8400)
+  [T3] conf_channel top-10: 0.8730 0.8706 0.8633 0.8418 0.8408 0.8354 0.8306 0.8291 0.8262 0.8228
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=5.3  bbox_count=2  total_ms=290.2
+     bbox[0] x=0.046 y=0.048 w=0.830 h=0.922
+     bbox[1] x=0.271 y=0.282 w=0.444 h=0.445
+     [stats] total_frames=26 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=43.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 26 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=43.62 map_max=43.62 map_mean=11.55 map_top1=30.88 map_top01=40.42
+     final_score=11.55 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=286.8
+[T3] frame 26 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/014.png
+     ead_final_score=11.548 ead_infer_ms=286.8
+     orig_size=900x900  input_size=640  preprocess_ms=119.3
+     infer_ms=100.3
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8784 mean=0.0020 (n=8400)
+  [T3] conf_channel top-10: 0.8784 0.8530 0.8496 0.8496 0.8452 0.8374 0.8301 0.8242 0.8066 0.7754
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 18
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.2  bbox_count=2  total_ms=242.7
+     bbox[0] x=0.030 y=0.051 w=0.855 h=0.910
+     bbox[1] x=0.284 y=0.279 w=0.445 h=0.439
+     [stats] total_frames=27 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=28.4219
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 27 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=28.42 map_max=28.42 map_mean=11.60 map_top1=23.98 map_top01=26.88
+     final_score=11.60 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=408.4
+[T3] frame 27 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/015.png
+     ead_final_score=11.601 ead_infer_ms=408.4
+     orig_size=900x900  input_size=640  preprocess_ms=110.9
+     infer_ms=155.5
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8789 mean=0.0022 (n=8400)
+  [T3] conf_channel top-10: 0.8789 0.8560 0.8477 0.8296 0.8267 0.8193 0.8164 0.8091 0.8022 0.7549
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 22
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 3
+  [T3] cleanup L3 max_area(0.95): 3 -> 3
+  [T3] cleanup L4 dedup(iou=0.70): 3 -> 3
+  [T3] after_cleanup: 3 bboxes
+     postprocess_ms=7.2  bbox_count=3  total_ms=294.8
+     bbox[0] x=0.027 y=0.049 w=0.841 h=0.891
+     bbox[1] x=0.285 y=0.284 w=0.448 h=0.441
+     bbox[2] x=0.718 y=0.236 w=0.068 h=0.061
+     [stats] total_frames=28 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=32.3125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 28 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=32.31 map_max=32.31 map_mean=11.86 map_top1=26.02 map_top01=30.82
+     final_score=11.86 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=297.2
+[T3] frame 28 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/012.png
+     ead_final_score=11.864 ead_infer_ms=297.2
+     orig_size=900x900  input_size=640  preprocess_ms=119.6
+     infer_ms=156.7
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8716 mean=0.0019 (n=8400)
+  [T3] conf_channel top-10: 0.8716 0.8716 0.8467 0.8403 0.8281 0.8164 0.8149 0.8096 0.8066 0.7539
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 19
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.3  bbox_count=2  total_ms=299.6
+     bbox[0] x=0.028 y=0.050 w=0.902 h=0.941
+     bbox[1] x=0.290 y=0.291 w=0.450 h=0.448
+     [stats] total_frames=29 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=46.9375
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 29 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=46.94 map_max=46.94 map_mean=11.89 map_top1=33.17 map_top01=44.28
+     final_score=11.89 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=434.3
+[T3] frame 29 | cat=bottle | model=/home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec/bottle/test/good/007.png
+     ead_final_score=11.886 ead_infer_ms=434.3
+     orig_size=900x900  input_size=640  preprocess_ms=105.2
+     infer_ms=98.3
+  [T3] output0 FP32 (want_float=1)
+  [T3] conf_channel min=0.0000 max=0.8970 mean=0.0017 (n=8400)
+  [T3] conf_channel top-10: 0.8970 0.8960 0.8911 0.8667 0.8643 0.8643 0.8584 0.8564 0.8472 0.8408
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.25: 16
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes
+     postprocess_ms=7.1  bbox_count=2  total_ms=226.4
+     bbox[0] x=0.043 y=0.052 w=0.835 h=0.931
+     bbox[1] x=0.275 y=0.294 w=0.441 h=0.438
+     [stats] total_frames=30 fallback_frames=0
+[T4] upload failed: HTTP 0 (frame from bottle)
+
+--- Shutdown requested ---
+[T4] stopped
+[T3] FastSamWorker stopped | total_frames=30 fallback_frames=0
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.8125
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 30 | cat=bottle | score_mode=map_mean | gate_mode=pass_all
+     raw_score=38.81 map_max=38.81 map_mean=11.71 map_top1=26.78 map_top01=36.18
+     final_score=11.71 thr=0.50 decision=PASS_ALL_WOULD_UPLOAD infer_ms=317.8
+[T2] EadWorker stopped
+[T1] stopped after 31 frames
+
+--- Pipeline Metrics ---
+capture:      31
+ead:          31
+vlm:          30
+upload_ok:    0
+upload_fail:  30
+upload_retry: 0
+dropped:      0
+
+edge_pipeline: clean exit.
