@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线进行中（Prompt 2B + 2C + 2C-Fix 完成，待 Prompt 2D）**
+**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线完成（Prompt 2B + 2C + 2C-Fix + 2D）**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -90,8 +90,16 @@ Phase 7 Prompt 2C completed:
 - output1 prototype mask decode 保留 TODO
 - 详见 `docs/experiments/phase7_prompt2c_fastsam_edge_report.md`
 
+Phase 7 Prompt 2D completed:
+- Qwen3-VL 2B base RKLLM 真实推理已接入 T3（替换 mock VLM JSON）
+- 新增 Qwen3VLRunner：vision encoder (RKNN 448×448) + LLM (RKLLM) 完整链路
+- VLM 输出 compact JSON：defect_type / severity / confidence，json_parse_ok=true
+- VLM 性能（RK3588 2B base W8A8）：vision ~2500ms，TTFT ~2500ms，decode 9.3 tok/s，RSS 3321MB
+- Rule-based fallback 在 VLM init 失败或 JSON 提取失败时自动启用
+- 需要 RKLLM runtime >= 1.2.3（板上 /usr/lib/librkllmrt.so 已更新）
+
 下一步：
-- Phase 7 Prompt 2D：Qwen3-VL 真实 RKLLM 推理接入 T3
+- Phase 7 Prompt 2D-Fix：优化 VLM 输出质量、调试 JSON 提取稳定性、考虑 LoRA 模型接入
 
 ## 一句话定义
 
