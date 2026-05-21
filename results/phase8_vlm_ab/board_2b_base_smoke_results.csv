@@ -1,0 +1,21 @@
+sample_id,category,label,defect_type_gt,image_path,upload_ok,json_parse_ok,fallback_used,predicted_defect_type,severity,confidence,prompt_tokens,output_tokens,ttft_ms,decode_tps,pipeline_ms_efficientad,pipeline_ms_fastsam,pipeline_ms_qwen3vl,rss_mb,queue_drop_count,notes
+tile_good_0,tile,good,,tile/test/good/023.png,Y,N,Y,anomaly,high,1.00,0,0,0.0,0.0,271.8,212.7,0.1,0.0,0,VLM failed (qwen3vl=0ms)
+screw_good_0,screw,good,,screw/test/good/011.png,Y,Y,N,none,low,0.97,441,57,1970.1,8.8,257.5,154.7,11208.0,3298.8,0,
+pill_good_0,pill,good,,pill/test/good/011.png,Y,Y,N,anomaly,low,0.97,399,56,2105.7,9.1,350.8,199.6,11051.8,3298.8,0,
+zipper_good_0,zipper,good,,zipper/test/good/023.png,Y,Y,N,anomaly,low,0.95,400,64,1843.2,8.9,377.0,148.9,11472.4,3298.8,0,
+metal_nut_good_0,metal_nut,good,,metal_nut/test/good/011.png,Y,Y,N,anomaly,medium,0.95,395,80,2172.8,9.9,462.3,177.7,12635.6,3298.8,0,
+grid_good_0,grid,good,,grid/test/good/011.png,Y,Y,N,anomaly,low,0.95,390,45,2459.6,9.6,317.2,154.8,9436.3,3298.8,0,
+carpet_good_0,carpet,good,,carpet/test/good/023.png,Y,Y,N,anomaly,medium,0.36,399,80,1855.3,9.1,436.8,240.5,13516.1,3298.8,0,
+tile_defect_1,tile,defect,crack,tile/test/crack/011.png,Y,N,Y,anomaly,high,1.00,0,0,0.0,0.0,271.6,194.8,0.0,0.0,0,VLM failed (qwen3vl=0ms)
+screw_defect_1,screw,defect,scratch_head,screw/test/scratch_head/011.png,Y,Y,N,none,low,0.97,441,57,1956.9,9.7,246.5,145.6,10362.8,3298.8,0,
+pill_defect_1,pill,defect,color,pill/test/color/011.png,Y,Y,N,anomaly,low,0.97,399,56,2107.1,9.4,400.1,181.2,10407.3,3298.8,0,
+zipper_defect_1,zipper,defect,broken_teeth,zipper/test/broken_teeth/011.png,Y,Y,N,missing_pin,low,0.98,401,63,1867.5,9.0,287.8,153.9,11221.5,3298.8,0,
+metal_nut_defect_1,metal_nut,defect,bent,metal_nut/test/bent/023.png,Y,Y,N,anomaly,medium,0.95,395,80,2128.8,9.3,344.0,176.1,13266.5,3298.8,0,
+grid_defect_1,grid,defect,bent,grid/test/bent/011.png,Y,Y,N,anomaly,low,0.95,390,45,2259.4,8.9,329.9,144.4,9787.9,3298.8,0,
+carpet_defect_1,carpet,defect,color,carpet/test/color/011.png,Y,Y,N,anomaly,medium,0.36,399,80,1842.3,9.5,453.9,270.0,12996.1,3298.8,0,
+tile_good_2,tile,good,,tile/test/good/023.png,Y,N,Y,anomaly,high,1.00,0,0,0.0,0.0,278.3,190.2,0.1,0.0,0,VLM failed (qwen3vl=0ms)
+screw_good_2,screw,good,,screw/test/good/011.png,Y,Y,N,none,low,0.97,441,57,2185.2,9.2,263.5,165.1,10715.3,3298.8,0,
+pill_good_2,pill,good,,pill/test/good/011.png,Y,Y,N,anomaly,low,0.97,399,56,2136.7,9.4,374.8,177.8,10465.1,3298.8,0,
+zipper_good_2,zipper,good,,zipper/test/good/023.png,Y,Y,N,missing_pin,low,0.98,401,63,1871.5,9.1,289.4,143.7,11136.4,3298.8,0,good image classified as defect: missing_pin
+grid_good_2,grid,good,,grid/test/good/011.png,Y,Y,N,crack,medium,0.95,442,121,2222.7,9.1,265.6,150.5,17786.0,3298.8,0,good image classified as defect: crack
+grid_defect_3,grid,defect,bent,grid/test/bent/011.png,Y,Y,N,anomaly,low,0.95,390,45,1823.8,9.3,342.3,169.6,9584.7,3280.5,0,
