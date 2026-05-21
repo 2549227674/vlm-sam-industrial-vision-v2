@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线完成（Prompt 2B + 2C + 2C-Fix + 2D + 2D-Fix）**
+**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线完成（Prompt 2B + 2C + 2C-Fix + 2D + 2D-Fix + 2E）**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -110,8 +110,18 @@ Phase 7 Prompt 2D-Fix completed:
 - 2B lora smoke test: 13/13 json_ok=1, 1 fallback, output_tokens warning 1 (499>120)
 - 详见 `docs/experiments/phase7_prompt2d_fix_report.md`
 
+Phase 7 Prompt 2E completed (True E2E PASS):
+- 四线程全链路小样本验收：8 图 4 类（bottle/metal_nut/pill/screw），3 全周期 + 1 部分帧 = 24 帧成功
+- T1/T2/T3/T4 全链路正常：capture=25, ead=25, vlm=24, upload_ok=24, upload_fail=0, dropped=0
+- Qwen3-VL 2B base json_parse_ok=100%（24/24），severity 仅 low/medium/high，output_tokens 54-92
+- VLM 性能：avg_ttft=2174ms, decode_tps=9.97, RSS=3324MB（稳定无泄漏）
+- EfficientAD avg=350.8ms, FastSAM avg=250.1ms, Qwen3-VL avg=11350ms
+- trace_events 6 项完整（efficientad_infer + fastsam_pre/postprocess + qwen3vl_generate + upload）
+- Backend 24 条记录可查，4 类各 6 条，avg_pipeline_ms/category_severity_matrix/ab_compare 全链路数据正确
+- 详见 `docs/experiments/phase7_prompt2e_e2e_acceptance_report.md`
+
 下一步：
-- Phase 7 Prompt 2E：队列节拍验证、4B 模型验证、enable_thinking 评估
+- Phase 7 Prompt 2F：队列节拍验证、4B 模型验证、enable_thinking 评估
 
 ## 一句话定义
 
