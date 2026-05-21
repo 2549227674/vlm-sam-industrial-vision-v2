@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前实现状态
 
-**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线完成（Prompt 2B + 2C + 2C-Fix + 2D + 2D-Fix + 2E）**
+**Phase 1-6 完成；Phase 4 联调验收已通过；Phase 5 v2 全部 Benchmark 完成；Phase 6 v2 Track B 模型转换完成；Phase 7 C++ 四线程流水线完成（Prompt 2B + 2C + 2C-Fix + 2D + 2D-Fix + 2E + 2F）**
 
 已完成：
 - Phase 1.1：项目骨架初始化（FastAPI + Next.js 15 + SQLAlchemy 2.0）
@@ -120,8 +120,17 @@ Phase 7 Prompt 2E completed (True E2E PASS):
 - Backend 24 条记录可查，4 类各 6 条，avg_pipeline_ms/category_severity_matrix/ab_compare 全链路数据正确
 - 详见 `docs/experiments/phase7_prompt2e_e2e_acceptance_report.md`
 
+Phase 7 Prompt 2F completed (threshold 模式与节拍验证):
+- 可观测性补丁：新增 ead_gate_pass/ead_gate_drop 原子计数器，区分 gate 拦截与队列丢帧
+- 2F-A（覆盖型低阈值）：21/21 帧全部通过 gate（pass_rate=100%），upload_ok=20，4 类全覆盖
+- 2F-B（过滤型高阈值）：8/21 帧通过 gate（pass_rate=38%），upload_ok=7，T3 压力下降 65%
+- threshold 模式未破坏 T3/T4/backend 链路，无崩溃/OOM/rknn_run failed/rkllm fatal
+- queue_drop=0（Q2(2) 容量在 15s/帧节拍下足够）
+- 本轮阈值为工程占位值，最终 per-category threshold 留到 Phase 8 校准
+- 详见 `docs/experiments/phase7_prompt2f_threshold_report.md`
+
 下一步：
-- Phase 7 Prompt 2F：队列节拍验证、4B 模型验证、enable_thinking 评估
+- Phase 8：per-category threshold 校准（全量 MVTec 15 类）、4B 模型验证、enable_thinking 评估
 
 ## 一句话定义
 

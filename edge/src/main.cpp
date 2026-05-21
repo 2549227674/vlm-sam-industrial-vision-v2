@@ -82,6 +82,10 @@ void print_metrics(const vlm_industrial::edge::common::PipelineMetrics& m) {
                m.upload_failed.load(std::memory_order_relaxed));
   std::fprintf(stderr, "upload_retry: %zu\n",
                m.upload_retry.load(std::memory_order_relaxed));
+  std::fprintf(stderr, "ead_gate_pass: %zu\n",
+               m.ead_gate_pass.load(std::memory_order_relaxed));
+  std::fprintf(stderr, "ead_gate_drop: %zu\n",
+               m.ead_gate_drop.load(std::memory_order_relaxed));
   std::fprintf(stderr, "dropped:      %zu\n",
                m.dropped_count.load(std::memory_order_relaxed));
 }
@@ -135,6 +139,11 @@ int main(int argc, char* argv[]) {
 
     std::fprintf(stderr, "\n--- Shutdown requested ---\n");
   }  // jthreads join here via RAII
+
+  // Collect queue drop counts from BoundedQueues (after jthreads join).
+  metrics.dropped_count.store(
+      q1.dropped() + q2.dropped() + q3.dropped(),
+      std::memory_order_relaxed);
 
   print_metrics(metrics);
   std::fprintf(stderr, "\nedge_pipeline: clean exit.\n");

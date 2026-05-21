@@ -462,7 +462,12 @@ void EadWorker::operator()(std::stop_token st) {
 
     m_.ead_count.fetch_add(1, std::memory_order_relaxed);
 
-    if (!push_to_q2) continue;
+    if (push_to_q2) {
+      m_.ead_gate_pass.fetch_add(1, std::memory_order_relaxed);
+    } else {
+      m_.ead_gate_drop.fetch_add(1, std::memory_order_relaxed);
+      continue;
+    }
 
     // Build EadResult and push to Q2.
     EadResult result;
