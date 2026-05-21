@@ -1,5 +1,5 @@
-// edge_pipeline — RK3588 16GB edge inference pipeline.
-// Prompt 2B: T1 image_loop + T2 EfficientAD + T3 MockVlm + T4 Upload.
+// edge_pipeline — RK3588 edge inference pipeline.
+// Prompt 2C: T1 image_loop + T2 EfficientAD + T3 FastSAM + T4 Upload.
 
 #include <csignal>
 #include <cstdio>
@@ -16,7 +16,7 @@
 #include "edge/common/metrics.hpp"
 #include "edge/common/types.hpp"
 #include "edge/pipeline/ead_worker.hpp"
-#include "edge/pipeline/mock_vlm_worker.hpp"
+#include "edge/pipeline/fastsam_worker.hpp"   // Prompt 2C: real FastSAM T3
 #include "edge/upload/upload_worker.hpp"
 
 namespace {
@@ -60,6 +60,10 @@ void print_config(const vlm_industrial::edge::common::Config& cfg) {
                score_mode_str(cfg.efficientad_score_mode));
   std::fprintf(stderr, "ead_gate_mode:     %s\n",
                gate_mode_str(cfg.efficientad_gate_mode));
+  std::fprintf(stderr, "fastsam_model:     %s\n",
+               cfg.fastsam_model_path.c_str());
+  std::fprintf(stderr, "fastsam_input_sz:  %d\n", cfg.fastsam_input_size);
+  std::fprintf(stderr, "fastsam_conf:      %.2f\n", cfg.fastsam_conf);
   std::fprintf(stderr, "model_variant:     %s_%s\n",
                cfg.vlm_model_size.c_str(), cfg.vlm_variant.c_str());
 }
@@ -112,13 +116,13 @@ int main(int argc, char* argv[]) {
   BoundedQueue<EadResult>    q2(2);
   BoundedQueue<VlmReport>    q3(4);
 
-  std::fprintf(stderr, "\n--- Starting pipeline (Prompt 2B: real EfficientAD) ---\n");
+  std::fprintf(stderr, "\n--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---\n");
 
   {
-    vlm_industrial::edge::CaptureWorker t1(cfg, q1, metrics);
-    vlm_industrial::edge::EadWorker t2(cfg, q1, q2, metrics);
-    vlm_industrial::edge::MockVlmWorker t3(cfg, q2, q3, metrics);
-    vlm_industrial::edge::UploadWorker t4(cfg, q3, metrics);
+    vlm_industrial::edge::CaptureWorker  t1(cfg, q1, metrics);
+    vlm_industrial::edge::EadWorker      t2(cfg, q1, q2, metrics);
+    vlm_industrial::edge::FastSamWorker  t3(cfg, q2, q3, metrics);  // Prompt 2C
+    vlm_industrial::edge::UploadWorker   t4(cfg, q3, metrics);
 
     std::jthread t1_th{std::move(t1)};
     std::jthread t2_th{std::move(t2)};
@@ -130,7 +134,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::fprintf(stderr, "\n--- Shutdown requested ---\n");
-  }
+  }  // jthreads join here via RAII
 
   print_metrics(metrics);
   std::fprintf(stderr, "\nedge_pipeline: clean exit.\n");
