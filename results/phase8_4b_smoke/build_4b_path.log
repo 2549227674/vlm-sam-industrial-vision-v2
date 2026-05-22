@@ -1,0 +1,8 @@
+-- Found rknnrt: /usr/lib/librknnrt.so
+-- Found rkllmrt: /usr/lib/librkllmrt.so
+-- Found rga: /usr/lib/librga.so
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/orangepi/vlm-sam-industrial-vision-v2/edge/build
+Consolidate compiler generated dependencies of target edge_pipeline
+[100%] Built target edge_pipeline

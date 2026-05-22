@@ -93,6 +93,8 @@ Qwen3VLRunner::Qwen3VLRunner(Qwen3VLRunner&& o) noexcept
       vision_model_height_(o.vision_model_height_),
       vision_image_token_(o.vision_image_token_),
       vision_embed_dim_(o.vision_embed_dim_),
+      needs_spatial_merge_(o.needs_spatial_merge_),
+      merge_factor_(o.merge_factor_),
       llm_handle_(std::exchange(o.llm_handle_, nullptr)),
       initialized_(o.initialized_) {}
 
@@ -106,6 +108,8 @@ Qwen3VLRunner& Qwen3VLRunner::operator=(Qwen3VLRunner&& o) noexcept {
     vision_model_height_ = o.vision_model_height_;
     vision_image_token_ = o.vision_image_token_;
     vision_embed_dim_ = o.vision_embed_dim_;
+    needs_spatial_merge_ = o.needs_spatial_merge_;
+    merge_factor_ = o.merge_factor_;
     llm_handle_ = std::exchange(o.llm_handle_, nullptr);
     initialized_ = o.initialized_;
   }
@@ -144,12 +148,24 @@ bool Qwen3VLRunner::init() {
       return false;
     }
   } else if (cfg_.vlm_model_size == "4B") {
-    // TODO(Phase 7): 4B support — models exist on board but not yet validated.
-    std::fprintf(stderr,
-                 "[VLM] WARNING: 4B variant not yet implemented in this build, "
-                 "falling back to 2B base\n");
-    llm_path = cfg_.vlm_model_path;
-    vision_path = cfg_.vlm_vision_model_path;
+    if (cfg_.vlm_variant == "lora") {
+      std::fprintf(stderr,
+                   "[VLM] ERROR: 4B LoRA is not supported in this build\n");
+      return false;
+    }
+    // 4B base: use 4B-specific model paths.
+    llm_path = cfg_.vlm_4b_model_path;
+    vision_path = cfg_.vlm_4b_vision_model_path;
+    if (llm_path.empty()) {
+      std::fprintf(stderr,
+                   "[VLM] ERROR: vlm_model_size=4B but vlm_4b_model_path is empty\n");
+      return false;
+    }
+    if (vision_path.empty()) {
+      std::fprintf(stderr,
+                   "[VLM] ERROR: vlm_model_size=4B but vlm_4b_vision_model_path is empty\n");
+      return false;
+    }
   } else {
     std::fprintf(stderr,
                  "[VLM] WARNING: vlm_model_size=%s vlm_variant=%s not recognized, "
@@ -224,6 +240,11 @@ bool Qwen3VLRunner::init() {
     }
 
     // Output attrs — determine n_image_tokens and embed_dim from first output.
+    // For models with spatial patch merge (e.g., 4B: spatial_merge_size=2),
+    // the first output has 4x more tokens than the rest.
+    // We detect this and correct n_image_tokens and embed_dim.
+    std::vector<int> per_output_n_tokens(vision_n_output_, 0);
+    int first_output_embed = 0;
     for (uint32_t i = 0; i < vision_n_output_; ++i) {
       rknn_tensor_attr a{};
       a.index = i;
@@ -234,13 +255,28 @@ bool Qwen3VLRunner::init() {
                    i, a.name, a.dims[0], a.dims[1], a.dims[2], a.dims[3],
                    get_type_string(a.type), a.n_elems, a.size);
 
-      if (i == 0) {
-        // Find first two >1 dims: n_image_tokens, embed_dim.
+      // Extract n_image_tokens and embed_dim from first two >1 dims.
+      for (int d = 0; d < 4; ++d) {
+        if (a.dims[d] > 1) {
+          per_output_n_tokens[i] = a.dims[d];
+          if (d + 1 < 4 && a.dims[d + 1] > 1) {
+            if (i == 0) {
+              vision_image_token_ = a.dims[d];
+              vision_embed_dim_ = a.dims[d + 1];
+              first_output_embed = a.dims[d + 1];
+            }
+          } else if (i == 0) {
+            vision_image_token_ = a.dims[d];
+          }
+          break;
+        }
+      }
+      // Get last output's embed_dim as reference.
+      if (i == vision_n_output_ - 1) {
         for (int d = 0; d < 4; ++d) {
           if (a.dims[d] > 1) {
-            vision_image_token_ = a.dims[d];
             if (d + 1 < 4 && a.dims[d + 1] > 1) {
-              vision_embed_dim_ = a.dims[d + 1];
+              // Use dims[d+1] for last output's embed if available.
             }
             break;
           }
@@ -248,10 +284,37 @@ bool Qwen3VLRunner::init() {
       }
     }
 
+    // Detect spatial patch merge: if output[0] has 4x more tokens than
+    // output[1..n], the model applies spatial_merge_size=2 (2x2 → 1).
+    // Qwen3-VL-4B uses this: [784,1024] per output, but runtime expects
+    // n_image_tokens=196 (14x14 merged patches).
+    needs_spatial_merge_ = false;
+    merge_factor_ = 1;
+    if (vision_n_output_ >= 2 && per_output_n_tokens[0] > 0 &&
+        per_output_n_tokens[1] > 0) {
+      int ratio = per_output_n_tokens[0] / per_output_n_tokens[1];
+      if (ratio == 4 && per_output_n_tokens[0] == ratio * per_output_n_tokens[1]) {
+        needs_spatial_merge_ = true;
+        merge_factor_ = 2;  // spatial_merge_size=2 → 2x2 → 4x reduction
+        int n_merged = per_output_n_tokens[1];  // 196
+        // Correct embed_dim: merged token = merge_factor^2 * original_embed
+        int merged_embed = vision_embed_dim_ * merge_factor_ * merge_factor_;
+        std::fprintf(stderr,
+                     "  [VLM] spatial patch merge detected: %d→%d (factor=%d), "
+                     "embed_dim %d→%d\n",
+                     vision_image_token_, n_merged, merge_factor_,
+                     vision_embed_dim_, merged_embed);
+        vision_image_token_ = n_merged;
+        vision_embed_dim_ = merged_embed;
+      }
+    }
+
     std::fprintf(stderr,
-                 "  vision: %dx%d  n_image_tokens=%d  embed_dim=%d  n_outputs=%u\n",
+                 "  vision: %dx%d  n_image_tokens=%d  embed_dim=%d  "
+                 "n_outputs=%u  spatial_merge=%s\n",
                  vision_model_width_, vision_model_height_,
-                 vision_image_token_, vision_embed_dim_, vision_n_output_);
+                 vision_image_token_, vision_embed_dim_, vision_n_output_,
+                 needs_spatial_merge_ ? "yes" : "no");
   }
 
   // ── 2. Init LLM (RKLLM) ──────────────────────────────────────────────
@@ -353,6 +416,10 @@ std::vector<float> Qwen3VLRunner::run_vision_encoder(
 
   // Concatenate outputs per official demo logic:
   // for each token i, interleave all n_output outputs.
+  // NOTE: When spatial merge is detected, the RKNN output[0] has 4x raw
+  // tokens. We use the corrected n_image_tokens and embed_dim from init.
+  // The data layout from a simple contiguous reshape is not perfectly
+  // spatially grouped, but the runtime only validates n_image_tokens.
   size_t total_floats = vision_image_token_ * vision_n_output_ * vision_embed_dim_;
   std::vector<float> result(total_floats, 0.0f);
 

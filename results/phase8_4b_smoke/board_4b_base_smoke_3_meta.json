@@ -1,0 +1,93 @@
+{
+  "experiment": "phase8b_4b_base_smoke_3img",
+  "timestamp": "2026-05-22T10:43:00Z",
+  "config": {
+    "vlm_model_size": "4B",
+    "vlm_variant": "base",
+    "vlm_4b_model_path": "/home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_base.rkllm",
+    "vlm_4b_vision_model_path": "/home/orangepi/models/qwen3vl_models/qwen3vl_4b_vision.rknn",
+    "efficientad_gate_mode": "pass_all",
+    "efficientad_score_mode": "raw_score",
+    "image_loop_beat_ms": 30000,
+    "image_loop_jitter_ms": 0,
+    "vlm_max_new_tokens": 300,
+    "vlm_max_context": 4096,
+    "backend_url": "http://192.168.137.1:8000"
+  },
+  "images": [
+    "tile/test/crack/011.png",
+    "carpet/test/color/011.png",
+    "screw/test/good/011.png"
+  ],
+  "results": {
+    "exit_code": 124,
+    "wall_clock_s": 602,
+    "timed_out": true,
+    "capture_frames": 21,
+    "vlm_completed": 20,
+    "upload_ok": 20,
+    "upload_fail": 0,
+    "ead_gate_pass": 21,
+    "ead_gate_drop": 0,
+    "queue_drop": 0,
+    "fallback_frames": 7,
+    "unique_images_vlm_completed": 2,
+    "unique_images_total": 3,
+    "carpet_vlm_skip": true,
+    "carpet_vlm_skip_reason": "unknown — rkllm_run does not invoke callback for carpet frames"
+  },
+  "vision_encoder": {
+    "output0_dims": [784, 1024],
+    "output1_4_dims": [196, 2560],
+    "spatial_merge_detected": true,
+    "spatial_merge_factor": 2,
+    "n_image_tokens_raw": 784,
+    "n_image_tokens_merged": 196,
+    "embed_dim_raw": 1024,
+    "embed_dim_merged": 4096,
+    "n_outputs": 5,
+    "total_floats": 4014080
+  },
+  "vlm_metrics_per_image": {
+    "tile_crack": {
+      "count": 7,
+      "vision_ms_mean": 2384,
+      "ttft_ms_mean": 4707,
+      "decode_tps": 4.9,
+      "qwen3vl_ms_mean": 19476,
+      "output_tokens": 59,
+      "rss_mb": 5689,
+      "json_parse_ok": 1
+    },
+    "carpet_color": {
+      "count": 7,
+      "vlm_skipped": true,
+      "json_parse_ok": 0,
+      "fallback_used": true
+    },
+    "screw_good": {
+      "count": 7,
+      "vision_ms_mean": 2502,
+      "ttft_ms_mean": 5074,
+      "decode_tps": 4.9,
+      "qwen3vl_ms_mean": 28940,
+      "output_tokens": 100,
+      "rss_mb": 5689,
+      "json_parse_ok": 1
+    }
+  },
+  "comparison_with_2b_base": {
+    "2b_ttft_ms": 1900,
+    "4b_ttft_ms": 4871,
+    "ttft_ratio": 2.56,
+    "2b_decode_tps": 9.7,
+    "4b_decode_tps": 4.9,
+    "tps_ratio": 0.51,
+    "2b_rss_mb": 3275,
+    "4b_rss_mb": 5689,
+    "rss_ratio": 1.74,
+    "2b_qwen3vl_ms_mean": 10735,
+    "4b_qwen3vl_ms_mean": 19476,
+    "latency_ratio": 1.81
+  }
+}

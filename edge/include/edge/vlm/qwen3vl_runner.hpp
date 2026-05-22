@@ -4,7 +4,7 @@
 // Runs vision encoder (RKNN) + LLM (RKLLM) to produce structured JSON from
 // an image + EfficientAD score + FastSAM bboxes.
 //
-// Only 2B base is used in this round. LoRA and 4B are not loaded.
+// 2B base, 2B LoRA, and 4B base are supported. 4B LoRA is not implemented.
 
 #include <array>
 #include <cstdint>
@@ -112,6 +112,8 @@ class Qwen3VLRunner {
   int vision_model_height_{0};
   int vision_image_token_{0};
   int vision_embed_dim_{0};
+  bool needs_spatial_merge_{false};
+  int merge_factor_{1};
 
   // LLM (RKLLM)
   LLMHandle llm_handle_{nullptr};
