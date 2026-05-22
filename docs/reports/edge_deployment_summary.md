@@ -70,8 +70,6 @@ flowchart LR
 
 边缘端只作为 HTTP POST client，不运行 FastAPI、Flask、Streamlit、Gradio 或 WebSocket server。WebSocket 只存在于 backend 和 frontend 之间。所有图片上传使用 `multipart/form-data`，禁止 Base64。
 
-![系统全局拓扑（Mermaid 高清渲染）](../figures/fig1_topology.png)
-
 ### 3.2 API Contract 与数据流
 
 `docs/API_CONTRACT.md` 定义 v1.2 contract，是边缘端、模拟器、后端、前端四端的**唯一权威接口**。任何字段变更必须先 bump contract 版本再改实现，模拟器是契约测试客户端。
@@ -186,8 +184,6 @@ flowchart LR
   T3 --> Q3["Q3 BoundedQueue cap=4<br/>upload buffer"]
   Q3 --> T4["T4 Upload<br/>libcurl multipart"]
 ```
-
-![四线程流水线详图（Mermaid 高清渲染）](../figures/fig2_pipeline.png)
 
 端侧固定四线程模型：
 
@@ -535,9 +531,6 @@ scripts/                  Training, conversion, evaluation and plotting scripts
 
 | 图表 | 生成依据 |
 |---|---|
-| `fig1_topology.png` | Mermaid `topology.mmd` |
-| `fig2_pipeline.png` | Mermaid `pipeline_detail.mmd` |
-| `fig3_sequence.png` | Mermaid `sequence.mmd` |
 | `fig4_score_mode_auroc.png` | `score_mode_comparison.csv` |
 | `fig5_threshold_auroc.png` | `edge/config.yaml` + `score_mode_comparison.csv` |
 | `fig6_board_perf.png` | Phase 8B board A/B + 4B smoke |
@@ -546,4 +539,4 @@ scripts/                  Training, conversion, evaluation and plotting scripts
 | `fig9_dashboard.png` | Phase 4 Playwright dashboard screenshot |
 | `fig_frontend_profile.png` | Phase 4 Playwright profile screenshot |
 
-说明：所有图表位于 `docs/figures/`。fig1-fig3 由 Mermaid 生成（SVG → PNG），fig4-fig8 由 `.venv` 中的 `pandas` + `matplotlib` 从 CSV/config 生成，fig9 和 fig_frontend_profile 由 Playwright 截图。
+说明：所有图表位于 `docs/figures/`。fig4-fig8 由 `.venv` 中的 `pandas` + `matplotlib` 从 CSV/config 生成，fig9 和 fig_frontend_profile 由 Playwright 截图。拓扑、流水线、时序图以原生 Mermaid 代码块形式内嵌于文档中。
