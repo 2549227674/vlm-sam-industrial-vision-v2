@@ -109,3 +109,32 @@ RKLLM 部署链路只处理以下产出：
 - 社区预转换的 base .rkllm 文件
 
 OPRO 搜索出的最优 prompt 可以在 C++ 代码中硬编码为 system prompt，但 prompt 优化过程本身（迭代搜索、LLM 评估）只在 PC 端完成。
+
+## Phase 8 新增约束
+
+- EfficientAD score mode 必须使用 `raw_score`（ReduceMax 输出），不使用 `map_mean`（被背景区域稀释，AUROC 更低）。5 种 mode 实测 mean AUROC：raw_score 0.5320 > map_mean 0.4561。
+
+- T2 EfficientAD gate 在当前 raw output 下定位为**负载脱落门控（load shedding gate）**，不是精确检测分类器。全 15 类 AUROC < 0.80（best: tile 0.8193）。设置 good_p95 阈值意味着约 5% good 帧进入 T3，大量 defect 帧被误 drop。
+
+- beat_ms 设计公式（实测验证）：
+  ```
+  安全 beat_ms >= VLM_avg_ms / 0.85
+  2B base pass_all：推荐 13000ms，最小稳定 10000ms
+  4B base pass_all：推荐 >=35000ms
+  ```
+
+- 4B vision encoder 需要 spatial patch merge 处理：
+  output[0] 维度 [784, 1024]，需 reshape 为 [196, 4096]（embed_dim = 1024 × 4）。
+  n_image_tokens = 196（patch_h=14, patch_w=14），非 784。
+  正确做法：`[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]`。
+  当前 contiguous reshape 对 6/7 类别有效，carpet 触发静默失败。
+
+- W8A8 量化破坏 LoRA 细粒度分类能力：
+  PC bf16 defect_type_exact = 51.8%，board W8A8 = 0%。
+  根因：LoRA rank-32 delta 幅值小于 W8A8 量化分辨率，delta 被量化为零。
+  category_exact 不受影响（粗粒度知识，量化鲁棒）。
+  结论：RK3588 LLM 路径（W8A8 only）不适合 LoRA 部署。
+
+- 禁止在 pass_all 模式下把 beat_ms 设置为低于 VLM_avg_ms 的值，否则 Q2（capacity=2）会溢出并产生 queue_drop。反压会引发 VLM 延迟放大（beat=5000ms 实测 VLM avg 增加 21.9%）。
+
+- per-category threshold 全部使用 raw_score good_p95（Phase 8A-Fix-Fix 后校准）。混合不同 score mode 的阈值是错误的，因为运行时应用单一全局 score_mode。

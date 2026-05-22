@@ -15,8 +15,8 @@
 阶段 4  轨道A 联调验收（v4 + API_CONTRACT v1.2）✅ 已完成（Phase 4.0-4.2 全链路验证）
 阶段 5  PC 端模型训练与 AB 评估                ✅ 已完成（v2: 15类, 4变体, 3 benchmark）
 阶段 6  轨道B：模型转换                       ✅ 已完成（Phase 6 v2 Track B 全部产物就绪）
-阶段 7  轨道B：C++ 四线程流水线               ← 进行中（Prompt 2B 代表类 FP16 raw RKNN 已验证）
-阶段 8  全链路验收 + 数据对比                  ← 待阶段 7 完成
+阶段 7  轨道B：C++ 四线程流水线               ✅ 已完成（Phase 7 Prompt 2B ~ 2F）
+阶段 8  全链路验收 + 数据对比                  ✅ 已完成（Phase 8A ~ 8C + 4B smoke）
 ```
 
 ---
@@ -1349,49 +1349,121 @@ pytest backend/tests/contract/ -v
 
 ---
 
-## 阶段 8：全链路验收 + 数据对比（待阶段 7 完成）
+## 阶段 8：全链路验收 + 数据对比 ✅ 已完成（Phase 8A–8C + 4B smoke）
 
-**时间预估**：1-2 天
+**实际耗时**：约 2 天
 **前置依赖**：阶段 7 完成
+**总报告**：`docs/experiments/phase8_execution_report.md`
+**工程发现**：`docs/ENGINEERING_FINDINGS.md`
 
-### 8.1 RK3588 四维指标实测
+### Phase 8 实际执行记录（2026-05）
 
-**文档依据**：ARCHITECTURE.md §7.1/§7.3
+#### Phase 8A：EfficientAD Threshold Calibration（已完成）
 
-在 RK3588 上跑完整流水线，收集 `PipelineMetrics` + `VlmMetrics` 数据：
+**实际偏差**：
+- 原计划直接校准阈值 → 实际发现需要先确定最优 score mode
+- 经历三轮迭代：8A → 8A-Fix（score mode 对比）→ 8A-Fix-Fix（recall@FPR 修复）
+- 阈值尺度从原 post-processor [0,1] 改为 raw_score 真实尺度（数量级差异）
 
-| 指标 | 2B_base | 2B_lora | 4B_base | 4B_lora | 来源 |
-|---|---|---|---|---|---|
-| JSON 解析成功率 | X'% | Y'% | P'% | Q'% | `vlm_metrics.json_parse_ok` |
-| TTFT（首 token 延迟） | ms | ms | ms | ms | `vlm_metrics.ttft_ms` |
-| Decode tokens/s | tps | tps | tps | tps | `vlm_metrics.decode_tps` |
-| 运行时 RAM | GB | GB | GB | GB | `vlm_metrics.rss_mb` |
+**最终产出**：
+- 15 类 per-category threshold（raw_score, good_p95）已更新至 edge/config.yaml
+- efficientad_score_mode 从 map_mean 改为 raw_score
+- T2 gate 定性为负载控制器（非精确分类器）
 
-**参考基线**（Qengineering 实测，RK3588 16GB，ctx=4096）：
-- 2B：11.5 tps / 3.1 GB RAM / TTFT 热 ~2-3s
-- 4B：5.7 tps / 8.7 GB RAM / TTFT 热 ~5-6s（Pipeline 总峰值 ~11.4 GB，余 ~3.1 GB）
+**关键数据**：
+- 5 种 score mode 均值 AUROC：raw_score 0.5320 > map_mean 0.4561
+- 14/15 类 AUROC < 0.80（例外：tile 0.8193）
 
-### 8.2 量化前后对比
+**关键数据文件**：`results/phase8_threshold_calibration/`
 
-| 对比组 | PC fp16 JSON 成功率 | RK3588 W8A8 JSON 成功率 | 量化损失 |
+#### Phase 8B：VLM A/B 评估（已完成）
+
+**实际偏差**：
+- 原计划"4 变体全板端 A/B" → 实际：2B board（多轮）+ PC eval + 4B smoke
+- 4B C++ 路径需要先实现（runtime stub），独立为一个子任务
+- 4B LoRA 未执行（W8A8 量化已知会破坏 LoRA 增益，结论可预测）
+
+**关键发现**：
+1. W8A8 量化选择性破坏 LoRA 细粒度分类：defect_type_exact 51.8%（PC）→ 0%（board）
+2. category_exact 基本保留，体现粗/细粒度知识的量化鲁棒性差异
+3. 2B LoRA grid/bent 确定性退化（499 token 重复括号）
+4. 4B vision encoder 需要 spatial patch merge 处理（embed_dim 4096）
+5. LoRA merge-then-convert 流程验证正确，问题在硬件量化精度限制
+
+**子阶段明细**：
+
+| 子阶段 | 核心成果 |
+|---|---|
+| 8B-Prep | fixed_samples_v2（14 图，tile good 023→011 替换） |
+| 8B-Board-2B | 2B base smoke 14/14，2B base vs LoRA 11/14（queue drop） |
+| controlled rerun | beat=60s LoRA 14/14，确认 11/14 是调度问题 |
+| 8B-PC | 409 样本 PC bf16：LoRA defect_type 51.8%，base 11.5% |
+| LoRA audit | merge-then-convert 确认正确，SHA256 跨平台一致 |
+| 8B-4B | 4B base runtime path 实现，RSS 5689MB，carpet 静默失败 |
+
+**部署决策**：2B base W8A8 作为 RK3588 部署首选
+
+**关键数据文件**：`results/phase8_vlm_ab/`、`results/phase8_4b_smoke/`
+
+#### Phase 8C：节拍优化（已完成）
+
+**实际偏差**：
+- 原计划多参数调优 → 精简为 pass_all 压力扫描（6 组 beat_ms）
+- threshold 模式下 T3 几乎无负载，无需调节
+
+**关键发现**：
+- 最小稳定 beat（pass_all，2B base）：10000ms
+- 推荐安全 beat：13000ms（ratio=0.83）
+- 设计公式：safe_beat_ms >= VLM_avg / 0.85
+- 5000ms 下 VLM avg 延迟增加 21.9%（反压效应）
+
+**关键数据文件**：`results/phase8c_beat_sweep/`
+
+#### Phase 8D：求职展示报告（进行中）
+
+见 `docs/reports/edge_deployment_summary.md`
+
+### Phase 8 与原始计划偏差总结
+
+| 原计划 | 实际执行 | 原因 |
+|---|---|---|
+| 4 变体全板端 A/B | 2B board + PC eval + 4B smoke | 4B runtime 原本 fallback，需先实现 |
+| threshold 模式评估 VLM | pass_all 固定样本 | T2 AUROC < 0.80 会污染质量评估 |
+| LoRA 作为部署候选 | LoRA 转为量化失效诊断案例 | PC 有效，板端 W8A8 失效 |
+| Phase 8C 大调参 | Phase 8C-mini pass_all 扫频 | threshold 模式下 T3 负载太低 |
+| 4B 完整 A/B | 4B path + smoke | spatial merge 未完全正确 |
+
+### Phase 8 最终结论
+
+- **RK3588 部署主线**：Qwen3-VL 2B base W8A8
+- **LoRA**：PC bf16 有效（51.8% defect_type_exact），板端 W8A8 失效（0%）
+- **4B base**：已打通但慢 1.8×，carpet 类别有 spatial merge issue
+- **T2 EfficientAD**：负载控制门控，不做精确检测承诺
+
+> 以下 8.1–8.4 为 Phase 8 执行前的规划模板，已被上方实际执行记录取代，保留作历史参考。
+
+### ~~8.1 RK3588 四维指标实测~~（已在 Phase 8B-Board / 8B-4B 中完成）
+
+实际数据见上方 Phase 8B 子节和 `docs/experiments/phase8_execution_report.md`。
+
+### ~~8.2 量化前后对比~~（已在 Phase 8B-PC + 8B-Board 中完成）
+
+| 对比组 | PC bf16 defect_type_exact | 板端 W8A8 defect_type_exact | 量化损失 |
 |---|---|---|---|
-| 2B_base | X% | X'% | Δ pp |
-| 2B_lora | Y% | Y'% | Δ pp |
-| 4B_base | P% | P'% | Δ pp |
-| 4B_lora | Q% | Q'% | Δ pp |
+| 2B_base | 11.5% | 0% | -11.5 pp |
+| 2B_lora | 51.8% | 0% | -51.8 pp |
+| 4B_base | — | 0%（非 carpet）| — |
+| 4B_lora | — | 未执行 | — |
 
-### 8.3 最终方案选择
+### ~~8.3 最终方案选择~~（已完成）
 
-综合四维指标在 4 个变体上的 Pareto 前沿，选定最终部署变体。
-决策维度：精度（JSON 解析成功率）× 吞吐（tps）× 内存（GB）。
-决策写入 `edge/config.yaml` 的 `vlm_model_size`（"2B" 或 "4B"）和 `vlm_variant`（"base" 或 "lora"）两个字段组合。
-综合判断维度：精度提升是否值得 2.8× 内存代价（8.7GB vs 3.1GB）和 2× 延迟代价（5.7 vs 11.5 tps）。
+已选定：**2B base W8A8**。理由：稳定，无退化模式，json_parse_ok 100%。
 
-### 8.4 前端仪表盘展示 AB 对比
+### ~~8.4 前端仪表盘展示 AB 对比~~
 
-前端 `/api/stats` 的 `ab_compare` 字段直接聚合两个变体的数据，ECharts 图表展示。
+前端 `/api/stats` 的 `ab_compare` 字段已支持 4 变体聚合，ECharts 图表展示。
 
-**阶段 8 完成标志**：全链路稳定运行 + AB 数据对比完成 + 方案选定 → **项目完成**。
+**阶段 8 完成标志**：全链路稳定运行 + AB 数据对比完成 + 方案选定 ✅
 
 ---
 
