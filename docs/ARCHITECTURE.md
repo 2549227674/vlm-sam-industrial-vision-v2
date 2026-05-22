@@ -588,75 +588,75 @@ class HttpClient {
 // 注意：CURL handle 不是线程安全——T4 Upload 单线程独占一个 HttpClient 实例。
 ```
 
-## 12. Phase 8 Architectural Corrections
+## 12. Phase 8 架构认知修正
 
-Phase 8 systematic experiments (threshold calibration, VLM A/B evaluation, beat sweep) revealed several corrections to the architectural assumptions established in Phase 7.
+Phase 8 系统实验（threshold calibration、VLM A/B 评估、beat 扫频）揭示了多项对 Phase 7 架构假设的修正。
 
-### 12.1 T2 Gate: Load Shedding Gate, Not Detection Gate
+### 12.1 T2 gate 定位修正：负载脱落门控
 
-Phase 8A tested 5 score modes on 15-class MVTec test split (1725 images, FP16/no-quant raw RKNN):
+Phase 8A 对 15 类 MVTec test split（1725 张图，FP16/no-quant raw RKNN）测试了 5 种 score mode：
 
-| Score Mode | Mean AUROC | Rank |
+| Score Mode | Mean AUROC | 排名 |
 |---|---|---|
-| raw_score | 0.5320 | 1 (best) |
+| raw_score | 0.5320 | 1（最优）|
 | map_max | 0.5320 | 2 |
 | map_top01 | 0.5223 | 3 |
 | map_top1 | 0.5061 | 4 |
-| map_mean | 0.4561 | 5 (worst) |
+| map_mean | 0.4561 | 5（最差）|
 
-14/15 categories have best AUROC < 0.80 (exception: tile at 0.8488 with map_top1). All categories show good/defect distribution overlap.
+14/15 类 best AUROC < 0.80（例外：tile 使用 map_top1 达到 0.8488）。所有类别均存在 good/defect 分布重叠。
 
-**Architectural conclusion**: In the current EfficientAD raw output regime, T2 gate is a **load shedding gate** (load shedding controller), not a detection classifier. Setting good_p95 thresholds means approximately 5% of good frames enter T3 (false positive) and a significant number of defect frames are dropped (due to low AUROC, weak ranking ability). This is a fundamental limitation of FP16 raw RKNN EfficientAD output, not an engineering implementation issue.
+**架构结论**：在当前 EfficientAD raw output 尺度下，T2 gate 是**负载脱落门控（load shedding gate）**，不是精确检测分类器。设置 good_p95 阈值意味着约 5% good 帧进入 T3（false positive），而大量 defect 帧也被 drop（因 AUROC 低，排序能力弱）。这是 FP16 raw RKNN 下 EfficientAD 的根本限制，不是工程实现问题。
 
-**Improvement direction**: Implement a C++ post-processor (Clip+Normalize+Sigmoid) to restore the [0,1] calibrated score scale, but requires bypassing the RKNN Greater node type limitation.
+**改善方向**：实现 C++ post-processor（Clip+Normalize+Sigmoid），恢复 [0,1] 校准分数尺度，但需绕过 RKNN 的 Greater 节点类型限制。
 
-### 12.2 Score Mode Selection
+### 12.2 score mode 选择
 
-Current deployment uses `raw_score` (ReduceMax output). Selection rationale:
-- `raw_score` and `map_max` are mathematically equivalent (both take the maximum pixel value of the anomaly map)
-- `raw_score` mean AUROC = 0.5320 vs `map_mean` 0.4561 (delta = +0.0759)
-- `map_mean` is diluted by large normal background areas, unsuitable for local defect detection
-- For grid category (local thin-line defects), `raw_score` AUROC improvement is largest (+0.3241)
+当前部署使用 `raw_score`（ReduceMax 输出）。选择依据：
+- `raw_score` 和 `map_max` 数学等价（均取 anomaly map 全局最大像素值）
+- `raw_score` mean AUROC = 0.5320，优于 `map_mean`（0.4561），delta = +0.0759
+- `map_mean` 被大面积正常背景稀释，不适合局部缺陷检测
+- 对 grid 类（局部细线缺陷），`raw_score` AUROC 改善最大（+0.3241）
 
-### 12.3 Qwen3-VL LoRA Deployment Conclusion
+### 12.3 Qwen3-VL LoRA 部署结论
 
-**PC bf16 LoRA is effective**: defect_type_exact 51.8%, category_exact 95.1%, bbox_iou>=0.5 47.7% (409 eval samples).
+**PC bf16 LoRA 有效**：defect_type_exact 51.8%，category_exact 95.1%，bbox_iou>=0.5 47.7%（409 eval 样本）。
 
-**RKLLM/W8A8 board LoRA collapses**: defect_type_exact 0%, category_exact ~93%. The LoRA adapter was correctly merged before RKLLM conversion (verified by SHA256 cross-platform match + post-merge key check). The collapse is caused by W8A8 quantization destroying rank-32 delta weights.
+**RKLLM/W8A8 板端 LoRA 坍塌**：defect_type_exact 0%，category_exact ~93%。LoRA adapter 已正确 merge 后再做 RKLLM 转换（SHA256 跨平台一致 + 合并后 key 检验通过）。坍塌由 W8A8 量化破坏 rank-32 delta 权重导致。
 
-**Current deployment choice**: 2B base W8A8 for RK3588. LoRA retains PC-side bf16 inference value.
+**当前部署选择**：RK3588 使用 2B base W8A8。LoRA 保留 PC 端 bf16 推理价值。
 
-### 12.4 4B Vision Encoder Spatial Patch Merge
+### 12.4 4B vision encoder spatial patch merge
 
-4B vision encoder output dimensions:
-- output[0]: [784, 1024] (pre-spatial-merge, 4x token count)
-- output[1-4]: [196, 2560]
+4B vision encoder 输出维度：
+- output[0]：[784, 1024]（spatial merge 前，4× token 数）
+- output[1-4]：[196, 2560]
 
-RKLLM runtime requires n_image_tokens = patch_h x patch_w = 14 x 14 = 196, embed_dim = 1024 x merge_factor^2 = 1024 x 4 = 4096.
+RKLLM 运行时要求 n_image_tokens = patch_h × patch_w = 14 × 14 = 196，embed_dim = 1024 × merge_factor² = 1024 × 4 = 4096。
 
-Current implementation (C++ qwen3vl_runner.cpp):
-- Detects 4x factor in output[0], auto-corrects n_image_tokens and embed_dim
-- Uses contiguous reshape [784,1024]->[196,4096]
-- Known limitation: correct implementation requires spatial permutation: `[28,28,1024] -> permute[14,2,14,2,1024] -> [196,4096]`
-- Current contiguous reshape works for 6/7 categories; carpet triggers silent VLM failure
-- 2B vision encoder has no spatial merge; code paths are independent
+当前实现（C++ qwen3vl_runner.cpp）：
+- 检测 output[0] 的 4× 因子，自动修正 n_image_tokens 和 embed_dim
+- 使用 contiguous reshape [784,1024]→[196,4096]
+- 已知限制：正确做法需要空间排列 `[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]`
+- 当前 contiguous reshape 对 6/7 类别有效；carpet 触发静默 VLM 失败
+- 2B vision encoder 无 spatial merge，代码路径独立，不受影响
 
-### 12.5 beat_ms Design Constraints (Phase 8C Measured)
+### 12.5 beat_ms 设计约束（Phase 8C 实测）
 
 ```
-Safe:     beat_ms > VLM_p99_latency
-Recommended: beat_ms >= VLM_avg_ms / 0.85 (15% buffer)
+安全：  beat_ms > VLM_p99_latency
+推荐：  beat_ms >= VLM_avg_ms / 0.85（预留 15% buffer）
 ```
 
-Measured data (pass_all mode, 2B base W8A8):
+实测数据（pass_all 模式，2B base W8A8）：
 
-| Condition | Value |
+| 条件 | 数值 |
 |---|---|
-| Minimum stable beat | 10000ms |
-| Recommended safe beat | 13000ms (VLM_avg/beat = 0.83) |
-| Critical ratio | VLM_avg/beat ~ 1.0 |
-| 4B base recommended | >= 35000ms (measured max VLM = 28.9s) |
+| 最小稳定 beat | 10000ms |
+| 推荐安全 beat | 13000ms（VLM_avg/beat = 0.83）|
+| 临界比值 | VLM_avg/beat ≈ 1.0 |
+| 4B base 推荐 | >= 35000ms（实测最大 VLM = 28.9s）|
 
-Production threshold mode: T2 gate filters approximately 95% of good frames. Equivalent T3 enqueue interval = beat_ms / gate_pass_rate. At 5000ms beat in threshold mode, equivalent interval is approximately 100s — sufficient for VLM 10.7s processing.
+生产 threshold 模式：T2 gate 过滤约 95% good 帧。等效 T3 入队间隔 = beat_ms / gate_pass_rate。5000ms beat 在 threshold 模式下约等效 100s 入队间隔，充分满足 VLM 10.7s 的处理需求。
 
-**Backpressure effect**: At beat=5000ms, VLM avg latency increases 21.9% due to NPU resource contention under Q2 saturation. System degrades acceleratively, not linearly.
+**反压效应**：beat=5000ms 下 VLM avg 延迟增加 21.9%，原因是 Q2 满载时 NPU 资源争用。系统在 Q2 饱和状态下加速退化，而非线性退化。
