@@ -1,0 +1,56 @@
+{
+  "2B_base": {
+    "total_samples": 409,
+    "json_parse_ok": 391,
+    "schema_ok": 391,
+    "category_exact": 220,
+    "defect_type_exact": 47,
+    "severity_valid": 391,
+    "bbox_iou_at_0_5": 5,
+    "repeated_bracket_count": 0,
+    "empty_generation_count": 0,
+    "output_tokens_mean": 119.0,
+    "output_tokens_max": 200,
+    "prompt_tokens_mean": 1156.0,
+    "unique_defect_types": 19,
+    "top_defect_types": {
+      "scratch": 232,
+      "bent": 60,
+      "crack": 57,
+      "stitching": 10,
+      "hole": 10,
+      "frayed": 4,
+      "stitch": 3,
+      "tear": 3,
+      "puncture": 2,
+      "scratches": 1
+    }
+  },
+  "2B_lora": {
+    "total_samples": 409,
+    "json_parse_ok": 393,
+    "schema_ok": 393,
+    "category_exact": 389,
+    "defect_type_exact": 212,
+    "severity_valid": 393,
+    "bbox_iou_at_0_5": 195,
+    "repeated_bracket_count": 0,
+    "empty_generation_count": 0,
+    "output_tokens_mean": 109.8,
+    "output_tokens_max": 200,
+    "prompt_tokens_mean": 958.0,
+    "unique_defect_types": 59,
+    "top_defect_types": {
+      "scratch": 35,
+      "crack": 34,
+      "color": 33,
+      "cut": 25,
+      "contamination": 15,
+      "bent": 13,
+      "hole": 13,
+      "combined": 13,
+      "thread_top": 11,
+      "scratch_head": 11
+    }
+  }
+}
