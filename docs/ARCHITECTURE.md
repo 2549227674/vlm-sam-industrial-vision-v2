@@ -66,45 +66,112 @@
 - 所有线程使用 `std::jthread` + `std::stop_token`，主线程析构时自动 `request_stop()` + `join()`。
 
 ```mermaid
-graph LR
-  subgraph Edge["RK3588 16GB — Orange Pi 5 Plus"]
-    T1["T1 Capture\nV4L2 / image_loop"]
-    T2["T2 EfficientAD-S\n256×256 INT8\nraw_score gate"]
-    T3["T3 FastSAM + Qwen3-VL\n640×640 FP16 + W8A8\nbbox cleanup + compact JSON"]
-    T4["T4 Upload\nlibcurl multipart"]
-    T1 -->|Q1 cap=4| T2 -->|Q2 cap=2| T3 -->|Q3 cap=4| T4
+flowchart TD
+  subgraph Edge["EDGE DEVICE | RK3588 16GB (Orange Pi 5 Plus) | 6 TOPS NPU x3"]
+    subgraph Pipeline["4-Thread C++ Pipeline"]
+      T1["T1: Capture\nV4L2 / Image Loop"]
+      Q1["Q1\ncap=2"]
+      T2["T2: Pipeline\nEfficientAD-S INT8\n256x256 + RGA"]
+      Q2["Q2\ncap=2"]
+      T3["T3: VLM Worker\nFastSAM FP16 640x640\nQwen3-VL-2B/4B W8A8"]
+      Q3["Q3\ncap=2"]
+      T4["T4: Upload\nlibcurl"]
+      T1 -->|frame| Q1 -->|frame| T2 -->|anomaly + mask| Q2 -->|candidates| T3 -->|defect JSON + img| Q3 -->|result| T4
+    end
+    subgraph ModelZoo["Model Zoo (RKNN / RKLLM)"]
+      EAD["EfficientAD-S\nINT8 RKNN"]
+      FS["FastSAM-s\nFP16 RKNN (no-quant)"]
+      QV["Qwen3-VL-2B/4B\nW8A8 RKLLM + Vision RKNN"]
+    end
+    EAD -.-> T2
+    FS -.-> T3
+    QV -.-> T3
   end
 
-  subgraph Backend["FastAPI + SQLite"]
-    API["POST /api/edge/report\nmultipart/form-data"]
-    DB["SQLite WAL\n+ static/defects/"]
-    REST["GET /api/defects\nGET /api/stats"]
-    WS["WS /ws/dashboard\nmetrics_tick + defect_created"]
+  T4 -->|multipart POST\n(no Base64)| Backend
+
+  subgraph Backend["BACKEND SERVER | Python 3.12 + FastAPI"]
+    POST["POST /api/edge/report\nmultipart/form-data\nimages -> static/defects/"]
+    SF["Static Files\nstatic/defects/*.jpg"]
+    POST -->|save| SF
+    subgraph APILayer["API Layer"]
+      GD["GET /api/defects\npagination"]
+      GS["GET /api/stats\nmatrix / ab_compute"]
+      GH["GET /api/health"]
+    end
+    SQL["SQLite WAL\nSQLAlchemy 2.0"]
+    WS["WebSocket Manager\n/ws/dashboard\nheartbeat + broadcast"]
+    APILayer -->|REST JSON| SQL
+    WS --> Frontend
   end
 
-  subgraph Frontend["Next.js 15 Dashboard"]
-    DT["DataTable\nrealtime defect stream"]
-    AB["AB Matrix\n4-variant comparison"]
-    PR["Profile\nChrome Trace timeline"]
+  subgraph Frontend["FRONTEND | Next.js 15 | output: export"]
+    WSC["WebSocket Client\nreconnect + Sonner toast"]
+    TABS["5 Tabs\nOverview | Profile\nAB Matrix | Models | Logs"]
+    TAB["TanStack Table v8\nReal-time defect streams"]
+    SVG["v4 SVG Charts\nKPI / Waterfall /\nMatrix / AB 5-axis"]
+    IMG["img src from\nbackend static/*.jpg"]
+    WSC -->|WS subscribe| TABS
   end
 
-  T4 -->|HTTPS| API --> DB
-  DB --> REST --> DT
-  DB --> WS --> AB
-  REST --> PR
+  SF -->|HTTP img| IMG
 ```
+
+![系统全局拓扑](figures/fig1_topology.png)
 
 ```mermaid
-graph LR
-  T1["T1 Capture\nV4L2 / MVTec image_loop"] -->|Q1 BoundedQueue\ncap=4 drop-oldest| T2["T2 Pipeline\nRGA resize → EfficientAD-S\nRKNN FP16 raw_score"]
-  T2 -->|Q2 BoundedQueue\ncap=2 drop-oldest| T3["T3 VLM Worker\nFastSAM bbox → cleanup\nQwen3-VL compact JSON"]
-  T3 -->|Q3 BoundedQueue\ncap=4 drop-oldest| T4["T4 Upload\nlibcurl multipart POST"]
+flowchart LR
+  subgraph Metrics["Atomic Metric Counters"]
+    m1["capture"]
+    m2["ead_gate_pass"]
+    m3["ead_gate_drop"]
+    m4["vlm_ok"]
+    m5["vlm_fallback"]
+    m6["upload_ok"]
+    m7["upload_fail"]
+    m8["queue_drop"]
+  end
 
-  style T1 fill:#1e3a5f,color:#fff
-  style T2 fill:#2d5a27,color:#fff
-  style T3 fill:#6b21a8,color:#fff
-  style T4 fill:#92400e,color:#fff
+  subgraph T1S["T1 Capture Thread"]
+    T1C["V4L2 / ioctl\nor Image-Set Loop"]
+  end
+
+  T1S -->|raw frames| Q1
+
+  Q1[("Q1\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+
+  Q1 -->|frame| T2S
+
+  subgraph T2S["T2 Pipeline Thread"]
+    direction LR
+    EAD["EfficientAD-S\nRKNN Inference\n256x256 INT8"] --> GD{{"Gate Decision\nThreshold Mode"}}
+    GD -->|PASS| ATT["Attach Score\n+ Metadata"]
+    GD -->|DROP| DROP["DROP\nead_gate_drop++"]
+  end
+
+  T2S -->|frame + score| Q2
+
+  Q2[("Q2\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+
+  Q2 -->|frame + score| T3S
+
+  subgraph T3S["T3 VLM Worker Thread"]
+    direction LR
+    R1["RGA Resize\nto 640x640"] --> FS["FastSAM\nRKNN Inference\n640x640 FP16"] --> BBOX["5-Level Bbox\nPurification"] --> R2["RGA Resize\nto 448x448"] --> VE["Qwen3-VL Vision\nEncoder RKNN\n448x448"] --> LLM["Qwen3-VL LLM\nRKLLM Inference\nW8A8"] --> JSON["Structured\nJSON Output"]
+  end
+
+  T3S -->|result| Q3
+
+  Q3[("Q3\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+
+  Q3 -->|result| T4S
+
+  subgraph T4S["T4 Upload Thread"]
+    CURL["libcurl\nmultipart POST"] --> BE["FastAPI\nBackend"]
+  end
 ```
+
+![四线程流水线详图](figures/fig2_pipeline.png)
 
 ### 3.2 三段模型定位
 
@@ -292,28 +359,73 @@ simulator (Python)            backend (FastAPI)            frontend (Next.js)
 
 ```mermaid
 sequenceDiagram
-  participant C as V4L2 Camera / MVTec Image Loop
-  participant E as RK3588 Edge Pipeline
-  participant B as FastAPI Backend
-  participant D as SQLite + Static Files
-  participant F as Next.js Frontend
+  participant V4L2 as V4L2 Camera
+  participant T1 as T1 Capture
+  participant Q1 as Q1 Queue
+  participant T2 as T2 Pipeline
+  participant Q2 as Q2 Queue
+  participant T3 as T3 VLM Worker
+  participant Q3 as Q3 Queue
+  participant T4 as T4 Upload
+  participant BE as Backend FastAPI
+  participant DB as SQLite
+  participant FE as Frontend Next.js
 
-  C->>E: T1 capture frame (V4L2 DQBUF or image read)
-  Note over E: T2: EfficientAD-S infer (~350ms)
-  alt score > threshold
-    Note over E: T3: FastSAM seg + bbox cleanup (~250ms)
-    Note over E: T3: Qwen3-VL JSON generate (~11s)
-  else score ≤ threshold
-    Note over E: gate drop (load shedding)
+  Note over V4L2,FE: End-to-End Data Flow | Total ~12s/frame
+
+  rect rgb(220, 252, 231)
+    Note over V4L2,T1: Stage 1: Frame Capture
+    T1->>T1: raw frame (V4L2 ioctl / image-set read)
+    T1->>Q1: enqueue frame
   end
-  E->>B: T4: POST /api/edge/report (image + crop + meta)
-  B->>D: write JPEG + insert DefectCreate JSON
-  B-->>E: 200 {id, image_url, server_ts}
-  B-->>F: WS defect_created + metrics_tick
-  F->>B: GET /api/defects, GET /api/stats
-  B-->>F: paginated records + aggregated metrics
-  Note over E,F: E2E per frame ≈ 12s (VLM-dominated)
+
+  rect rgb(255, 237, 213)
+    Note over Q1,T2: Stage 2: Anomaly Detection (~350ms)
+    Q1-->>T2: dequeue frame
+    T2->>T2: RGA resize: 256x256
+    T2->>T2: EfficientAD-S RKNN infer
+    T2->>T2: score + gate check
+    alt gate PASS
+      T2->>Q2: enqueue (frame + score)
+    else gate DROP
+      T2->>T2: drop frame (skip T3/T4)
+    end
+  end
+
+  rect rgb(219, 234, 254)
+    Note over Q2,Q3: Stage 3: VLM Analysis (~11s)
+    Q2-->>T3: dequeue frame
+    T3->>T3: RGA resize: 640x640
+    T3->>T3: FastSAM RKNN (~250ms)
+    T3->>T3: bbox purification (5-level)
+    T3->>T3: RGA resize: 448x448
+    T3->>T3: Qwen3-VL vision RKNN (~2.5s)
+    T3->>T3: LLM RKLLM decode (~6s)
+    T3->>T3: JSON output (category/severity/confidence/bbox)
+    T3->>Q3: enqueue result (image + JSON + trace_events)
+  end
+
+  rect rgb(220, 252, 231)
+    Note over Q3,T4: Stage 4: Upload (~50ms)
+    Q3-->>T4: dequeue result
+    T4->>BE: HTTP POST multipart/form-data
+  end
+
+  rect rgb(251, 207, 232)
+    Note over BE,DB: Backend Processing
+    BE->>DB: INSERT defect (SQLite WAL)
+    BE->>FE: WebSocket push (new defect)
+  end
+
+  rect rgb(251, 207, 232)
+    Note over FE,FE: Dashboard Update
+    FE->>FE: DataTable + KPI + charts refresh
+  end
+
+  Note over V4L2,FE: 4 Threads + 3 BoundedQueues | Async Pipeline
 ```
+
+![端云数据流时序图](figures/fig3_sequence.png)
 
 ### 4.2 RK3588 真机模式（轨道 B 落地后）
 

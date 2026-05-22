@@ -71,33 +71,58 @@ flowchart LR
 边缘端只作为 HTTP POST client，不运行 FastAPI、Flask、Streamlit、Gradio 或 WebSocket server。WebSocket 只存在于 backend 和 frontend 之间。所有图片上传使用 `multipart/form-data`，禁止 Base64。
 
 ```mermaid
-graph LR
-  subgraph Edge["RK3588 16GB — Orange Pi 5 Plus"]
-    T1["T1 Capture\nV4L2 / image_loop"]
-    T2["T2 EfficientAD-S\n256×256 INT8\nraw_score gate"]
-    T3["T3 FastSAM + Qwen3-VL\n640×640 FP16 + W8A8\nbbox cleanup + compact JSON"]
-    T4["T4 Upload\nlibcurl multipart"]
-    T1 -->|Q1 cap=4| T2 -->|Q2 cap=2| T3 -->|Q3 cap=4| T4
+flowchart TD
+  subgraph Edge["EDGE DEVICE | RK3588 16GB (Orange Pi 5 Plus) | 6 TOPS NPU x3"]
+    subgraph Pipeline["4-Thread C++ Pipeline"]
+      T1["T1: Capture\nV4L2 / Image Loop"]
+      Q1["Q1\ncap=2"]
+      T2["T2: Pipeline\nEfficientAD-S INT8\n256x256 + RGA"]
+      Q2["Q2\ncap=2"]
+      T3["T3: VLM Worker\nFastSAM FP16 640x640\nQwen3-VL-2B/4B W8A8"]
+      Q3["Q3\ncap=2"]
+      T4["T4: Upload\nlibcurl"]
+      T1 -->|frame| Q1 -->|frame| T2 -->|anomaly + mask| Q2 -->|candidates| T3 -->|defect JSON + img| Q3 -->|result| T4
+    end
+    subgraph ModelZoo["Model Zoo (RKNN / RKLLM)"]
+      EAD["EfficientAD-S\nINT8 RKNN"]
+      FS["FastSAM-s\nFP16 RKNN (no-quant)"]
+      QV["Qwen3-VL-2B/4B\nW8A8 RKLLM + Vision RKNN"]
+    end
+    EAD -.-> T2
+    FS -.-> T3
+    QV -.-> T3
   end
 
-  subgraph Backend["FastAPI + SQLite"]
-    API["POST /api/edge/report\nmultipart/form-data"]
-    DB["SQLite WAL\n+ static/defects/"]
-    REST["GET /api/defects\nGET /api/stats"]
-    WS["WS /ws/dashboard\nmetrics_tick + defect_created"]
+  T4 -->|multipart POST\n(no Base64)| Backend
+
+  subgraph Backend["BACKEND SERVER | Python 3.12 + FastAPI"]
+    POST["POST /api/edge/report\nmultipart/form-data\nimages -> static/defects/"]
+    SF["Static Files\nstatic/defects/*.jpg"]
+    POST -->|save| SF
+    subgraph APILayer["API Layer"]
+      GD["GET /api/defects\npagination"]
+      GS["GET /api/stats\nmatrix / ab_compute"]
+      GH["GET /api/health"]
+    end
+    SQL["SQLite WAL\nSQLAlchemy 2.0"]
+    WS["WebSocket Manager\n/ws/dashboard\nheartbeat + broadcast"]
+    APILayer -->|REST JSON| SQL
+    WS --> Frontend
   end
 
-  subgraph Frontend["Next.js 15 Dashboard"]
-    DT["DataTable\nrealtime defect stream"]
-    AB["AB Matrix\n4-variant comparison"]
-    PR["Profile\nChrome Trace timeline"]
+  subgraph Frontend["FRONTEND | Next.js 15 | output: export"]
+    WSC["WebSocket Client\nreconnect + Sonner toast"]
+    TABS["5 Tabs\nOverview | Profile\nAB Matrix | Models | Logs"]
+    TAB["TanStack Table v8\nReal-time defect streams"]
+    SVG["v4 SVG Charts\nKPI / Waterfall /\nMatrix / AB 5-axis"]
+    IMG["img src from\nbackend static/*.jpg"]
+    WSC -->|WS subscribe| TABS
   end
 
-  T4 -->|HTTPS| API --> DB
-  DB --> REST --> DT
-  DB --> WS --> AB
-  REST --> PR
+  SF -->|HTTP img| IMG
 ```
+
+![系统全局拓扑](../figures/fig1_topology.png)
 
 ### 3.2 API Contract 与数据流
 
@@ -215,16 +240,58 @@ flowchart LR
 ```
 
 ```mermaid
-graph LR
-  T1["T1 Capture\nV4L2 / MVTec image_loop"] -->|Q1 BoundedQueue\ncap=4 drop-oldest| T2["T2 Pipeline\nRGA resize → EfficientAD-S\nRKNN FP16 raw_score"]
-  T2 -->|Q2 BoundedQueue\ncap=2 drop-oldest| T3["T3 VLM Worker\nFastSAM bbox → cleanup\nQwen3-VL compact JSON"]
-  T3 -->|Q3 BoundedQueue\ncap=4 drop-oldest| T4["T4 Upload\nlibcurl multipart POST"]
+flowchart LR
+  subgraph Metrics["Atomic Metric Counters"]
+    m1["capture"]
+    m2["ead_gate_pass"]
+    m3["ead_gate_drop"]
+    m4["vlm_ok"]
+    m5["vlm_fallback"]
+    m6["upload_ok"]
+    m7["upload_fail"]
+    m8["queue_drop"]
+  end
 
-  style T1 fill:#1e3a5f,color:#fff
-  style T2 fill:#2d5a27,color:#fff
-  style T3 fill:#6b21a8,color:#fff
-  style T4 fill:#92400e,color:#fff
+  subgraph T1S["T1 Capture Thread"]
+    T1C["V4L2 / ioctl\nor Image-Set Loop"]
+  end
+
+  T1S -->|raw frames| Q1
+
+  Q1[("Q1\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+
+  Q1 -->|frame| T2S
+
+  subgraph T2S["T2 Pipeline Thread"]
+    direction LR
+    EAD["EfficientAD-S\nRKNN Inference\n256x256 INT8"] --> GD{{"Gate Decision\nThreshold Mode"}}
+    GD -->|PASS| ATT["Attach Score\n+ Metadata"]
+    GD -->|DROP| DROP["DROP\nead_gate_drop++"]
+  end
+
+  T2S -->|frame + score| Q2
+
+  Q2[("Q2\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+
+  Q2 -->|frame + score| T3S
+
+  subgraph T3S["T3 VLM Worker Thread"]
+    direction LR
+    R1["RGA Resize\nto 640x640"] --> FS["FastSAM\nRKNN Inference\n640x640 FP16"] --> BBOX["5-Level Bbox\nPurification"] --> R2["RGA Resize\nto 448x448"] --> VE["Qwen3-VL Vision\nEncoder RKNN\n448x448"] --> LLM["Qwen3-VL LLM\nRKLLM Inference\nW8A8"] --> JSON["Structured\nJSON Output"]
+  end
+
+  T3S -->|result| Q3
+
+  Q3[("Q3\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+
+  Q3 -->|result| T4S
+
+  subgraph T4S["T4 Upload Thread"]
+    CURL["libcurl\nmultipart POST"] --> BE["FastAPI\nBackend"]
+  end
 ```
+
+![四线程流水线详图](../figures/fig2_pipeline.png)
 
 端侧固定四线程模型：
 
@@ -572,6 +639,9 @@ scripts/                  Training, conversion, evaluation and plotting scripts
 
 | 图表 | 生成依据 |
 |---|---|
+| `fig1_topology.png` | Mermaid flowchart TD → PNG |
+| `fig2_pipeline.png` | Mermaid flowchart LR → PNG |
+| `fig3_sequence.png` | Mermaid sequenceDiagram → PNG |
 | `fig4_score_mode_auroc.png` | `score_mode_comparison.csv` |
 | `fig5_threshold_auroc.png` | `edge/config.yaml` + `score_mode_comparison.csv` |
 | `fig6_board_perf.png` | Phase 8B board A/B + 4B smoke |
@@ -580,4 +650,4 @@ scripts/                  Training, conversion, evaluation and plotting scripts
 | `fig9_dashboard.png` | Phase 4 Playwright dashboard screenshot |
 | `fig_frontend_profile.png` | Phase 4 Playwright profile screenshot |
 
-说明：所有图表位于 `docs/figures/`。fig4-fig8 由 `.venv` 中的 `pandas` + `matplotlib` 从 CSV/config 生成，fig9 和 fig_frontend_profile 由 Playwright 截图。拓扑、流水线、时序图以原生 Mermaid 代码块形式内嵌于文档中。
+说明：所有图表位于 `docs/figures/`。fig1-fig3 由 Mermaid 代码块渲染为 PNG 高清图，原生 Mermaid 代码块同时内嵌于文档中；fig4-fig8 由 `.venv` 中的 `pandas` + `matplotlib` 从 CSV/config 生成；fig9 和 fig_frontend_profile 由 Playwright 截图。
