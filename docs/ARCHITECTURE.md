@@ -61,9 +61,13 @@
                 old                       old                            old
 ```
 
+![系统全局拓扑](figures/fig1_topology.png)
+
 - **Q1 / Q3** 容量 4，缓冲短时抖动。
 - **Q2** 容量 2 + drop-oldest，VLM 慢于异常检测时主动丢弃旧帧（保延迟优先）。
 - 所有线程使用 `std::jthread` + `std::stop_token`，主线程析构时自动 `request_stop()` + `join()`。
+
+![四线程流水线详图](figures/fig2_pipeline.png)
 
 ### 3.2 三段模型定位
 
@@ -265,6 +269,8 @@ RK3588 C++ pipeline                              backend                  fronte
 ```
 
 两种模式对后端报文**完全相同**，靠 API 契约保证可替换性。
+
+![端云数据流时序图](figures/fig3_sequence.png)
 
 ## 5. 静态图片集循环测试方案
 

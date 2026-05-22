@@ -70,23 +70,30 @@ flowchart LR
 
 边缘端只作为 HTTP POST client，不运行 FastAPI、Flask、Streamlit、Gradio 或 WebSocket server。WebSocket 只存在于 backend 和 frontend 之间。所有图片上传使用 `multipart/form-data`，禁止 Base64。
 
+![系统全局拓扑（Mermaid 高清渲染）](figures/fig1_topology.png)
+
 ### 3.2 API Contract 与数据流
 
-`docs/API_CONTRACT.md` 定义 v1.2 contract。边缘端和模拟器上报同一个 `DefectCreate` schema：
+`docs/API_CONTRACT.md` 定义 v1.2 contract，是边缘端、模拟器、后端、前端四端的**唯一权威接口**。任何字段变更必须先 bump contract 版本再改实现，模拟器是契约测试客户端。
+
+边缘端和模拟器上报同一个 `DefectCreate` schema：
 
 | 字段 | 作用 |
 |---|---|
 | `category` | MVTec AD 15 类白名单 |
 | `defect_type` / `severity` / `confidence` | VLM 结构化描述 |
 | `anomaly_score` | EfficientAD raw score |
-| `bboxes` | 归一化 bbox，供前端 overlay |
+| `bboxes` | 归一化 [0,1] bbox，供前端 overlay |
 | `pipeline_ms` | efficientad / fastsam / qwen3vl 分阶段延迟 |
 | `vlm_metrics` | TTFT、decode_tps、RSS、json_parse_ok |
-| `trace_events` | Chrome Trace 风格事件，用于 ProfilePage 性能追踪 |
+| `trace_events` | Chrome Trace 风格事件（v1.2 新增），用于 ProfilePage 性能追踪 |
+| `variant` | 4 变体标识（2B_base / 2B_lora / 4B_base / 4B_lora） |
+
+错误码体系覆盖 400–503 共 9 类，C++ 端对 408/429/5xx 执行指数退避重试。图片传输强制 `multipart/form-data`，禁止 Base64。
 
 ```mermaid
 sequenceDiagram
-  participant E as RK3588 Edge
+  participant E as RK3588 Edge / Simulator
   participant B as FastAPI Backend
   participant D as SQLite + Static Files
   participant F as Next.js Frontend
@@ -99,28 +106,72 @@ sequenceDiagram
   B-->>F: WS defect_created / metrics_tick
 ```
 
-### 3.3 后端、前端、模拟器验收
+### 3.3 后端 FastAPI
 
-Phase 4 轨道 A 已验证端云联调：
+后端使用 FastAPI + SQLAlchemy 2.0 async + aiosqlite，SQLite WAL 模式。核心模块：
+
+| 路由 | 功能 |
+|---|---|
+| `POST /api/edge/report` | 接收 multipart 落盘图片到 `static/defects/{YYYYMMDD}/{uuid}.jpg`，元数据写入 SQLite |
+| `GET /api/defects` | 分页查询，支持 category/severity/variant/since/until 过滤和排序 |
+| `GET /api/stats` | 聚合统计：total、today_defects、today_high、by_category、by_severity、timeline、ab_compare、avg_pipeline_ms、category_severity_matrix |
+| `GET /api/health` | 存活探针：status + uptime + db + ws_clients |
+| `WS /ws/dashboard` | ConnectionManager 进程内单例，broadcast `defect_created` / `metrics_tick` / `ping` |
+
+`ConnectionManager` 使用 `asyncio.Lock` 保护连接集合，`broadcast` 用 `asyncio.gather(return_exceptions=True)` 防止单连接异常影响全局。单 worker 部署（ConnectionManager 进程内单例保证一致性），扩展到多 worker 需引入 Redis pub/sub。
+
+Pydantic v2 schema 强制 `extra="forbid"` 防止未知字段，`edge_ts` 必须带时区，BBox 坐标归一化 [0,1] 并由路由层二次校验 `x+w ≤ 1`、`y+h ≤ 1`。
+
+### 3.4 前端 Next.js Dashboard
+
+前端使用 Next.js 15 App Router + React 19 + Tailwind v4 + shadcn/ui，`output: 'export'` 纯静态导出。三大功能模块：
+
+| 模块 | 技术栈 | 功能 |
+|---|---|---|
+| Overview | TanStack Table v8 + WebSocket + Sonner toast | 实时缺陷流水 DataTable（9 列），WebSocket 指数退避重连，新缺陷入库后实时追加行并弹出 toast |
+| Profile | 原生 SVG trace timeline | trace_events Chrome Trace 可视化，关键路径分析，NPU 占比，分阶段延迟条形图 |
+| AB Matrix | 自定义矩阵组件 | 4 变体 2×2 对比：json_ok_rate、avg_ttft_ms、avg_decode_tps、avg_rss_mb、avg_output_tokens |
+
+后端不可达时自动 fallback 到 mock 数据，不白屏。环境变量 `NEXT_PUBLIC_API_BASE` 控制后端地址。`app/layout.tsx` 保持 Server Component，其余业务组件全部 `'use client'`。
+
+### 3.5 模拟器
+
+`simulator/line_runner.py` 是 MVTec 数据集驱动的产线回放客户端，同时充当契约测试工具：
+
+- 多线程模拟多产线（默认 3 条，每条独立 line_id + 独立图片队列）
+- PNG→JPEG 内存转换 + 指数退避重试 + Session 复用
+- 生成 trace_events（V4L2_dequeue → RGA_preprocess → EfficientAD_infer → FastSAM_infer → VLM_prompt → VLM_decode → HTTP_upload，共 7 个事件）
+- 固定 `random.seed(42)` 保证可复现
+- `beat_ms` + jitter（±200ms）控制产线节拍
+
+模拟器与 C++ 边缘端对后端报文**完全相同**，靠 API contract 保证可替换性。
+
+### 3.6 Phase 4 联调验收
+
+Phase 4 轨道 A 已验证端云联调全链路：
 
 | 模块 | 验收结果 |
 |---|---|
 | FastAPI backend | `/api/health`、`/api/defects`、`/api/stats`、静态图片服务均 PASS |
-| SQLite schema | `defects.trace_events` JSON 列存在，simulator 数据 78/78 含 trace_events |
+| SQLite schema | `defects.trace_events` JSON 列存在，simulator 数据 78/78 含 trace_events（7 个事件） |
 | Python simulator | 20s 写入 78 条缺陷，覆盖 3 产线 × 2 变体 |
-| WebSocket | POST 后收到 `defect_created` 广播 |
-| Next.js frontend | Overview、Profile、AB Matrix 均通过视觉验收 |
-| 自动化测试 | `pytest backend/tests/contract/ -v` 为 34/34 passed，`npm run build` 成功 |
+| WebSocket | POST 后收到 `defect_created` 广播，`data.trace_events` 存在 |
+| Next.js frontend | Overview、Profile、AB Matrix 三页面均通过视觉验收（phase4-accept-verify） |
+| Profile trace | 选中帧后关键路径 532.3ms，NPU.2 占比 84%，7 个彩色条形正确渲染 |
+| Fallback mock | 停止后端后前端不白屏，重启后端后恢复正常 |
+| 自动化测试 | `pytest backend/tests/contract/ -v` 34/34 passed，`tsc --noEmit` 0 errors，`npm run build` 成功 |
 
-这说明 Phase 8D 报告不是孤立的边端笔记，而是一个前后端、模拟器、API contract 和真实 RK3588 端侧 pipeline 串联后的项目叙事。
+这证明 Phase 8D 报告不是孤立的边端笔记，而是前后端、模拟器、API contract 和真实 RK3588 端侧 pipeline 串联后的完整项目叙事。
 
-### 3.4 前端 Dashboard 截图
+### 3.7 前端 Dashboard 截图
 
 > 以下截图来自 Phase 4 前端联调与视觉验收（Playwright 截图，模拟器数据驱动），用于展示前端 Profile Trace 的可视化能力。真实 RK3588 端侧瓶颈分析以 Phase 7/8 的 qwen3vl_ms、TTFT、decode_tps 和 beat_ms sweep 数据为准。
 
 ![Frontend overview dashboard（Phase 4 联调验收截图）](figures/fig_frontend_overview.png)
 
 Overview 页面展示实时工业检测流、RK3588 数字孪生、关键性能指标和 WebSocket 实时状态。适合在面试开场说明”系统已经端云联调，而不是只有单机模型脚本”。
+
+![Frontend overview（最新版，含 Orange Pi 5 标题）](figures/fig9_dashboard.png)
 
 ![Frontend profile trace（Phase 4 联调验收截图）](figures/fig_frontend_profile.png)
 
@@ -139,6 +190,8 @@ flowchart LR
   T3 --> Q3["Q3 BoundedQueue cap=4<br/>upload buffer"]
   Q3 --> T4["T4 Upload<br/>libcurl multipart"]
 ```
+
+![四线程流水线详图（Mermaid 高清渲染）](figures/fig2_pipeline.png)
 
 端侧固定四线程模型：
 
@@ -196,21 +249,27 @@ FastSAM-s INT8 per-tensor quantization 将 YOLOv8 置信度压缩到近零，导
 
 ### 5.3 Qwen3-VL：RKLLM W8A8
 
-Qwen3-VL 部署经历三类关键排障：
+Qwen3-VL 部署经历三类关键排障，每类都需要定位不同层面的根因：
 
 | 问题 | 根因 | 修复 |
 |---|---|---|
 | RKLLM runtime 版本不匹配 | 板上 v1.2.1，模型由 toolkit v1.2.3 导出 | 替换 `librkllmrt.so` |
-| `n_image_tokens` 错误 | 误设为 784，RKLLM 期望 196 | 使用 patch_h × patch_w = 14 × 14 |
-| JSON 截断 | `vlm_max_new_tokens=200` 不够 | 提升到 500，并使用 compact JSON prompt |
+| `n_image_tokens` 错误 | 误设为 784（196×4），RKLLM 期望 patch_h × patch_w = 196 | 使用 `vision_image_token_` 直接赋值 |
+| JSON 截断 | `vlm_max_new_tokens=200` 不够（实际输出 ~196 tokens） | 提升到 500，并使用 compact JSON prompt 将输出从 ~196 降至 ~89 tokens |
 
-2B base W8A8 是当前主线。2B LoRA 和 4B base 都作为 Phase 8 评估对象，但不改变主线部署判断。
+T3 的 VLM 推理链路为：RKNN vision encoder（448×448, 196 image tokens） → RKLLM W8A8 LLM（enable_thinking=false, max_context=4096） → JSON 提取（`rfind('}')` 容忍不完整输出） → 3 级 fallback（VLM init 失败 → JSON 解析失败 → bbox fallback 到 rule-based）。VLM bbox 经过归一化（像素坐标 / orig_w × orig_h）后与 FastSAM bbox 做 IoU>0.3 保守融合。
+
+2B base W8A8 当前主线性能：TTFT ~1877ms，decode ~9.7 tok/s，RSS ~3285MB，json_parse_ok 92.9%（14 帧小样本）/ 100%（Phase 7 24 帧验收）。
+
+2B LoRA 和 4B base 都作为 Phase 8 评估对象，但不改变主线部署判断。
 
 ## 6. Phase 8A：EfficientAD Threshold Calibration
 
 Phase 8A 的核心结论是：EfficientAD raw output 在当前部署链路下排序能力有限，因此 T2 gate 只能作为负载控制器。
 
 ![EfficientAD score mode AUROC](figures/fig_score_mode_auroc.png)
+
+![EfficientAD Score Mode AUROC Heatmap（15 类 × 5 模式）](figures/fig4_score_mode_auroc.png)
 
 | Score Mode | Mean AUROC | 结论 |
 |---|---:|---|
@@ -221,6 +280,8 @@ Phase 8A 的核心结论是：EfficientAD raw output 在当前部署链路下排
 | map_mean | 0.4561 | 最差，被背景稀释 |
 
 ![Threshold vs AUROC](figures/fig_threshold_auroc_scatter.png)
+
+![Per-Category Threshold & AUROC 双面板（13/15 类 AUROC < 0.8）](figures/fig5_threshold_auroc.png)
 
 当前 `edge/config.yaml` 使用 raw_score good_p95 阈值。仅 tile 的 raw_score AUROC > 0.80；其余类别均低于 0.80，所有类别 good/defect 分布都有重叠。因此报告和前端演示都不能把 T2 描述成可靠 detection gate。
 
@@ -250,6 +311,8 @@ VLM A/B 使用 14 张固定样本：7 类 × 2 张（每类 1 good + 1 defect）
 
 ![LoRA W8A8 collapse](figures/fig_lora_w8a8_collapse.png)
 
+![RK3588 板端性能对比：2B base / 2B LoRA / 4B base（TTFT、Decode、RAM、JSON 成功率）](figures/fig6_board_perf.png)
+
 | 指标 | PC 2B base（n=409） | PC 2B LoRA（n=409） | Board 2B LoRA（n=14） |
 |---|---:|---:|---:|
 | json_parse_ok | 391/409（95.6%） | 393/409（96.1%） | 14/14（100%） |
@@ -258,6 +321,8 @@ VLM A/B 使用 14 张固定样本：7 类 × 2 张（每类 1 good + 1 defect）
 | bbox_iou>=0.5 | 5/409（1.2%） | 195/409（47.7%） | N/A |
 
 LoRA 训练不是失败：PC bf16 上 defect_type_exact 从 11.5% 提升到 51.8%，bbox_iou>=0.5 从 1.2% 提升到 47.7%。但 RK3588 RKLLM/W8A8 上 defect_type_exact 归零，category_exact 基本保留。合理解释是 rank-32 LoRA delta 权重幅值小，W8A8 量化分辨率不足以保留细粒度 defect_type 知识，而粗粒度 category 知识因编码冗余更鲁棒。
+
+![PC vs Board Quantization Cliff（W8A8 细粒度字段坍塌）](figures/fig7_pc_vs_board.png)
 
 ### 7.4 LoRA merge-then-convert 审计
 
@@ -273,26 +338,13 @@ flowchart LR
 
 审计确认 LoRA 已正确 merge 后再转换，AutoDL 与 Orange Pi artifact SHA256 一致。第一次转换失败来自磁盘空间不足，重试成功。正确结论是 W8A8 部署链路破坏了 LoRA 细粒度增益，不是 missing merge 或上传错误。
 
-### 7.5 4B base runtime extension
-
-4B base runtime path 已真实实现，不再 fallback 到 2B。4B LoRA 未作为部署主线实现，当前应明确报错而不是静默回退。
-
-| 指标 | 4B base | 相对 2B base |
-|---|---:|---:|
-| TTFT | 4650ms | 2.45× 慢 |
-| decode_tps | 4.9 | 约半速 |
-| RSS | 5689MB | 1.74× |
-| qwen3vl_ms（tile） | 19500ms | 1.82× |
-| json_parse_ok（非 carpet） | 27/27 | 与 2B 相同 |
-| pass_all 安全 beat | >=35000ms | 约 2.7× |
-
-4B 的已知问题是 vision encoder spatial patch merge。output[0] 为 `[784,1024]`，RKLLM 期望 196 image tokens 和 4096 embed dim。当前 contiguous reshape `[784,1024] -> [196,4096]` 对 6/7 类别有效，但 carpet 触发静默失败。正确修复路径是 `[28,28,1024] -> permute[14,2,14,2,1024] -> [196,4096]`。
-
-## 8. Phase 8C：beat_ms Queue Pressure Testing
+## 8. Phase 8C：beat_ms 队列压力测试
 
 ![beat_ms pressure sweep](figures/fig_beat_sweep.png)
 
-Phase 8C-mini 使用 2B base、pass_all、14 张固定样本做最坏情况压力扫描。
+![Beat Sweep 双面板：队列丢帧 + VLM 瓶颈分析（beat_ms=10000 为甜蜜点）](figures/fig8_beat_sweep.png)
+
+Phase 8C 使用 2B base、pass_all、14 张固定样本做最坏情况压力扫描。pass_all 意味着所有帧都进入 T3 VLM，是压力最大的场景。
 
 | beat_ms | queue_drop | stable | VLM_avg/beat | qwen3vl_avg |
 |---:|---:|---|---:|---:|
@@ -307,12 +359,47 @@ Phase 8C-mini 使用 2B base、pass_all、14 张固定样本做最坏情况压�
 
 ```text
 安全：beat_ms > VLM_p99_latency
-推荐：beat_ms >= VLM_avg_ms / 0.85
+推荐：beat_ms >= VLM_avg_ms / 0.85（预留 15% buffer）
+2B base pass_all：推荐 13000ms（ratio=0.83），最小稳定 10000ms
 ```
 
-所有 drop 都发生在 Q2。beat=5000ms 时 VLM avg 增加 21.9%，说明反压会引发延迟放大：VLM 慢导致 Q2 满，Q2 满又增加 NPU/调度竞争，使 VLM 更慢。生产 threshold 模式下，由于 T2 gate 会过滤大量 good 帧，5000-8000ms 可能可行，但这是由 pass rate 推算，不是本轮 Phase 8C 的实测结论。
+所有 drop 都发生在 Q2（capacity=2，有意设计的保护性瓶颈）。当 VLM_avg/beat > 1.0 时，Q2 开始积压；> 1.5 时严重不稳定。
 
-## 9. 最终部署决策
+**反压正反馈循环**：beat=5000ms 时 VLM avg 增加 21.9%（10.7s → 13.1s），原因是 Q2 持续满载时 T2 在 push 等待中消耗 CPU/调度时间，VLM 与 EfficientAD/FastSAM 在 NPU 资源上形成竞争。这是正反馈循环：VLM 慢 → 更多积压 → NPU 更拥挤 → VLM 更慢。系统在 Q2 饱和状态下不是线性退化，而是加速退化。RSS 全程稳定（3275–3297MB），json_parse_ok 不受 beat_ms 影响，无内存泄漏。
+
+**生产 threshold 模式推算**：T2 gate 过滤约 95% good 帧（good_p95 阈值），等效 T3 入队间隔 = beat_ms / gate_pass_rate。5000ms beat 在 threshold 模式下约等效 100s 入队间隔，远超 VLM 10.7s 处理需求。但这是由 pass_all 数据推算，不是实测结论。
+
+## 9. W8A8 LoRA 量化失效诊断
+
+Phase 8B 最重要的发现之一不是模型精度本身，而是**对失效机制的诊断**。
+
+**现象**：2B LoRA 在 PC bf16 推理上表现出色（defect_type_exact 51.8%、category_exact 95.1%、bbox_iou>=0.5 47.7%），但在 RK3588 RKLLM/W8A8 上 defect_type_exact 归零。
+
+**诊断过程**：首先排除了训练问题（PC bf16 验证有效），然后排除了转换问题（SHA256 跨平台一致、merge-then-convert 审计通过），最终定位到 W8A8 量化对 LoRA delta 权重的破坏。
+
+**根因**：LoRA rank=32 的 delta 权重幅值相对 base 权重小 1–2 个数量级。W8A8 量化 step size = max(|W|)/127，按 base 权重分布校准，对 delta 精度不足——delta 被量化为零或近零，fine-grained defect_type 知识丢失。而粗粒度 category 知识因在多个大幅值权重上编码冗余，W8A8 下仍能存活（category_exact 95.1% → ~93%）。
+
+**工程结论**：这不是训练失败，不是转换错误，而是 W8A8 硬件量化对增量学习的根本精度限制。任何小幅值 fine-tuning delta（不限于 LoRA）在 W8A8 下都面临类似退化。RK3588 LLM 路径只支持 W8A8（W4A16 仅 RK3576），这是无法绕过的硬件约束。
+
+## 10. 4B Runtime Extension
+
+4B base runtime path 已真实实现，不再 fallback 到 2B。代码独立于 2B 路径（`vlm_model_size == "4B" && vlm_variant == "base"`），4B LoRA 路径明确报错而不是静默回退。
+
+| 指标 | 4B base | 相对 2B base |
+|---|---:|---:|
+| TTFT | 4650ms | 2.45× 慢 |
+| decode_tps | 4.9 | 约半速 |
+| RSS | 5689MB | 1.74× |
+| qwen3vl_ms（tile） | 19500ms | 1.82× |
+| json_parse_ok（非 carpet） | 27/27（100%） | 与 2B 相同 |
+| pass_all 安全 beat | ~25000ms | 约 1.9× |
+| carpet VLM | 静默失败 | 2B 正常 |
+
+4B 的已知问题是 vision encoder spatial patch merge。4B vision encoder output[0] 为 `[784,1024]`（merge 前），RKLLM 期望 196 image tokens 和 4096 embed dim。当前 contiguous reshape `[784,1024] → [196,4096]` 对 6/7 类别有效，但 carpet 触发静默失败——carpet 纹理对空间位置敏感，错误排列产生 RKLLM 无法处理的 embedding。正确修复路径是 `[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]`。
+
+4B base 是扩展候选，不改变当前 2B base 部署主线。RSS 5.7GB 在 16GB 板上安全（余量 ~9GB），但延迟 1.8× 慢和 carpet 问题限制了其适用性。
+
+## 11. 最终部署决策
 
 | 场景 | 推荐 | 原因 |
 |---|---|---|
@@ -331,9 +418,9 @@ EfficientAD-S FP16 raw RKNN
   -> HTTP multipart POST /api/edge/report
 ```
 
-## 10. 前端 Demo 展示叙事
+## 12. 求职展示叙事
 
-### 10.1 简历描述
+### 12.1 简历描述
 
 中文简历可写：
 
@@ -343,7 +430,7 @@ EfficientAD-S FP16 raw RKNN
 
 > Built an RK3588 edge-cloud industrial vision pipeline with EfficientAD-S, FastSAM, and Qwen3-VL, integrated with a FastAPI ingestion backend and a Next.js realtime dashboard. Diagnosed raw-score gating limits, LoRA W8A8 quantization collapse, 2B/4B latency-memory tradeoffs, and queue backpressure boundaries; selected Qwen3-VL-2B base W8A8 as the stable edge deployment.
 
-### 10.2 面试 3 分钟讲法
+### 12.2 面试 3 分钟讲法
 
 1. **系统目标**：把工业缺陷检测从 PC 侧实验推进到 RK3588 16GB 真机端侧部署，并接入后端和前端 dashboard。
 2. **架构选择**：端侧使用四线程 C++ pipeline，T1 采集，T2 EfficientAD raw_score gate，T3 FastSAM + Qwen3-VL，T4 multipart 上传；后端只负责 ingestion、存储、WebSocket，前端只消费 REST/WS。
@@ -351,7 +438,7 @@ EfficientAD-S FP16 raw RKNN
 4. **Phase 8 发现**：T2 gate 是 load shedding，不是 reliable detector；LoRA 在 PC bf16 有效但在 RK3588 W8A8 细粒度能力坍塌；2B base pass_all 推荐 beat 为 13000ms；4B base 可运行但慢且有 carpet spatial merge issue。
 5. **最终决策**：当前 RK3588 主线是 2B base W8A8，前端展示重点是实时可观测性和工程诊断，而不是夸大 defect_type 精确分类。
 
-### 10.3 前端 Demo 讲解顺序
+### 12.3 前端 Demo 讲解顺序
 
 前端展示不应包装成“板端 defect_type 精确分类已经成功”。更合适的演示叙事是实时工业视觉流水线可观测性：
 
@@ -365,7 +452,7 @@ EfficientAD-S FP16 raw RKNN
 | AB Matrix | 展示 2B base、2B LoRA、4B base 的质量-延迟-内存权衡 |
 | queue_drop / upload 状态 | 展示 BoundedQueue 背压和边端上传可靠性 |
 
-### 10.4 不应该说什么
+### 12.4 不应该说什么
 
 | 错误说法 | 原因 |
 |---|---|
@@ -373,28 +460,23 @@ EfficientAD-S FP16 raw RKNN
 | LoRA 是当前 RK3588 最优部署方案 | LoRA W8A8 细粒度能力坍塌，且有 repeated bracket 退化 |
 | 4B 已全面替代 2B | 4B 只是扩展候选，仍有 carpet spatial merge issue |
 | EfficientAD T2 是可靠 detector | raw_score mean AUROC 仅 0.5320，T2 是 load shedding gate |
+| LoRA 转换失败了 | 审计确认 merge-then-convert 正确，SHA256 一致，问题在 W8A8 量化 |
 
 面试一句话总结：
 
 > 我完成了一个 RK3588 端侧三阶段工业视觉流水线，并把模型转换、量化失效、队列背压和端云 API 可观测性都做成了可验证的工程闭环。
 
-## 11. 已知限制
+## 13. 已知限制与未来工作
 
 | 限制 | 当前影响 | 后续方向 |
 |---|---|---|
-| EfficientAD raw_score AUROC 低 | T2 只能做负载控制 | 实现 C++ post-processor，重新校准 |
-| LoRA W8A8 fine-grained collapse | 板端不部署 LoRA | 等待更高精度 RKLLM 量化或改 PC 离线推理 |
-| 4B carpet 静默失败 | 4B 不能作为主线 | 实现正确 spatial permutation |
-| FastSAM mask decode 未实现 | 只输出 bbox | 补像素级 mask decode |
-| calibration-on-test | 阈值不是生产认证指标 | 采集生产 good/defect 样本重做校准 |
-| pass_all beat sweep 与 threshold 模式不同 | 5000-8000ms threshold 可行性是推算 | 做真实 threshold 长时间稳定性测试 |
-
-## 12. 后续优化方向
-
-1. 修复 4B vision spatial patch merge，完成 carpet 类别复测。
-2. 实现 EfficientAD C++ post-processor，比较 post-processed score 与 raw_score。
-3. 增加 FastSAM mask decode，支持像素级缺陷区域展示。
-4. 增加长时间 threshold 模式 soak test，记录 queue_drop、RSS、upload retry。
+| EfficientAD raw_score AUROC 低 | T2 只能做负载控制 | 实现 C++ post-processor（Clip+Normalize+Sigmoid），重新校准 |
+| LoRA W8A8 fine-grained collapse | 板端不部署 LoRA | 等待更高精度 RKLLM 量化（W4A16 仅 RK3576）或改 PC 离线推理 |
+| 4B carpet spatial merge | 4B 不能作为主线 | 实现正确 spatial permutation：`[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]` |
+| FastSAM mask decode 未实现 | 只输出 bbox，无像素级分割 | 补 prototype mask decode |
+| calibration-on-test | 阈值在 test split 上校准，非生产认证 | 采集生产 good/defect 样本重做校准 |
+| pass_all beat sweep vs threshold 模式 | threshold 模式下 beat 边界是推算不是实测 | 做真实 threshold 长时间 soak test |
+| MVTec AD 局限性 | 15 类工业件，非真实产线数据 | 外部同类数据集或真实产线验证 |
 
 ## Appendix A：环境与版本
 
@@ -435,11 +517,16 @@ EfficientAD-S FP16 raw RKNN
 | F-EAD-03 | score mode 影响 AUROC | 能把 map_mean 误用修正为 raw_score |
 | F-EAD-04 | recall@FPR 计算 bug | 能对评估脚本做单调性和运行时一致性校验 |
 | F-FSM-01 | FastSAM INT8 置信度坍塌 | 能发现量化导致 proposal 全部 fallback |
+| F-VLM-01 | RKLLM runtime 版本不匹配 | 能通过 runtime 错误定位版本依赖 |
 | F-VLM-02 | n_image_tokens 错误 | 能理解 RKLLM image token 语义而非只调参数 |
+| F-VLM-03 | JSON 截断与 compact prompt | 能用 token 预算分析优化 prompt 输出长度 |
 | F-VLM-04 | LoRA W8A8 细粒度坍塌 | 能区分训练有效、转换正确、部署量化失效 |
+| F-VLM-05 | LoRA repeated bracket 退化 | 能用 controlled rerun 区分调度问题和模型确定性行为 |
 | F-VLM-06 | 4B spatial patch merge | 能定位 4B vision embedding shape 与空间排列问题 |
 | F-CPP-01 | beat_ms 与队列稳定 | 能用 VLM_avg/beat ratio 解释 Q2 drop |
+| F-CPP-02 | 反压引发延迟放大 | 能发现 Q2 饱和下的正反馈循环 |
 | F-METHOD-01 | timeout / drain 误判 | 能用 controlled rerun 区分调度问题和模型问题 |
+| F-METHOD-03 | pass_all vs threshold 评估边界 | 能选择无偏样本集做 VLM 质量评估 |
 
 完整记录见 `docs/ENGINEERING_FINDINGS.md`。
 
