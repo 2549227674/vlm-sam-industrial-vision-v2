@@ -70,6 +70,35 @@ flowchart LR
 
 边缘端只作为 HTTP POST client，不运行 FastAPI、Flask、Streamlit、Gradio 或 WebSocket server。WebSocket 只存在于 backend 和 frontend 之间。所有图片上传使用 `multipart/form-data`，禁止 Base64。
 
+```mermaid
+graph LR
+  subgraph Edge["RK3588 16GB — Orange Pi 5 Plus"]
+    T1["T1 Capture\nV4L2 / image_loop"]
+    T2["T2 EfficientAD-S\n256×256 INT8\nraw_score gate"]
+    T3["T3 FastSAM + Qwen3-VL\n640×640 FP16 + W8A8\nbbox cleanup + compact JSON"]
+    T4["T4 Upload\nlibcurl multipart"]
+    T1 -->|Q1 cap=4| T2 -->|Q2 cap=2| T3 -->|Q3 cap=4| T4
+  end
+
+  subgraph Backend["FastAPI + SQLite"]
+    API["POST /api/edge/report\nmultipart/form-data"]
+    DB["SQLite WAL\n+ static/defects/"]
+    REST["GET /api/defects\nGET /api/stats"]
+    WS["WS /ws/dashboard\nmetrics_tick + defect_created"]
+  end
+
+  subgraph Frontend["Next.js 15 Dashboard"]
+    DT["DataTable\nrealtime defect stream"]
+    AB["AB Matrix\n4-variant comparison"]
+    PR["Profile\nChrome Trace timeline"]
+  end
+
+  T4 -->|HTTPS| API --> DB
+  DB --> REST --> DT
+  DB --> WS --> AB
+  REST --> PR
+```
+
 ### 3.2 API Contract 与数据流
 
 `docs/API_CONTRACT.md` 定义 v1.2 contract，是边缘端、模拟器、后端、前端四端的**唯一权威接口**。任何字段变更必须先 bump contract 版本再改实现，模拟器是契约测试客户端。
@@ -183,6 +212,18 @@ flowchart LR
   Q2 --> T3["T3 FastSAM + Qwen3-VL<br/>bbox cleanup + compact JSON"]
   T3 --> Q3["Q3 BoundedQueue cap=4<br/>upload buffer"]
   Q3 --> T4["T4 Upload<br/>libcurl multipart"]
+```
+
+```mermaid
+graph LR
+  T1["T1 Capture\nV4L2 / MVTec image_loop"] -->|Q1 BoundedQueue\ncap=4 drop-oldest| T2["T2 Pipeline\nRGA resize → EfficientAD-S\nRKNN FP16 raw_score"]
+  T2 -->|Q2 BoundedQueue\ncap=2 drop-oldest| T3["T3 VLM Worker\nFastSAM bbox → cleanup\nQwen3-VL compact JSON"]
+  T3 -->|Q3 BoundedQueue\ncap=4 drop-oldest| T4["T4 Upload\nlibcurl multipart POST"]
+
+  style T1 fill:#1e3a5f,color:#fff
+  style T2 fill:#2d5a27,color:#fff
+  style T3 fill:#6b21a8,color:#fff
+  style T4 fill:#92400e,color:#fff
 ```
 
 端侧固定四线程模型：

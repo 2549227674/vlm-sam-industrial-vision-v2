@@ -65,6 +65,47 @@
 - **Q2** 容量 2 + drop-oldest，VLM 慢于异常检测时主动丢弃旧帧（保延迟优先）。
 - 所有线程使用 `std::jthread` + `std::stop_token`，主线程析构时自动 `request_stop()` + `join()`。
 
+```mermaid
+graph LR
+  subgraph Edge["RK3588 16GB — Orange Pi 5 Plus"]
+    T1["T1 Capture\nV4L2 / image_loop"]
+    T2["T2 EfficientAD-S\n256×256 INT8\nraw_score gate"]
+    T3["T3 FastSAM + Qwen3-VL\n640×640 FP16 + W8A8\nbbox cleanup + compact JSON"]
+    T4["T4 Upload\nlibcurl multipart"]
+    T1 -->|Q1 cap=4| T2 -->|Q2 cap=2| T3 -->|Q3 cap=4| T4
+  end
+
+  subgraph Backend["FastAPI + SQLite"]
+    API["POST /api/edge/report\nmultipart/form-data"]
+    DB["SQLite WAL\n+ static/defects/"]
+    REST["GET /api/defects\nGET /api/stats"]
+    WS["WS /ws/dashboard\nmetrics_tick + defect_created"]
+  end
+
+  subgraph Frontend["Next.js 15 Dashboard"]
+    DT["DataTable\nrealtime defect stream"]
+    AB["AB Matrix\n4-variant comparison"]
+    PR["Profile\nChrome Trace timeline"]
+  end
+
+  T4 -->|HTTPS| API --> DB
+  DB --> REST --> DT
+  DB --> WS --> AB
+  REST --> PR
+```
+
+```mermaid
+graph LR
+  T1["T1 Capture\nV4L2 / MVTec image_loop"] -->|Q1 BoundedQueue\ncap=4 drop-oldest| T2["T2 Pipeline\nRGA resize → EfficientAD-S\nRKNN FP16 raw_score"]
+  T2 -->|Q2 BoundedQueue\ncap=2 drop-oldest| T3["T3 VLM Worker\nFastSAM bbox → cleanup\nQwen3-VL compact JSON"]
+  T3 -->|Q3 BoundedQueue\ncap=4 drop-oldest| T4["T4 Upload\nlibcurl multipart POST"]
+
+  style T1 fill:#1e3a5f,color:#fff
+  style T2 fill:#2d5a27,color:#fff
+  style T3 fill:#6b21a8,color:#fff
+  style T4 fill:#92400e,color:#fff
+```
+
 ### 3.2 三段模型定位
 
 | Stage | 模型 | 输入 | 输出 | RK3588 INT8 延迟 | 备注 |
@@ -247,6 +288,31 @@ simulator (Python)            backend (FastAPI)            frontend (Next.js)
      │ next image from MVTec set   │                              │ Sonner toast
      ▼                             ▼                              ▼
 （PC 端开多线程模拟多产线，每条独立节拍）
+```
+
+```mermaid
+sequenceDiagram
+  participant C as V4L2 Camera / MVTec Image Loop
+  participant E as RK3588 Edge Pipeline
+  participant B as FastAPI Backend
+  participant D as SQLite + Static Files
+  participant F as Next.js Frontend
+
+  C->>E: T1 capture frame (V4L2 DQBUF or image read)
+  Note over E: T2: EfficientAD-S infer (~350ms)
+  alt score > threshold
+    Note over E: T3: FastSAM seg + bbox cleanup (~250ms)
+    Note over E: T3: Qwen3-VL JSON generate (~11s)
+  else score ≤ threshold
+    Note over E: gate drop (load shedding)
+  end
+  E->>B: T4: POST /api/edge/report (image + crop + meta)
+  B->>D: write JPEG + insert DefectCreate JSON
+  B-->>E: 200 {id, image_url, server_ts}
+  B-->>F: WS defect_created + metrics_tick
+  F->>B: GET /api/defects, GET /api/stats
+  B-->>F: paginated records + aggregated metrics
+  Note over E,F: E2E per frame ≈ 12s (VLM-dominated)
 ```
 
 ### 4.2 RK3588 真机模式（轨道 B 落地后）
