@@ -1,0 +1,15 @@
+sample_id,category,label,defect_type_gt,image_path,upload_ok,json_parse_ok,fallback_used,predicted_defect_type,severity,confidence,prompt_tokens,output_tokens,ttft_ms,decode_tps,pipeline_ms_efficientad,pipeline_ms_fastsam,pipeline_ms_qwen3vl,rss_mb,queue_drop_count,notes
+tile_defect_0,tile,defect,crack,test/crack/011.png,Y,Y,N,anomaly,medium,0.9,401,76,1974.2,9.5,886.9,0,12519.4,3266.0,0,
+tile_good_1,tile,good,,test/good/011.png,Y,Y,N,anomaly,low,0.95,380,75,1700.2,9.0,361.5,0,12375.2,3267.0,0,
+carpet_good_2,carpet,good,,test/good/023.png,Y,Y,N,anomaly,medium,0.36,399,80,1872.3,9.5,445.7,0,12945.5,3267.0,0,
+carpet_defect_3,carpet,defect,color,test/color/011.png,Y,N,Y,anomaly,high,1.0,399,80,1848.6,9.5,408.4,0,12833.6,3297.1,0,fallback
+grid_good_4,grid,good,,test/good/011.png,Y,Y,N,anomaly,low,0.95,390,45,1828.0,9.9,330.2,0,9117.5,3267.0,0,
+grid_defect_5,grid,defect,bent,test/bent/011.png,Y,Y,N,crack,medium,0.95,442,121,1966.7,9.7,256.8,0,16979.6,3279.0,0,
+metal_nut_good_6,metal_nut,good,,test/good/011.png,Y,Y,N,anomaly,medium,0.95,395,80,1840.5,9.6,369.8,0,12458.1,3279.0,0,
+metal_nut_defect_7,metal_nut,defect,bent,test/bent/023.png,Y,Y,N,anomaly,low,0.95,394,60,1848.1,9.4,283.8,0,10558.2,3297.0,0,
+zipper_good_8,zipper,good,,test/good/023.png,Y,Y,N,anomaly,low,0.95,400,64,1866.8,10.1,431.7,0,10491.2,3297.0,0,
+zipper_defect_9,zipper,defect,broken_teeth,test/broken_teeth/011.png,Y,Y,N,missing_pin,low,0.98,401,63,1875.0,10.0,278.5,0,10644.5,3297.0,0,
+pill_good_10,pill,good,,test/good/011.png,Y,Y,N,anomaly,medium,0.95,390,54,1855.9,10.0,378.3,0,9677.2,3297.0,0,
+pill_defect_11,pill,defect,color,test/color/011.png,Y,Y,N,anomaly,low,0.97,399,56,1883.0,10.0,297.6,0,10071.5,3297.0,0,
+screw_defect_12,screw,defect,scratch_head,test/scratch_head/011.png,Y,Y,N,anomaly,low,0.95,425,55,1935.5,10.0,343.4,0,9785.3,3297.0,0,
+screw_good_13,screw,good,,test/good/011.png,Y,Y,N,none,low,0.97,441,57,1960.3,9.9,255.2,0,10048.0,3297.0,0,

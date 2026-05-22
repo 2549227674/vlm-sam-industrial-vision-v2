@@ -1,0 +1,1607 @@
+device_id:         rk3588-phase8b-ab-v2-lora
+line_id:           L1
+backend_url:       http://192.168.137.1:8000
+vlm_variant:       lora
+vlm_model_size:    2B
+capture_mode:      image_loop
+image_loop_dir:    /home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2
+categories (7):  tile carpet grid metal_nut zipper pill screw 
+beat_ms:           20000
+jitter_ms:         0
+ead_model_dir:     /home/orangepi/models/efficientad_models
+ead_threshold_def: 49.17
+ead_score_mode:    raw_score
+ead_gate_mode:     pass_all
+fastsam_model:     /home/orangepi/models/fastsam_models/fastsam_s.rknn
+fastsam_input_sz:  640
+fastsam_conf:      0.50
+model_variant:     2B_lora
+
+--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---
+[T2] EadWorker started | score_mode=raw_score gate_mode=pass_all
+[T2] *** WARNING: gate_mode=pass_all is DEBUG-ONLY. All frames will enter Q2 regardless of score. ***
+[T3] loading FastSAM RKNN: /home/orangepi/models/fastsam_models/fastsam_s.rknn
+[T4] uploading to http://192.168.137.1:8000/api/edge/report
+[T1] scanned 14 images across 7 categories
+[T2] model 'tile' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+[T3] FastSAM loaded: 1 inputs, 2 outputs
+  input[0]: name='images' dims=[1,640,640,3] type=INT8(2) fmt=1 qnt_type=2 zp=-128 scale=0.003922
+  output[0]: name='output0' dims=[1,37,8400,0] type=INT8(2) qnt_type=2 zp=-119 scale=2.820890 n_elems=310800 size=310800
+  output[1]: name='output1' dims=[1,32,160,160] type=INT8(2) qnt_type=2 zp=-123 scale=0.059204 n_elems=819200 size=819200
+[T3] detection output index: 0
+[T3] prototype output index: 1 (mask decode TODO)
+[VLM] Initializing Qwen3-VL
+  selected_model_size=2B  selected_variant=lora
+  selected_llm_path=/home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+  selected_vision_path=/home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+  max_context=4096  max_new_tokens=500
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 0 | cat=tile | score_mode=raw_score | gate_mode=pass_all
+     raw_score=36.62 map_max=36.62 map_mean=13.45 map_top1=29.78 map_top01=34.15
+     final_score=36.62 thr=38.31 decision=PASS_ALL_WOULD_DROP infer_ms=858.4
+  vision input[0]: name='pixel' dims=[1,448,448,3] type=FP16 fmt=1
+  vision output[0]: name='4820' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[1]: name='1669' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[2]: name='2720' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision output[3]: name='3771' dims=[196,2048,0,0] type=FP16 n_elems=401408 size=802816
+  vision: 448x448  n_image_tokens=196  embed_dim=2048  n_outputs=4
+I rkllm: rkllm-runtime version: 1.2.3, rknpu driver version: 0.9.8, platform: RK3588
+I rkllm: loading rkllm model from /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+I rkllm: rkllm-toolkit version: 1.2.3, max_context_limit: 4096, npu_core_num: 3, target_platform: RK3588, model_dtype: W8A8
+I rkllm: Enabled cpus: [4, 5, 6, 7]
+I rkllm: Enabled cpus num: 4
+[VLM] rkllm_init success
+[T3] FastSamWorker started | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn input_size=640 conf=0.50
+[T3] frame 0 | cat=tile | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/tile/test/crack/011.png
+     ead_final_score=36.625 ead_infer_ms=858.4
+     orig_size=840x840  input_size=640  preprocess_ms=126.5
+     infer_ms=50.2
+  [T3][first_frame] output[0] name='output0' type=INT8 zp=-119 scale=2.820890 n_elems=310800 want_float=0  <- DETECTION output
+  [T3][first_frame] output[1] name='output1' type=INT8 zp=-123 scale=0.059204 n_elems=819200 want_float=0  <- prototype(mask TODO) output
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.2938 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.3348 (n=8400)
+  [T3] w_channel min=0.0000 max=620.5958 mean=43.5492 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=44.0586 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 3422.1 ms, embed size=1605632 floats
+[VLM] prompt (606 chars): <image>Inspect this tile image for defects.
+EfficientAD anomaly score: 36.625
+FastSAM detected 1 region(s).
+  region 0: x=0.0308535 y=0.00440764 w=0.0440764 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"tile","defect_
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 1 | cat=tile | score_mode=raw_score | gate_mode=pass_all
+     raw_score=38.06 map_max=38.06 map_mean=10.19 map_top1=24.51 map_top01=32.70
+     final_score=38.06 thr=38.31 decision=PASS_ALL_WOULD_DROP infer_ms=310.3
+[VLM] raw_text (136 chars): {"category":"tile","defect_type":"anomaly","severity":"high","confidence":0.98,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]}
+  ttft=5093.6 ms  decode_tps=5.4  prompt_tokens=401  output_tokens=72  rss=3267 MB
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=0.98
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0309 y=0.0044 w=0.0441 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=17.0  bbox_count=1  total_ms=22193.4
+     vlm: defect_type=anomaly severity=high conf=0.98 json_ok=1
+     vlm: vision_ms=3422.1 llm_ms=18365.8 vlm_total_ms=21900.9
+     vlm: raw_text({"category":"tile","defect_type":"anomaly","severity":"high","confidence":0.98,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]})
+     bbox[0] x=0.031 y=0.004 w=0.044 h=0.026
+     [stats] total_frames=1 fallback_frames=0
+[T3] frame 1 | cat=tile | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/tile/test/good/011.png
+     ead_final_score=38.062 ead_infer_ms=310.3
+[T4] meta JSON (frame 0): {"line_id":"L1","category":"tile","defect_type":"anomaly","severity":"high","confidence":0.98,"anomaly_score":36.625,"bboxes":[{"x":0.0309,"y":0.0044,"w":0.0441,"h":0.0264}],"description":"","variant":"2B_lora","edge_ts":"2026-05-22T04:18:36Z","pipeline_ms":{"efficientad":858.4,"fastsam":193.7,"qwen3vl":21900.9},"vlm_metrics":{"ttft_ms":5093.6,"decode_tps":5.4,"prompt_tokens":401,"output_tokens":72,"rss_mb":3267.4,"json_parse_ok":true},"trace_events":[{"name":"efficientad_infer","ts":0.0,"dur":858449.6,"tid":"T2.pipeline","ph":"X","cat":"pipeline"},{"name":"fastsam_preprocess","ts":858449.6,"dur":126500.8,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_infer","ts":984950.4,"dur":50233.2,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"fastsam_postprocess","ts":1035183.6,"dur":16973.8,"tid":"T3.fastsam","ph":"X","cat":"pipeline"},{"name":"qwen3vl_generate","ts":1052157.5,"dur":21900932.0,"tid":"T3.vlm","ph":"X","cat":"vlm"},{"name":"upload","ts":0.0,"dur":0.0,"tid":"T4.upload","ph":"X","cat":"upload"}],"schema_version":"v1"}
+[T4] upload_ms=26.2
+     orig_size=840x840  input_size=640  preprocess_ms=146.8
+     infer_ms=74.4
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.5567 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.2562 (n=8400)
+  [T3] w_channel min=0.0000 max=631.8794 mean=46.2505 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=39.4609 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 4327.0 ms, embed size=1605632 floats
+[VLM] prompt (589 chars): <image>Inspect this tile image for defects.
+EfficientAD anomaly score: 38.0625
+FastSAM detected 1 region(s).
+  region 0: x=0 y=0 w=0.048484 h=0.0440764
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"tile","defect_type":"string","s
+{"id":280,"image_url":"/static/defects/20260522/62ea7929ff1c4eac9c1dd2866c83786b.jpg","server_ts":"2026-05-22T04:19:02.991377Z"}[T2] model 'carpet' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 2 | cat=carpet | score_mode=raw_score | gate_mode=pass_all
+     raw_score=36.38 map_max=36.38 map_mean=17.18 map_top1=31.34 map_top01=34.22
+     final_score=36.38 thr=38.70 decision=PASS_ALL_WOULD_DROP infer_ms=479.2
+[VLM] raw_text (121 chars): {"category":"tile","defect_type":"anomaly","severity":"low","confidence":0.38,"bboxes":[[0.0, 0.0, 0.048484, 0.0440764]]}
+  ttft=3666.8 ms  decode_tps=5.3  prompt_tokens=380  output_tokens=58  rss=3268 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.38
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0000 y=0.0000 w=0.0485 h=0.0441
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=12.3  bbox_count=1  total_ms=19526.3
+     vlm: defect_type=anomaly severity=low conf=0.38 json_ok=1
+     vlm: vision_ms=4327.0 llm_ms=14706.3 vlm_total_ms=19146.6
+     vlm: raw_text({"category":"tile","defect_type":"anomaly","severity":"low","confidence":0.38,"bboxes":[[0.0, 0.0, 0.048484, 0.0440764]]})
+     bbox[0] x=0.000 y=0.000 w=0.048 h=0.044
+     [stats] total_frames=2 fallback_frames=0
+[T3] frame 2 | cat=carpet | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/carpet/test/good/023.png
+     ead_final_score=36.375 ead_infer_ms=479.2
+[T4] upload_ms=44.1
+     orig_size=1024x1024  input_size=640  preprocess_ms=180.0
+     infer_ms=73.6
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=643.1630 mean=322.1121 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=322.6020 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=22.0614 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=26.2685 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 4634.3 ms, embed size=1605632 floats
+[VLM] prompt (612 chars): <image>Inspect this carpet image for defects.
+EfficientAD anomaly score: 36.375
+FastSAM detected 1 region(s).
+  region 0: x=0.0308535 y=0.00440764 w=0.0440764 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"carpet","def
+{"id":282,"image_url":"/static/defects/20260522/7fb90dc7651140ca8e5259258b7ac47a.jpg","server_ts":"2026-05-22T04:19:22.918575Z"}  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=68.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 3 | cat=carpet | score_mode=raw_score | gate_mode=pass_all
+     raw_score=68.62 map_max=68.62 map_mean=18.16 map_top1=47.30 map_top01=66.28
+     final_score=68.62 thr=38.70 decision=PASS_ALL_WOULD_UPLOAD infer_ms=407.1
+[VLM] raw_text (137 chars): {"category":"carpet","defect_type":"anomaly","severity":"high","confidence":0.9,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]}
+  ttft=3346.3 ms  decode_tps=4.8  prompt_tokens=399  output_tokens=72  rss=3268 MB
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=0.90
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0309 y=0.0044 w=0.0441 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=16.5  bbox_count=1  total_ms=23485.5
+     vlm: defect_type=anomaly severity=high conf=0.90 json_ok=1
+     vlm: vision_ms=4634.3 llm_ms=18207.8 vlm_total_ms=23030.0
+     vlm: raw_text({"category":"carpet","defect_type":"anomaly","severity":"high","confidence":0.9,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]})
+     bbox[0] x=0.031 y=0.004 w=0.044 h=0.026
+     [stats] total_frames=3 fallback_frames=0
+[T3] frame 3 | cat=carpet | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/carpet/test/color/011.png
+     ead_final_score=68.625 ead_infer_ms=407.1
+[T4] upload_ms=24.8
+     orig_size=1024x1024  input_size=640  preprocess_ms=405.2
+     infer_ms=104.1
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=640.3421 mean=322.0980 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=322.5426 (n=8400)
+  [T3] w_channel min=0.0000 max=631.8794 mean=21.7041 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=27.2730 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 0
+  [T3] cleanup L3 max_area(0.95): 0 -> 0
+  [T3] cleanup L4 dedup(iou=0.70): 0 -> 0
+  [T3] after_cleanup: 0 bboxes (from top-5 fallback — NOT valid detections)
+  [T3] NO VALID BBOX after cleanup -> using center placeholder
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=1.00
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=13.2  bbox_count=1 (EMERGENCY_FALLBACK)  total_ms=792.0
+     vlm: defect_type=anomaly severity=high conf=1.00 json_ok=0
+     vlm: vision_ms=0.0 llm_ms=0.0 vlm_total_ms=0.0
+     vlm: raw_text()
+     bbox[0] x=0.300 y=0.300 w=0.400 h=0.400
+     [stats] total_frames=4 fallback_frames=1
+[T4] upload_ms=24.1
+[T2] model 'grid' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=46.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 4 | cat=grid | score_mode=raw_score | gate_mode=pass_all
+     raw_score=46.47 map_max=46.47 map_mean=28.36 map_top1=43.72 map_top01=45.28
+     final_score=46.47 thr=46.72 decision=PASS_ALL_WOULD_DROP infer_ms=408.7
+[T3] frame 4 | cat=grid | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/grid/test/good/011.png
+     ead_final_score=46.469 ead_infer_ms=408.7
+     orig_size=1024x1024  input_size=640  preprocess_ms=84.9
+     infer_ms=57.9
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=0.0000 max=643.1630 mean=322.5805 (n=8400)
+  [T3] cy_channel min=5.6418 max=643.1630 mean=324.6388 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=44.2443 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=64.0883 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 3268.9 ms, embed size=1605632 floats
+[VLM] prompt (599 chars): <image>Inspect this grid image for defects.
+EfficientAD anomaly score: 46.4688
+FastSAM detected 1 region(s).
+  region 0: x=0.00220382 y=0 w=0.0661146 h=0.0661146
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"grid","defect_type":"
+{"id":284,"image_url":"/static/defects/20260522/15dd1f5ef8aa4c49a50ec676f178de84.jpg","server_ts":"2026-05-22T04:19:45.743439Z"}{"id":285,"image_url":"/static/defects/20260522/c4d49799b45341e4bdc313e9d09eae65.jpg","server_ts":"2026-05-22T04:19:46.514049Z"}[VLM] raw_text (112 chars): {"category":"grid","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.0, 0.0, 1.0, 1.0]]}
+  ttft=1872.7 ms  decode_tps=7.4  prompt_tokens=390  output_tokens=46  rss=3268 MB
+[VLM] JSON extracted: defect_type=anomaly severity=medium conf=0.90
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=12.1  bbox_count=1  total_ms=11687.5
+     vlm: defect_type=anomaly severity=medium conf=0.90 json_ok=1
+     vlm: vision_ms=3268.9 llm_ms=8135.7 vlm_total_ms=11477.2
+     vlm: raw_text({"category":"grid","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.0, 0.0, 1.0, 1.0]]})
+     bbox[0] x=0.002 y=0.000 w=0.066 h=0.066
+     [stats] total_frames=5 fallback_frames=1
+[T4] upload_ms=34.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=47.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 5 | cat=grid | score_mode=raw_score | gate_mode=pass_all
+     raw_score=47.69 map_max=47.69 map_mean=20.97 map_top1=40.22 map_top01=45.33
+     final_score=47.69 thr=46.72 decision=PASS_ALL_WOULD_UPLOAD infer_ms=222.9
+[T3] frame 5 | cat=grid | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/grid/test/bent/011.png
+     ead_final_score=47.688 ead_infer_ms=222.9
+     orig_size=1024x1024  input_size=640  preprocess_ms=86.0
+     infer_ms=62.8
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.5963 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.3429 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=55.4577 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=56.7869 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2351.9 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this grid image for defects.
+EfficientAD anomaly score: 47.6875
+FastSAM detected 2 region(s).
+  region 0: x=0.00220382 y=0 w=0.0661146 h=0.0440764
+  region 1: x=0.00440764 y=0.00220382 w=0.0528917 h=0.0220382
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+{"id":287,"image_url":"/static/defects/20260522/fcd519eb305543bba855a814e3523609.jpg","server_ts":"2026-05-22T04:20:08.193112Z"}[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=114.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 6 | cat=metal_nut | score_mode=raw_score | gate_mode=pass_all
+     raw_score=114.25 map_max=114.25 map_mean=39.96 map_top1=111.65 map_top01=113.46
+     final_score=114.25 thr=119.47 decision=PASS_ALL_WOULD_DROP infer_ms=469.8
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=112.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 7 | cat=metal_nut | score_mode=raw_score | gate_mode=pass_all
+     raw_score=112.50 map_max=112.50 map_mean=39.63 map_top1=110.58 map_top01=111.64
+     final_score=112.50 thr=119.47 decision=PASS_ALL_WOULD_DROP infer_ms=369.0
+[T2] model 'zipper' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 8 | cat=zipper | score_mode=raw_score | gate_mode=pass_all
+     raw_score=33.28 map_max=33.28 map_mean=13.97 map_top1=30.26 map_top01=32.54
+     final_score=33.28 thr=36.42 decision=PASS_ALL_WOULD_DROP infer_ms=297.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 9 | cat=zipper | score_mode=raw_score | gate_mode=pass_all
+     raw_score=30.78 map_max=30.78 map_mean=13.31 map_top1=27.70 map_top01=29.30
+     final_score=30.78 thr=36.42 decision=PASS_ALL_WOULD_DROP infer_ms=241.2
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=83.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 10 | cat=pill | score_mode=raw_score | gate_mode=pass_all
+     raw_score=83.69 map_max=83.69 map_mean=34.24 map_top1=81.29 map_top01=82.90
+     final_score=83.69 thr=218.69 decision=PASS_ALL_WOULD_DROP infer_ms=439.4
+[VLM] raw_text (593 chars): {"category":"grid","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.0
+  ttft=1973.8 ms  decode_tps=4.6  prompt_tokens=442  output_tokens=499  rss=3297 MB
+[VLM] WARNING: output_tokens=499 > 120
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=1.00
+[T3] VLM JSON parse failed, using fallback
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=14.9  bbox_count=2  total_ms=112718.3
+     vlm: defect_type=anomaly severity=high conf=1.00 json_ok=1
+     vlm: vision_ms=2351.9 llm_ms=110072.0 vlm_total_ms=112496.3
+     vlm: raw_text({"category":"grid","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.0)
+     bbox[0] x=0.002 y=0.000 w=0.066 h=0.044
+     bbox[1] x=0.004 y=0.002 w=0.053 h=0.022
+     [stats] total_frames=6 fallback_frames=1
+  [T3] WARNING: output_tokens=499 > 120, consider shortening prompt/description
+[T3] frame 9 | cat=zipper | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/zipper/test/broken_teeth/011.png
+     ead_final_score=30.781 ead_infer_ms=241.2
+[T4] upload_ms=30.3
+     orig_size=1024x1024  input_size=640  preprocess_ms=123.2
+     infer_ms=312.4
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=643.1630 mean=321.8498 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.6499 (n=8400)
+  [T3] w_channel min=0.0000 max=609.3123 mean=50.0520 (n=8400)
+  [T3] h_channel min=0.0000 max=640.3421 mean=54.2571 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2632.8 ms, embed size=1605632 floats
+[VLM] prompt (614 chars): <image>Inspect this zipper image for defects.
+EfficientAD anomaly score: 30.7812
+FastSAM detected 1 region(s).
+  region 0: x=0.00440764 y=0.00440764 w=0.0969681 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"zipper","d
+{"id":291,"image_url":"/static/defects/20260522/a952e3dc90a4468eaebea7bc9dbfed4f.jpg","server_ts":"2026-05-22T04:22:08.848641Z"}  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=96.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 11 | cat=pill | score_mode=raw_score | gate_mode=pass_all
+     raw_score=96.56 map_max=96.56 map_mean=38.07 map_top1=93.27 map_top01=94.69
+     final_score=96.56 thr=218.69 decision=PASS_ALL_WOULD_DROP infer_ms=343.0
+[VLM] raw_text (137 chars): {"category":"zipper","defect_type":"anomaly","severity":"low","confidence":0.3,"bboxes":[[0.00440764, 0.00440764, 0.0969681, 0.0264458]]}
+  ttft=3549.0 ms  decode_tps=5.9  prompt_tokens=401  output_tokens=73  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.30
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0044 y=0.0044 w=0.0970 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=23.3  bbox_count=1  total_ms=19229.0
+     vlm: defect_type=anomaly severity=low conf=0.30 json_ok=1
+     vlm: vision_ms=2632.8 llm_ms=15946.5 vlm_total_ms=18684.1
+     vlm: raw_text({"category":"zipper","defect_type":"anomaly","severity":"low","confidence":0.3,"bboxes":[[0.00440764, 0.00440764, 0.0969681, 0.0264458]]})
+     bbox[0] x=0.004 y=0.004 w=0.097 h=0.026
+     [stats] total_frames=7 fallback_frames=1
+[T3] frame 10 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/pill/test/good/011.png
+     ead_final_score=83.688 ead_infer_ms=439.4
+[T4] upload_ms=23.9
+     orig_size=800x800  input_size=640  preprocess_ms=164.7
+     infer_ms=407.7
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.0782 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.9665 (n=8400)
+  [T3] w_channel min=0.0000 max=640.3421 mean=60.5336 (n=8400)
+  [T3] h_channel min=0.0000 max=620.5958 mean=53.0848 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2695.0 ms, embed size=1605632 floats
+[VLM] prompt (599 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 83.6875
+FastSAM detected 1 region(s).
+  region 0: x=0.00881528 y=0 w=0.0440764 h=0.0528917
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"pill","defect_type":"
+{"id":292,"image_url":"/static/defects/20260522/cf646260ee4f4ca493b7ea8c96ce3a1f.jpg","server_ts":"2026-05-22T04:22:28.475912Z"}[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=24.6406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 12 | cat=screw | score_mode=raw_score | gate_mode=pass_all
+     raw_score=24.64 map_max=24.64 map_mean=11.95 map_top1=23.35 map_top01=24.16
+     final_score=24.64 thr=28.00 decision=PASS_ALL_WOULD_DROP infer_ms=407.9
+[VLM] raw_text (173 chars): {"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.89,"bboxes":[[0.00881528, 0.0528917, 0.0440764, 0.00881528], "description":"pill with red specks"}
+  ttft=3067.9 ms  decode_tps=6.1  prompt_tokens=390  output_tokens=81  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.89
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0088 y=0.0529 w=0.0441 h=0.0088
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=14.4  bbox_count=1  total_ms=19994.0
+     vlm: defect_type=anomaly severity=low conf=0.89 json_ok=1
+     vlm: vision_ms=2695.0 llm_ms=16435.6 vlm_total_ms=19280.4
+     vlm: raw_text({"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.89,"bboxes":[[0.00881528, 0.0528917, 0.0440764, 0.00881528], "description":"pill with red specks"})
+     bbox[0] x=0.009 y=0.000 w=0.044 h=0.053
+     [stats] total_frames=8 fallback_frames=1
+[T3] frame 11 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/pill/test/color/011.png
+     ead_final_score=96.562 ead_infer_ms=343.0
+[T4] upload_ms=33.3
+     orig_size=800x800  input_size=640  preprocess_ms=113.2
+     infer_ms=57.3
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.1000 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.0279 (n=8400)
+  [T3] w_channel min=0.0000 max=640.3421 mean=59.8046 (n=8400)
+  [T3] h_channel min=0.0000 max=620.5958 mean=51.5739 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2262.2 ms, embed size=1605632 floats
+[VLM] prompt (608 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 96.5625
+FastSAM detected 1 region(s).
+  region 0: x=0.00440764 y=0.00220382 w=0.0705223 h=0.0308535
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"pill","defec
+{"id":293,"image_url":"/static/defects/20260522/eb327f09e58744afbb795ab0a9d312fd.jpg","server_ts":"2026-05-22T04:22:47.904102Z"}  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 13 | cat=screw | score_mode=raw_score | gate_mode=pass_all
+     raw_score=27.69 map_max=27.69 map_mean=12.90 map_top1=25.76 map_top01=27.04
+     final_score=27.69 thr=28.00 decision=PASS_ALL_WOULD_DROP infer_ms=309.8
+[VLM] raw_text (123 chars): {"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[0.0, 0.0, 0.1756432, 0.00220382]]}
+  ttft=1869.3 ms  decode_tps=9.4  prompt_tokens=399  output_tokens=60  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.98
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0000 y=0.0000 w=0.1756 h=0.0022
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=17.5  bbox_count=1  total_ms=10897.3
+     vlm: defect_type=anomaly severity=low conf=0.98 json_ok=1
+     vlm: vision_ms=2262.2 llm_ms=8246.1 vlm_total_ms=10609.9
+     vlm: raw_text({"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.98,"bboxes":[[0.0, 0.0, 0.1756432, 0.00220382]]})
+     bbox[0] x=0.004 y=0.002 w=0.071 h=0.031
+     [stats] total_frames=9 fallback_frames=1
+[T3] frame 12 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/screw/test/scratch_head/011.png
+     ead_final_score=24.641 ead_infer_ms=407.9
+[T4] upload_ms=27.6
+     orig_size=1024x1024  input_size=640  preprocess_ms=82.1
+     infer_ms=50.2
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=0.0000 max=643.1630 mean=321.7430 (n=8400)
+  [T3] cy_channel min=2.8209 max=660.0883 mean=323.5188 (n=8400)
+  [T3] w_channel min=0.0000 max=631.8794 mean=51.7878 (n=8400)
+  [T3] h_channel min=0.0000 max=609.3123 mean=54.3837 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2237.3 ms, embed size=1605632 floats
+[VLM] prompt (645 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 24.6406
+FastSAM detected 2 region(s).
+  region 0: x=0.0154267 y=0 w=0.0308535 h=0.0661146
+  region 1: x=0 y=0 w=0.0176306 h=0.0925605
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exac
+{"id":294,"image_url":"/static/defects/20260522/67aafcf2360c48269bec5395155826b6.jpg","server_ts":"2026-05-22T04:22:59.675470Z"}[VLM] raw_text (144 chars): {"category":"screw","defect_type":"region","severity":"low","confidence":0.0,"bboxes":[["0.0154267", "0.0308535"], "description":"max 20 words"}
+  ttft=1954.4 ms  decode_tps=9.8  prompt_tokens=425  output_tokens=56  rss=3297 MB
+[VLM] JSON extracted: defect_type=region severity=low conf=0.00
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=19.1  bbox_count=2  total_ms=10218.4
+     vlm: defect_type=region severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2237.3 llm_ms=7697.3 vlm_total_ms=10001.6
+     vlm: raw_text({"category":"screw","defect_type":"region","severity":"low","confidence":0.0,"bboxes":[["0.0154267", "0.0308535"], "description":"max 20 words"})
+     bbox[0] x=0.015 y=0.000 w=0.031 h=0.066
+     bbox[1] x=0.000 y=0.000 w=0.018 h=0.093
+     [stats] total_frames=10 fallback_frames=1
+[T3] frame 13 | cat=screw | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/screw/test/good/011.png
+     ead_final_score=27.688 ead_infer_ms=309.8
+[T4] upload_ms=18.8
+     orig_size=1024x1024  input_size=640  preprocess_ms=80.7
+     infer_ms=65.3
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=-2.8209 max=643.1630 mean=321.5318 (n=8400)
+  [T3] cy_channel min=2.8209 max=671.3719 mean=323.5860 (n=8400)
+  [T3] w_channel min=0.0000 max=640.3421 mean=56.0625 (n=8400)
+  [T3] h_channel min=0.0000 max=620.5958 mean=56.4158 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2423.7 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 27.6875
+FastSAM detected 2 region(s).
+  region 0: x=0.0198344 y=0.00440764 w=0.0220382 h=0.0528917
+  region 1: x=0.0132229 y=0 w=0.0176306 h=0.061707
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in value
+{"id":295,"image_url":"/static/defects/20260522/80e97333867f408d98e30fbc64b2d1dc.jpg","server_ts":"2026-05-22T04:23:09.607306Z"}[T2] model 'tile' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 14 | cat=tile | score_mode=raw_score | gate_mode=pass_all
+     raw_score=36.62 map_max=36.62 map_mean=13.45 map_top1=29.78 map_top01=34.15
+     final_score=36.62 thr=38.31 decision=PASS_ALL_WOULD_DROP infer_ms=430.1
+[VLM] raw_text (181 chars): {"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[0.0198344, 0.00440764, 0.0220382, 0.0528917], [0.0132229, 0.00440764, 0.0176306, 0.061707]]}
+  ttft=1975.1 ms  decode_tps=9.5  prompt_tokens=441  output_tokens=116  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.00
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0198 y=0.0044 w=0.0220 h=0.0529
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=16.9  bbox_count=1  total_ms=16940.3
+     vlm: defect_type=anomaly severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2423.7 llm_ms=14224.9 vlm_total_ms=16716.3
+     vlm: raw_text({"category":"screw","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[0.0198344, 0.00440764, 0.0220382, 0.0528917], [0.0132229, 0.00440764, 0.0176306, 0.061707]]})
+     bbox[0] x=0.020 y=0.004 w=0.022 h=0.053
+     [stats] total_frames=11 fallback_frames=1
+[T3] frame 14 | cat=tile | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/tile/test/crack/011.png
+     ead_final_score=36.625 ead_infer_ms=430.1
+[T4] upload_ms=32.8
+     orig_size=840x840  input_size=640  preprocess_ms=126.4
+     infer_ms=51.7
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.2938 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.3348 (n=8400)
+  [T3] w_channel min=0.0000 max=620.5958 mean=43.5492 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=44.0586 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2214.3 ms, embed size=1605632 floats
+[VLM] prompt (606 chars): <image>Inspect this tile image for defects.
+EfficientAD anomaly score: 36.625
+FastSAM detected 1 region(s).
+  region 0: x=0.0308535 y=0.00440764 w=0.0440764 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"tile","defect_
+{"id":296,"image_url":"/static/defects/20260522/d434ada2e632421fa5c69c246d16b2a1.jpg","server_ts":"2026-05-22T04:23:26.913054Z"}  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 15 | cat=tile | score_mode=raw_score | gate_mode=pass_all
+     raw_score=38.06 map_max=38.06 map_mean=10.19 map_top1=24.51 map_top01=32.70
+     final_score=38.06 thr=38.31 decision=PASS_ALL_WOULD_DROP infer_ms=295.3
+[VLM] raw_text (136 chars): {"category":"tile","defect_type":"anomaly","severity":"high","confidence":0.98,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]}
+  ttft=1881.9 ms  decode_tps=9.4  prompt_tokens=397  output_tokens=72  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=0.98
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0309 y=0.0044 w=0.0441 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=17.5  bbox_count=1  total_ms=12158.7
+     vlm: defect_type=anomaly severity=high conf=0.98 json_ok=1
+     vlm: vision_ms=2214.3 llm_ms=9523.5 vlm_total_ms=11849.7
+     vlm: raw_text({"category":"tile","defect_type":"anomaly","severity":"high","confidence":0.98,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]})
+     bbox[0] x=0.031 y=0.004 w=0.044 h=0.026
+     [stats] total_frames=12 fallback_frames=1
+[T3] frame 15 | cat=tile | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/tile/test/good/011.png
+     ead_final_score=38.062 ead_infer_ms=295.3
+[T4] upload_ms=20.9
+     orig_size=840x840  input_size=640  preprocess_ms=127.1
+     infer_ms=66.5
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.5567 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.2562 (n=8400)
+  [T3] w_channel min=0.0000 max=631.8794 mean=46.2505 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=39.4609 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2476.9 ms, embed size=1605632 floats
+[VLM] prompt (589 chars): <image>Inspect this tile image for defects.
+EfficientAD anomaly score: 38.0625
+FastSAM detected 1 region(s).
+  region 0: x=0 y=0 w=0.048484 h=0.0440764
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"tile","defect_type":"string","s
+{"id":297,"image_url":"/static/defects/20260522/583d09230e324ae092be37b31a13990c.jpg","server_ts":"2026-05-22T04:23:38.765993Z"}[VLM] raw_text (121 chars): {"category":"tile","defect_type":"anomaly","severity":"low","confidence":0.38,"bboxes":[[0.0, 0.0, 0.048484, 0.0440764]]}
+  ttft=1700.2 ms  decode_tps=10.0  prompt_tokens=380  output_tokens=58  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.38
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0000 y=0.0000 w=0.0485 h=0.0441
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=15.6  bbox_count=1  total_ms=10432.3
+     vlm: defect_type=anomaly severity=low conf=0.38 json_ok=1
+     vlm: vision_ms=2476.9 llm_ms=7522.3 vlm_total_ms=10112.8
+     vlm: raw_text({"category":"tile","defect_type":"anomaly","severity":"low","confidence":0.38,"bboxes":[[0.0, 0.0, 0.048484, 0.0440764]]})
+     bbox[0] x=0.000 y=0.000 w=0.048 h=0.044
+     [stats] total_frames=13 fallback_frames=1
+[T4] upload_ms=19.6
+[T2] model 'carpet' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 16 | cat=carpet | score_mode=raw_score | gate_mode=pass_all
+     raw_score=36.38 map_max=36.38 map_mean=17.18 map_top1=31.34 map_top01=34.22
+     final_score=36.38 thr=38.70 decision=PASS_ALL_WOULD_DROP infer_ms=402.7
+[T3] frame 16 | cat=carpet | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/carpet/test/good/023.png
+     ead_final_score=36.375 ead_infer_ms=402.7
+     orig_size=1024x1024  input_size=640  preprocess_ms=178.6
+     infer_ms=57.9
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=643.1630 mean=322.1121 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=322.6020 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=22.0614 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=26.2685 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2315.3 ms, embed size=1605632 floats
+[VLM] prompt (612 chars): <image>Inspect this carpet image for defects.
+EfficientAD anomaly score: 36.375
+FastSAM detected 1 region(s).
+  region 0: x=0.0308535 y=0.00440764 w=0.0440764 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"carpet","def
+{"id":298,"image_url":"/static/defects/20260522/4054fd4440324c728657609f5b2c0fd3.jpg","server_ts":"2026-05-22T04:23:48.896048Z"}[VLM] raw_text (137 chars): {"category":"carpet","defect_type":"anomaly","severity":"high","confidence":0.9,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]}
+  ttft=1885.9 ms  decode_tps=9.8  prompt_tokens=399  output_tokens=72  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=0.90
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0309 y=0.0044 w=0.0441 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=17.6  bbox_count=1  total_ms=12130.7
+     vlm: defect_type=anomaly severity=high conf=0.90 json_ok=1
+     vlm: vision_ms=2315.3 llm_ms=9242.8 vlm_total_ms=11725.7
+     vlm: raw_text({"category":"carpet","defect_type":"anomaly","severity":"high","confidence":0.9,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]})
+     bbox[0] x=0.031 y=0.004 w=0.044 h=0.026
+     [stats] total_frames=14 fallback_frames=1
+[T4] upload_ms=77.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=68.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 17 | cat=carpet | score_mode=raw_score | gate_mode=pass_all
+     raw_score=68.62 map_max=68.62 map_mean=18.16 map_top1=47.30 map_top01=66.28
+     final_score=68.62 thr=38.70 decision=PASS_ALL_WOULD_UPLOAD infer_ms=351.9
+[T3] frame 17 | cat=carpet | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/carpet/test/color/011.png
+     ead_final_score=68.625 ead_infer_ms=351.9
+     orig_size=1024x1024  input_size=640  preprocess_ms=182.7
+     infer_ms=68.0
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=640.3421 mean=322.0980 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=322.5426 (n=8400)
+  [T3] w_channel min=0.0000 max=631.8794 mean=21.7041 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=27.2730 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 0
+  [T3] cleanup L3 max_area(0.95): 0 -> 0
+  [T3] cleanup L4 dedup(iou=0.70): 0 -> 0
+  [T3] after_cleanup: 0 bboxes (from top-5 fallback — NOT valid detections)
+  [T3] NO VALID BBOX after cleanup -> using center placeholder
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=1.00
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=17.7  bbox_count=1 (EMERGENCY_FALLBACK)  total_ms=421.4
+     vlm: defect_type=anomaly severity=high conf=1.00 json_ok=0
+     vlm: vision_ms=0.0 llm_ms=0.0 vlm_total_ms=0.1
+     vlm: raw_text()
+     bbox[0] x=0.300 y=0.300 w=0.400 h=0.400
+     [stats] total_frames=15 fallback_frames=2
+[T4] upload_ms=32.6
+[T2] model 'grid' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=46.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 18 | cat=grid | score_mode=raw_score | gate_mode=pass_all
+     raw_score=46.47 map_max=46.47 map_mean=28.36 map_top1=43.72 map_top01=45.28
+     final_score=46.47 thr=46.72 decision=PASS_ALL_WOULD_DROP infer_ms=324.2
+[T3] frame 18 | cat=grid | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/grid/test/good/011.png
+     ead_final_score=46.469 ead_infer_ms=324.2
+     orig_size=1024x1024  input_size=640  preprocess_ms=86.1
+     infer_ms=66.6
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=0.0000 max=643.1630 mean=322.5805 (n=8400)
+  [T3] cy_channel min=5.6418 max=643.1630 mean=324.6388 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=44.2443 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=64.0883 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2451.4 ms, embed size=1605632 floats
+[VLM] prompt (599 chars): <image>Inspect this grid image for defects.
+EfficientAD anomaly score: 46.4688
+FastSAM detected 1 region(s).
+  region 0: x=0.00220382 y=0 w=0.0661146 h=0.0661146
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"grid","defect_type":"
+{"id":299,"image_url":"/static/defects/20260522/a7f24108a412416088478ca5a3afc233.jpg","server_ts":"2026-05-22T04:24:09.149005Z"}{"id":300,"image_url":"/static/defects/20260522/4d53de93e9c54ecea002edbd11264fbd.jpg","server_ts":"2026-05-22T04:24:17.080314Z"}[VLM] raw_text (112 chars): {"category":"grid","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.0, 0.0, 1.0, 1.0]]}
+  ttft=1860.7 ms  decode_tps=9.9  prompt_tokens=390  output_tokens=46  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=medium conf=0.90
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=17.3  bbox_count=1  total_ms=9275.2
+     vlm: defect_type=anomaly severity=medium conf=0.90 json_ok=1
+     vlm: vision_ms=2451.4 llm_ms=6521.7 vlm_total_ms=9045.4
+     vlm: raw_text({"category":"grid","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.0, 0.0, 1.0, 1.0]]})
+     bbox[0] x=0.002 y=0.000 w=0.066 h=0.066
+     [stats] total_frames=16 fallback_frames=2
+[T4] upload_ms=38.4
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=47.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 19 | cat=grid | score_mode=raw_score | gate_mode=pass_all
+     raw_score=47.69 map_max=47.69 map_mean=20.97 map_top1=40.22 map_top01=45.33
+     final_score=47.69 thr=46.72 decision=PASS_ALL_WOULD_UPLOAD infer_ms=254.1
+[T3] frame 19 | cat=grid | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/grid/test/bent/011.png
+     ead_final_score=47.688 ead_infer_ms=254.1
+     orig_size=1024x1024  input_size=640  preprocess_ms=86.0
+     infer_ms=50.9
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.5963 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.3429 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=55.4577 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=56.7869 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2235.9 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this grid image for defects.
+EfficientAD anomaly score: 47.6875
+FastSAM detected 2 region(s).
+  region 0: x=0.00220382 y=0 w=0.0661146 h=0.0440764
+  region 1: x=0.00440764 y=0.00220382 w=0.0528917 h=0.0220382
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+{"id":301,"image_url":"/static/defects/20260522/ca817c23dc794681b836fc89f323942b.jpg","server_ts":"2026-05-22T04:24:46.111456Z"}[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=114.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 20 | cat=metal_nut | score_mode=raw_score | gate_mode=pass_all
+     raw_score=114.25 map_max=114.25 map_mean=39.96 map_top1=111.65 map_top01=113.46
+     final_score=114.25 thr=119.47 decision=PASS_ALL_WOULD_DROP infer_ms=367.2
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=112.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 21 | cat=metal_nut | score_mode=raw_score | gate_mode=pass_all
+     raw_score=112.50 map_max=112.50 map_mean=39.63 map_top1=110.58 map_top01=111.64
+     final_score=112.50 thr=119.47 decision=PASS_ALL_WOULD_DROP infer_ms=267.3
+[VLM] raw_text (593 chars): {"category":"grid","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.0
+  ttft=2013.2 ms  decode_tps=9.5  prompt_tokens=442  output_tokens=499  rss=3297 MB
+[VLM] WARNING: output_tokens=499 > 120
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=1.00
+[T3] VLM JSON parse failed, using fallback
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=11.8  bbox_count=2  total_ms=57418.8
+     vlm: defect_type=anomaly severity=high conf=1.00 json_ok=1
+     vlm: vision_ms=2235.9 llm_ms=54903.5 vlm_total_ms=57212.0
+     vlm: raw_text({"category":"grid","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.0)
+     bbox[0] x=0.002 y=0.000 w=0.066 h=0.044
+     bbox[1] x=0.004 y=0.002 w=0.053 h=0.022
+     [stats] total_frames=17 fallback_frames=2
+  [T3] WARNING: output_tokens=499 > 120, consider shortening prompt/description
+[T3] frame 20 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/metal_nut/test/good/011.png
+     ead_final_score=114.250 ead_infer_ms=367.2
+[T4] upload_ms=23.1
+     orig_size=700x700  input_size=640  preprocess_ms=92.8
+     infer_ms=61.7
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=0.0000 max=643.1630 mean=322.5426 (n=8400)
+  [T3] cy_channel min=5.6418 max=643.1630 mean=324.8433 (n=8400)
+  [T3] w_channel min=0.0000 max=640.3421 mean=70.7724 (n=8400)
+  [T3] h_channel min=2.8209 max=620.5958 mean=62.4508 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[T2] model 'zipper' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[VLM] vision encoder: 2418.1 ms, embed size=1605632 floats
+[VLM] prompt (613 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 114.25
+FastSAM detected 1 region(s).
+  region 0: x=0.00661146 y=0 w=0.0308535 h=0.0661146
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"metal_nut","defec
+[T2] frame 22 | cat=zipper | score_mode=raw_score | gate_mode=pass_all
+     raw_score=33.28 map_max=33.28 map_mean=13.97 map_top1=30.26 map_top01=32.54
+     final_score=33.28 thr=36.42 decision=PASS_ALL_WOULD_DROP infer_ms=424.6
+{"id":302,"image_url":"/static/defects/20260522/ae9107a07fd74d33b4d1b82a8199af4b.jpg","server_ts":"2026-05-22T04:25:54.145316Z"}[VLM] raw_text (170 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"high","confidence":1.0,"bboxes":[[0.00661146, 0.00535278, 0.0308535, 0.0661146], "description":"max 20 words"}
+  ttft=1878.0 ms  decode_tps=9.9  prompt_tokens=395  output_tokens=82  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=1.00
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0066 y=0.0054 w=0.0309 h=0.0661
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=21.3  bbox_count=1  total_ms=12961.6
+     vlm: defect_type=anomaly severity=high conf=1.00 json_ok=1
+     vlm: vision_ms=2418.1 llm_ms=10212.3 vlm_total_ms=12709.2
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"high","confidence":1.0,"bboxes":[[0.00661146, 0.00535278, 0.0308535, 0.0661146], "description":"max 20 words"})
+     bbox[0] x=0.007 y=0.005 w=0.031 h=0.066
+     [stats] total_frames=18 fallback_frames=2
+[T3] frame 21 | cat=metal_nut | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/metal_nut/test/bent/023.png
+     ead_final_score=112.500 ead_infer_ms=267.3
+[T4] upload_ms=38.1
+     orig_size=700x700  input_size=640  preprocess_ms=92.6
+     infer_ms=48.9
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=0.0000 max=643.1630 mean=322.0718 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.5888 (n=8400)
+  [T3] w_channel min=0.0000 max=631.8794 mean=67.5019 (n=8400)
+  [T3] h_channel min=0.0000 max=620.5958 mean=65.0390 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 3 bboxes
+  [T3] cleanup L1 bounds: 3 -> 3
+  [T3] cleanup L2 min_area(0.001): 3 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2212.6 ms, embed size=1605632 floats
+[VLM] prompt (612 chars): <image>Inspect this metal_nut image for defects.
+EfficientAD anomaly score: 112.5
+FastSAM detected 1 region(s).
+  region 0: x=0.00661146 y=0 w=0.0396688 h=0.0661146
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"metal_nut","defect
+{"id":303,"image_url":"/static/defects/20260522/eb751d05478041f3ad6584e622a56a9e.jpg","server_ts":"2026-05-22T04:26:06.790205Z"}  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 23 | cat=zipper | score_mode=raw_score | gate_mode=pass_all
+     raw_score=30.78 map_max=30.78 map_mean=13.31 map_top1=27.70 map_top01=29.30
+     final_score=30.78 thr=36.42 decision=PASS_ALL_WOULD_DROP infer_ms=257.0
+[VLM] raw_text (140 chars): {"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[0.00661146, 0.00661146, 0.0396688, 0.0661146]]}
+  ttft=1859.8 ms  decode_tps=9.5  prompt_tokens=394  output_tokens=74  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.00
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0066 y=0.0066 w=0.0397 h=0.0661
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=12.1  bbox_count=1  total_ms=12194.6
+     vlm: defect_type=anomaly severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=2212.6 llm_ms=9673.1 vlm_total_ms=11965.2
+     vlm: raw_text({"category":"metal_nut","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[0.00661146, 0.00661146, 0.0396688, 0.0661146]]})
+     bbox[0] x=0.007 y=0.007 w=0.040 h=0.066
+     [stats] total_frames=19 fallback_frames=2
+[T3] frame 22 | cat=zipper | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/zipper/test/good/023.png
+     ead_final_score=33.281 ead_infer_ms=424.6
+[T4] upload_ms=25.8
+     orig_size=1024x1024  input_size=640  preprocess_ms=84.0
+     infer_ms=50.8
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=643.1630 mean=322.1510 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.6724 (n=8400)
+  [T3] w_channel min=0.0000 max=600.8496 mean=46.1249 (n=8400)
+  [T3] h_channel min=2.8209 max=640.3421 mean=51.0047 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2252.4 ms, embed size=1605632 floats
+[VLM] prompt (613 chars): <image>Inspect this zipper image for defects.
+EfficientAD anomaly score: 33.2812
+FastSAM detected 1 region(s).
+  region 0: x=0.00220382 y=0.00440764 w=0.110191 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"zipper","de
+{"id":304,"image_url":"/static/defects/20260522/15181e7205e84eea9e1618c58cacb853.jpg","server_ts":"2026-05-22T04:26:19.590589Z"}[VLM] raw_text (179 chars): {"category":"zipper","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.00220382, 0.00440764, 0.110191, 0.0264458]],"description":"detected zipper anomaly"}
+  ttft=1895.0 ms  decode_tps=9.9  prompt_tokens=400  output_tokens=79  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=medium conf=0.90
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0022 y=0.0044 w=0.1102 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=15.7  bbox_count=1  total_ms=12450.2
+     vlm: defect_type=anomaly severity=medium conf=0.90 json_ok=1
+     vlm: vision_ms=2252.4 llm_ms=9911.4 vlm_total_ms=12233.5
+     vlm: raw_text({"category":"zipper","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.00220382, 0.00440764, 0.110191, 0.0264458]],"description":"detected zipper anomaly"})
+     bbox[0] x=0.002 y=0.004 w=0.110 h=0.026
+     [stats] total_frames=20 fallback_frames=2
+[T3] frame 23 | cat=zipper | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/zipper/test/broken_teeth/011.png
+     ead_final_score=30.781 ead_infer_ms=257.0
+[T4] upload_ms=37.0
+     orig_size=1024x1024  input_size=640  preprocess_ms=85.1
+     infer_ms=65.9
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=643.1630 mean=321.8498 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.6499 (n=8400)
+  [T3] w_channel min=0.0000 max=609.3123 mean=50.0520 (n=8400)
+  [T3] h_channel min=0.0000 max=640.3421 mean=54.2571 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2492.2 ms, embed size=1605632 floats
+[VLM] prompt (614 chars): <image>Inspect this zipper image for defects.
+EfficientAD anomaly score: 30.7812
+FastSAM detected 1 region(s).
+  region 0: x=0.00440764 y=0.00440764 w=0.0969681 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"zipper","d
+{"id":305,"image_url":"/static/defects/20260522/18c6430a944c461d8b57f2bdea4b3cf2.jpg","server_ts":"2026-05-22T04:26:31.624339Z"}[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=83.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 24 | cat=pill | score_mode=raw_score | gate_mode=pass_all
+     raw_score=83.69 map_max=83.69 map_mean=34.24 map_top1=81.29 map_top01=82.90
+     final_score=83.69 thr=218.69 decision=PASS_ALL_WOULD_DROP infer_ms=418.8
+[VLM] raw_text (137 chars): {"category":"zipper","defect_type":"anomaly","severity":"low","confidence":0.3,"bboxes":[[0.00440764, 0.00440764, 0.0969681, 0.0264458]]}
+  ttft=1870.8 ms  decode_tps=9.4  prompt_tokens=401  output_tokens=73  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.30
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0044 y=0.0044 w=0.0970 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=16.7  bbox_count=1  total_ms=12474.5
+     vlm: defect_type=anomaly severity=low conf=0.30 json_ok=1
+     vlm: vision_ms=2492.2 llm_ms=9675.5 vlm_total_ms=12239.5
+     vlm: raw_text({"category":"zipper","defect_type":"anomaly","severity":"low","confidence":0.3,"bboxes":[[0.00440764, 0.00440764, 0.0969681, 0.0264458]]})
+     bbox[0] x=0.004 y=0.004 w=0.097 h=0.026
+     [stats] total_frames=21 fallback_frames=2
+[T3] frame 24 | cat=pill | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/pill/test/good/011.png
+     ead_final_score=83.688 ead_infer_ms=418.8
+[T4] upload_ms=29.2
+     orig_size=800x800  input_size=640  preprocess_ms=113.1
+     infer_ms=49.3
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.0782 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.9665 (n=8400)
+  [T3] w_channel min=0.0000 max=640.3421 mean=60.5336 (n=8400)
+  [T3] h_channel min=0.0000 max=620.5958 mean=53.0848 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2333.5 ms, embed size=1605632 floats
+[VLM] prompt (599 chars): <image>Inspect this pill image for defects.
+EfficientAD anomaly score: 83.6875
+FastSAM detected 1 region(s).
+  region 0: x=0.00881528 y=0 w=0.0440764 h=0.0528917
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"pill","defect_type":"
+{"id":306,"image_url":"/static/defects/20260522/6e1b736b70b04661a529068efe045b89.jpg","server_ts":"2026-05-22T04:26:44.732104Z"}
+--- Shutdown requested ---
+[T4] stopped
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=96.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 25 | cat=pill | score_mode=raw_score | gate_mode=pass_all
+     raw_score=96.56 map_max=96.56 map_mean=38.07 map_top1=93.27 map_top01=94.69
+     final_score=96.56 thr=218.69 decision=PASS_ALL_WOULD_DROP infer_ms=334.1
+[VLM] raw_text (173 chars): {"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.89,"bboxes":[[0.00881528, 0.0528917, 0.0440764, 0.00881528], "description":"pill with red specks"}
+  ttft=1855.1 ms  decode_tps=9.6  prompt_tokens=390  output_tokens=81  rss=3298 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.89
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0088 y=0.0529 w=0.0441 h=0.0088
+  [T3] bbox_source=fastsam_fallback (VLM bbox IoU<0.3 with FastSAM)
+  [T3] bbox_merge_reason: VLM bbox not aligned with FastSAM (IoU<0.3)
+     postprocess_ms=18.0  bbox_count=1  total_ms=13054.4
+     vlm: defect_type=anomaly severity=low conf=0.89 json_ok=1
+     vlm: vision_ms=2333.5 llm_ms=10345.3 vlm_total_ms=12777.4
+     vlm: raw_text({"category":"pill","defect_type":"anomaly","severity":"low","confidence":0.89,"bboxes":[[0.00881528, 0.0528917, 0.0440764, 0.00881528], "description":"pill with red specks"})
+     bbox[0] x=0.009 y=0.000 w=0.044 h=0.053
+     [stats] total_frames=22 fallback_frames=2
+[T3] FastSamWorker stopped | total_frames=22 fallback_frames=2
+[T2] EadWorker stopped
+[T1] stopped after 26 frames
+
+--- Pipeline Metrics ---
+capture:      26
+ead:          26
+vlm:          22
+upload_ok:    21
+upload_fail:  0
+upload_retry: 0
+ead_gate_pass: 26
+ead_gate_drop: 0
+dropped:      3
+
+edge_pipeline: clean exit.
+ embed size=1605632 floats
+[VLM] prompt (645 chars): <image>Inspect this screw image for defects.
+EfficientAD anomaly score: 24.6406
+FastSAM detected 2 region(s).
+  region 0: x=0.0154267 y=0 w=0.0308535 h=0.0661146
+  region 1: x=0 y=0 w=0.0176306 h=0.0925605
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exac
+{"id":281,"image_url":"/static/defects/20260522/26a9d0b1e130497494deab243c13b9a1.jpg","server_ts":"2026-05-22T04:19:21.954956Z"}  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 29 | cat=tile | score_mode=raw_score | gate_mode=pass_all
+     raw_score=38.06 map_max=38.06 map_mean=10.19 map_top1=24.51 map_top01=32.70
+     final_score=38.06 thr=38.31 decision=PASS_ALL_WOULD_DROP infer_ms=284.0
+[VLM] raw_text (144 chars): {"category":"screw","defect_type":"region","severity":"low","confidence":0.0,"bboxes":[["0.0154267", "0.0308535"], "description":"max 20 words"}
+  ttft=3966.4 ms  decode_tps=5.0  prompt_tokens=425  output_tokens=56  rss=3297 MB
+[VLM] JSON extracted: defect_type=region severity=low conf=0.00
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=15.2  bbox_count=2  total_ms=19646.2
+     vlm: defect_type=region severity=low conf=0.00 json_ok=1
+     vlm: vision_ms=3799.8 llm_ms=15176.9 vlm_total_ms=19072.3
+     vlm: raw_text({"category":"screw","defect_type":"region","severity":"low","confidence":0.0,"bboxes":[["0.0154267", "0.0308535"], "description":"max 20 words"})
+     bbox[0] x=0.015 y=0.000 w=0.031 h=0.066
+     bbox[1] x=0.000 y=0.000 w=0.018 h=0.093
+     [stats] total_frames=22 fallback_frames=2
+[T3] frame 28 | cat=tile | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/tile/test/crack/011.png
+     ead_final_score=36.625 ead_infer_ms=393.1
+[T4] upload_ms=28.1
+     orig_size=840x840  input_size=640  preprocess_ms=176.4
+     infer_ms=504.4
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.2938 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.3348 (n=8400)
+  [T3] w_channel min=0.0000 max=620.5958 mean=43.5492 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=44.0586 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 4 bboxes
+  [T3] cleanup L1 bounds: 4 -> 4
+  [T3] cleanup L2 min_area(0.001): 4 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2779.8 ms, embed size=1605632 floats
+[VLM] prompt (606 chars): <image>Inspect this tile image for defects.
+EfficientAD anomaly score: 36.625
+FastSAM detected 1 region(s).
+  region 0: x=0.0308535 y=0.00440764 w=0.0440764 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"tile","defect_
+{"id":283,"image_url":"/static/defects/20260522/8c1830a4749a4e18ab2445f67e8bf06b.jpg","server_ts":"2026-05-22T04:19:41.094330Z"}[T2] model 'carpet' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.3750
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 30 | cat=carpet | score_mode=raw_score | gate_mode=pass_all
+     raw_score=36.38 map_max=36.38 map_mean=17.18 map_top1=31.34 map_top01=34.22
+     final_score=36.38 thr=38.70 decision=PASS_ALL_WOULD_DROP infer_ms=441.2
+[VLM] raw_text (136 chars): {"category":"tile","defect_type":"anomaly","severity":"high","confidence":0.98,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]}
+  ttft=2220.5 ms  decode_tps=9.4  prompt_tokens=397  output_tokens=72  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=0.98
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0309 y=0.0044 w=0.0441 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=23.2  bbox_count=1  total_ms=13685.6
+     vlm: defect_type=anomaly severity=high conf=0.98 json_ok=1
+     vlm: vision_ms=2779.8 llm_ms=9892.3 vlm_total_ms=12827.1
+     vlm: raw_text({"category":"tile","defect_type":"anomaly","severity":"high","confidence":0.98,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]})
+     bbox[0] x=0.031 y=0.004 w=0.044 h=0.026
+     [stats] total_frames=23 fallback_frames=2
+[T3] frame 29 | cat=tile | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/tile/test/good/011.png
+     ead_final_score=38.062 ead_infer_ms=284.0
+[T4] upload_ms=22.5
+     orig_size=840x840  input_size=640  preprocess_ms=127.5
+     infer_ms=65.5
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.5567 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=323.2562 (n=8400)
+  [T3] w_channel min=0.0000 max=631.8794 mean=46.2505 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=39.4609 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 3861.6 ms, embed size=1605632 floats
+[VLM] prompt (589 chars): <image>Inspect this tile image for defects.
+EfficientAD anomaly score: 38.0625
+FastSAM detected 1 region(s).
+  region 0: x=0 y=0 w=0.048484 h=0.0440764
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"tile","defect_type":"string","s
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=68.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 31 | cat=carpet | score_mode=raw_score | gate_mode=pass_all
+     raw_score=68.62 map_max=68.62 map_mean=18.16 map_top1=47.30 map_top01=66.28
+     final_score=68.62 thr=38.70 decision=PASS_ALL_WOULD_UPLOAD infer_ms=414.7
+{"id":286,"image_url":"/static/defects/20260522/bd49526a64244f65b60bda2ccfffaa1d.jpg","server_ts":"2026-05-22T04:19:55.303051Z"}[VLM] raw_text (121 chars): {"category":"tile","defect_type":"anomaly","severity":"low","confidence":0.38,"bboxes":[[0.0, 0.0, 0.048484, 0.0440764]]}
+  ttft=6450.3 ms  decode_tps=7.8  prompt_tokens=380  output_tokens=58  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=low conf=0.38
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0000 y=0.0000 w=0.0485 h=0.0441
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=17.1  bbox_count=1  total_ms=18155.4
+     vlm: defect_type=anomaly severity=low conf=0.38 json_ok=1
+     vlm: vision_ms=3861.6 llm_ms=13861.2 vlm_total_ms=17836.5
+     vlm: raw_text({"category":"tile","defect_type":"anomaly","severity":"low","confidence":0.38,"bboxes":[[0.0, 0.0, 0.048484, 0.0440764]]})
+     bbox[0] x=0.000 y=0.000 w=0.048 h=0.044
+     [stats] total_frames=24 fallback_frames=2
+[T3] frame 30 | cat=carpet | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/carpet/test/good/023.png
+     ead_final_score=36.375 ead_infer_ms=441.2
+[T4] upload_ms=15.6
+     orig_size=1024x1024  input_size=640  preprocess_ms=182.7
+     infer_ms=65.7
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=5.6418 max=643.1630 mean=322.1121 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=322.6020 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=22.0614 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=26.2685 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[T2] model 'grid' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=46.4688
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 32 | cat=grid | score_mode=raw_score | gate_mode=pass_all
+     raw_score=46.47 map_max=46.47 map_mean=28.36 map_top1=43.72 map_top01=45.28
+     final_score=46.47 thr=46.72 decision=PASS_ALL_WOULD_DROP infer_ms=290.9
+[VLM] vision encoder: 3366.0 ms, embed size=1605632 floats
+[VLM] prompt (612 chars): <image>Inspect this carpet image for defects.
+EfficientAD anomaly score: 36.375
+FastSAM detected 1 region(s).
+  region 0: x=0.0308535 y=0.00440764 w=0.0440764 h=0.0264458
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"carpet","def
+{"id":288,"image_url":"/static/defects/20260522/fad2a2db6ee4465c90abe5fffe5f30b7.jpg","server_ts":"2026-05-22T04:20:12.912705Z"}  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=47.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 33 | cat=grid | score_mode=raw_score | gate_mode=pass_all
+     raw_score=47.69 map_max=47.69 map_mean=20.97 map_top1=40.22 map_top01=45.33
+     final_score=47.69 thr=46.72 decision=PASS_ALL_WOULD_UPLOAD infer_ms=348.6
+[VLM] raw_text (137 chars): {"category":"carpet","defect_type":"anomaly","severity":"high","confidence":0.9,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]}
+  ttft=7641.4 ms  decode_tps=4.9  prompt_tokens=399  output_tokens=72  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=0.90
+[VLM] vlm_bbox_normalized: 1 valid bboxes (is_pixel=0)
+  [T3] vlm_bbox_raw: parsed 1 bboxes from VLM
+    vlm_bbox_normalized[0]: x=0.0309 y=0.0044 w=0.0441 h=0.0264
+  [T3] bbox_source=vlm
+  [T3] bbox_merge_reason: VLM bbox aligned with FastSAM (IoU>0.3)
+     postprocess_ms=18.3  bbox_count=1  total_ms=26388.7
+     vlm: defect_type=anomaly severity=high conf=0.90 json_ok=1
+     vlm: vision_ms=3366.0 llm_ms=22425.4 vlm_total_ms=25959.0
+     vlm: raw_text({"category":"carpet","defect_type":"anomaly","severity":"high","confidence":0.9,"bboxes":[[0.0308535, 0.00440764, 0.0440764, 0.0264458]]})
+     bbox[0] x=0.031 y=0.004 w=0.044 h=0.026
+     [stats] total_frames=25 fallback_frames=2
+[T3] frame 32 | cat=grid | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/grid/test/good/011.png
+     ead_final_score=46.469 ead_infer_ms=290.9
+[T4] upload_ms=59.2
+     orig_size=1024x1024  input_size=640  preprocess_ms=122.3
+     infer_ms=334.6
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=0.0000 max=643.1630 mean=322.5805 (n=8400)
+  [T3] cy_channel min=5.6418 max=643.1630 mean=324.6388 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=44.2443 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=64.0883 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 1
+  [T3] cleanup L3 max_area(0.95): 1 -> 1
+  [T3] cleanup L4 dedup(iou=0.70): 1 -> 1
+  [T3] after_cleanup: 1 bboxes (from top-5 fallback — NOT valid detections)
+[VLM] vision encoder: 2708.4 ms, embed size=1605632 floats
+[VLM] prompt (599 chars): <image>Inspect this grid image for defects.
+EfficientAD anomaly score: 46.4688
+FastSAM detected 1 region(s).
+  region 0: x=0.00220382 y=0 w=0.0661146 h=0.0661146
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in values.
+Use this exact format: {"category":"grid","defect_type":"
+[T2] model 'metal_nut' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=114.2500
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 34 | cat=metal_nut | score_mode=raw_score | gate_mode=pass_all
+     raw_score=114.25 map_max=114.25 map_mean=39.96 map_top1=111.65 map_top01=113.46
+     final_score=114.25 thr=119.47 decision=PASS_ALL_WOULD_DROP infer_ms=444.3
+{"id":289,"image_url":"/static/defects/20260522/6fbcea9de75f490595b4a2b2e9bef364.jpg","server_ts":"2026-05-22T04:20:39.952269Z"}[VLM] raw_text (112 chars): {"category":"grid","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.0, 0.0, 1.0, 1.0]]}
+  ttft=3661.5 ms  decode_tps=6.2  prompt_tokens=390  output_tokens=46  rss=3297 MB
+[VLM] JSON extracted: defect_type=anomaly severity=medium conf=0.90
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=15.7  bbox_count=1  total_ms=14486.1
+     vlm: defect_type=anomaly severity=medium conf=0.90 json_ok=1
+     vlm: vision_ms=2708.4 llm_ms=11117.1 vlm_total_ms=13923.0
+     vlm: raw_text({"category":"grid","defect_type":"anomaly","severity":"medium","confidence":0.9,"bboxes":[[0.0, 0.0, 1.0, 1.0]]})
+     bbox[0] x=0.002 y=0.000 w=0.066 h=0.066
+     [stats] total_frames=26 fallback_frames=2
+[T3] frame 33 | cat=grid | model=/home/orangepi/models/fastsam_models/fastsam_s.rknn
+     image=/home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2/grid/test/bent/011.png
+     ead_final_score=47.688 ead_infer_ms=348.6
+[T4] upload_ms=32.7
+     orig_size=1024x1024  input_size=640  preprocess_ms=125.2
+     infer_ms=327.0
+  [T3] output0 INT8 dequant: zp=-119 scale=2.820890
+  [T3] conf_channel min=0.0000 max=0.0000 mean=0.0000 (n=8400)
+  [T3] conf_channel top-10: 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000
+  [T3] max_abs_conf=0.000 <= 4.0 -> values already in [0,1]
+  [T3] raw candidates after conf>0.50: 0
+  [T3] cx_channel min=2.8209 max=643.1630 mean=322.5963 (n=8400)
+  [T3] cy_channel min=2.8209 max=643.1630 mean=324.3429 (n=8400)
+  [T3] w_channel min=2.8209 max=631.8794 mean=55.4577 (n=8400)
+  [T3] h_channel min=2.8209 max=631.8794 mean=56.7869 (n=8400)
+  [T3] WARNING: 0 candidates above conf 0.50
+  [T3]   Decode assumption may be wrong — check output layout.
+  [T3]   Falling back to top-5 anchors by raw conf.
+  [T3]   top-5 fallback produced 5 candidates
+  [T3] after NMS (iou=0.45): 2 bboxes
+  [T3] cleanup L1 bounds: 2 -> 2
+  [T3] cleanup L2 min_area(0.001): 2 -> 2
+  [T3] cleanup L3 max_area(0.95): 2 -> 2
+  [T3] cleanup L4 dedup(iou=0.70): 2 -> 2
+  [T3] after_cleanup: 2 bboxes (from top-5 fallback — NOT valid detections)
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=112.5000
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 35 | cat=metal_nut | score_mode=raw_score | gate_mode=pass_all
+     raw_score=112.50 map_max=112.50 map_mean=39.63 map_top1=110.58 map_top01=111.64
+     final_score=112.50 thr=119.47 decision=PASS_ALL_WOULD_DROP infer_ms=307.0
+[VLM] vision encoder: 3009.0 ms, embed size=1605632 floats
+[VLM] prompt (661 chars): <image>Inspect this grid image for defects.
+EfficientAD anomaly score: 47.6875
+FastSAM detected 2 region(s).
+  region 0: x=0.00220382 y=0 w=0.0661146 h=0.0440764
+  region 1: x=0.00440764 y=0.00220382 w=0.0528917 h=0.0220382
+Output ONLY compact JSON, no markdown, no explanation, no line breaks in val
+{"id":290,"image_url":"/static/defects/20260522/e181c7446a6942acb3dada8d36fccd2c.jpg","server_ts":"2026-05-22T04:20:54.003986Z"}[T2] model 'zipper' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=33.2812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 36 | cat=zipper | score_mode=raw_score | gate_mode=pass_all
+     raw_score=33.28 map_max=33.28 map_mean=13.97 map_top1=30.26 map_top01=32.54
+     final_score=33.28 thr=36.42 decision=PASS_ALL_WOULD_DROP infer_ms=449.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=30.7812
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 37 | cat=zipper | score_mode=raw_score | gate_mode=pass_all
+     raw_score=30.78 map_max=30.78 map_mean=13.31 map_top1=27.70 map_top01=29.30
+     final_score=30.78 thr=36.42 decision=PASS_ALL_WOULD_DROP infer_ms=272.4
+[T2] model 'pill' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=83.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 38 | cat=pill | score_mode=raw_score | gate_mode=pass_all
+     raw_score=83.69 map_max=83.69 map_mean=34.24 map_top1=81.29 map_top01=82.90
+     final_score=83.69 thr=218.69 decision=PASS_ALL_WOULD_DROP infer_ms=510.0
+
+--- Shutdown requested ---
+[T4] stopped
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=96.5625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 39 | cat=pill | score_mode=raw_score | gate_mode=pass_all
+     raw_score=96.56 map_max=96.56 map_mean=38.07 map_top1=93.27 map_top01=94.69
+     final_score=96.56 thr=218.69 decision=PASS_ALL_WOULD_DROP infer_ms=328.6
+[T2] model 'screw' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=24.6406
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 40 | cat=screw | score_mode=raw_score | gate_mode=pass_all
+     raw_score=24.64 map_max=24.64 map_mean=11.95 map_top1=23.35 map_top01=24.16
+     final_score=24.64 thr=28.00 decision=PASS_ALL_WOULD_DROP infer_ms=308.9
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=27.6875
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 41 | cat=screw | score_mode=raw_score | gate_mode=pass_all
+     raw_score=27.69 map_max=27.69 map_mean=12.90 map_top1=25.76 map_top01=27.04
+     final_score=27.69 thr=28.00 decision=PASS_ALL_WOULD_DROP infer_ms=278.0
+[T2] model 'tile' loaded: 1 inputs, 2 outputs
+  input[0]: name='input' dims=[1,256,256,3] type=1 fmt=1 qnt_type=2 zp=0 scale=1.000000
+  output[0]: name='raw_score' dims=[1,1,0,0] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=1 size=2
+  output[1]: name='raw_anomaly_map' dims=[1,1,256,256] type=FP16(1) qnt_type=2 zp=0 scale=1.000000 n_elems=65536 size=131072
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=36.6250
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 42 | cat=tile | score_mode=raw_score | gate_mode=pass_all
+     raw_score=36.62 map_max=36.62 map_mean=13.45 map_top1=29.78 map_top01=34.15
+     final_score=36.62 thr=38.31 decision=PASS_ALL_WOULD_DROP infer_ms=381.6
+  output raw_score: type=FP16 parse_mode=fp16_want_float n_elems=1 size=4 val=38.0625
+  output raw_anomaly_map: type=FP16 parse_mode=fp16_want_float n_elems=65536 size=262144
+[T2] frame 43 | cat=tile | score_mode=raw_score | gate_mode=pass_all
+     raw_score=38.06 map_max=38.06 map_mean=10.19 map_top1=24.51 map_top01=32.70
+     final_score=38.06 thr=38.31 decision=PASS_ALL_WOULD_DROP infer_ms=282.1
+[VLM] raw_text (593 chars): {"category":"grid","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.0
+  ttft=3712.5 ms  decode_tps=4.8  prompt_tokens=442  output_tokens=499  rss=3297 MB
+[VLM] WARNING: output_tokens=499 > 120
+[VLM] JSON extracted: defect_type=anomaly severity=high conf=1.00
+[T3] VLM JSON parse failed, using fallback
+  [T3] vlm_bbox_raw: parsed 0 bboxes from VLM
+  [T3] bbox_merge_reason: default: FastSAM bboxes
+     postprocess_ms=15.4  bbox_count=2  total_ms=112053.7
+     vlm: defect_type=anomaly severity=high conf=1.00 json_ok=1
+     vlm: vision_ms=3009.0 llm_ms=108394.1 vlm_total_ms=111501.7
+     vlm: raw_text({"category":"grid","defect_type":"anomaly","severity":"low","confidence":0.0,"bboxes":[[[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.00220382, 0.0528917, 0.0440764], [[0.00440764, 0.00220382, 0.0528917, 0.0440764], [[0.00220382, 0.0)
+     bbox[0] x=0.002 y=0.000 w=0.066 h=0.044
+     bbox[1] x=0.004 y=0.002 w=0.053 h=0.022
+     [stats] total_frames=27 fallback_frames=2
+  [T3] WARNING: output_tokens=499 > 120, consider shortening prompt/description
+[T3] FastSamWorker stopped | total_frames=27 fallback_frames=2
+[T2] EadWorker stopped
+[T1] stopped after 44 frames
+
+--- Pipeline Metrics ---
+capture:      44
+ead:          44
+vlm:          27
+upload_ok:    26
+upload_fail:  0
+upload_retry: 0
+ead_gate_pass: 44
+ead_gate_drop: 0
+dropped:      15
+
+edge_pipeline: clean exit.

@@ -1,0 +1,29 @@
+# Phase 8B-Board-2B Fixed Sample List v2
+# 7 categories x 2 images (1 good + 1 defect) = 14 images
+# v2 replaces tile/test/good/023.png due to deterministic no-generation in 2B base smoke.
+# Use with pass_all gate mode. Do NOT depend on T2 threshold filtering.
+# All paths relative to edge/config.yaml image_loop_dir or project root.
+#
+# To use: set image_loop_categories to only these categories,
+# or copy these images to a dedicated directory and set image_loop_dir.
+#
+# Category selection rationale:
+#   High AUROC:   tile (0.8193), carpet (0.7887)
+#   Medium AUROC: grid (0.6099), metal_nut (0.6173), screw (0.5337)
+#   Low AUROC:    zipper (0.4766), pill (0.3682)
+
+# Format: category,label,defect_type,relative_path
+tile,good,,tile/test/good/011.png
+tile,defect,crack,tile/test/crack/011.png
+carpet,good,,carpet/test/good/023.png
+carpet,defect,color,carpet/test/color/011.png
+grid,good,,grid/test/good/011.png
+grid,defect,bent,grid/test/bent/011.png
+metal_nut,good,,metal_nut/test/good/011.png
+metal_nut,defect,bent,metal_nut/test/bent/023.png
+zipper,good,,zipper/test/good/023.png
+zipper,defect,broken_teeth,zipper/test/broken_teeth/011.png
+pill,good,,pill/test/good/011.png
+pill,defect,color,pill/test/color/011.png
+screw,good,,screw/test/good/011.png
+screw,defect,scratch_head,screw/test/scratch_head/011.png
