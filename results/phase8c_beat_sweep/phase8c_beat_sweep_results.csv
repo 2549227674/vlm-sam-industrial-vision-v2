@@ -1,0 +1,7 @@
+beat_ms,frames_emitted_or_attempted,unique_images_seen,backend_results_count,upload_ok,json_parse_ok,fallback_used,queue_drop_count,t3_started_count,t3_completed_count,avg_qwen3vl_ms,median_qwen3vl_ms,max_qwen3vl_ms,avg_ttft_ms,avg_decode_tps,avg_rss_mb,max_rss_mb,avg_output_tokens,max_output_tokens,wall_clock_s,exit_code,timed_out,stable,notes
+15000,16,14,15,15,14,1,0,16,15,10735,NA,17636,1900,9.8,3275,3279,69,121,225,0,False,True,15 total (14 unique + 1 repeat in cycle 2). 1 fallback (tile good). 0 drops. All PASS_ALL_WOULD_DROP confirmed.
+13000,17,14,15,15,14,1,0,17,16,10775,NA,17183,1902,9.7,3275,3279,69,121,204,0,False,True,15 total (14 unique + 1 repeat). 1 fallback. 0 drops.
+10000,19,14,15,15,14,1,1,19,16,10957,NA,17183,2017,9.5,3275,3279,69,121,185,0,False,True,15 results. dropped=1 (minor). 1 fallback. 19 captures but 16 VLM — 3 frames lost near shutdown boundary.
+8000,24,14,15,15,14,1,6,24,16,11384,NA,17455,1999,9.4,3289,3297,72,121,171,0,False,False,6 queue drops. VLM avg 11.4s > beat 8s. 14/14 unique images still processed.
+6000,33,14,16,16,15,1,14,33,17,11737,NA,17538,2088,9.3,3292,3297,67,121,119,0,False,False,"14 queue drops. VLM avg 11.7s >> beat 6s. 33 captures, 17 VLM, 16 uploads. Heavy backlog."
+5000,41,14,15,15,14,1,23,41,16,13083,NA,18295,2013,9.2,3287,3297,78,121,161,0,False,False,"23 queue drops. VLM avg 13.1s >> beat 5s. 41 captures, 16 VLM. Severe backlog."
