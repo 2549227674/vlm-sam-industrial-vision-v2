@@ -49,7 +49,7 @@ export function OverviewPage({
           <div>
             <h1 style={{ margin: 0, fontSize: 52, fontWeight: 600, lineHeight: 1.04, letterSpacing: "-0.03em", color: "var(--fg)" }}>
               三阶段视觉流水线，
-              <span style={{ display: "block", color: "var(--fg-3)" }}>量化部署在一块 <span style={{ color: accent }}>$80 单板机</span>上。</span>
+              <span style={{ display: "block", color: "var(--fg-3)" }}>量化部署在一块 <span style={{ color: accent }}>Orange Pi 5</span> 上。</span>
             </h1>
             <p style={{ color: "var(--fg-2)", fontSize: 15, lineHeight: 1.65, marginTop: 20, maxWidth: 620 }}>
               EfficientAD-S 检测异常，FastSAM-s 精确定位，Qwen3-VL 输出描述——全部运行在同一块 Rockchip RK3588 NPU 上，
