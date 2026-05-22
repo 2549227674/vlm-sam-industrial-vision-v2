@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1050" height="620" viewBox="0 0 1050 620">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; fill: #111827; }
+    .title { font-size: 22px; font-weight: 700; }
+    .subtitle { font-size: 12px; fill: #6b7280; }
+    .label { font-size: 12px; }
+    .small { font-size: 10px; fill: #6b7280; }
+    .axis { stroke: #111827; stroke-width: 1; }
+    .grid { stroke: #e5e7eb; stroke-width: 1; }
+  </style>
+<text x="40" y="42" class="title">beat_ms pressure sweep</text>
+<text x="40" y="64" class="subtitle">Source: results/phase8c_beat_sweep/phase8c_beat_sweep_results.csv</text>
+<line x1="90" y1="460.0" x2="910" y2="460.0" class="grid"/>
+<text x="55" y="464.0" class="small">0</text>
+<text x="920" y="464.0" class="small">0.0</text>
+<line x1="90" y1="388.0" x2="910" y2="388.0" class="grid"/>
+<text x="55" y="392.0" class="small">5</text>
+<text x="920" y="392.0" class="small">0.6</text>
+<line x1="90" y1="316.0" x2="910" y2="316.0" class="grid"/>
+<text x="55" y="320.0" class="small">9</text>
+<text x="920" y="320.0" class="small">1.2</text>
+<line x1="90" y1="244.0" x2="910" y2="244.0" class="grid"/>
+<text x="55" y="248.0" class="small">14</text>
+<text x="920" y="248.0" class="small">1.7</text>
+<line x1="90" y1="172.0" x2="910" y2="172.0" class="grid"/>
+<text x="55" y="176.0" class="small">18</text>
+<text x="920" y="176.0" class="small">2.3</text>
+<line x1="90" y1="100.0" x2="910" y2="100.0" class="grid"/>
+<text x="55" y="104.0" class="small">23</text>
+<text x="920" y="104.0" class="small">2.9</text>
+<rect x="125.5" y="460.0" width="65.6" height="0.0" fill="#2563eb"/>
+<text x="158.3" y="454.0" class="small" text-anchor="middle">0</text>
+<text x="158.3" y="482" class="small" text-anchor="middle">15000</text>
+<rect x="262.2" y="460.0" width="65.6" height="0.0" fill="#2563eb"/>
+<text x="295.0" y="454.0" class="small" text-anchor="middle">0</text>
+<text x="295.0" y="482" class="small" text-anchor="middle">13000</text>
+<rect x="398.9" y="444.3" width="65.6" height="15.7" fill="#2563eb"/>
+<text x="431.7" y="438.3" class="small" text-anchor="middle">1</text>
+<text x="431.7" y="482" class="small" text-anchor="middle">10000</text>
+<rect x="535.5" y="366.1" width="65.6" height="93.9" fill="#2563eb"/>
+<text x="568.3" y="360.1" class="small" text-anchor="middle">6</text>
+<text x="568.3" y="482" class="small" text-anchor="middle">8000</text>
+<rect x="672.2" y="240.9" width="65.6" height="219.1" fill="#2563eb"/>
+<text x="705.0" y="234.9" class="small" text-anchor="middle">14</text>
+<text x="705.0" y="482" class="small" text-anchor="middle">6000</text>
+<rect x="808.9" y="100.0" width="65.6" height="360.0" fill="#2563eb"/>
+<text x="841.7" y="94.0" class="small" text-anchor="middle">23</text>
+<text x="841.7" y="482" class="small" text-anchor="middle">5000</text>
+<path d="M 158.3 370.5 L 295.0 356.3 L 431.7 323.0 L 568.3 282.0 L 705.0 215.3 L 841.7 132.7" fill="none" stroke="#dc2626" stroke-width="3"/>
+<circle cx="158.3" cy="370.5" r="5" fill="#dc2626"/>
+<text x="158.3" y="360.5" class="small" text-anchor="middle">0.72</text>
+<circle cx="295.0" cy="356.3" r="5" fill="#dc2626"/>
+<text x="295.0" y="346.3" class="small" text-anchor="middle">0.83</text>
+<circle cx="431.7" cy="323.0" r="5" fill="#dc2626"/>
+<text x="431.7" y="313.0" class="small" text-anchor="middle">1.10</text>
+<circle cx="568.3" cy="282.0" r="5" fill="#dc2626"/>
+<text x="568.3" y="272.0" class="small" text-anchor="middle">1.42</text>
+<circle cx="705.0" cy="215.3" r="5" fill="#dc2626"/>
+<text x="705.0" y="205.3" class="small" text-anchor="middle">1.96</text>
+<circle cx="841.7" cy="132.7" r="5" fill="#dc2626"/>
+<text x="841.7" y="122.7" class="small" text-anchor="middle">2.62</text>
+<line x1="90" y1="334.9" x2="910" y2="334.9" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5 5"/>
+<text x="958" y="338.9" class="small" fill="#dc2626">ratio=1</text>
+<text x="500.0" y="515" class="label" text-anchor="middle">beat_ms</text>
+<text transform="translate(25,280.0) rotate(-90)" class="label" text-anchor="middle">queue_drop</text>
+<text transform="translate(984,280.0) rotate(90)" class="label" text-anchor="middle">VLM_avg / beat</text>
+<rect x="710" y="94" width="14" height="14" fill="#2563eb"/><text x="731" y="106" class="small">queue_drop</text>
+<line x1="710" y1="126" x2="724" y2="126" stroke="#dc2626" stroke-width="3"/><text x="731" y="130" class="small">VLM_avg/beat</text>
+</svg>
