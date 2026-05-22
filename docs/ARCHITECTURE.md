@@ -587,3 +587,76 @@ class HttpClient {
 };
 // 注意：CURL handle 不是线程安全——T4 Upload 单线程独占一个 HttpClient 实例。
 ```
+
+## 12. Phase 8 Architectural Corrections
+
+Phase 8 systematic experiments (threshold calibration, VLM A/B evaluation, beat sweep) revealed several corrections to the architectural assumptions established in Phase 7.
+
+### 12.1 T2 Gate: Load Shedding Gate, Not Detection Gate
+
+Phase 8A tested 5 score modes on 15-class MVTec test split (1725 images, FP16/no-quant raw RKNN):
+
+| Score Mode | Mean AUROC | Rank |
+|---|---|---|
+| raw_score | 0.5320 | 1 (best) |
+| map_max | 0.5320 | 2 |
+| map_top01 | 0.5223 | 3 |
+| map_top1 | 0.5061 | 4 |
+| map_mean | 0.4561 | 5 (worst) |
+
+14/15 categories have best AUROC < 0.80 (exception: tile at 0.8488 with map_top1). All categories show good/defect distribution overlap.
+
+**Architectural conclusion**: In the current EfficientAD raw output regime, T2 gate is a **load shedding gate** (load shedding controller), not a detection classifier. Setting good_p95 thresholds means approximately 5% of good frames enter T3 (false positive) and a significant number of defect frames are dropped (due to low AUROC, weak ranking ability). This is a fundamental limitation of FP16 raw RKNN EfficientAD output, not an engineering implementation issue.
+
+**Improvement direction**: Implement a C++ post-processor (Clip+Normalize+Sigmoid) to restore the [0,1] calibrated score scale, but requires bypassing the RKNN Greater node type limitation.
+
+### 12.2 Score Mode Selection
+
+Current deployment uses `raw_score` (ReduceMax output). Selection rationale:
+- `raw_score` and `map_max` are mathematically equivalent (both take the maximum pixel value of the anomaly map)
+- `raw_score` mean AUROC = 0.5320 vs `map_mean` 0.4561 (delta = +0.0759)
+- `map_mean` is diluted by large normal background areas, unsuitable for local defect detection
+- For grid category (local thin-line defects), `raw_score` AUROC improvement is largest (+0.3241)
+
+### 12.3 Qwen3-VL LoRA Deployment Conclusion
+
+**PC bf16 LoRA is effective**: defect_type_exact 51.8%, category_exact 95.1%, bbox_iou>=0.5 47.7% (409 eval samples).
+
+**RKLLM/W8A8 board LoRA collapses**: defect_type_exact 0%, category_exact ~93%. The LoRA adapter was correctly merged before RKLLM conversion (verified by SHA256 cross-platform match + post-merge key check). The collapse is caused by W8A8 quantization destroying rank-32 delta weights.
+
+**Current deployment choice**: 2B base W8A8 for RK3588. LoRA retains PC-side bf16 inference value.
+
+### 12.4 4B Vision Encoder Spatial Patch Merge
+
+4B vision encoder output dimensions:
+- output[0]: [784, 1024] (pre-spatial-merge, 4x token count)
+- output[1-4]: [196, 2560]
+
+RKLLM runtime requires n_image_tokens = patch_h x patch_w = 14 x 14 = 196, embed_dim = 1024 x merge_factor^2 = 1024 x 4 = 4096.
+
+Current implementation (C++ qwen3vl_runner.cpp):
+- Detects 4x factor in output[0], auto-corrects n_image_tokens and embed_dim
+- Uses contiguous reshape [784,1024]->[196,4096]
+- Known limitation: correct implementation requires spatial permutation: `[28,28,1024] -> permute[14,2,14,2,1024] -> [196,4096]`
+- Current contiguous reshape works for 6/7 categories; carpet triggers silent VLM failure
+- 2B vision encoder has no spatial merge; code paths are independent
+
+### 12.5 beat_ms Design Constraints (Phase 8C Measured)
+
+```
+Safe:     beat_ms > VLM_p99_latency
+Recommended: beat_ms >= VLM_avg_ms / 0.85 (15% buffer)
+```
+
+Measured data (pass_all mode, 2B base W8A8):
+
+| Condition | Value |
+|---|---|
+| Minimum stable beat | 10000ms |
+| Recommended safe beat | 13000ms (VLM_avg/beat = 0.83) |
+| Critical ratio | VLM_avg/beat ~ 1.0 |
+| 4B base recommended | >= 35000ms (measured max VLM = 28.9s) |
+
+Production threshold mode: T2 gate filters approximately 95% of good frames. Equivalent T3 enqueue interval = beat_ms / gate_pass_rate. At 5000ms beat in threshold mode, equivalent interval is approximately 100s — sufficient for VLM 10.7s processing.
+
+**Backpressure effect**: At beat=5000ms, VLM avg latency increases 21.9% due to NPU resource contention under Q2 saturation. System degrades acceleratively, not linearly.
