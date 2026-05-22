@@ -70,7 +70,7 @@ flowchart LR
 
 边缘端只作为 HTTP POST client，不运行 FastAPI、Flask、Streamlit、Gradio 或 WebSocket server。WebSocket 只存在于 backend 和 frontend 之间。所有图片上传使用 `multipart/form-data`，禁止 Base64。
 
-![系统全局拓扑（Mermaid 高清渲染）](figures/fig1_topology.png)
+![系统全局拓扑（Mermaid 高清渲染）](../figures/fig1_topology.png)
 
 ### 3.2 API Contract 与数据流
 
@@ -167,13 +167,9 @@ Phase 4 轨道 A 已验证端云联调全链路：
 
 > 以下截图来自 Phase 4 前端联调与视觉验收（Playwright 截图，模拟器数据驱动），用于展示前端 Profile Trace 的可视化能力。真实 RK3588 端侧瓶颈分析以 Phase 7/8 的 qwen3vl_ms、TTFT、decode_tps 和 beat_ms sweep 数据为准。
 
-![Frontend overview dashboard（Phase 4 联调验收截图）](figures/fig_frontend_overview.png)
+![Frontend overview dashboard（Phase 4 联调验收 + Orange Pi 5 标题）](../figures/fig9_dashboard.png)
 
-Overview 页面展示实时工业检测流、RK3588 数字孪生、关键性能指标和 WebSocket 实时状态。适合在面试开场说明”系统已经端云联调，而不是只有单机模型脚本”。
-
-![Frontend overview（最新版，含 Orange Pi 5 标题）](figures/fig9_dashboard.png)
-
-![Frontend profile trace（Phase 4 联调验收截图）](figures/fig_frontend_profile.png)
+![Frontend profile trace（Phase 4 联调验收截图）](../figures/fig_frontend_profile.png)
 
 Profile 页面展示 trace_events 可视化与分阶段延迟分析。VLM 阶段占关键路径主要比例，EfficientAD/FastSAM 不是当前 E2E 延迟主因——这与 Phase 8C 的 beat_ms 压力测试结论一致。
 
@@ -191,7 +187,7 @@ flowchart LR
   Q3 --> T4["T4 Upload<br/>libcurl multipart"]
 ```
 
-![四线程流水线详图（Mermaid 高清渲染）](figures/fig2_pipeline.png)
+![四线程流水线详图（Mermaid 高清渲染）](../figures/fig2_pipeline.png)
 
 端侧固定四线程模型：
 
@@ -267,9 +263,7 @@ T3 的 VLM 推理链路为：RKNN vision encoder（448×448, 196 image tokens）
 
 Phase 8A 的核心结论是：EfficientAD raw output 在当前部署链路下排序能力有限，因此 T2 gate 只能作为负载控制器。
 
-![EfficientAD score mode AUROC](figures/fig_score_mode_auroc.png)
-
-![EfficientAD Score Mode AUROC Heatmap（15 类 × 5 模式）](figures/fig4_score_mode_auroc.png)
+![EfficientAD Score Mode AUROC Heatmap（15 类 × 5 模式）](../figures/fig4_score_mode_auroc.png)
 
 | Score Mode | Mean AUROC | 结论 |
 |---|---:|---|
@@ -279,9 +273,7 @@ Phase 8A 的核心结论是：EfficientAD raw output 在当前部署链路下排
 | map_top1 | 0.5061 | 接近随机 |
 | map_mean | 0.4561 | 最差，被背景稀释 |
 
-![Threshold vs AUROC](figures/fig_threshold_auroc_scatter.png)
-
-![Per-Category Threshold & AUROC 双面板（13/15 类 AUROC < 0.8）](figures/fig5_threshold_auroc.png)
+![Per-Category Threshold & AUROC 双面板（13/15 类 AUROC < 0.8）](../figures/fig5_threshold_auroc.png)
 
 当前 `edge/config.yaml` 使用 raw_score good_p95 阈值。仅 tile 的 raw_score AUROC > 0.80；其余类别均低于 0.80，所有类别 good/defect 分布都有重叠。因此报告和前端演示都不能把 T2 描述成可靠 detection gate。
 
@@ -292,8 +284,6 @@ Phase 8A 的核心结论是：EfficientAD raw output 在当前部署链路下排
 VLM A/B 使用 14 张固定样本：7 类 × 2 张（每类 1 good + 1 defect），覆盖 tile、carpet、grid、metal_nut、zipper、pill、screw。所有 VLM 质量评估使用 `pass_all`，避免低 AUROC 的 T2 threshold gate 非随机过滤样本，污染模型质量比较。
 
 ### 7.2 板端 2B base vs 2B LoRA
-
-![Board VLM runtime comparison](figures/fig_vlm_variant_runtime.png)
 
 | 指标 | 2B base（n=14） | 2B LoRA controlled rerun（n=14） |
 |---|---:|---:|
@@ -309,9 +299,7 @@ VLM A/B 使用 14 张固定样本：7 类 × 2 张（每类 1 good + 1 defect）
 
 ### 7.3 PC LoRA 有效，板端 W8A8 坍塌
 
-![LoRA W8A8 collapse](figures/fig_lora_w8a8_collapse.png)
-
-![RK3588 板端性能对比：2B base / 2B LoRA / 4B base（TTFT、Decode、RAM、JSON 成功率）](figures/fig6_board_perf.png)
+![RK3588 板端性能对比：2B base / 2B LoRA / 4B base（TTFT、Decode、RAM、JSON 成功率）](../figures/fig6_board_perf.png)
 
 | 指标 | PC 2B base（n=409） | PC 2B LoRA（n=409） | Board 2B LoRA（n=14） |
 |---|---:|---:|---:|
@@ -322,7 +310,7 @@ VLM A/B 使用 14 张固定样本：7 类 × 2 张（每类 1 good + 1 defect）
 
 LoRA 训练不是失败：PC bf16 上 defect_type_exact 从 11.5% 提升到 51.8%，bbox_iou>=0.5 从 1.2% 提升到 47.7%。但 RK3588 RKLLM/W8A8 上 defect_type_exact 归零，category_exact 基本保留。合理解释是 rank-32 LoRA delta 权重幅值小，W8A8 量化分辨率不足以保留细粒度 defect_type 知识，而粗粒度 category 知识因编码冗余更鲁棒。
 
-![PC vs Board Quantization Cliff（W8A8 细粒度字段坍塌）](figures/fig7_pc_vs_board.png)
+![PC vs Board Quantization Cliff（W8A8 细粒度字段坍塌）](../figures/fig7_pc_vs_board.png)
 
 ### 7.4 LoRA merge-then-convert 审计
 
@@ -340,9 +328,7 @@ flowchart LR
 
 ## 8. Phase 8C：beat_ms 队列压力测试
 
-![beat_ms pressure sweep](figures/fig_beat_sweep.png)
-
-![Beat Sweep 双面板：队列丢帧 + VLM 瓶颈分析（beat_ms=10000 为甜蜜点）](figures/fig8_beat_sweep.png)
+![Beat Sweep 双面板：队列丢帧 + VLM 瓶颈分析（beat_ms=10000 为甜蜜点）](../figures/fig8_beat_sweep.png)
 
 Phase 8C 使用 2B base、pass_all、14 张固定样本做最坏情况压力扫描。pass_all 意味着所有帧都进入 T3 VLM，是压力最大的场景。
 
@@ -549,12 +535,15 @@ scripts/                  Training, conversion, evaluation and plotting scripts
 
 | 图表 | 生成依据 |
 |---|---|
-| `figures/fig_score_mode_auroc.png` | `score_mode_comparison.csv` |
-| `figures/fig_threshold_auroc_scatter.png` | `edge/config.yaml` + `score_mode_comparison.csv` |
-| `figures/fig_vlm_variant_runtime.png` | Phase 8B board A/B + 4B smoke |
-| `figures/fig_lora_w8a8_collapse.png` | PC eval + board LoRA + audit |
-| `figures/fig_beat_sweep.png` | `phase8c_beat_sweep_results.csv` |
-| `figures/fig_frontend_overview.png` | Phase 4 Playwright dashboard screenshot |
-| `figures/fig_frontend_profile.png` | Phase 4 Playwright profile screenshot |
+| `fig1_topology.png` | Mermaid `topology.mmd` |
+| `fig2_pipeline.png` | Mermaid `pipeline_detail.mmd` |
+| `fig3_sequence.png` | Mermaid `sequence.mmd` |
+| `fig4_score_mode_auroc.png` | `score_mode_comparison.csv` |
+| `fig5_threshold_auroc.png` | `edge/config.yaml` + `score_mode_comparison.csv` |
+| `fig6_board_perf.png` | Phase 8B board A/B + 4B smoke |
+| `fig7_pc_vs_board.png` | PC eval + board LoRA + audit |
+| `fig8_beat_sweep.png` | `phase8c_beat_sweep_results.csv` |
+| `fig9_dashboard.png` | Phase 4 Playwright dashboard screenshot |
+| `fig_frontend_profile.png` | Phase 4 Playwright profile screenshot |
 
-说明：PNG 图表由 `.venv` 中的 `pandas` + `matplotlib` 直接从 CSV、config 和 Phase 8 报告数据生成。SVG 版本保留在同目录，作为可编辑矢量备份。
+说明：所有图表位于 `docs/figures/`。fig1-fig3 由 Mermaid 生成（SVG → PNG），fig4-fig8 由 `.venv` 中的 `pandas` + `matplotlib` 从 CSV/config 生成，fig9 和 fig_frontend_profile 由 Playwright 截图。
