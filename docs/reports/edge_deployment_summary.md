@@ -6,7 +6,7 @@
 > **报告状态**：Phase 8D 求职展示报告
 > **生成日期**：2026-05-22
 
-## 1. Executive Summary
+## 1. 摘要
 
 本项目完成端侧三阶段工业视觉检测流水线部署，并系统定位了 EfficientAD raw score、LoRA W8A8 量化失效、2B/4B 延迟内存权衡、队列节拍边界等工程瓶颈。
 
@@ -34,7 +34,7 @@
 2. **系统诊断能力**：不是只报告指标，而是定位了 raw score gate、W8A8 量化、4B vision spatial merge、beat_ms 背压等瓶颈。
 3. **端云产品闭环**：后端、前端、模拟器和 API contract 已完成验收，前端可展示实时缺陷流、trace_events、VLM metrics 和 A/B 结果。
 
-## 3. Edge-Cloud System Architecture
+## 3. 端云分离系统架构
 
 ### 3.1 全局拓扑
 
@@ -116,13 +116,15 @@ Phase 4 轨道 A 已验证端云联调：
 
 ### 3.4 前端 Dashboard 截图
 
-![Frontend overview dashboard](figures/fig_frontend_overview.png)
+> 以下截图来自 Phase 4 前端联调与视觉验收（Playwright 截图，模拟器数据驱动），用于展示前端 Profile Trace 的可视化能力。真实 RK3588 端侧瓶颈分析以 Phase 7/8 的 qwen3vl_ms、TTFT、decode_tps 和 beat_ms sweep 数据为准。
 
-Overview 页面用于展示实时工业检测流、RK3588 数字孪生、关键性能指标和 WebSocket 实时状态。它适合在面试开场说明“系统已经端云联调，而不是只有单机模型脚本”。
+![Frontend overview dashboard（Phase 4 联调验收截图）](figures/fig_frontend_overview.png)
 
-![Frontend profile trace](figures/fig_frontend_profile.png)
+Overview 页面展示实时工业检测流、RK3588 数字孪生、关键性能指标和 WebSocket 实时状态。适合在面试开场说明”系统已经端云联调，而不是只有单机模型脚本”。
 
-Profile 页面用于解释 trace_events 和端侧瓶颈：VLM 阶段占关键路径主要比例，EfficientAD/FastSAM 不是当前 E2E 延迟主因。这与 Phase 8C 的 beat_ms 压力测试结论一致。
+![Frontend profile trace（Phase 4 联调验收截图）](figures/fig_frontend_profile.png)
+
+Profile 页面展示 trace_events 可视化与分阶段延迟分析。VLM 阶段占关键路径主要比例，EfficientAD/FastSAM 不是当前 E2E 延迟主因——这与 Phase 8C 的 beat_ms 压力测试结论一致。
 
 ## 4. RK3588 四线程端侧流水线
 
@@ -157,7 +159,7 @@ Phase 7 True E2E 在 RK3588 上完成 8 图 4 类、24 帧闭环：
 |---|---|
 | upload_ok | 24/24 |
 | upload_fail | 0 |
-| json_parse_ok | 100% |
+| json_parse_ok | 24/24（100%，4 类 24 帧小样本） |
 | fallback_frames | 0 |
 | dropped_count | 0 |
 | Backend records | 24 条可查 |
@@ -232,8 +234,9 @@ VLM A/B 使用 14 张固定样本：7 类 × 2 张（每类 1 good + 1 defect）
 
 ![Board VLM runtime comparison](figures/fig_vlm_variant_runtime.png)
 
-| 指标 | 2B base | 2B LoRA controlled rerun |
+| 指标 | 2B base（n=14） | 2B LoRA controlled rerun（n=14） |
 |---|---:|---:|
+| json_parse_ok | 13/14（92.9%） | 14/14（100%） |
 | defect_type_exact | 0/7 | 0/7 |
 | TTFT mean | 1877ms | 1914ms |
 | decode_tps | 9.7 | 9.9 |
@@ -247,12 +250,12 @@ VLM A/B 使用 14 张固定样本：7 类 × 2 张（每类 1 good + 1 defect）
 
 ![LoRA W8A8 collapse](figures/fig_lora_w8a8_collapse.png)
 
-| 指标 | PC 2B base | PC 2B LoRA | Board 2B LoRA |
+| 指标 | PC 2B base（n=409） | PC 2B LoRA（n=409） | Board 2B LoRA（n=14） |
 |---|---:|---:|---:|
-| json_parse_ok | 95.6% | 96.1% | 100% |
-| defect_type_exact | 11.5% | 51.8% | 0% |
-| category_exact | 53.8% | 95.1% | 约 93% |
-| bbox_iou>=0.5 | 1.2% | 47.7% | N/A |
+| json_parse_ok | 391/409（95.6%） | 393/409（96.1%） | 14/14（100%） |
+| defect_type_exact | 47/409（11.5%） | 212/409（51.8%） | 0/7（0%） |
+| category_exact | 220/409（53.8%） | 389/409（95.1%） | 约 93% |
+| bbox_iou>=0.5 | 5/409（1.2%） | 195/409（47.7%） | N/A |
 
 LoRA 训练不是失败：PC bf16 上 defect_type_exact 从 11.5% 提升到 51.8%，bbox_iou>=0.5 从 1.2% 提升到 47.7%。但 RK3588 RKLLM/W8A8 上 defect_type_exact 归零，category_exact 基本保留。合理解释是 rank-32 LoRA delta 权重幅值小，W8A8 量化分辨率不足以保留细粒度 defect_type 知识，而粗粒度 category 知识因编码冗余更鲁棒。
 
@@ -309,7 +312,7 @@ Phase 8C-mini 使用 2B base、pass_all、14 张固定样本做最坏情况压�
 
 所有 drop 都发生在 Q2。beat=5000ms 时 VLM avg 增加 21.9%，说明反压会引发延迟放大：VLM 慢导致 Q2 满，Q2 满又增加 NPU/调度竞争，使 VLM 更慢。生产 threshold 模式下，由于 T2 gate 会过滤大量 good 帧，5000-8000ms 可能可行，但这是由 pass rate 推算，不是本轮 Phase 8C 的实测结论。
 
-## 9. Final Deployment Decision
+## 9. 最终部署决策
 
 | 场景 | 推荐 | 原因 |
 |---|---|---|
@@ -328,7 +331,7 @@ EfficientAD-S FP16 raw RKNN
   -> HTTP multipart POST /api/edge/report
 ```
 
-## 10. Frontend Demo Narrative
+## 10. 前端 Demo 展示叙事
 
 ### 10.1 简历描述
 
@@ -375,7 +378,7 @@ EfficientAD-S FP16 raw RKNN
 
 > 我完成了一个 RK3588 端侧三阶段工业视觉流水线，并把模型转换、量化失效、队列背压和端云 API 可观测性都做成了可验证的工程闭环。
 
-## 11. Known Limitations
+## 11. 已知限制
 
 | 限制 | 当前影响 | 后续方向 |
 |---|---|---|
@@ -386,13 +389,12 @@ EfficientAD-S FP16 raw RKNN
 | calibration-on-test | 阈值不是生产认证指标 | 采集生产 good/defect 样本重做校准 |
 | pass_all beat sweep 与 threshold 模式不同 | 5000-8000ms threshold 可行性是推算 | 做真实 threshold 长时间稳定性测试 |
 
-## 12. Future Work
+## 12. 后续优化方向
 
 1. 修复 4B vision spatial patch merge，完成 carpet 类别复测。
 2. 实现 EfficientAD C++ post-processor，比较 post-processed score 与 raw_score。
 3. 增加 FastSAM mask decode，支持像素级缺陷区域展示。
 4. 增加长时间 threshold 模式 soak test，记录 queue_drop、RSS、upload retry。
-5. 后续安装 Pandoc 或 LibreOffice 后，将本 Markdown 导出 PDF/Word，用于简历附件或项目展示。
 
 ## Appendix A：环境与版本
 
@@ -469,75 +471,3 @@ scripts/                  Training, conversion, evaluation and plotting scripts
 | `figures/fig_frontend_profile.png` | Phase 4 Playwright profile screenshot |
 
 说明：PNG 图表由 `.venv` 中的 `pandas` + `matplotlib` 直接从 CSV、config 和 Phase 8 报告数据生成。SVG 版本保留在同目录，作为可编辑矢量备份。
-
-## Appendix F：交付格式与工具决策
-
-### F.1 远程仓库与本地结构核对
-
-远程仓库 `https://github.com/2549227674/vlm-sam-industrial-vision-v2` 已核对：仓库公开，主分支包含 `.claude`、`backend`、`design-reference`、`docs`、`edge`、`frontend`、`logs`、`results`、`scripts`、`simulator`、`temp_docs` 等目录。GitHub About 描述与本报告一致：边缘端 RK3588 16GB 跑 EfficientAD-S -> FastSAM -> Qwen3-VL-2B，后端 FastAPI 收单与广播，前端 Next.js 仪表盘可视化。
-
-本地工作区在 `main` 分支，当前本地 HEAD 为 `393e233`。远程 `docs/reports/edge_deployment_summary.md` 仍是草稿/TODO 版本；本地报告已补齐正文、图表、Phase 4/7/8 串联叙事和部署判断。
-
-本地三层结构核对结果：
-
-| 模块 | 路径 | 作用 |
-|---|---|---|
-| Backend | `backend/app`, `backend/tests/contract`, `backend/static/defects` | FastAPI ingestion、contract tests、图片落盘 |
-| Frontend | `frontend/app`, `frontend/components`, `frontend/lib` | Next.js dashboard 和可视化组件 |
-| Simulator | `simulator/` | PC 端 MVTec line replay 和契约测试客户端 |
-| Edge | `edge/src`, `edge/include`, `edge/third_party`, `edge/phase8c_configs` | RK3588 C++ 四线程流水线、RKNN/RKLLM/RGA/libcurl 集成 |
-| Docs | `docs/experiments`, `docs/reports` | 阶段报告、求职展示报告 |
-| Results | `results/phase8_*` | Phase 8 阈值、VLM A/B、4B smoke、beat sweep 数据 |
-
-### F.2 Markdown / Word / PDF 取舍
-
-当前推荐：**先维护 Markdown 作为源文档，再导出 PDF/Word**。
-
-原因：
-
-1. Markdown 可直接引用 Mermaid、PNG 图表、代码块和 repo 相对路径，最适合作为版本化技术报告。
-2. PDF 适合投递和分享，但不适合作为唯一源文件。
-3. Word 适合简历附件二次排版，但会弱化 Mermaid、代码块和图表的可维护性。
-4. 本机当前未安装 `pandoc`、`libreoffice` 或 `wkhtmltopdf`，因此本轮不生成伪导出的 PDF/Word。
-
-后续导出建议：
-
-```bash
-pandoc docs/reports/edge_deployment_summary.md \
-  -o docs/reports/edge_deployment_summary.pdf \
-  --toc --number-sections
-
-pandoc docs/reports/edge_deployment_summary.md \
-  -o docs/reports/edge_deployment_summary.docx \
-  --toc
-```
-
-### F.3 图表与生图策略
-
-精确指标图只使用可复现数据源生成，不使用 AI 生图：
-
-| 图类型 | 生成方式 | 原因 |
-|---|---|---|
-| AUROC / threshold / runtime / LoRA collapse / beat sweep | `.venv` + pandas + matplotlib | 数据可追溯、可复现、不会出现错误数值 |
-| 系统拓扑 / 四线程 / sequence / audit flow | Mermaid | 文档内可维护，适合架构图 |
-| 封面概念图 | 可选 AI image generation | 只做视觉封面，不承载指标或 API 结构 |
-
-因此，本轮已经直接生成了数据图。没有使用 GPT image 生成指标图，因为这类图必须以 CSV/报告数据为准。若后续需要封面图，可生成一张“RK3588 edge-cloud industrial vision pipeline”概念图，但应放在封面或展示页，不应替代 Mermaid 架构图和 matplotlib 指标图。
-
-### F.4 skills / MCP / plugins 判断
-
-本轮不需要额外安装 skills / MCP / plugins。已有能力足够：
-
-| 能力 | 用途 | 结论 |
-|---|---|---|
-| `rk3588-deployment` skill | 边端约束、RKNN/RKLLM、四线程模型 | 已覆盖 |
-| `shadcn` skill | 前端 dashboard UI 维护 | 仅当前端改 UI 时使用，本轮未改前端 |
-| Playwright MCP / 本地截图资产 | 前端视觉验收 | Phase 4 已用，本轮报告引用即可 |
-| GitHub / web 读取 | 远程仓库事实核对 | 已核对远程公开仓库与草稿状态 |
-| image generation | 概念封面图 | 可选，不用于精确指标 |
-
-不建议新增：
-
-- 不需要用 diagram AI 画 API 或数据流图；Mermaid 更准确。
-- 不需要用 GPT image 画 AUROC、runtime、beat sweep；matplotlib 更可靠。
-- 不需要为了文档任务引入新的 frontend/backend/code MCP。
