@@ -1,0 +1,15 @@
+sample_id,category,label,defect_type_gt,image_path,upload_ok,json_parse_ok,fallback_used,empty_generation,repeated_bracket,predicted_defect_type,severity,confidence,prompt_tokens,output_tokens,ttft_ms,decode_tps,pipeline_ms_qwen3vl,rss_mb,queue_drop_count,notes
+tile_defect_0,tile,defect,crack,tile/test/crack/011.png,Y,Y,N,N,N,anomaly,high,0.98,401,72,1988.1,9.9,11703.2,3265.0,0,
+tile_good_1,tile,good,,tile/test/good/011.png,Y,Y,N,N,N,anomaly,low,0.38,380,58,1675.1,10.0,10205.1,3266.0,0,
+carpet_good_2,carpet,good,,carpet/test/good/023.png,Y,Y,N,N,N,anomaly,high,0.9,399,72,1886.8,10.0,11769.2,3266.0,0,
+carpet_defect_3,carpet,defect,color,carpet/test/color/011.png,Y,Y,N,N,N,anomaly,high,1.0,0,0,0,0,0.1,0,0,
+grid_good_4,grid,good,,grid/test/good/011.png,Y,Y,N,N,N,anomaly,medium,0.9,390,46,1992.3,9.8,9663.1,3266.0,0,
+grid_defect_5,grid,defect,bent,grid/test/bent/011.png,Y,Y,Y,N,Y,anomaly,high,1.0,442,499,1981.2,9.7,56064.1,3266.0,0,repeated_brackets
+metal_nut_good_6,metal_nut,good,,metal_nut/test/good/011.png,Y,Y,N,N,N,anomaly,high,1.0,395,82,1876.5,9.9,12746.5,3279.0,0,
+metal_nut_defect_7,metal_nut,defect,bent,metal_nut/test/bent/023.png,Y,Y,N,N,N,anomaly,low,0.0,394,74,1847.8,10.1,11493.5,3279.0,0,
+zipper_good_8,zipper,good,,zipper/test/good/023.png,Y,Y,N,N,N,anomaly,medium,0.9,400,79,1961.7,9.9,12523.4,3279.0,0,
+zipper_defect_9,zipper,defect,broken_teeth,zipper/test/broken_teeth/011.png,Y,Y,N,N,N,anomaly,low,0.3,401,73,1881.1,9.9,11933.7,3279.0,0,
+pill_good_10,pill,good,,pill/test/good/011.png,Y,Y,N,N,N,anomaly,low,0.89,390,81,1827.1,10.0,12591.2,3279.0,0,
+pill_defect_11,pill,defect,color,pill/test/color/011.png,Y,Y,N,N,N,anomaly,low,0.98,399,60,1950.3,9.9,10381.6,3279.0,0,
+screw_defect_12,screw,defect,scratch_head,screw/test/scratch_head/011.png,Y,Y,N,N,N,region,low,0.0,425,56,2036.8,10.0,10076.2,3279.0,0,
+screw_good_13,screw,good,,screw/test/good/011.png,Y,Y,N,N,N,anomaly,low,0.0,441,116,1977.1,9.9,16051.8,3279.0,0,

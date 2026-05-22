@@ -1,0 +1,18 @@
+{
+  "variant": "2B_lora",
+  "config": "edge/config.phase8b_2b_lora_controlled_rerun.yaml",
+  "image_loop_beat_ms": 60000,
+  "remote_timeout_s": 1800,
+  "wall_clock_s": 757,
+  "exit_code": "SIGTERM (manual stop after 14/14 detected via backend poll)",
+  "timed_out": false,
+  "unique_images_seen": 14,
+  "backend_results_count": 14,
+  "queue_drop_count": 0,
+  "t3_started_count": 14,
+  "t3_completed_count": 14,
+  "json_parse_ok_count": 14,
+  "fallback_count": 1,
+  "repeated_bracket_count": 1,
+  "notes": "Controlled rerun with 60s beat. 14/14 unique images processed. Grid defect still shows repeated bracket degeneration (499 tokens) but NO queue drops with 60s beat. Previous run: 11/14 with 20s beat and 3+ queue drops."
+}
