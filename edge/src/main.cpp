@@ -1,5 +1,6 @@
 // edge_pipeline — RK3588 edge inference pipeline.
 // Prompt 2C: T1 image_loop + T2 EfficientAD + T3 FastSAM + T4 Upload.
+// Phase 9: queue metrics, VLM watchdog counters.
 
 #include <csignal>
 #include <cstdio>
@@ -66,28 +67,52 @@ void print_config(const vlm_industrial::edge::common::Config& cfg) {
   std::fprintf(stderr, "fastsam_conf:      %.2f\n", cfg.fastsam_conf);
   std::fprintf(stderr, "model_variant:     %s_%s\n",
                cfg.vlm_model_size.c_str(), cfg.vlm_variant.c_str());
+  std::fprintf(stderr, "vlm_watchdog:      %s (max_decode_ms=%d "
+               "char_limit=%d ngram_limit=%d)\n",
+               cfg.vlm_json_watchdog_enabled ? "enabled" : "disabled",
+               cfg.vlm_json_watchdog_max_decode_ms,
+               cfg.vlm_json_watchdog_repeated_char_limit,
+               cfg.vlm_json_watchdog_repeated_ngram_limit);
 }
 
-void print_metrics(const vlm_industrial::edge::common::PipelineMetrics& m) {
+void print_queue_stats(const char* name, const QueueStats& qs) {
+  std::fprintf(stderr, "  %s: push=%zu pop=%zu drop=%zu high_watermark=%zu\n",
+               name,
+               qs.push_count.load(std::memory_order_relaxed),
+               qs.pop_count.load(std::memory_order_relaxed),
+               qs.drop_count.load(std::memory_order_relaxed),
+               qs.high_watermark.load(std::memory_order_relaxed));
+}
+
+void print_metrics(const vlm_industrial::edge::common::PipelineMetrics& m,
+                   const QueueStats& q1s, const QueueStats& q2s,
+                   const QueueStats& q3s) {
   std::fprintf(stderr, "\n--- Pipeline Metrics ---\n");
-  std::fprintf(stderr, "capture:      %zu\n",
+  std::fprintf(stderr, "capture:           %zu\n",
                m.capture_count.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "ead:          %zu\n",
+  std::fprintf(stderr, "ead:               %zu\n",
                m.ead_count.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "vlm:          %zu\n",
+  std::fprintf(stderr, "vlm:               %zu\n",
                m.vlm_count.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "upload_ok:    %zu\n",
+  std::fprintf(stderr, "upload_ok:         %zu\n",
                m.upload_count.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "upload_fail:  %zu\n",
+  std::fprintf(stderr, "upload_fail:       %zu\n",
                m.upload_failed.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "upload_retry: %zu\n",
+  std::fprintf(stderr, "upload_retry:      %zu\n",
                m.upload_retry.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "ead_gate_pass: %zu\n",
+  std::fprintf(stderr, "ead_gate_pass:     %zu\n",
                m.ead_gate_pass.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "ead_gate_drop: %zu\n",
+  std::fprintf(stderr, "ead_gate_drop:     %zu\n",
                m.ead_gate_drop.load(std::memory_order_relaxed));
-  std::fprintf(stderr, "dropped:      %zu\n",
+  std::fprintf(stderr, "vlm_watchdog_abort: %zu\n",
+               m.vlm_watchdog_abort.load(std::memory_order_relaxed));
+  std::fprintf(stderr, "dropped (total):   %zu\n",
                m.dropped_count.load(std::memory_order_relaxed));
+
+  std::fprintf(stderr, "\n--- Queue Stats ---\n");
+  print_queue_stats("Q1 (T1->T2)", q1s);
+  print_queue_stats("Q2 (T2->T3)", q2s);
+  print_queue_stats("Q3 (T3->T4)", q3s);
 }
 
 }  // namespace
@@ -110,15 +135,18 @@ int main(int argc, char* argv[]) {
 
   vlm_industrial::edge::common::PipelineMetrics metrics;
 
+  // Per-queue stats for observability.
+  QueueStats q1_stats, q2_stats, q3_stats;
+
   // Queues: Q1(4) → T2 → Q2(2) → T3 → Q3(4) → T4
   using vlm_industrial::edge::CaptureFrame;
   using vlm_industrial::edge::EadResult;
   using vlm_industrial::edge::VlmReport;
   using vlm_industrial::edge::common::BoundedQueue;
 
-  BoundedQueue<CaptureFrame> q1(4);
-  BoundedQueue<EadResult>    q2(2);
-  BoundedQueue<VlmReport>    q3(4);
+  BoundedQueue<CaptureFrame> q1(4, &q1_stats);
+  BoundedQueue<EadResult>    q2(2, &q2_stats);
+  BoundedQueue<VlmReport>    q3(4, &q3_stats);
 
   std::fprintf(stderr, "\n--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---\n");
 
@@ -133,8 +161,15 @@ int main(int argc, char* argv[]) {
     std::jthread t3_th{std::move(t3)};
     std::jthread t4_th{std::move(t4)};
 
+    // Periodic metrics dump every ~10 seconds.
+    int tick = 0;
     while (!g_shutdown_requested.load(std::memory_order_acquire)) {
       std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      if (++tick >= 50) {  // 50 * 200ms = 10s
+        tick = 0;
+        std::fprintf(stderr, "\n--- Periodic Metrics (10s) ---\n");
+        print_metrics(metrics, q1_stats, q2_stats, q3_stats);
+      }
     }
 
     std::fprintf(stderr, "\n--- Shutdown requested ---\n");
@@ -145,7 +180,7 @@ int main(int argc, char* argv[]) {
       q1.dropped() + q2.dropped() + q3.dropped(),
       std::memory_order_relaxed);
 
-  print_metrics(metrics);
+  print_metrics(metrics, q1_stats, q2_stats, q3_stats);
   std::fprintf(stderr, "\nedge_pipeline: clean exit.\n");
 
   curl_global_cleanup();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <cstddef>
 #include <deque>
@@ -9,12 +10,42 @@
 
 namespace vlm_industrial::edge::common {
 
+// Per-queue runtime metrics (optional, passed by caller).
+struct QueueStats {
+  std::atomic<uint64_t> push_count{0};
+  std::atomic<uint64_t> pop_count{0};
+  std::atomic<uint64_t> drop_count{0};
+  std::atomic<uint64_t> high_watermark{0};
+
+  void record_push(std::size_t depth) {
+    push_count.fetch_add(1, std::memory_order_relaxed);
+    update_high_watermark(depth);
+  }
+
+  void record_pop() {
+    pop_count.fetch_add(1, std::memory_order_relaxed);
+  }
+
+  void record_drop() {
+    drop_count.fetch_add(1, std::memory_order_relaxed);
+  }
+
+  void update_high_watermark(std::size_t depth) {
+    auto prev = high_watermark.load(std::memory_order_relaxed);
+    while (depth > prev &&
+           !high_watermark.compare_exchange_weak(prev, depth,
+                                                 std::memory_order_relaxed)) {
+    }
+  }
+};
+
 // Thread-safe bounded queue with drop-oldest back-pressure.
-// Q1/Q3 capacity 4, Q2 capacity 2 (see ARCHITECTURE.md  3.1).
+// Q1/Q3 capacity 4, Q2 capacity 2 (see ARCHITECTURE.md §3.1).
 template <class T>
 class BoundedQueue {
  public:
-  explicit BoundedQueue(std::size_t cap) : cap_(cap) {}
+  explicit BoundedQueue(std::size_t cap, QueueStats* stats = nullptr)
+      : cap_(cap), stats_(stats) {}
 
   // Push an item; if at capacity, drop the oldest and increment dropped_count.
   void push_drop_oldest(T v) {
@@ -23,8 +54,10 @@ class BoundedQueue {
       if (q_.size() >= cap_) {
         q_.pop_front();
         ++dropped_;
+        if (stats_) stats_->record_drop();
       }
       q_.push_back(std::move(v));
+      if (stats_) stats_->record_push(q_.size());
     }
     cv_.notify_one();
   }
@@ -38,6 +71,7 @@ class BoundedQueue {
     }
     T v = std::move(q_.front());
     q_.pop_front();
+    if (stats_) stats_->record_pop();
     return v;
   }
 
@@ -59,6 +93,7 @@ class BoundedQueue {
   std::condition_variable_any cv_;
   const std::size_t cap_;
   std::size_t dropped_{0};
+  QueueStats* stats_;  // optional, owned by caller
 };
 
 }  // namespace vlm_industrial::edge::common

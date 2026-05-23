@@ -34,17 +34,21 @@ struct CallbackState {
   std::string             text;
   bool                    finished{false};
   bool                    error{false};
+  bool                    watchdog_abort{false};
   float                   prefill_time_ms{0.0f};
   float                   generate_time_ms{0.0f};
   int                     prefill_tokens{0};
   int                     generate_tokens{0};
   float                   memory_usage_mb{0.0f};
+  int                     repeated_char_limit{64};
+  int                     repeated_ngram_limit{32};
 
   void reset() {
     std::scoped_lock lk(mu);
     text.clear();
     finished = false;
     error = false;
+    watchdog_abort = false;
     prefill_time_ms = 0.0f;
     generate_time_ms = 0.0f;
     prefill_tokens = 0;
@@ -52,6 +56,38 @@ struct CallbackState {
     memory_usage_mb = 0.0f;
   }
 };
+
+// Detect if the tail of str contains a run of the same character exceeding limit.
+static bool detect_repeated_chars(const std::string& s, int limit) {
+  if (static_cast<int>(s.size()) < limit) return false;
+  char last = s.back();
+  int run = 1;
+  for (int i = static_cast<int>(s.size()) - 2; i >= 0 && run < limit; --i) {
+    if (s[i] == last) ++run;
+    else break;
+  }
+  return run >= limit;
+}
+
+// Detect if the tail of str consists of a short n-gram repeated many times.
+// Uses the last (limit * 2) characters, checking if a prefix of length
+// 1..max_ngram_len repeats enough times to hit the limit.
+static bool detect_repeated_ngram(const std::string& s, int limit) {
+  int window = limit * 2;
+  if (static_cast<int>(s.size()) < window) return false;
+  std::string_view tail{s.data() + s.size() - window, static_cast<size_t>(window)};
+  for (int ngram_len = 1; ngram_len <= 16; ++ngram_len) {
+    if (ngram_len > static_cast<int>(tail.size()) / 2) break;
+    std::string_view ngram{tail.data(), static_cast<size_t>(ngram_len)};
+    int repeats = 1;
+    for (size_t pos = ngram_len; pos + ngram_len <= tail.size(); pos += ngram_len) {
+      if (tail.substr(pos, ngram_len) == ngram) ++repeats;
+      else break;
+    }
+    if (repeats >= limit / ngram_len) return true;
+  }
+  return false;
+}
 
 static int llm_callback(RKLLMResult* result, void* userdata, LLMCallState state) {
   auto* cb = static_cast<CallbackState*>(userdata);
@@ -74,7 +110,19 @@ static int llm_callback(RKLLMResult* result, void* userdata, LLMCallState state)
   } else if (state == RKLLM_RUN_NORMAL || state == RKLLM_RUN_WAITING) {
     if (result && result->text) {
       std::scoped_lock lk(cb->mu);
+      if (cb->watchdog_abort) return 0;  // stop accumulating
       cb->text += result->text;
+
+      // JSON watchdog: detect pathological repeated output.
+      if (detect_repeated_chars(cb->text, cb->repeated_char_limit) ||
+          detect_repeated_ngram(cb->text, cb->repeated_ngram_limit)) {
+        std::fprintf(stderr,
+                     "[VLM] WATCHDOG: repeated pattern detected (text_len=%zu), "
+                     "aborting accumulation\n", cb->text.size());
+        cb->watchdog_abort = true;
+        cb->finished = true;
+        cb->cv.notify_all();
+      }
     }
   }
   return 0;
@@ -416,20 +464,72 @@ std::vector<float> Qwen3VLRunner::run_vision_encoder(
 
   // Concatenate outputs per official demo logic:
   // for each token i, interleave all n_output outputs.
-  // NOTE: When spatial merge is detected, the RKNN output[0] has 4x raw
-  // tokens. We use the corrected n_image_tokens and embed_dim from init.
-  // The data layout from a simple contiguous reshape is not perfectly
-  // spatially grouped, but the runtime only validates n_image_tokens.
+  // When spatial merge is detected (4B), output[0] has raw [784,1024] which must
+  // be permute-merged to [196,4096] before interleaving.
+  // Outputs [1..n] are already [196, ...] in the merged space.
+
+  // Pre-merge output[0] if spatial merge is needed.
+  std::vector<float> merged_output0;
+  float* output0_ptr = static_cast<float*>(outputs[0].buf);
+  int raw_tokens = 0;
+
+  if (needs_spatial_merge_ && vision_n_output_ > 0) {
+    // Determine raw token count from the first output (before merge).
+    rknn_tensor_attr a0{};
+    a0.index = 0;
+    rknn_query(vision_ctx_.get(), RKNN_QUERY_OUTPUT_ATTR, &a0, sizeof(a0));
+    for (int d = 0; d < 4; ++d) {
+      if (a0.dims[d] > 1) { raw_tokens = a0.dims[d]; break; }
+    }
+    int raw_embed = a0.dims[2];  // typically 1024
+
+    merged_output0.resize(vision_image_token_ * vision_embed_dim_);
+    merge_spatial_2x2<float>(
+        static_cast<float*>(outputs[0].buf),
+        merged_output0.data());
+    output0_ptr = merged_output0.data();
+
+    // Print shape and checksum log for first invocation (static once).
+    static bool logged_merge = false;
+    if (!logged_merge) {
+      float ck_first = output0_ptr[0];
+      float ck_mid   = output0_ptr[(vision_image_token_ / 2) * vision_embed_dim_];
+      int last_off   = (vision_image_token_ - 1) * vision_embed_dim_;
+      float ck_last  = output0_ptr[last_off];
+      std::fprintf(stderr,
+                   "[Qwen3VL4B] vision_out shape=[%d,%d] dtype=fp32(want_float)\n"
+                   "[Qwen3VL4B] spatial_merge mode=2x2_permute "
+                   "input_tokens=%d output_tokens=%d embed=%d\n"
+                   "[Qwen3VL4B] token_checksum first=%.6f middle=%.6f last=%.6f\n",
+                   raw_tokens, raw_embed,
+                   raw_tokens, vision_image_token_, vision_embed_dim_,
+                   ck_first, ck_mid, ck_last);
+      logged_merge = true;
+    }
+  }
+
   size_t total_floats = vision_image_token_ * vision_n_output_ * vision_embed_dim_;
   std::vector<float> result(total_floats, 0.0f);
 
   for (int i = 0; i < vision_image_token_; ++i) {
     for (uint32_t j = 0; j < vision_n_output_; ++j) {
       size_t dst_offset = i * vision_n_output_ * vision_embed_dim_ + j * vision_embed_dim_;
-      size_t src_offset = i * vision_embed_dim_;
-      std::memcpy(result.data() + dst_offset,
-                   static_cast<float*>(outputs[j].buf) + src_offset,
-                   vision_embed_dim_ * sizeof(float));
+      if (j == 0 && needs_spatial_merge_) {
+        // output[0] already merged to [196, 4096].
+        std::memcpy(result.data() + dst_offset,
+                     output0_ptr + i * vision_embed_dim_,
+                     vision_embed_dim_ * sizeof(float));
+      } else {
+        // Other outputs are already [196, embed] in merged space.
+        // For output[0] without spatial merge, src_offset = i * embed.
+        int original_embed = needs_spatial_merge_
+            ? (vision_embed_dim_ / (merge_factor_ * merge_factor_))
+            : vision_embed_dim_;
+        size_t src_offset = i * original_embed;
+        std::memcpy(result.data() + dst_offset,
+                     static_cast<float*>(outputs[j].buf) + src_offset,
+                     original_embed * sizeof(float));
+      }
     }
   }
 
@@ -517,6 +617,10 @@ VlmResult Qwen3VLRunner::infer(
 
   static CallbackState cb_state;  // Static because RKLLM is single-instance.
   cb_state.reset();
+  if (cfg_.vlm_json_watchdog_enabled) {
+    cb_state.repeated_char_limit = cfg_.vlm_json_watchdog_repeated_char_limit;
+    cb_state.repeated_ngram_limit = cfg_.vlm_json_watchdog_repeated_ngram_limit;
+  }
 
   RKLLMInput rkllm_input{};
   rkllm_input.input_type = RKLLM_INPUT_MULTIMODAL;
@@ -544,13 +648,25 @@ VlmResult Qwen3VLRunner::infer(
   }
 
   // 5. Collect result.
+  // Use watchdog max_decode_ms if enabled, else default 120s.
+  auto wait_timeout = cfg_.vlm_json_watchdog_enabled
+      ? std::chrono::milliseconds(cfg_.vlm_json_watchdog_max_decode_ms)
+      : std::chrono::seconds(120);
   {
     std::unique_lock lk(cb_state.mu);
-    cb_state.cv.wait_for(lk, std::chrono::seconds(120),
+    cb_state.cv.wait_for(lk, wait_timeout,
                          [&] { return cb_state.finished; });
     result.raw_text = cb_state.text;
+    result.watchdog_abort = cb_state.watchdog_abort;
     if (cb_state.error) {
       result.error_message = "RKLLM callback reported error";
+    }
+    if (!cb_state.finished) {
+      result.error_message = "RKLLM timeout (decode did not finish)";
+      std::fprintf(stderr, "[VLM] WARNING: decode timeout after %lld ms\n",
+                   static_cast<long long>(
+                       std::chrono::duration_cast<std::chrono::milliseconds>(
+                           wait_timeout).count()));
     }
     result.prefill_tokens = cb_state.prefill_tokens;
     result.output_tokens = cb_state.generate_tokens;

@@ -6,6 +6,7 @@
 //
 // 2B base, 2B LoRA, and 4B base are supported. 4B LoRA is not implemented.
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <memory>
@@ -14,6 +15,17 @@
 
 #include "edge/common/config.hpp"
 #include "edge/common/unique_rknn.hpp"
+
+namespace vlm_industrial::edge {
+
+// 2x2 spatial merge for Qwen3-VL-4B vision encoder output.
+// Input: [28*28*1024] flat buffer (pre-merge spatial tokens).
+// Output: [14*14*4096] flat buffer (post-merge tokens).
+// Correctly groups 2x2 spatial neighbours before flattening the channel dim.
+template <typename T>
+void merge_spatial_2x2(const T* input, T* output);
+
+}  // namespace vlm_industrial::edge (forward decl)
 
 // Forward-declare RKLLM types to avoid pulling rkllm.h into every TU.
 typedef void* LLMHandle;
@@ -28,6 +40,7 @@ struct VlmResult {
   int32_t     output_tokens{0};
   float       rss_mb{0.0f};
   bool        json_parse_ok{false};
+  bool        watchdog_abort{false};
   std::string error_message;
   float       vision_ms{0.0f};
   float       llm_ms{0.0f};
@@ -120,5 +133,42 @@ class Qwen3VLRunner {
 
   bool initialized_{false};
 };
+
+// ── 2x2 spatial merge implementation ─────────────────────────────────────────
+// Qwen3-VL-4B vision encoder outputs [28,28,1024] pre-merge spatial tokens.
+// RKLLM expects [196,4096] post-merge tokens where each output token is the
+// concatenation of a 2x2 spatial block (merge_size=2).
+// This implementation correctly groups spatial neighbours before flattening.
+
+template <typename T>
+void merge_spatial_2x2(const T* input, T* output) {
+  constexpr int H = 28;
+  constexpr int W = 28;
+  constexpr int C = 1024;
+  constexpr int MERGE = 2;
+  constexpr int OH = H / MERGE;
+  constexpr int OW = W / MERGE;
+  constexpr int OC = C * MERGE * MERGE;
+
+  for (int by = 0; by < OH; ++by) {
+    for (int bx = 0; bx < OW; ++bx) {
+      const int out_token = by * OW + bx;
+      T* out_ptr = output + out_token * OC;
+
+      int local = 0;
+      for (int dy = 0; dy < MERGE; ++dy) {
+        for (int dx = 0; dx < MERGE; ++dx) {
+          const int iy = by * MERGE + dy;
+          const int ix = bx * MERGE + dx;
+          const int in_token = iy * W + ix;
+          const T* in_ptr = input + in_token * C;
+
+          std::copy(in_ptr, in_ptr + C, out_ptr + local * C);
+          ++local;
+        }
+      }
+    }
+  }
+}
 
 }  // namespace vlm_industrial::edge

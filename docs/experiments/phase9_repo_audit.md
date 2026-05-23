@@ -17,7 +17,7 @@
 | 队列容量 | Q1=4, Q2=2, Q3=4（`edge/src/main.cpp:119-121` 确认） |
 | VLM 主线 | 2B base W8A8 |
 | LoRA 状态 | PC bf16 有效；RK3588 W8A8 下细粒度能力坍塌（F-VLM-04） |
-| 4B 状态 | 运行路径已打通；速度慢；spatial merge **未正确实现**（F-VLM-06） |
+| 4B 状态 | 运行路径已打通；速度慢；spatial merge **已修复**（F-VLM-06，Phase 9 CLAUDE_04） |
 | FastSAM mask decode | **未实现** — 仅 bbox proposal（`fastsam_worker.cpp:3` 有 TODO） |
 | pass_all 安全节拍 | 推荐 13000ms，最小稳定 10000ms |
 | API contract 版本 | v1.2（`docs/API_CONTRACT.md`） |
@@ -111,12 +111,12 @@
 
 #### F-P1-02：4B spatial merge 未正确实现（F-VLM-06）
 
-**状态**：已知缺陷，未修复
+**状态**：已修复（CLAUDE_04）
 **影响**：中高 — 4B 对纹理敏感类别（carpet）产生错误嵌入
 
-`edge/src/vlm/qwen3vl_runner.cpp:419-422` 使用连续 memcpy 而非正确的 2x2 spatial merge 排列：`[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]`。详见 `docs/ENGINEERING_FINDINGS.md:F-VLM-06`。
+原实现 `edge/src/vlm/qwen3vl_runner.cpp` 使用连续 memcpy。已替换为 `merge_spatial_2x2<T>` 模板函数，正确执行 `[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]` 排列。单元测试 5/5 PASS。详见 `docs/experiments/phase9_edge_runtime_model_fixes.md`。
 
-修复路径已记录但未实现，不阻塞 2B 主线。延后至 CLAUDE_04 处理。
+待做：4B 推理回归实验（carpet/tile 纹理敏感样本）。
 
 #### F-P1-03：FastSAM Stage 2 输出标签写成"segmentation" / "mask"
 
@@ -134,16 +134,16 @@
 
 #### F-P1-05：运行时指标暴露不充分
 
-**状态**：部分实现
+**状态**：已修复（CLAUDE_04）
 **影响**：中
 
-`edge/src/main.cpp` 在进程关闭时将指标打印到 stderr。已有计数器：`ead_gate_pass`、`ead_gate_drop`、`queue_drop`。缺失项：
-- 各队列当前深度 / 高水位线（实时）
-- push/pop 等待时间（ms）
-- T3 VLM 繁忙比
-- 上传重试计数 / 最后错误 / 退避时间
+新增能力：
+- `QueueStats` 结构体：push/pop/drop/high_watermark 原子计数，每队列独立
+- `PipelineMetrics` 扩展：Q1/Q2/Q3 各 4 个队列指标 + `vlm_watchdog_abort`
+- 主循环每 10 秒周期性 dump metrics
+- 进程关闭时完整打印所有指标
 
-延后至 CLAUDE_04 处理。
+原有计数器（ead_gate_pass/ead_gate_drop）保持不变。详见 `docs/experiments/phase9_edge_runtime_model_fixes.md`。
 
 ### P2：实验与验证空白
 
@@ -185,8 +185,8 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 | **P1** | Stage 2 输出标签 mask+bbox → bbox | ARCHITECTURE.md:181 | 5 min | 低 | **已完成** |
 | **P1** | 表头 "RK3588 INT8 延迟" → "RK3588 延迟" | ARCHITECTURE.md:178 | 5 min | 低 | **已完成** |
 | **P1** | 性能表 map_mean → raw_score 注释 + ASCII 图 T3 标签 | ARCHITECTURE.md:527, :438 | 10 min | 低 | **已完成**（CLAUDE_02） |
-| **P1** | 实现 4B spatial merge（2x2 permute） | qwen3vl_runner.cpp | 2-4 hr | 中高 | 待处理（CLAUDE_04） |
-| **P1** | 增加实时队列深度 / 高水位线指标 | edge 代码 | 2-3 hr | 中 | 待处理（CLAUDE_04） |
+| **P1** | 实现 4B spatial merge（2x2 permute） | qwen3vl_runner.hpp/cpp | 2-4 hr | 中高 | **已完成**（CLAUDE_04） → `phase9_edge_runtime_model_fixes.md` |
+| **P1** | 增加实时队列深度 / 高水位线指标 | bounded_queue.hpp, metrics.hpp, main.cpp | 2-3 hr | 中 | **已完成**（CLAUDE_04） → `phase9_edge_runtime_model_fixes.md` |
 | **P1** | API Contract schema 自动化 + CI + 跨端类型同步 | scripts/, tests/, .github/ | 3-4 hr | 中高 | **已完成**（CLAUDE_03） → `phase9_contract_ci_hardening.md` |
 | **P2** | Threshold soak test（30 分钟以上） | 板端硬件 | 1 hr 运行时间 | 中 | 待处理（CLAUDE_05） |
 | **P2** | FastSAM mask decode（可选 v1.3 contract） | fastsam_worker.cpp + contract | 4-6 hr | 低 | 待处理 |
@@ -223,7 +223,7 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 - `docs/ENGINEERING_FINDINGS.md` — 准确记录了 Phase 7/8 所有发现（含 F-VLM-04、F-VLM-06）
 - `docs/API_CONTRACT.md` v1.2 — 与代码一致
 - `edge/config.yaml` 类别级阈值 — Phase 8A-Fix-Fix 校准值
-- `edge/src/vlm/qwen3vl_runner.cpp` — spatial merge 检测逻辑正确（修复路径已知但排列未实现）
+- `edge/src/vlm/qwen3vl_runner.cpp` — spatial merge 已修复为 2x2 permute（CLAUDE_04），watchdog 已集成
 - Phase 7 实验报告（phase7_edge_pipeline_report.md, phase7_prompt2e, phase7_prompt2f）— map_mean 引用为历史准确记录，Phase 8 已说明切换原因
 - Phase 8 实验报告（phase8_execution_report.md）— 内部自洽，正确区分 pass_all vs threshold、PC vs Board
 - 后端 Pydantic schema — 与 contract 一致
@@ -245,6 +245,6 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 |---|---|---|
 | `CLAUDE_02_DOC_CONSISTENCY_AND_REPORT_PATCH.md` | 实验报告中剩余文档不一致项深度扫描 | **已完成** → `phase9_doc_consistency_patch.md` |
 | `CLAUDE_03_API_CONTRACT_AND_CI_HARDENING.md` | Contract schema 自动化、CI 检查、跨端类型同步 | **已完成** → `phase9_contract_ci_hardening.md` |
-| `CLAUDE_04_EDGE_RUNTIME_AND_MODEL_FIXES.md` | 4B spatial merge 修复、队列指标、JSON watchdog | 待开始 |
+| `CLAUDE_04_EDGE_RUNTIME_AND_MODEL_FIXES.md` | 4B spatial merge 修复、队列指标、JSON watchdog | **已完成** → `phase9_edge_runtime_model_fixes.md` |
 | `CLAUDE_05_EXPERIMENT_VALIDATION_AND_RELEASE_GATES.md` | Threshold soak test、4B 修复后复测、校准集分离 | 待开始 |
 | `CLAUDE_06_FRONTEND_DEMO_TRUTHFULNESS_GUARDRAILS.md` | 前端 mock/real 标识、AB matrix 口径控制 | 待开始 |

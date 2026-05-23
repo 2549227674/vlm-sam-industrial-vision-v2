@@ -107,5 +107,13 @@ vlm_max_new_tokens: 500
 vlm_max_context: 4096            # 16GB 板约束，上限 4096
 vlm_npu_core_num: 3              # 三核并行
 
+# ── VLM JSON Watchdog ─────────────────────────────
+# Detects repeated bracket / n-gram patterns in VLM output to abort early.
+# Prevents LoRA or other degenerate models from blocking T3 for 50+ seconds.
+vlm_json_watchdog_enabled: true
+vlm_json_watchdog_max_decode_ms: 45000       # 45s decode budget
+vlm_json_watchdog_repeated_char_limit: 64    # 64+ repeated chars -> abort
+vlm_json_watchdog_repeated_ngram_limit: 32   # 32+ repeated n-gram -> abort
+
 # ── 图片落盘 ──────────────────────────────────────
 jpeg_quality: 85                 # 上报图片压缩质量

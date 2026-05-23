@@ -710,6 +710,12 @@ void FastSamWorker::operator()(std::stop_token st) {
           vlm_defect_type, vlm_severity, vlm_confidence, vlm_description,
           orig_w_img, orig_h_img, &vlm_severity_corrected);
 
+      if (vlm_result.watchdog_abort) {
+        m_.vlm_watchdog_abort.fetch_add(1, std::memory_order_relaxed);
+        std::fprintf(stderr, "[T3] VLM watchdog abort detected, "
+                     "text_len=%zu\n", vlm_result.raw_text.size());
+      }
+
       if (vlm_severity_corrected) {
         std::fprintf(stderr, "[T3] severity_corrected=true\n");
       }
@@ -884,6 +890,12 @@ void FastSamWorker::operator()(std::stop_token st) {
     report.trace_events.push_back(
         {"qwen3vl_generate", ts, vlm_total_ms * 1000.0f,
          "T3.vlm", 'X', "vlm"});
+    if (vlm_result.watchdog_abort) {
+      float wd_ts = ts + vlm_total_ms * 1000.0f;
+      report.trace_events.push_back(
+          {"vlm_watchdog_abort", wd_ts, 0.0f,
+           "T3.vlm", 'X', "watchdog"});
+    }
 
     out_.push_drop_oldest(std::move(report));
     m_.vlm_count.fetch_add(1, std::memory_order_relaxed);

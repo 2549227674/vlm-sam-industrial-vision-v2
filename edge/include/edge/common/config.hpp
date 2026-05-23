@@ -113,6 +113,12 @@ struct Config {
   int32_t     vlm_max_context{4096};
   int32_t     vlm_npu_core_num{3};
 
+  // -- VLM JSON watchdog --
+  bool        vlm_json_watchdog_enabled{true};
+  int32_t     vlm_json_watchdog_max_decode_ms{45000};
+  int32_t     vlm_json_watchdog_repeated_char_limit{64};
+  int32_t     vlm_json_watchdog_repeated_ngram_limit{32};
+
   // -- Image output --
   int32_t     jpeg_quality{85};
 };

@@ -194,6 +194,16 @@ Result<Config> load_config(std::string_view path) {
     else if (full_key == "vlm_npu_core_num")
       cfg.vlm_npu_core_num = std::stoi(val);
 
+    // -- VLM JSON watchdog --
+    else if (full_key == "vlm_json_watchdog_enabled")
+      cfg.vlm_json_watchdog_enabled = (val == "true" || val == "1");
+    else if (full_key == "vlm_json_watchdog_max_decode_ms")
+      cfg.vlm_json_watchdog_max_decode_ms = std::stoi(val);
+    else if (full_key == "vlm_json_watchdog_repeated_char_limit")
+      cfg.vlm_json_watchdog_repeated_char_limit = std::stoi(val);
+    else if (full_key == "vlm_json_watchdog_repeated_ngram_limit")
+      cfg.vlm_json_watchdog_repeated_ngram_limit = std::stoi(val);
+
     // -- Output --
     else if (full_key == "jpeg_quality")
       cfg.jpeg_quality = std::stoi(val);
