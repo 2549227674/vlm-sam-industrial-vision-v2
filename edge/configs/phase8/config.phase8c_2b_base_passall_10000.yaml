@@ -1,0 +1,60 @@
+# ── edge/phase8c_configs/config.phase8c_2b_base_passall_10000.yaml ──
+# Phase 8C-mini: 2B base pass_all beat_ms=10000 sweep point.
+
+device_id: rk3588-phase8c-beat10000
+line_id: "L1"
+
+backend_url: http://192.168.137.1:8000
+upload_timeout_s: 30
+upload_max_retries: 5
+
+vlm_variant: "base"
+vlm_model_size: "2B"
+
+capture_mode: image_loop
+image_loop_dir: /home/orangepi/fixed_sample_images_v2
+image_loop_categories:
+  - tile
+  - carpet
+  - grid
+  - metal_nut
+  - zipper
+  - pill
+  - screw
+image_loop_beat_ms: 10000
+image_loop_jitter_ms: 0
+
+efficientad_model_dir: /home/orangepi/models/efficientad_models
+efficientad_threshold: 0.5
+efficientad_input_size: 256
+efficientad_threshold_default: 49.17
+efficientad_score_mode: raw_score
+efficientad_gate_mode: pass_all
+per_category_threshold:
+  bottle: 49.17
+  cable: 99.84
+  capsule: 668.60
+  carpet: 38.70
+  grid: 46.72
+  hazelnut: 1142.50
+  leather: 619.70
+  metal_nut: 119.47
+  pill: 218.69
+  screw: 28.00
+  tile: 38.31
+  toothbrush: 429.01
+  transistor: 631.65
+  wood: 809.40
+  zipper: 36.42
+
+fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s.rknn
+fastsam_input_size: 640
+fastsam_conf: 0.5
+
+vlm_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+vlm_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+vlm_max_new_tokens: 500
+vlm_max_context: 4096
+vlm_npu_core_num: 3
+
+jpeg_quality: 85

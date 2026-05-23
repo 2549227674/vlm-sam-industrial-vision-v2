@@ -1,0 +1,108 @@
+# ── 设备标识 ──────────────────────────────────────
+device_id: rk3588-line-A-cam01
+line_id: "L1"                    # 上报到后端的 line_id 字段，max 32 字符
+
+# ── 后端连接 ──────────────────────────────────────
+backend_url: http://192.168.137.1:8000
+upload_timeout_s: 30
+upload_max_retries: 5            # 指数退避最多 5 次（500ms × 2ⁿ + jitter）
+
+# ── AB 测试 ───────────────────────────────────────
+vlm_variant: "base"              # "base"=Base+Prompt工程 / "lora"=LoRA+极简Prompt
+vlm_model_size: "4B"             # "2B" (mainline) | "4B" (experimental, spatial merge fix pending)
+
+# ── 取帧模式 ──────────────────────────────────────
+capture_mode: image_loop         # "v4l2" | "image_loop"
+
+# V4L2 模式（板子接摄像头时用）
+camera_device: /dev/video0
+camera_width: 1920
+camera_height: 1080
+
+# Image Loop 模式（静态图片集循环测试用）
+image_loop_dir: /home/orangepi/vlm-sam-industrial-vision-v2/simulator/mvtec
+image_loop_categories:           # 4B 回归测试：纹理敏感 + 基准类别
+  - carpet
+  - tile
+  - metal_nut
+  - pill
+  - screw
+image_loop_beat_ms: 15000         # 每帧间隔，毫秒
+image_loop_jitter_ms: 1000        # ± 抖动
+
+# ── Stage 1：EfficientAD-S ───────────────────────
+efficientad_model_dir: /home/orangepi/models/efficientad_models
+efficientad_threshold: 0.5       # 异常分数超过此值触发 Stage 2/3（等同 efficientad_threshold_default）
+efficientad_input_size: 256      # 固定 256×256，不要改
+
+# ── Stage 1：类别级自适应阈值 ─────────────────────
+# 默认阈值：anomaly_score > 此值时触发 FastSAM + VLM
+# NOTE:
+# Raw EfficientAD 输出不在旧 post_processor [0,1] 分数尺度上。
+# Phase 8A + 8A-Fix + 8A-Fix-Fix 已在 Orange Pi 板端用 RKNNLite 对 15 类 MVTec test split
+# 做了全量校准，并比较了 5 种 score_mode。
+# 所有类别均存在 good/defect 分布重叠（14/15 类 AUROC < 0.80，tile 例外），
+# 阈值仅为工程起始值，T2 gate 定位为 load shedding gate。
+efficientad_threshold_default: 49.17
+# Score mode：从 raw anomaly map 中选择哪个指标作为 final_score
+# 可选值：raw_score, map_max, map_mean, map_top1, map_top01
+# Phase 8A-Fix 比较：raw_score/map_max 平均 AUROC=0.5320（最佳），
+# map_mean 平均 AUROC=0.4561（最差）。delta=+0.0759。
+# Phase 8A-Fix-Fix: single global score_mode=raw_score.
+# All per_category_threshold values are raw_score good_p95 on MVTec AD test split.
+# Runtime does NOT support per-category score_mode; mixing scales is incorrect.
+efficientad_score_mode: raw_score
+# Gate mode：T2 如何决定将帧推入 Q2
+# 可选值：threshold（正式生产），pass_all（仅调试）
+efficientad_gate_mode: pass_all
+# Phase 8A-Fix-Fix: all per_category_threshold values are raw_score good_p95.
+# Runtime uses a single global efficientad_score_mode=raw_score.
+# T2 gate is a load shedding gate, not a detection gate.
+# Thresholds are engineering starting values, not production-certified.
+# Real production calibration required before deployment.
+per_category_threshold:
+  cable: 99.84      # raw_score good_p95, AUROC=0.4822
+  capsule: 668.60   # raw_score good_p95, AUROC=0.4779
+  carpet: 38.70     # raw_score good_p95, AUROC=0.7887
+  grid: 46.72       # raw_score good_p95, AUROC=0.6099
+  hazelnut: 1142.50 # raw_score good_p95, AUROC=0.5673
+  leather: 619.70   # raw_score good_p95, AUROC=0.4693
+  metal_nut: 119.47 # raw_score good_p95, AUROC=0.6173
+  pill: 218.69      # raw_score good_p95, AUROC=0.3682
+  screw: 28.00      # raw_score good_p95, AUROC=0.5337
+  tile: 38.31       # raw_score good_p95, AUROC=0.8193 — only category > 0.80
+  toothbrush: 429.01 # raw_score good_p95, AUROC=0.5250
+  transistor: 631.65 # raw_score good_p95, AUROC=0.3308
+  wood: 809.40      # raw_score good_p95, AUROC=0.4162
+  zipper: 36.42     # raw_score good_p95, AUROC=0.4766
+
+# ── Stage 2：FastSAM ──────────────────────────────
+fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s_noquant.rknn
+fastsam_input_size: 640          # 固定 640，见 ARCHITECTURE.md §3.2
+fastsam_conf: 0.5
+
+# ── Stage 3：Qwen3-VL-2B/4B ──────────────────────
+vlm_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+vlm_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+vlm_4b_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_base.rkllm
+vlm_4b_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_vision.rknn
+# LoRA 模型路径（当 vlm_variant="lora" 时使用）
+vlm_2b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+vlm_4b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_lora_15cls.rkllm
+# 4B 运行时 RAM ~8.7 GB，Pipeline 总峰值 ~11.4 GB（16GB 板裕度 ~3.1 GB）
+# 4B 文件来源：Qengineering Sync.com（不自行转换 base 文件）
+# 视觉文件：使用 v1.2.2 版本（v1.2.3 精度存在回退，见 Issue #421）
+vlm_max_new_tokens: 500
+vlm_max_context: 4096            # 16GB 板约束，上限 4096
+vlm_npu_core_num: 3              # 三核并行
+
+# ── VLM JSON Watchdog ─────────────────────────────
+# Detects repeated bracket / n-gram patterns in VLM output to abort early.
+# Prevents LoRA or other degenerate models from blocking T3 for 50+ seconds.
+vlm_json_watchdog_enabled: true
+vlm_json_watchdog_max_decode_ms: 45000       # 45s decode budget
+vlm_json_watchdog_repeated_char_limit: 64    # 64+ repeated chars -> abort
+vlm_json_watchdog_repeated_ngram_limit: 32   # 32+ repeated n-gram -> abort
+
+# ── 图片落盘 ──────────────────────────────────────
+jpeg_quality: 85                 # 上报图片压缩质量

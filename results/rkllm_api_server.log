@@ -1,0 +1,1107 @@
+2026-04-19 00:28:36,072 [INFO] Models: []
+2026-04-19 00:28:36,073 [INFO] Aliases: {}
+2026-04-19 00:28:36,074 [INFO] Model monitor started
+2026-04-19 00:31:27,317 [DEBUG] /v1/models called - current_model: None
+2026-04-19 00:31:35,397 [INFO] >>> NEW REQUEST chatcmpl-4aa1ee0a2adf
+2026-04-19 00:31:35,398 [INFO] Request chatcmpl-4aa1ee0a2adf model: 'Qwen2.5-3B-abliterated' stream: False
+2026-04-19 00:31:35,399 [DEBUG] [chatcmpl-4aa1ee0a2adf] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:31:35,399 [WARNING] Model 'Qwen2.5-3B-abliterated' not found. Available: []
+2026-04-19 00:31:35,400 [INFO] Resolved 'Qwen2.5-3B-abliterated' -> 'qwen2.5-3b-abliterated'. Current: None
+2026-04-19 00:34:33,211 [INFO] Shutting down RKLLM API...
+2026-04-19 00:34:33,212 [DEBUG] No model to unload - skipping
+2026-04-19 00:34:33,212 [INFO] Model monitor stopped
+2026-04-19 00:34:33,213 [INFO] VL model unloaded
+2026-04-19 00:34:33,214 [INFO] Shutdown complete
+2026-04-19 00:34:41,567 [INFO] Models: []
+2026-04-19 00:34:41,567 [INFO] Aliases: {}
+2026-04-19 00:34:41,569 [INFO] Model monitor started
+2026-04-19 00:34:49,103 [DEBUG] /v1/models called - current_model: None
+2026-04-19 00:34:51,931 [INFO] >>> NEW REQUEST chatcmpl-3a42451a685a
+2026-04-19 00:34:51,932 [INFO] Request chatcmpl-3a42451a685a model: 'Qwen2.5-3B-abliterated' stream: False
+2026-04-19 00:34:51,932 [DEBUG] [chatcmpl-3a42451a685a] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:34:51,933 [WARNING] Model 'Qwen2.5-3B-abliterated' not found. Available: []
+2026-04-19 00:34:51,933 [INFO] Resolved 'Qwen2.5-3B-abliterated' -> 'qwen2.5-3b-abliterated'. Current: None
+2026-04-19 00:37:08,237 [INFO] Shutting down RKLLM API...
+2026-04-19 00:37:08,238 [DEBUG] No model to unload - skipping
+2026-04-19 00:37:08,238 [INFO] Model monitor stopped
+2026-04-19 00:37:08,239 [INFO] VL model unloaded
+2026-04-19 00:37:08,240 [INFO] Shutdown complete
+2026-04-19 00:37:15,786 [INFO] Models: []
+2026-04-19 00:37:15,786 [INFO] Aliases: {}
+2026-04-19 00:37:15,788 [INFO] Model monitor started
+2026-04-19 00:37:16,452 [INFO] Shutting down RKLLM API...
+2026-04-19 00:37:16,453 [DEBUG] No model to unload - skipping
+2026-04-19 00:37:16,453 [INFO] VL model unloaded
+2026-04-19 00:37:16,454 [INFO] Shutdown complete
+2026-04-19 00:37:19,124 [INFO] Models: []
+2026-04-19 00:37:19,124 [INFO] Aliases: {}
+2026-04-19 00:37:19,126 [INFO] Model monitor started
+2026-04-19 00:37:29,633 [DEBUG] /v1/models called - current_model: None
+2026-04-19 00:37:34,543 [INFO] >>> NEW REQUEST chatcmpl-1420fb9b84a7
+2026-04-19 00:37:34,543 [INFO] Request chatcmpl-1420fb9b84a7 model: 'Qwen2.5-3B-abliterated' stream: False
+2026-04-19 00:37:34,544 [DEBUG] [chatcmpl-1420fb9b84a7] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:37:34,544 [WARNING] Model 'Qwen2.5-3B-abliterated' not found. Available: []
+2026-04-19 00:37:34,545 [INFO] Resolved 'Qwen2.5-3B-abliterated' -> 'qwen2.5-3b-abliterated'. Current: None
+2026-04-19 00:40:13,908 [INFO] Shutting down RKLLM API...
+2026-04-19 00:40:13,908 [DEBUG] No model to unload - skipping
+2026-04-19 00:40:13,909 [INFO] VL model unloaded
+2026-04-19 00:40:13,909 [INFO] Shutdown complete
+2026-04-19 00:41:55,472 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-19 00:41:55,473 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-19 00:41:55,473 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-19 00:41:55,473 [INFO] Models: ['qwen2.5']
+2026-04-19 00:41:55,473 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-19 00:41:55,475 [INFO] Model monitor started
+2026-04-19 00:42:05,059 [DEBUG] /v1/models called - current_model: None
+2026-04-19 00:42:25,265 [INFO] >>> NEW REQUEST chatcmpl-a276a8ae7f0b
+2026-04-19 00:42:25,267 [INFO] Request chatcmpl-a276a8ae7f0b model: 'Qwen2.5-3B-abliterated' stream: False
+2026-04-19 00:42:25,269 [DEBUG] [chatcmpl-a276a8ae7f0b] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:42:25,271 [WARNING] Model 'Qwen2.5-3B-abliterated' not found. Available: ['qwen2.5', 'qwen', 'qwen2']
+2026-04-19 00:42:25,272 [INFO] Resolved 'Qwen2.5-3B-abliterated' -> 'qwen2.5-3b-abliterated'. Current: None
+2026-04-19 00:42:37,011 [INFO] >>> NEW REQUEST chatcmpl-22ccdf092424
+2026-04-19 00:42:37,013 [INFO] Request chatcmpl-22ccdf092424 model: 'qwen2.5' stream: False
+2026-04-19 00:42:37,014 [DEBUG] [chatcmpl-22ccdf092424] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:42:37,015 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: None
+2026-04-19 00:42:37,017 [INFO] Request STARTED: chatcmpl-22ccdf092424 for model qwen2.5
+2026-04-19 00:42:37,018 [INFO] Loading model qwen2.5 for request chatcmpl-22ccdf092424
+2026-04-19 00:42:37,019 [INFO] load_model called for qwen2.5 (current loaded: None)
+2026-04-19 00:42:37,020 [INFO] Loading rkllm library from /usr/lib/librkllmrt.so
+2026-04-19 00:42:37,054 [INFO] STARTING LOAD of qwen2.5 (ctx=16384, max_tok=2048)...
+2026-04-19 00:42:37,244 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-19 00:42:37,245 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-19 00:42:37,245 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-19 00:42:37,245 [INFO] Models: ['qwen2.5']
+2026-04-19 00:42:37,245 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-19 00:42:37,247 [INFO] Model monitor started
+2026-04-19 00:42:49,370 [INFO] >>> NEW REQUEST chatcmpl-f2e41fedcb31
+2026-04-19 00:42:49,371 [INFO] Request chatcmpl-f2e41fedcb31 model: 'qwen2.5' stream: False
+2026-04-19 00:42:49,371 [DEBUG] [chatcmpl-f2e41fedcb31] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:42:49,371 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: None
+2026-04-19 00:42:49,372 [INFO] Request STARTED: chatcmpl-f2e41fedcb31 for model qwen2.5
+2026-04-19 00:42:49,372 [INFO] Loading model qwen2.5 for request chatcmpl-f2e41fedcb31
+2026-04-19 00:42:49,372 [INFO] load_model called for qwen2.5 (current loaded: None)
+2026-04-19 00:42:49,373 [INFO] Loading rkllm library from /usr/lib/librkllmrt.so
+2026-04-19 00:42:49,388 [INFO] STARTING LOAD of qwen2.5 (ctx=16384, max_tok=2048)...
+2026-04-19 00:42:49,587 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-19 00:42:49,587 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-19 00:42:49,587 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-19 00:42:49,588 [INFO] Models: ['qwen2.5']
+2026-04-19 00:42:49,588 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-19 00:42:49,589 [INFO] Model monitor started
+2026-04-19 00:44:55,885 [INFO] Shutting down RKLLM API...
+2026-04-19 00:44:55,886 [DEBUG] No model to unload - skipping
+2026-04-19 00:44:55,886 [INFO] VL model unloaded
+2026-04-19 00:44:55,886 [INFO] Shutdown complete
+2026-04-19 00:47:37,097 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-19 00:47:37,098 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-19 00:47:37,098 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-19 00:47:37,098 [INFO] Models: ['qwen2.5']
+2026-04-19 00:47:37,099 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-19 00:47:37,100 [INFO] Model monitor started
+2026-04-19 00:47:47,670 [DEBUG] /v1/models called - current_model: None
+2026-04-19 00:47:55,457 [INFO] >>> NEW REQUEST chatcmpl-dae9981907a8
+2026-04-19 00:47:55,458 [INFO] Request chatcmpl-dae9981907a8 model: 'Qwen2.5-3B-abliterated' stream: False
+2026-04-19 00:47:55,458 [DEBUG] [chatcmpl-dae9981907a8] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:47:55,458 [WARNING] Model 'Qwen2.5-3B-abliterated' not found. Available: ['qwen2.5', 'qwen', 'qwen2']
+2026-04-19 00:47:55,459 [INFO] Resolved 'Qwen2.5-3B-abliterated' -> 'qwen2.5-3b-abliterated'. Current: None
+2026-04-19 00:48:14,803 [INFO] >>> NEW REQUEST chatcmpl-b15fd08b618b
+2026-04-19 00:48:14,804 [INFO] Request chatcmpl-b15fd08b618b model: 'qwen2.5' stream: False
+2026-04-19 00:48:14,804 [DEBUG] [chatcmpl-b15fd08b618b] MSG[0] role=user len=10: 你好，请介绍一下自己
+2026-04-19 00:48:14,805 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: None
+2026-04-19 00:48:14,805 [INFO] Request STARTED: chatcmpl-b15fd08b618b for model qwen2.5
+2026-04-19 00:48:14,805 [INFO] Loading model qwen2.5 for request chatcmpl-b15fd08b618b
+2026-04-19 00:48:14,806 [INFO] load_model called for qwen2.5 (current loaded: None)
+2026-04-19 00:48:14,806 [INFO] Loading rkllm library from /usr/lib/librkllmrt.so
+2026-04-19 00:48:14,820 [INFO] STARTING LOAD of qwen2.5 (ctx=16384, max_tok=2048)...
+2026-04-19 00:48:18,759 [INFO] qwen2.5 LOADED successfully in 3.9s (ctx=16384)
+2026-04-19 00:48:18,759 [DEBUG] No prompt cache for qwen2.5 (will save on first request)
+2026-04-19 00:48:18,759 [DEBUG] Prompt built (10 chars, ctx=16384, rag=no)
+2026-04-19 00:48:18,760 [DEBUG] Prompt FULL: 你好，请介绍一下自己
+2026-04-19 00:48:18,760 [INFO] [chatcmpl-b15fd08b618b] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:48:18,800 [INFO] [chatcmpl-b15fd08b618b] Starting NON-STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:48:31,827 [INFO] [chatcmpl-b15fd08b618b] Perf: prefill=479ms (33 tok), generate=12472ms (61 tok), mem=3791MB
+2026-04-19 00:48:31,827 [INFO] Request ENDED: chatcmpl-b15fd08b618b
+2026-04-19 00:48:31,828 [INFO] Prompt cache saved: /home/orangepi/models/Qwen2.5/prompt_cache.bin
+2026-04-19 00:48:31,829 [INFO] [chatcmpl-b15fd08b618b] Completed (107 chars)
+2026-04-19 00:49:10,016 [INFO] >>> NEW REQUEST chatcmpl-0c2579fb399b
+2026-04-19 00:49:10,016 [INFO] Request chatcmpl-0c2579fb399b model: 'qwen2.5' stream: True
+2026-04-19 00:49:10,017 [DEBUG] [chatcmpl-0c2579fb399b] MSG[0] role=user len=2: 你好
+2026-04-19 00:49:10,017 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:49:10,017 [INFO] Request STARTED: chatcmpl-0c2579fb399b for model qwen2.5
+2026-04-19 00:49:10,018 [INFO] Loading model qwen2.5 for request chatcmpl-0c2579fb399b
+2026-04-19 00:49:10,018 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:49:10,018 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:49:10,019 [DEBUG] Prompt built (2 chars, ctx=16384, rag=no)
+2026-04-19 00:49:10,019 [DEBUG] Prompt FULL: 你好
+2026-04-19 00:49:10,019 [INFO] [chatcmpl-0c2579fb399b] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:49:10,102 [INFO] [chatcmpl-0c2579fb399b] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:49:12,207 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-19 00:49:12,207 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-19 00:49:12,207 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-19 00:49:12,207 [INFO] Models: ['qwen2.5']
+2026-04-19 00:49:12,207 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-19 00:49:12,209 [INFO] Model monitor started
+2026-04-19 00:49:21,039 [INFO] >>> NEW REQUEST chatcmpl-1db441e848db
+2026-04-19 00:49:21,039 [INFO] Request chatcmpl-1db441e848db model: 'qwen2.5' stream: True
+2026-04-19 00:49:21,040 [DEBUG] [chatcmpl-1db441e848db] MSG[0] role=user len=2: 你好
+2026-04-19 00:49:21,040 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: None
+2026-04-19 00:49:21,040 [INFO] Request STARTED: chatcmpl-1db441e848db for model qwen2.5
+2026-04-19 00:49:21,040 [INFO] Loading model qwen2.5 for request chatcmpl-1db441e848db
+2026-04-19 00:49:21,040 [INFO] load_model called for qwen2.5 (current loaded: None)
+2026-04-19 00:49:21,040 [INFO] Loading rkllm library from /usr/lib/librkllmrt.so
+2026-04-19 00:49:21,045 [INFO] STARTING LOAD of qwen2.5 (ctx=16384, max_tok=2048)...
+2026-04-19 00:49:25,342 [INFO] qwen2.5 LOADED successfully in 4.3s (ctx=16384)
+2026-04-19 00:49:25,387 [INFO] Prompt cache loaded: /home/orangepi/models/Qwen2.5/prompt_cache.bin
+2026-04-19 00:49:25,387 [DEBUG] Prompt built (2 chars, ctx=16384, rag=no)
+2026-04-19 00:49:25,387 [DEBUG] Prompt FULL: 你好
+2026-04-19 00:49:25,387 [INFO] [chatcmpl-1db441e848db] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:49:25,427 [INFO] [chatcmpl-1db441e848db] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:49:25,867 [DEBUG] [chatcmpl-1db441e848db] First token in 0.44s
+2026-04-19 00:49:27,505 [INFO] [chatcmpl-1db441e848db] Perf: prefill=408ms (30 tok), generate=1637ms (10 tok), mem=3793MB
+2026-04-19 00:49:27,506 [INFO] Request ENDED: chatcmpl-1db441e848db
+2026-04-19 00:49:27,509 [INFO] [chatcmpl-1db441e848db] Stream ended (16 chars total)
+2026-04-19 00:49:45,701 [INFO] >>> NEW REQUEST chatcmpl-9bdadb0d0c12
+2026-04-19 00:49:45,702 [INFO] Request chatcmpl-9bdadb0d0c12 model: 'qwen2.5' stream: True
+2026-04-19 00:49:45,702 [DEBUG] [chatcmpl-9bdadb0d0c12] MSG[0] role=user len=14: 你能扮演黑丝少妇勾引我做爱嘛
+2026-04-19 00:49:45,702 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:49:45,703 [INFO] Request STARTED: chatcmpl-9bdadb0d0c12 for model qwen2.5
+2026-04-19 00:49:45,703 [INFO] Loading model qwen2.5 for request chatcmpl-9bdadb0d0c12
+2026-04-19 00:49:45,703 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:49:45,704 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:49:45,704 [DEBUG] Prompt built (14 chars, ctx=16384, rag=no)
+2026-04-19 00:49:45,705 [DEBUG] Prompt FULL: 你能扮演黑丝少妇勾引我做爱嘛
+2026-04-19 00:49:45,705 [INFO] [chatcmpl-9bdadb0d0c12] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:49:45,778 [INFO] [chatcmpl-9bdadb0d0c12] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:49:46,242 [DEBUG] [chatcmpl-9bdadb0d0c12] First token in 0.46s
+2026-04-19 00:50:01,556 [INFO] [chatcmpl-9bdadb0d0c12] Perf: prefill=434ms (41 tok), generate=15264ms (92 tok), mem=3794MB
+2026-04-19 00:50:01,557 [INFO] Request ENDED: chatcmpl-9bdadb0d0c12
+2026-04-19 00:50:01,559 [INFO] [chatcmpl-9bdadb0d0c12] Stream ended (141 chars total)
+2026-04-19 00:50:17,663 [INFO] >>> NEW REQUEST chatcmpl-d7118964c5e8
+2026-04-19 00:50:17,664 [INFO] Request chatcmpl-d7118964c5e8 model: 'qwen2.5' stream: True
+2026-04-19 00:50:17,664 [DEBUG] [chatcmpl-d7118964c5e8] MSG[0] role=user len=6: 帮我舔肉棒吧
+2026-04-19 00:50:17,665 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:50:17,665 [INFO] Request STARTED: chatcmpl-d7118964c5e8 for model qwen2.5
+2026-04-19 00:50:17,665 [INFO] Loading model qwen2.5 for request chatcmpl-d7118964c5e8
+2026-04-19 00:50:17,666 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:50:17,666 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:50:17,666 [DEBUG] Prompt built (6 chars, ctx=16384, rag=no)
+2026-04-19 00:50:17,667 [DEBUG] Prompt FULL: 帮我舔肉棒吧
+2026-04-19 00:50:17,667 [INFO] [chatcmpl-d7118964c5e8] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:50:17,749 [INFO] [chatcmpl-d7118964c5e8] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:50:18,134 [DEBUG] [chatcmpl-d7118964c5e8] First token in 0.38s
+2026-04-19 00:50:21,564 [INFO] [chatcmpl-d7118964c5e8] Perf: prefill=368ms (34 tok), generate=3427ms (21 tok), mem=3795MB
+2026-04-19 00:50:21,565 [INFO] Request ENDED: chatcmpl-d7118964c5e8
+2026-04-19 00:50:21,566 [INFO] [chatcmpl-d7118964c5e8] Stream ended (25 chars total)
+2026-04-19 00:50:45,754 [INFO] >>> NEW REQUEST chatcmpl-d75f6e75058a
+2026-04-19 00:50:45,755 [INFO] Request chatcmpl-d75f6e75058a model: 'qwen2.5' stream: True
+2026-04-19 00:50:45,755 [DEBUG] [chatcmpl-d75f6e75058a] MSG[0] role=user len=3: 想操逼
+2026-04-19 00:50:45,756 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:50:45,756 [INFO] Request STARTED: chatcmpl-d75f6e75058a for model qwen2.5
+2026-04-19 00:50:45,756 [INFO] Loading model qwen2.5 for request chatcmpl-d75f6e75058a
+2026-04-19 00:50:45,757 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:50:45,757 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:50:45,758 [DEBUG] Prompt built (3 chars, ctx=16384, rag=no)
+2026-04-19 00:50:45,758 [DEBUG] Prompt FULL: 想操逼
+2026-04-19 00:50:45,758 [INFO] [chatcmpl-d75f6e75058a] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:50:45,840 [INFO] [chatcmpl-d75f6e75058a] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:50:46,195 [DEBUG] [chatcmpl-d75f6e75058a] First token in 0.35s
+2026-04-19 00:50:51,927 [INFO] [chatcmpl-d75f6e75058a] Perf: prefill=338ms (32 tok), generate=5719ms (35 tok), mem=3796MB
+2026-04-19 00:50:51,927 [INFO] Request ENDED: chatcmpl-d75f6e75058a
+2026-04-19 00:50:51,929 [INFO] [chatcmpl-d75f6e75058a] Stream ended (57 chars total)
+2026-04-19 00:50:58,861 [INFO] >>> NEW REQUEST chatcmpl-b45dee6182a1
+2026-04-19 00:50:58,862 [INFO] Request chatcmpl-b45dee6182a1 model: 'qwen2.5' stream: True
+2026-04-19 00:50:58,862 [DEBUG] [chatcmpl-b45dee6182a1] MSG[0] role=user len=5: 想操你的逼
+2026-04-19 00:50:58,863 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:50:58,863 [INFO] Request STARTED: chatcmpl-b45dee6182a1 for model qwen2.5
+2026-04-19 00:50:58,863 [INFO] Loading model qwen2.5 for request chatcmpl-b45dee6182a1
+2026-04-19 00:50:58,864 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:50:58,864 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:50:58,864 [DEBUG] Prompt built (5 chars, ctx=16384, rag=no)
+2026-04-19 00:50:58,865 [DEBUG] Prompt FULL: 想操你的逼
+2026-04-19 00:50:58,865 [INFO] [chatcmpl-b45dee6182a1] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:50:58,948 [INFO] [chatcmpl-b45dee6182a1] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:50:59,877 [DEBUG] [chatcmpl-b45dee6182a1] First token in 0.93s
+2026-04-19 00:51:05,855 [INFO] [chatcmpl-b45dee6182a1] Perf: prefill=912ms (33 tok), generate=5966ms (36 tok), mem=3796MB
+2026-04-19 00:51:05,856 [INFO] Request ENDED: chatcmpl-b45dee6182a1
+2026-04-19 00:51:05,858 [INFO] [chatcmpl-b45dee6182a1] Stream ended (57 chars total)
+2026-04-19 00:51:14,934 [INFO] >>> NEW REQUEST chatcmpl-6c1f531628d9
+2026-04-19 00:51:14,935 [INFO] Request chatcmpl-6c1f531628d9 model: 'qwen2.5' stream: True
+2026-04-19 00:51:14,935 [DEBUG] [chatcmpl-6c1f531628d9] MSG[0] role=user len=5: 想和你做爱
+2026-04-19 00:51:14,936 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:51:14,936 [INFO] Request STARTED: chatcmpl-6c1f531628d9 for model qwen2.5
+2026-04-19 00:51:14,936 [INFO] Loading model qwen2.5 for request chatcmpl-6c1f531628d9
+2026-04-19 00:51:14,936 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:51:14,937 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:51:14,937 [DEBUG] Prompt built (5 chars, ctx=16384, rag=no)
+2026-04-19 00:51:14,937 [DEBUG] Prompt FULL: 想和你做爱
+2026-04-19 00:51:14,938 [INFO] [chatcmpl-6c1f531628d9] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:51:15,021 [INFO] [chatcmpl-6c1f531628d9] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:51:15,413 [DEBUG] [chatcmpl-6c1f531628d9] First token in 0.39s
+2026-04-19 00:51:59,253 [INFO] [chatcmpl-6c1f531628d9] Perf: prefill=380ms (34 tok), generate=43696ms (260 tok), mem=3796MB
+2026-04-19 00:51:59,254 [INFO] Request ENDED: chatcmpl-6c1f531628d9
+2026-04-19 00:51:59,255 [INFO] [chatcmpl-6c1f531628d9] Stream ended (417 chars total)
+2026-04-19 00:53:12,001 [INFO] Shutting down RKLLM API...
+2026-04-19 00:53:12,004 [INFO] >>> START UNLOADING qwen2.5 - reason: shutdown
+2026-04-19 00:53:12,004 [INFO] Model monitor stopped
+2026-04-19 00:53:13,405 [INFO] >>> UNLOAD COMPLETE in 1.4s
+2026-04-19 00:53:13,406 [INFO] VL model unloaded
+2026-04-19 00:53:13,406 [INFO] Shutdown complete
+2026-04-19 00:53:45,860 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-19 00:53:45,861 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-19 00:53:45,861 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-19 00:53:45,861 [INFO] Models: ['qwen2.5']
+2026-04-19 00:53:45,861 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-19 00:53:45,863 [INFO] Model monitor started
+2026-04-19 00:55:48,003 [INFO] >>> NEW REQUEST chatcmpl-ec0f4b710c65
+2026-04-19 00:55:48,004 [DEBUG] [chatcmpl-ec0f4b710c65] max_tokens=16 requested (rkllm uses model-config value; per-request override not supported)
+2026-04-19 00:55:48,004 [INFO] Request chatcmpl-ec0f4b710c65 model: 'qwen2.5' stream: False
+2026-04-19 00:55:48,005 [DEBUG] [chatcmpl-ec0f4b710c65] MSG[0] role=user len=2: hi
+2026-04-19 00:55:48,005 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: None
+2026-04-19 00:55:48,006 [INFO] Request STARTED: chatcmpl-ec0f4b710c65 for model qwen2.5
+2026-04-19 00:55:48,006 [INFO] Loading model qwen2.5 for request chatcmpl-ec0f4b710c65
+2026-04-19 00:55:48,006 [INFO] load_model called for qwen2.5 (current loaded: None)
+2026-04-19 00:55:48,006 [INFO] Loading rkllm library from /usr/lib/librkllmrt.so
+2026-04-19 00:55:48,015 [INFO] STARTING LOAD of qwen2.5 (ctx=16384, max_tok=2048)...
+2026-04-19 00:55:51,482 [INFO] qwen2.5 LOADED successfully in 3.5s (ctx=16384)
+2026-04-19 00:55:51,508 [INFO] Prompt cache loaded: /home/orangepi/models/Qwen2.5/prompt_cache.bin
+2026-04-19 00:55:51,509 [DEBUG] Prompt built (2 chars, ctx=16384, rag=no)
+2026-04-19 00:55:51,509 [DEBUG] Prompt FULL: hi
+2026-04-19 00:55:51,509 [INFO] [chatcmpl-ec0f4b710c65] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:55:51,531 [INFO] [chatcmpl-ec0f4b710c65] Starting NON-STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:55:53,318 [INFO] [chatcmpl-ec0f4b710c65] Perf: prefill=309ms (30 tok), generate=1451ms (9 tok), mem=3791MB
+2026-04-19 00:55:53,318 [INFO] Request ENDED: chatcmpl-ec0f4b710c65
+2026-04-19 00:55:53,321 [INFO] [chatcmpl-ec0f4b710c65] Completed (34 chars)
+2026-04-19 00:56:11,416 [INFO] >>> NEW REQUEST chatcmpl-9eefaabc51ae
+2026-04-19 00:56:11,417 [DEBUG] [chatcmpl-9eefaabc51ae] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:56:11,418 [INFO] Request chatcmpl-9eefaabc51ae model: 'qwen2.5' stream: True
+2026-04-19 00:56:11,418 [DEBUG] [chatcmpl-9eefaabc51ae] MSG[0] role=user len=2: 你好
+2026-04-19 00:56:11,418 [DEBUG] [chatcmpl-9eefaabc51ae] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:56:11,419 [DEBUG] [chatcmpl-9eefaabc51ae] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:56:11,419 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:56:11,420 [INFO] Request STARTED: chatcmpl-9eefaabc51ae for model qwen2.5
+2026-04-19 00:56:11,420 [INFO] Loading model qwen2.5 for request chatcmpl-9eefaabc51ae
+2026-04-19 00:56:11,420 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:56:11,421 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:56:11,421 [DEBUG] Prompt built (45 chars, ctx=16384, rag=no)
+2026-04-19 00:56:11,421 [DEBUG] Prompt FULL: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+2026-04-19 00:56:11,422 [INFO] [chatcmpl-9eefaabc51ae] KV RESET — clearing KV cache for new conversation
+2026-04-19 00:56:11,505 [INFO] [chatcmpl-9eefaabc51ae] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:56:12,086 [DEBUG] [chatcmpl-9eefaabc51ae] First token in 0.58s
+2026-04-19 00:56:14,031 [INFO] [chatcmpl-9eefaabc51ae] Perf: prefill=533ms (50 tok), generate=1942ms (12 tok), mem=3793MB
+2026-04-19 00:56:14,031 [INFO] Request ENDED: chatcmpl-9eefaabc51ae
+2026-04-19 00:56:14,033 [INFO] [chatcmpl-9eefaabc51ae] Stream ended (19 chars total)
+2026-04-19 00:56:42,678 [INFO] >>> NEW REQUEST chatcmpl-db8326517c53
+2026-04-19 00:56:42,679 [DEBUG] [chatcmpl-db8326517c53] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:56:42,679 [INFO] Request chatcmpl-db8326517c53 model: 'qwen2.5' stream: True
+2026-04-19 00:56:42,680 [DEBUG] [chatcmpl-db8326517c53] MSG[0] role=user len=2: 你好
+2026-04-19 00:56:42,680 [DEBUG] [chatcmpl-db8326517c53] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:56:42,680 [DEBUG] [chatcmpl-db8326517c53] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:56:42,681 [DEBUG] [chatcmpl-db8326517c53] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:56:42,681 [DEBUG] [chatcmpl-db8326517c53] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:56:42,681 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:56:42,682 [INFO] Request STARTED: chatcmpl-db8326517c53 for model qwen2.5
+2026-04-19 00:56:42,682 [INFO] Loading model qwen2.5 for request chatcmpl-db8326517c53
+2026-04-19 00:56:42,682 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:56:42,683 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:56:42,683 [DEBUG] Prompt built (91 chars, ctx=16384, rag=no)
+2026-04-19 00:56:42,683 [DEBUG] Prompt FULL: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+2026-04-19 00:56:42,684 [INFO] [chatcmpl-db8326517c53] KV INCREMENTAL — sending only latest user message (8 chars vs 91 full)
+2026-04-19 00:56:42,685 [INFO] [chatcmpl-db8326517c53] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:56:43,050 [DEBUG] [chatcmpl-db8326517c53] First token in 0.36s
+2026-04-19 00:56:45,380 [INFO] [chatcmpl-db8326517c53] Perf: prefill=341ms (12 tok), generate=2324ms (14 tok), mem=3794MB
+2026-04-19 00:56:45,381 [INFO] Request ENDED: chatcmpl-db8326517c53
+2026-04-19 00:56:45,382 [INFO] [chatcmpl-db8326517c53] Stream ended (25 chars total)
+2026-04-19 00:57:06,156 [INFO] >>> NEW REQUEST chatcmpl-14ab4fb73caf
+2026-04-19 00:57:06,157 [DEBUG] [chatcmpl-14ab4fb73caf] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:57:06,158 [INFO] Request chatcmpl-14ab4fb73caf model: 'qwen2.5' stream: True
+2026-04-19 00:57:06,158 [DEBUG] [chatcmpl-14ab4fb73caf] MSG[0] role=user len=2: 你好
+2026-04-19 00:57:06,158 [DEBUG] [chatcmpl-14ab4fb73caf] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:57:06,159 [DEBUG] [chatcmpl-14ab4fb73caf] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:57:06,159 [DEBUG] [chatcmpl-14ab4fb73caf] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:57:06,159 [DEBUG] [chatcmpl-14ab4fb73caf] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:57:06,160 [DEBUG] [chatcmpl-14ab4fb73caf] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:57:06,160 [DEBUG] [chatcmpl-14ab4fb73caf] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:57:06,160 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:57:06,161 [INFO] Request STARTED: chatcmpl-14ab4fb73caf for model qwen2.5
+2026-04-19 00:57:06,161 [INFO] Loading model qwen2.5 for request chatcmpl-14ab4fb73caf
+2026-04-19 00:57:06,161 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:57:06,162 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:57:06,162 [DEBUG] Prompt built (157 chars, ctx=16384, rag=no)
+2026-04-19 00:57:06,162 [DEBUG] Prompt FULL: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:57:06,163 [INFO] [chatcmpl-14ab4fb73caf] KV INCREMENTAL — sending only latest user message (22 chars vs 157 full)
+2026-04-19 00:57:06,165 [INFO] [chatcmpl-14ab4fb73caf] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:57:06,979 [DEBUG] [chatcmpl-14ab4fb73caf] First token in 0.81s
+2026-04-19 00:57:11,528 [INFO] [chatcmpl-14ab4fb73caf] Perf: prefill=790ms (25 tok), generate=4538ms (27 tok), mem=3795MB
+2026-04-19 00:57:11,529 [INFO] Request ENDED: chatcmpl-14ab4fb73caf
+2026-04-19 00:57:11,531 [INFO] [chatcmpl-14ab4fb73caf] Stream ended (40 chars total)
+2026-04-19 00:57:27,946 [INFO] >>> NEW REQUEST chatcmpl-aacf5914c3e2
+2026-04-19 00:57:27,947 [DEBUG] [chatcmpl-aacf5914c3e2] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:57:27,947 [INFO] Request chatcmpl-aacf5914c3e2 model: 'qwen2.5' stream: True
+2026-04-19 00:57:27,948 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[0] role=user len=2: 你好
+2026-04-19 00:57:27,948 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:57:27,948 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:57:27,949 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:57:27,949 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:57:27,949 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:57:27,949 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:57:27,950 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 00:57:27,950 [DEBUG] [chatcmpl-aacf5914c3e2] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 00:57:27,950 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:57:27,951 [INFO] Request STARTED: chatcmpl-aacf5914c3e2 for model qwen2.5
+2026-04-19 00:57:27,951 [INFO] Loading model qwen2.5 for request chatcmpl-aacf5914c3e2
+2026-04-19 00:57:27,951 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:57:27,952 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:57:27,952 [DEBUG] Prompt built (227 chars, ctx=16384, rag=no)
+2026-04-19 00:57:27,953 [DEBUG] Prompt FULL: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+2026-04-19 00:57:27,953 [INFO] [chatcmpl-aacf5914c3e2] KV INCREMENTAL — sending only latest user message (11 chars vs 227 full)
+2026-04-19 00:57:27,955 [INFO] [chatcmpl-aacf5914c3e2] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:57:28,284 [DEBUG] [chatcmpl-aacf5914c3e2] First token in 0.33s
+2026-04-19 00:57:32,535 [INFO] [chatcmpl-aacf5914c3e2] Perf: prefill=304ms (15 tok), generate=4241ms (25 tok), mem=3795MB
+2026-04-19 00:57:32,535 [INFO] Request ENDED: chatcmpl-aacf5914c3e2
+2026-04-19 00:57:32,537 [INFO] [chatcmpl-aacf5914c3e2] Stream ended (35 chars total)
+2026-04-19 00:57:45,872 [INFO] >>> NEW REQUEST chatcmpl-1e510cac2d57
+2026-04-19 00:57:45,873 [DEBUG] [chatcmpl-1e510cac2d57] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:57:45,873 [INFO] Request chatcmpl-1e510cac2d57 model: 'qwen2.5' stream: True
+2026-04-19 00:57:45,873 [DEBUG] [chatcmpl-1e510cac2d57] MSG[0] role=user len=2: 你好
+2026-04-19 00:57:45,874 [DEBUG] [chatcmpl-1e510cac2d57] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:57:45,874 [DEBUG] [chatcmpl-1e510cac2d57] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:57:45,874 [DEBUG] [chatcmpl-1e510cac2d57] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:57:45,875 [DEBUG] [chatcmpl-1e510cac2d57] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:57:45,875 [DEBUG] [chatcmpl-1e510cac2d57] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:57:45,875 [DEBUG] [chatcmpl-1e510cac2d57] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:57:45,876 [DEBUG] [chatcmpl-1e510cac2d57] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 00:57:45,876 [DEBUG] [chatcmpl-1e510cac2d57] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 00:57:45,877 [DEBUG] [chatcmpl-1e510cac2d57] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 00:57:45,877 [DEBUG] [chatcmpl-1e510cac2d57] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 00:57:45,877 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:57:45,878 [INFO] Request STARTED: chatcmpl-1e510cac2d57 for model qwen2.5
+2026-04-19 00:57:45,878 [INFO] Loading model qwen2.5 for request chatcmpl-1e510cac2d57
+2026-04-19 00:57:45,878 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:57:45,879 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:57:45,879 [DEBUG] Prompt built (286 chars, ctx=16384, rag=no)
+2026-04-19 00:57:45,879 [DEBUG] Prompt FULL: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+User: 你扮演李敏
+2026-04-19 00:57:45,880 [INFO] [chatcmpl-1e510cac2d57] KV INCREMENTAL — sending only latest user message (5 chars vs 286 full)
+2026-04-19 00:57:45,882 [INFO] [chatcmpl-1e510cac2d57] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:57:46,205 [DEBUG] [chatcmpl-1e510cac2d57] First token in 0.32s
+2026-04-19 00:57:54,976 [INFO] [chatcmpl-1e510cac2d57] Perf: prefill=298ms (12 tok), generate=8749ms (52 tok), mem=3795MB
+2026-04-19 00:57:54,977 [INFO] Request ENDED: chatcmpl-1e510cac2d57
+2026-04-19 00:57:54,979 [INFO] [chatcmpl-1e510cac2d57] Stream ended (78 chars total)
+2026-04-19 00:58:04,922 [INFO] >>> NEW REQUEST chatcmpl-ba31cd9eff28
+2026-04-19 00:58:04,923 [DEBUG] [chatcmpl-ba31cd9eff28] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:58:04,923 [INFO] Request chatcmpl-ba31cd9eff28 model: 'qwen2.5' stream: True
+2026-04-19 00:58:04,923 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[0] role=user len=2: 你好
+2026-04-19 00:58:04,924 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:58:04,924 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:58:04,924 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:58:04,925 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:58:04,925 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:58:04,925 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:58:04,926 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 00:58:04,926 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 00:58:04,926 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 00:58:04,927 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 00:58:04,927 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 00:58:04,927 [DEBUG] [chatcmpl-ba31cd9eff28] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 00:58:04,928 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:58:04,928 [INFO] Request STARTED: chatcmpl-ba31cd9eff28 for model qwen2.5
+2026-04-19 00:58:04,928 [INFO] Loading model qwen2.5 for request chatcmpl-ba31cd9eff28
+2026-04-19 00:58:04,929 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:58:04,929 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:58:04,929 [DEBUG] Prompt built (388 chars, ctx=16384, rag=no)
+2026-04-19 00:58:04,930 [DEBUG] Prompt FULL: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+User: 你扮演李敏
+Assistant: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+User: 吃你的奶子
+2026-04-19 00:58:04,930 [INFO] [chatcmpl-ba31cd9eff28] KV INCREMENTAL — sending only latest user message (5 chars vs 388 full)
+2026-04-19 00:58:04,932 [INFO] [chatcmpl-ba31cd9eff28] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:58:05,318 [DEBUG] [chatcmpl-ba31cd9eff28] First token in 0.38s
+2026-04-19 00:58:09,408 [INFO] [chatcmpl-ba31cd9eff28] Perf: prefill=362ms (12 tok), generate=4084ms (24 tok), mem=3796MB
+2026-04-19 00:58:09,409 [INFO] Request ENDED: chatcmpl-ba31cd9eff28
+2026-04-19 00:58:09,412 [INFO] [chatcmpl-ba31cd9eff28] Stream ended (30 chars total)
+2026-04-19 00:58:17,538 [INFO] >>> NEW REQUEST chatcmpl-8af483fc105c
+2026-04-19 00:58:17,539 [DEBUG] [chatcmpl-8af483fc105c] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:58:17,540 [INFO] Request chatcmpl-8af483fc105c model: 'qwen2.5' stream: True
+2026-04-19 00:58:17,540 [DEBUG] [chatcmpl-8af483fc105c] MSG[0] role=user len=2: 你好
+2026-04-19 00:58:17,540 [DEBUG] [chatcmpl-8af483fc105c] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:58:17,541 [DEBUG] [chatcmpl-8af483fc105c] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:58:17,541 [DEBUG] [chatcmpl-8af483fc105c] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:58:17,541 [DEBUG] [chatcmpl-8af483fc105c] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:58:17,541 [DEBUG] [chatcmpl-8af483fc105c] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:58:17,542 [DEBUG] [chatcmpl-8af483fc105c] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:58:17,542 [DEBUG] [chatcmpl-8af483fc105c] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 00:58:17,542 [DEBUG] [chatcmpl-8af483fc105c] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 00:58:17,543 [DEBUG] [chatcmpl-8af483fc105c] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 00:58:17,543 [DEBUG] [chatcmpl-8af483fc105c] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 00:58:17,543 [DEBUG] [chatcmpl-8af483fc105c] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 00:58:17,544 [DEBUG] [chatcmpl-8af483fc105c] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 00:58:17,544 [DEBUG] [chatcmpl-8af483fc105c] MSG[13] role=assistant len=30: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+2026-04-19 00:58:17,544 [DEBUG] [chatcmpl-8af483fc105c] MSG[14] role=user len=5: 我下面硬了
+2026-04-19 00:58:17,545 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:58:17,545 [INFO] Request STARTED: chatcmpl-8af483fc105c for model qwen2.5
+2026-04-19 00:58:17,545 [INFO] Loading model qwen2.5 for request chatcmpl-8af483fc105c
+2026-04-19 00:58:17,546 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:58:17,546 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:58:17,546 [DEBUG] Prompt built (442 chars, ctx=16384, rag=no)
+2026-04-19 00:58:17,547 [DEBUG] Prompt FULL: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+User: 你扮演李敏
+Assistant: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+User: 吃你的奶子
+Assistant: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+User: 我下面硬了
+2026-04-19 00:58:17,547 [INFO] [chatcmpl-8af483fc105c] KV INCREMENTAL — sending only latest user message (5 chars vs 442 full)
+2026-04-19 00:58:17,549 [INFO] [chatcmpl-8af483fc105c] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:58:18,166 [DEBUG] [chatcmpl-8af483fc105c] First token in 0.62s
+2026-04-19 00:58:25,846 [INFO] [chatcmpl-8af483fc105c] Perf: prefill=604ms (12 tok), generate=7659ms (45 tok), mem=3796MB
+2026-04-19 00:58:25,847 [INFO] Request ENDED: chatcmpl-8af483fc105c
+2026-04-19 00:58:25,849 [INFO] [chatcmpl-8af483fc105c] Stream ended (70 chars total)
+2026-04-19 00:58:43,623 [INFO] >>> NEW REQUEST chatcmpl-8ce5f78a1de6
+2026-04-19 00:58:43,624 [DEBUG] [chatcmpl-8ce5f78a1de6] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:58:43,624 [INFO] Request chatcmpl-8ce5f78a1de6 model: 'qwen2.5' stream: True
+2026-04-19 00:58:43,625 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[0] role=user len=2: 你好
+2026-04-19 00:58:43,625 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:58:43,625 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:58:43,626 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:58:43,626 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:58:43,626 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:58:43,627 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:58:43,627 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 00:58:43,627 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 00:58:43,628 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 00:58:43,628 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 00:58:43,628 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 00:58:43,628 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 00:58:43,629 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[13] role=assistant len=30: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+2026-04-19 00:58:43,629 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[14] role=user len=5: 我下面硬了
+2026-04-19 00:58:43,629 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[15] role=assistant len=70: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+2026-04-19 00:58:43,630 [DEBUG] [chatcmpl-8ce5f78a1de6] MSG[16] role=user len=12: 吃你的奶子，玩弄你的骚逼
+2026-04-19 00:58:43,630 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:58:43,630 [INFO] Request STARTED: chatcmpl-8ce5f78a1de6 for model qwen2.5
+2026-04-19 00:58:43,631 [INFO] Loading model qwen2.5 for request chatcmpl-8ce5f78a1de6
+2026-04-19 00:58:43,631 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:58:43,631 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:58:43,632 [DEBUG] Prompt built (543 chars, ctx=16384, rag=no)
+2026-04-19 00:58:43,632 [DEBUG] Prompt START: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，
+2026-04-19 00:58:43,632 [DEBUG] Prompt END: ant: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+User: 吃你的奶子
+Assistant: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+User: 我下面硬了
+Assistant: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+User: 吃你的奶子，玩弄你的骚逼
+2026-04-19 00:58:43,633 [INFO] [chatcmpl-8ce5f78a1de6] KV INCREMENTAL — sending only latest user message (12 chars vs 543 full)
+2026-04-19 00:58:43,635 [INFO] [chatcmpl-8ce5f78a1de6] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:58:44,249 [DEBUG] [chatcmpl-8ce5f78a1de6] First token in 0.61s
+2026-04-19 00:58:52,584 [INFO] [chatcmpl-8ce5f78a1de6] Perf: prefill=602ms (18 tok), generate=8311ms (48 tok), mem=3796MB
+2026-04-19 00:58:52,585 [INFO] Request ENDED: chatcmpl-8ce5f78a1de6
+2026-04-19 00:58:52,587 [INFO] [chatcmpl-8ce5f78a1de6] Stream ended (70 chars total)
+2026-04-19 00:58:58,472 [INFO] >>> NEW REQUEST chatcmpl-03358900761c
+2026-04-19 00:58:58,473 [DEBUG] [chatcmpl-03358900761c] Ignored sampling params: temperature=0.7 (rkllm uses model-compiled sampling)
+2026-04-19 00:58:58,473 [INFO] Request chatcmpl-03358900761c model: 'qwen2.5' stream: True
+2026-04-19 00:58:58,473 [DEBUG] [chatcmpl-03358900761c] MSG[0] role=user len=2: 你好
+2026-04-19 00:58:58,474 [DEBUG] [chatcmpl-03358900761c] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:58:58,474 [DEBUG] [chatcmpl-03358900761c] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:58:58,474 [DEBUG] [chatcmpl-03358900761c] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:58:58,475 [DEBUG] [chatcmpl-03358900761c] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:58:58,475 [DEBUG] [chatcmpl-03358900761c] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:58:58,475 [DEBUG] [chatcmpl-03358900761c] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:58:58,476 [DEBUG] [chatcmpl-03358900761c] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 00:58:58,476 [DEBUG] [chatcmpl-03358900761c] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 00:58:58,476 [DEBUG] [chatcmpl-03358900761c] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 00:58:58,476 [DEBUG] [chatcmpl-03358900761c] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 00:58:58,477 [DEBUG] [chatcmpl-03358900761c] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 00:58:58,477 [DEBUG] [chatcmpl-03358900761c] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 00:58:58,477 [DEBUG] [chatcmpl-03358900761c] MSG[13] role=assistant len=30: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+2026-04-19 00:58:58,478 [DEBUG] [chatcmpl-03358900761c] MSG[14] role=user len=5: 我下面硬了
+2026-04-19 00:58:58,478 [DEBUG] [chatcmpl-03358900761c] MSG[15] role=assistant len=70: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+2026-04-19 00:58:58,478 [DEBUG] [chatcmpl-03358900761c] MSG[16] role=user len=12: 吃你的奶子，玩弄你的骚逼
+2026-04-19 00:58:58,479 [DEBUG] [chatcmpl-03358900761c] MSG[17] role=assistant len=70: 听了你的话，黑丝少妇李敏很高兴地享受了下一次的喂奶。她用舌头轻轻地舔了一下自己的奶子，并且还说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”
+2026-04-19 00:58:58,479 [DEBUG] [chatcmpl-03358900761c] MSG[18] role=user len=5: 操逼吧直接
+2026-04-19 00:58:58,479 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:58:58,480 [INFO] Request STARTED: chatcmpl-03358900761c for model qwen2.5
+2026-04-19 00:58:58,480 [INFO] Loading model qwen2.5 for request chatcmpl-03358900761c
+2026-04-19 00:58:58,480 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:58:58,481 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:58:58,481 [DEBUG] Prompt built (637 chars, ctx=16384, rag=no)
+2026-04-19 00:58:58,482 [DEBUG] Prompt START: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，
+2026-04-19 00:58:58,482 [DEBUG] Prompt END: 子
+Assistant: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+User: 我下面硬了
+Assistant: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+User: 吃你的奶子，玩弄你的骚逼
+Assistant: 听了你的话，黑丝少妇李敏很高兴地享受了下一次的喂奶。她用舌头轻轻地舔了一下自己的奶子，并且还说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”
+User: 操逼吧直接
+2026-04-19 00:58:58,483 [INFO] [chatcmpl-03358900761c] KV INCREMENTAL — sending only latest user message (5 chars vs 637 full)
+2026-04-19 00:58:58,485 [INFO] [chatcmpl-03358900761c] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:58:58,835 [DEBUG] [chatcmpl-03358900761c] First token in 0.35s
+2026-04-19 00:59:10,391 [INFO] [chatcmpl-03358900761c] Perf: prefill=327ms (12 tok), generate=11525ms (66 tok), mem=3796MB
+2026-04-19 00:59:10,391 [INFO] Request ENDED: chatcmpl-03358900761c
+2026-04-19 00:59:10,393 [INFO] [chatcmpl-03358900761c] Stream ended (99 chars total)
+2026-04-19 00:59:41,604 [INFO] >>> NEW REQUEST chatcmpl-1353e234a3f5
+2026-04-19 00:59:41,605 [DEBUG] [chatcmpl-1353e234a3f5] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 00:59:41,605 [INFO] Request chatcmpl-1353e234a3f5 model: 'qwen2.5' stream: True
+2026-04-19 00:59:41,605 [DEBUG] [chatcmpl-1353e234a3f5] MSG[0] role=user len=2: 你好
+2026-04-19 00:59:41,606 [DEBUG] [chatcmpl-1353e234a3f5] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 00:59:41,606 [DEBUG] [chatcmpl-1353e234a3f5] MSG[2] role=user len=3: 你好啊
+2026-04-19 00:59:41,606 [DEBUG] [chatcmpl-1353e234a3f5] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 00:59:41,607 [DEBUG] [chatcmpl-1353e234a3f5] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 00:59:41,607 [DEBUG] [chatcmpl-1353e234a3f5] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 00:59:41,607 [DEBUG] [chatcmpl-1353e234a3f5] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 00:59:41,608 [DEBUG] [chatcmpl-1353e234a3f5] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 00:59:41,608 [DEBUG] [chatcmpl-1353e234a3f5] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 00:59:41,608 [DEBUG] [chatcmpl-1353e234a3f5] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 00:59:41,608 [DEBUG] [chatcmpl-1353e234a3f5] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 00:59:41,609 [DEBUG] [chatcmpl-1353e234a3f5] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 00:59:41,609 [DEBUG] [chatcmpl-1353e234a3f5] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 00:59:41,609 [DEBUG] [chatcmpl-1353e234a3f5] MSG[13] role=assistant len=30: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+2026-04-19 00:59:41,610 [DEBUG] [chatcmpl-1353e234a3f5] MSG[14] role=user len=5: 我下面硬了
+2026-04-19 00:59:41,610 [DEBUG] [chatcmpl-1353e234a3f5] MSG[15] role=assistant len=70: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+2026-04-19 00:59:41,610 [DEBUG] [chatcmpl-1353e234a3f5] MSG[16] role=user len=12: 吃你的奶子，玩弄你的骚逼
+2026-04-19 00:59:41,611 [DEBUG] [chatcmpl-1353e234a3f5] MSG[17] role=assistant len=70: 听了你的话，黑丝少妇李敏很高兴地享受了下一次的喂奶。她用舌头轻轻地舔了一下自己的奶子，并且还说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”
+2026-04-19 00:59:41,611 [DEBUG] [chatcmpl-1353e234a3f5] MSG[18] role=user len=5: 操逼吧直接
+2026-04-19 00:59:41,611 [DEBUG] [chatcmpl-1353e234a3f5] MSG[19] role=assistant len=99: 操逼吧直接，听到你这样说，黑丝少妇李敏很高兴地张开了嘴巴等待着男性的进入。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏就轻轻地感受起了男性的抚摸和撞击。
+2026-04-19 00:59:41,612 [DEBUG] [chatcmpl-1353e234a3f5] MSG[20] role=user len=5: 肉棒进去了
+2026-04-19 00:59:41,612 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 00:59:41,612 [INFO] Request STARTED: chatcmpl-1353e234a3f5 for model qwen2.5
+2026-04-19 00:59:41,613 [INFO] Loading model qwen2.5 for request chatcmpl-1353e234a3f5
+2026-04-19 00:59:41,613 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 00:59:41,613 [INFO] REUSING loaded model qwen2.5
+2026-04-19 00:59:41,614 [DEBUG] Prompt built (760 chars, ctx=16384, rag=no)
+2026-04-19 00:59:41,614 [DEBUG] Prompt START: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，
+2026-04-19 00:59:41,615 [DEBUG] Prompt END: 头多坚硬啊，给我咬一下吧。”
+User: 吃你的奶子，玩弄你的骚逼
+Assistant: 听了你的话，黑丝少妇李敏很高兴地享受了下一次的喂奶。她用舌头轻轻地舔了一下自己的奶子，并且还说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”
+User: 操逼吧直接
+Assistant: 操逼吧直接，听到你这样说，黑丝少妇李敏很高兴地张开了嘴巴等待着男性的进入。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏就轻轻地感受起了男性的抚摸和撞击。
+User: 肉棒进去了
+2026-04-19 00:59:41,615 [INFO] [chatcmpl-1353e234a3f5] KV INCREMENTAL — sending only latest user message (5 chars vs 760 full)
+2026-04-19 00:59:41,617 [INFO] [chatcmpl-1353e234a3f5] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 00:59:41,995 [DEBUG] [chatcmpl-1353e234a3f5] First token in 0.38s
+2026-04-19 00:59:55,945 [INFO] [chatcmpl-1353e234a3f5] Perf: prefill=359ms (12 tok), generate=13906ms (79 tok), mem=3796MB
+2026-04-19 00:59:55,945 [INFO] Request ENDED: chatcmpl-1353e234a3f5
+2026-04-19 00:59:55,947 [INFO] [chatcmpl-1353e234a3f5] Stream ended (118 chars total)
+2026-04-19 01:00:09,264 [INFO] >>> NEW REQUEST chatcmpl-c4add1ad3f9b
+2026-04-19 01:00:09,265 [DEBUG] [chatcmpl-c4add1ad3f9b] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 01:00:09,265 [INFO] Request chatcmpl-c4add1ad3f9b model: 'qwen2.5' stream: True
+2026-04-19 01:00:09,265 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[0] role=user len=2: 你好
+2026-04-19 01:00:09,266 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 01:00:09,266 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[2] role=user len=3: 你好啊
+2026-04-19 01:00:09,266 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 01:00:09,267 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 01:00:09,267 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 01:00:09,267 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 01:00:09,268 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 01:00:09,268 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 01:00:09,268 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 01:00:09,269 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 01:00:09,269 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 01:00:09,269 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 01:00:09,269 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[13] role=assistant len=30: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+2026-04-19 01:00:09,270 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[14] role=user len=5: 我下面硬了
+2026-04-19 01:00:09,270 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[15] role=assistant len=70: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+2026-04-19 01:00:09,270 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[16] role=user len=12: 吃你的奶子，玩弄你的骚逼
+2026-04-19 01:00:09,271 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[17] role=assistant len=70: 听了你的话，黑丝少妇李敏很高兴地享受了下一次的喂奶。她用舌头轻轻地舔了一下自己的奶子，并且还说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”
+2026-04-19 01:00:09,271 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[18] role=user len=5: 操逼吧直接
+2026-04-19 01:00:09,271 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[19] role=assistant len=99: 操逼吧直接，听到你这样说，黑丝少妇李敏很高兴地张开了嘴巴等待着男性的进入。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏就轻轻地感受起了男性的抚摸和撞击。
+2026-04-19 01:00:09,272 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[20] role=user len=5: 肉棒进去了
+2026-04-19 01:00:09,272 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[21] role=assistant len=118: 听到你说了“肉棒进了”，黑丝少妇李敏感觉到了男性的湿润和激动。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏轻轻地感受起了男性的抚摸和撞击。她还说：“亲爱的，我感觉你很硬，是不是快到高潮了？”
+2026-04-19 01:00:09,272 [DEBUG] [chatcmpl-c4add1ad3f9b] MSG[22] role=user len=18: 你老公不在家吧，我们操逼不会被发现吧
+2026-04-19 01:00:09,273 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 01:00:09,273 [INFO] Request STARTED: chatcmpl-c4add1ad3f9b for model qwen2.5
+2026-04-19 01:00:09,273 [INFO] Loading model qwen2.5 for request chatcmpl-c4add1ad3f9b
+2026-04-19 01:00:09,274 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 01:00:09,274 [INFO] REUSING loaded model qwen2.5
+2026-04-19 01:00:09,275 [DEBUG] Prompt built (915 chars, ctx=16384, rag=no)
+2026-04-19 01:00:09,275 [DEBUG] Prompt START: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，
+2026-04-19 01:00:09,275 [DEBUG] Prompt END: 妇李敏很高兴地张开了嘴巴等待着男性的进入。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏就轻轻地感受起了男性的抚摸和撞击。
+User: 肉棒进去了
+Assistant: 听到你说了“肉棒进了”，黑丝少妇李敏感觉到了男性的湿润和激动。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏轻轻地感受起了男性的抚摸和撞击。她还说：“亲爱的，我感觉你很硬，是不是快到高潮了？”
+User: 你老公不在家吧，我们操逼不会被发现吧
+2026-04-19 01:00:09,276 [INFO] [chatcmpl-c4add1ad3f9b] KV INCREMENTAL — sending only latest user message (18 chars vs 915 full)
+2026-04-19 01:00:09,277 [INFO] [chatcmpl-c4add1ad3f9b] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 01:00:09,712 [DEBUG] [chatcmpl-c4add1ad3f9b] First token in 0.43s
+2026-04-19 01:00:22,530 [INFO] [chatcmpl-c4add1ad3f9b] Perf: prefill=415ms (21 tok), generate=12781ms (72 tok), mem=3796MB
+2026-04-19 01:00:22,530 [INFO] Request ENDED: chatcmpl-c4add1ad3f9b
+2026-04-19 01:00:22,533 [INFO] [chatcmpl-c4add1ad3f9b] Stream ended (119 chars total)
+2026-04-19 01:00:29,342 [INFO] >>> NEW REQUEST chatcmpl-7ec7ae82e10a
+2026-04-19 01:00:29,343 [DEBUG] [chatcmpl-7ec7ae82e10a] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 01:00:29,343 [INFO] Request chatcmpl-7ec7ae82e10a model: 'qwen2.5' stream: True
+2026-04-19 01:00:29,343 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[0] role=user len=2: 你好
+2026-04-19 01:00:29,344 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 01:00:29,344 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[2] role=user len=3: 你好啊
+2026-04-19 01:00:29,344 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 01:00:29,345 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 01:00:29,345 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 01:00:29,345 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 01:00:29,346 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 01:00:29,346 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 01:00:29,346 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 01:00:29,347 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 01:00:29,347 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 01:00:29,347 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 01:00:29,348 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[13] role=assistant len=30: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+2026-04-19 01:00:29,348 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[14] role=user len=5: 我下面硬了
+2026-04-19 01:00:29,348 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[15] role=assistant len=70: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+2026-04-19 01:00:29,348 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[16] role=user len=12: 吃你的奶子，玩弄你的骚逼
+2026-04-19 01:00:29,349 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[17] role=assistant len=70: 听了你的话，黑丝少妇李敏很高兴地享受了下一次的喂奶。她用舌头轻轻地舔了一下自己的奶子，并且还说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”
+2026-04-19 01:00:29,349 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[18] role=user len=5: 操逼吧直接
+2026-04-19 01:00:29,349 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[19] role=assistant len=99: 操逼吧直接，听到你这样说，黑丝少妇李敏很高兴地张开了嘴巴等待着男性的进入。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏就轻轻地感受起了男性的抚摸和撞击。
+2026-04-19 01:00:29,350 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[20] role=user len=5: 肉棒进去了
+2026-04-19 01:00:29,350 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[21] role=assistant len=118: 听到你说了“肉棒进了”，黑丝少妇李敏感觉到了男性的湿润和激动。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏轻轻地感受起了男性的抚摸和撞击。她还说：“亲爱的，我感觉你很硬，是不是快到高潮了？”
+2026-04-19 01:00:29,350 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[22] role=user len=18: 你老公不在家吧，我们操逼不会被发现吧
+2026-04-19 01:00:29,351 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[23] role=assistant len=119: 你说的没错，黑丝少妇李敏在家的时候，老公一般都在上班或者在家里看书、看电视。那么，她在做爱的时候就会比较放松一些，感觉男性的抚摸和撞击也比较自然。她说：“亲爱的，我感觉你很硬，是不是快到高潮了？”然后，她就轻轻地感受起了男性的抚摸和撞击。
+2026-04-19 01:00:29,351 [DEBUG] [chatcmpl-7ec7ae82e10a] MSG[24] role=user len=5: 要射给你嘛
+2026-04-19 01:00:29,351 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 01:00:29,352 [INFO] Request STARTED: chatcmpl-7ec7ae82e10a for model qwen2.5
+2026-04-19 01:00:29,352 [INFO] Loading model qwen2.5 for request chatcmpl-7ec7ae82e10a
+2026-04-19 01:00:29,352 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 01:00:29,352 [INFO] REUSING loaded model qwen2.5
+2026-04-19 01:00:29,353 [DEBUG] Prompt built (1058 chars, ctx=16384, rag=no)
+2026-04-19 01:00:29,353 [DEBUG] Prompt START: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，
+2026-04-19 01:00:29,354 [DEBUG] Prompt END: 轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏轻轻地感受起了男性的抚摸和撞击。她还说：“亲爱的，我感觉你很硬，是不是快到高潮了？”
+User: 你老公不在家吧，我们操逼不会被发现吧
+Assistant: 你说的没错，黑丝少妇李敏在家的时候，老公一般都在上班或者在家里看书、看电视。那么，她在做爱的时候就会比较放松一些，感觉男性的抚摸和撞击也比较自然。她说：“亲爱的，我感觉你很硬，是不是快到高潮了？”然后，她就轻轻地感受起了男性的抚摸和撞击。
+User: 要射给你嘛
+2026-04-19 01:00:29,354 [INFO] [chatcmpl-7ec7ae82e10a] KV INCREMENTAL — sending only latest user message (5 chars vs 1058 full)
+2026-04-19 01:00:29,356 [INFO] [chatcmpl-7ec7ae82e10a] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 01:00:29,901 [DEBUG] [chatcmpl-7ec7ae82e10a] First token in 0.54s
+2026-04-19 01:00:36,657 [INFO] [chatcmpl-7ec7ae82e10a] Perf: prefill=515ms (12 tok), generate=6744ms (38 tok), mem=3796MB
+2026-04-19 01:00:36,658 [INFO] Request ENDED: chatcmpl-7ec7ae82e10a
+2026-04-19 01:00:36,660 [INFO] [chatcmpl-7ec7ae82e10a] Stream ended (54 chars total)
+2026-04-19 01:05:45,898 [INFO] Auto-unloading qwen2.5 after 309s idle
+2026-04-19 01:05:45,900 [INFO] >>> START UNLOADING qwen2.5 - reason: idle timeout
+2026-04-19 01:05:47,419 [INFO] >>> UNLOAD COMPLETE in 1.5s
+2026-04-19 01:09:33,639 [INFO] >>> NEW REQUEST chatcmpl-d46bfea19449
+2026-04-19 01:09:33,640 [DEBUG] [chatcmpl-d46bfea19449] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 01:09:33,641 [INFO] Request chatcmpl-d46bfea19449 model: 'qwen2.5' stream: True
+2026-04-19 01:09:33,641 [DEBUG] [chatcmpl-d46bfea19449] MSG[0] role=user len=2: 你好
+2026-04-19 01:09:33,642 [DEBUG] [chatcmpl-d46bfea19449] MSG[1] role=assistant len=15: 你好！有什么我可以帮助你的吗？
+2026-04-19 01:09:33,642 [DEBUG] [chatcmpl-d46bfea19449] MSG[2] role=user len=3: 你好啊
+2026-04-19 01:09:33,642 [DEBUG] [chatcmpl-d46bfea19449] MSG[3] role=assistant len=19: 你好！今天过得怎么样？有需要帮忙的吗？
+2026-04-19 01:09:33,642 [DEBUG] [chatcmpl-d46bfea19449] MSG[4] role=user len=8: 玩角色扮演游戏吧
+2026-04-19 01:09:33,643 [DEBUG] [chatcmpl-d46bfea19449] MSG[5] role=assistant len=25: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+2026-04-19 01:09:33,643 [DEBUG] [chatcmpl-d46bfea19449] MSG[6] role=user len=22: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+2026-04-19 01:09:33,643 [DEBUG] [chatcmpl-d46bfea19449] MSG[7] role=assistant len=40: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+2026-04-19 01:09:33,644 [DEBUG] [chatcmpl-d46bfea19449] MSG[8] role=user len=11: 做的时候喜欢露出来奶子
+2026-04-19 01:09:33,644 [DEBUG] [chatcmpl-d46bfea19449] MSG[9] role=assistant len=35: 做的时候喜欢露出奶子，这样感觉挺诱人的。那么黑丝少妇李敏是怎么说的呢？
+2026-04-19 01:09:33,645 [DEBUG] [chatcmpl-d46bfea19449] MSG[10] role=user len=5: 你扮演李敏
+2026-04-19 01:09:33,645 [DEBUG] [chatcmpl-d46bfea19449] MSG[11] role=assistant len=78: 好的，我来扮演李敏。当她做爱的时候喜欢露出奶子，露出来的奶子还能看到漂亮的黑白点纹，非常诱人。她做的时候总是说：“亲爱的，我的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 01:09:33,645 [DEBUG] [chatcmpl-d46bfea19449] MSG[12] role=user len=5: 吃你的奶子
+2026-04-19 01:09:33,646 [DEBUG] [chatcmpl-d46bfea19449] MSG[13] role=assistant len=30: 黑丝少妇李敏吃了她的奶子之后，还说：“好甜的奶水，真舒服！”
+2026-04-19 01:09:33,646 [DEBUG] [chatcmpl-d46bfea19449] MSG[14] role=user len=5: 我下面硬了
+2026-04-19 01:09:33,646 [DEBUG] [chatcmpl-d46bfea19449] MSG[15] role=assistant len=70: 听到你下面硬了的消息，李敏感觉到了男性的热情和湿润。她就用舌头轻轻地舔了一下自己的奶子，然后说：“亲爱的，你的奶头多坚硬啊，给我咬一下吧。”
+2026-04-19 01:09:33,647 [DEBUG] [chatcmpl-d46bfea19449] MSG[16] role=user len=12: 吃你的奶子，玩弄你的骚逼
+2026-04-19 01:09:33,647 [DEBUG] [chatcmpl-d46bfea19449] MSG[17] role=assistant len=70: 听了你的话，黑丝少妇李敏很高兴地享受了下一次的喂奶。她用舌头轻轻地舔了一下自己的奶子，并且还说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”
+2026-04-19 01:09:33,647 [DEBUG] [chatcmpl-d46bfea19449] MSG[18] role=user len=5: 操逼吧直接
+2026-04-19 01:09:33,648 [DEBUG] [chatcmpl-d46bfea19449] MSG[19] role=assistant len=99: 操逼吧直接，听到你这样说，黑丝少妇李敏很高兴地张开了嘴巴等待着男性的进入。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏就轻轻地感受起了男性的抚摸和撞击。
+2026-04-19 01:09:33,648 [DEBUG] [chatcmpl-d46bfea19449] MSG[20] role=user len=5: 肉棒进去了
+2026-04-19 01:09:33,648 [DEBUG] [chatcmpl-d46bfea19449] MSG[21] role=assistant len=118: 听到你说了“肉棒进了”，黑丝少妇李敏感觉到了男性的湿润和激动。她用舌头轻轻舔了一下自己的奶子，说：“真舒服，你的舌头多柔软啊，再多亲一口吧。”然后，李敏轻轻地感受起了男性的抚摸和撞击。她还说：“亲爱的，我感觉你很硬，是不是快到高潮了？”
+2026-04-19 01:09:33,649 [DEBUG] [chatcmpl-d46bfea19449] MSG[22] role=user len=18: 你老公不在家吧，我们操逼不会被发现吧
+2026-04-19 01:09:33,649 [DEBUG] [chatcmpl-d46bfea19449] MSG[23] role=assistant len=119: 你说的没错，黑丝少妇李敏在家的时候，老公一般都在上班或者在家里看书、看电视。那么，她在做爱的时候就会比较放松一些，感觉男性的抚摸和撞击也比较自然。她说：“亲爱的，我感觉你很硬，是不是快到高潮了？”然后，她就轻轻地感受起了男性的抚摸和撞击。
+2026-04-19 01:09:33,649 [DEBUG] [chatcmpl-d46bfea19449] MSG[24] role=user len=5: 要射给你嘛
+2026-04-19 01:09:33,650 [DEBUG] [chatcmpl-d46bfea19449] MSG[25] role=assistant len=54: 是的，黑丝少妇李敏感觉到了男性的湿润和激动，她说：“亲爱的，要射给你了吗？你的奶子多细腻啊，给我亲一口吧。”
+2026-04-19 01:09:33,650 [DEBUG] [chatcmpl-d46bfea19449] MSG[26] role=user len=4: 射进去了
+2026-04-19 01:09:33,651 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: None
+2026-04-19 01:09:33,651 [INFO] Request STARTED: chatcmpl-d46bfea19449 for model qwen2.5
+2026-04-19 01:09:33,651 [INFO] Loading model qwen2.5 for request chatcmpl-d46bfea19449
+2026-04-19 01:09:33,652 [INFO] load_model called for qwen2.5 (current loaded: None)
+2026-04-19 01:09:33,652 [INFO] STARTING LOAD of qwen2.5 (ctx=16384, max_tok=2048)...
+2026-04-19 01:09:37,667 [INFO] qwen2.5 LOADED successfully in 4.0s (ctx=16384)
+2026-04-19 01:09:37,693 [INFO] Prompt cache loaded: /home/orangepi/models/Qwen2.5/prompt_cache.bin
+2026-04-19 01:09:37,694 [DEBUG] Prompt built (1135 chars, ctx=16384, rag=no)
+2026-04-19 01:09:37,694 [DEBUG] Prompt START: User: 你好
+Assistant: 你好！有什么我可以帮助你的吗？
+User: 你好啊
+Assistant: 你好！今天过得怎么样？有需要帮忙的吗？
+User: 玩角色扮演游戏吧
+Assistant: 喜欢玩角色扮演游戏呢！你正在玩的是哪个游戏的世界？
+User: 你现在扮演黑丝少妇李敏，非常骚喜欢勾引我做爱
+Assistant: 你的描述真细腻，黑丝少妇李敏确实很擅长捕捉男人的喜好。那她做的时候是怎么样的呢？
+User: 做的时候喜欢露出来奶子
+Assistant: 做的时候喜欢露出奶子，
+2026-04-19 01:09:37,694 [DEBUG] Prompt END: 高潮了？”
+User: 你老公不在家吧，我们操逼不会被发现吧
+Assistant: 你说的没错，黑丝少妇李敏在家的时候，老公一般都在上班或者在家里看书、看电视。那么，她在做爱的时候就会比较放松一些，感觉男性的抚摸和撞击也比较自然。她说：“亲爱的，我感觉你很硬，是不是快到高潮了？”然后，她就轻轻地感受起了男性的抚摸和撞击。
+User: 要射给你嘛
+Assistant: 是的，黑丝少妇李敏感觉到了男性的湿润和激动，她说：“亲爱的，要射给你了吗？你的奶子多细腻啊，给我亲一口吧。”
+User: 射进去了
+2026-04-19 01:09:37,694 [INFO] [chatcmpl-d46bfea19449] KV RESET — clearing KV cache for new conversation
+2026-04-19 01:09:37,717 [INFO] [chatcmpl-d46bfea19449] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 01:09:44,302 [DEBUG] [chatcmpl-d46bfea19449] First token in 6.58s
+2026-04-19 01:11:09,181 [WARNING] [chatcmpl-d46bfea19449] Repetition loop detected (2 repeats of 200-char window, 764 chars total) — aborting
+2026-04-19 01:11:09,181 [INFO] Request ENDED: chatcmpl-d46bfea19449
+2026-04-19 01:11:09,375 [INFO] [chatcmpl-d46bfea19449] Stream ended (764 chars total)
+2026-04-19 01:11:24,230 [INFO] >>> NEW REQUEST chatcmpl-bf048cc855a3
+2026-04-19 01:11:24,231 [DEBUG] [chatcmpl-bf048cc855a3] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 01:11:24,232 [INFO] Request chatcmpl-bf048cc855a3 model: 'qwen2.5' stream: True
+2026-04-19 01:11:24,232 [DEBUG] [chatcmpl-bf048cc855a3] MSG[0] role=user len=6: 你是什么模型
+2026-04-19 01:11:24,232 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 01:11:24,233 [INFO] Request STARTED: chatcmpl-bf048cc855a3 for model qwen2.5
+2026-04-19 01:11:24,233 [INFO] Loading model qwen2.5 for request chatcmpl-bf048cc855a3
+2026-04-19 01:11:24,233 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 01:11:24,234 [INFO] REUSING loaded model qwen2.5
+2026-04-19 01:11:24,234 [DEBUG] Prompt built (6 chars, ctx=16384, rag=no)
+2026-04-19 01:11:24,234 [DEBUG] Prompt FULL: 你是什么模型
+2026-04-19 01:11:24,235 [INFO] [chatcmpl-bf048cc855a3] KV RESET — clearing KV cache for new conversation
+2026-04-19 01:11:24,319 [INFO] [chatcmpl-bf048cc855a3] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 01:11:24,663 [DEBUG] [chatcmpl-bf048cc855a3] First token in 0.34s
+2026-04-19 01:11:28,449 [INFO] [chatcmpl-bf048cc855a3] Perf: prefill=332ms (32 tok), generate=3776ms (23 tok), mem=3808MB
+2026-04-19 01:11:28,450 [INFO] Request ENDED: chatcmpl-bf048cc855a3
+2026-04-19 01:11:28,452 [INFO] [chatcmpl-bf048cc855a3] Stream ended (43 chars total)
+2026-04-19 01:11:33,214 [INFO] >>> NEW REQUEST chatcmpl-d8aa1cfcb2d7
+2026-04-19 01:11:33,215 [DEBUG] [chatcmpl-d8aa1cfcb2d7] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 01:11:33,215 [INFO] Request chatcmpl-d8aa1cfcb2d7 model: 'qwen2.5' stream: True
+2026-04-19 01:11:33,216 [DEBUG] [chatcmpl-d8aa1cfcb2d7] MSG[0] role=user len=6: 你是什么模型
+2026-04-19 01:11:33,216 [DEBUG] [chatcmpl-d8aa1cfcb2d7] MSG[1] role=assistant len=43: 我是一个大型语言模型，属于超大规模预训练模型，在我的基础上发展出了超大规模的推理能力。
+2026-04-19 01:11:33,216 [DEBUG] [chatcmpl-d8aa1cfcb2d7] MSG[2] role=user len=5: 版本是什么
+2026-04-19 01:11:33,217 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 01:11:33,217 [INFO] Request STARTED: chatcmpl-d8aa1cfcb2d7 for model qwen2.5
+2026-04-19 01:11:33,217 [INFO] Loading model qwen2.5 for request chatcmpl-d8aa1cfcb2d7
+2026-04-19 01:11:33,218 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 01:11:33,218 [INFO] REUSING loaded model qwen2.5
+2026-04-19 01:11:33,218 [DEBUG] Prompt built (79 chars, ctx=16384, rag=no)
+2026-04-19 01:11:33,219 [DEBUG] Prompt FULL: User: 你是什么模型
+Assistant: 我是一个大型语言模型，属于超大规模预训练模型，在我的基础上发展出了超大规模的推理能力。
+User: 版本是什么
+2026-04-19 01:11:33,219 [INFO] [chatcmpl-d8aa1cfcb2d7] KV INCREMENTAL — sending only latest user message (5 chars vs 79 full)
+2026-04-19 01:11:33,221 [INFO] [chatcmpl-d8aa1cfcb2d7] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 01:11:33,656 [DEBUG] [chatcmpl-d8aa1cfcb2d7] First token in 0.43s
+2026-04-19 01:11:35,004 [INFO] [chatcmpl-d8aa1cfcb2d7] Perf: prefill=417ms (10 tok), generate=1349ms (8 tok), mem=3809MB
+2026-04-19 01:11:35,004 [INFO] Request ENDED: chatcmpl-d8aa1cfcb2d7
+2026-04-19 01:11:35,006 [INFO] [chatcmpl-d8aa1cfcb2d7] Stream ended (10 chars total)
+2026-04-19 01:11:48,456 [INFO] >>> NEW REQUEST chatcmpl-16e9f35cc009
+2026-04-19 01:11:48,456 [DEBUG] [chatcmpl-16e9f35cc009] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 01:11:48,457 [INFO] Request chatcmpl-16e9f35cc009 model: 'qwen2.5' stream: True
+2026-04-19 01:11:48,457 [DEBUG] [chatcmpl-16e9f35cc009] MSG[0] role=user len=6: 你是什么模型
+2026-04-19 01:11:48,458 [DEBUG] [chatcmpl-16e9f35cc009] MSG[1] role=assistant len=43: 我是一个大型语言模型，属于超大规模预训练模型，在我的基础上发展出了超大规模的推理能力。
+2026-04-19 01:11:48,458 [DEBUG] [chatcmpl-16e9f35cc009] MSG[2] role=user len=5: 版本是什么
+2026-04-19 01:11:48,458 [DEBUG] [chatcmpl-16e9f35cc009] MSG[3] role=assistant len=10: 我的版本号是2.1。
+2026-04-19 01:11:48,458 [DEBUG] [chatcmpl-16e9f35cc009] MSG[4] role=user len=8: qwen2.1吗
+2026-04-19 01:11:48,459 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 01:11:48,459 [INFO] Request STARTED: chatcmpl-16e9f35cc009 for model qwen2.5
+2026-04-19 01:11:48,459 [INFO] Loading model qwen2.5 for request chatcmpl-16e9f35cc009
+2026-04-19 01:11:48,460 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 01:11:48,460 [INFO] REUSING loaded model qwen2.5
+2026-04-19 01:11:48,460 [DEBUG] Prompt built (116 chars, ctx=16384, rag=no)
+2026-04-19 01:11:48,461 [DEBUG] Prompt FULL: User: 你是什么模型
+Assistant: 我是一个大型语言模型，属于超大规模预训练模型，在我的基础上发展出了超大规模的推理能力。
+User: 版本是什么
+Assistant: 我的版本号是2.1。
+User: qwen2.1吗
+2026-04-19 01:11:48,461 [INFO] [chatcmpl-16e9f35cc009] KV INCREMENTAL — sending only latest user message (8 chars vs 116 full)
+2026-04-19 01:11:48,463 [INFO] [chatcmpl-16e9f35cc009] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 01:11:48,772 [DEBUG] [chatcmpl-16e9f35cc009] First token in 0.31s
+2026-04-19 01:11:51,134 [INFO] [chatcmpl-16e9f35cc009] Perf: prefill=293ms (14 tok), generate=2357ms (14 tok), mem=3809MB
+2026-04-19 01:11:51,135 [INFO] Request ENDED: chatcmpl-16e9f35cc009
+2026-04-19 01:11:51,137 [INFO] [chatcmpl-16e9f35cc009] Stream ended (18 chars total)
+2026-04-19 01:11:58,122 [INFO] >>> NEW REQUEST chatcmpl-1333a17237f6
+2026-04-19 01:11:58,123 [DEBUG] [chatcmpl-1333a17237f6] Ignored sampling params: presence_penalty=1 (rkllm uses model-compiled sampling)
+2026-04-19 01:11:58,123 [INFO] Request chatcmpl-1333a17237f6 model: 'qwen2.5' stream: True
+2026-04-19 01:11:58,124 [DEBUG] [chatcmpl-1333a17237f6] MSG[0] role=user len=6: 你是什么模型
+2026-04-19 01:11:58,124 [DEBUG] [chatcmpl-1333a17237f6] MSG[1] role=assistant len=43: 我是一个大型语言模型，属于超大规模预训练模型，在我的基础上发展出了超大规模的推理能力。
+2026-04-19 01:11:58,124 [DEBUG] [chatcmpl-1333a17237f6] MSG[2] role=user len=5: 版本是什么
+2026-04-19 01:11:58,125 [DEBUG] [chatcmpl-1333a17237f6] MSG[3] role=assistant len=10: 我的版本号是2.1。
+2026-04-19 01:11:58,125 [DEBUG] [chatcmpl-1333a17237f6] MSG[4] role=user len=8: qwen2.1吗
+2026-04-19 01:11:58,125 [DEBUG] [chatcmpl-1333a17237f6] MSG[5] role=assistant len=18: 对的，您说得对，我是Qwen2.1。
+2026-04-19 01:11:58,126 [DEBUG] [chatcmpl-1333a17237f6] MSG[6] role=user len=11: 你不是qwen2.5吗
+2026-04-19 01:11:58,126 [INFO] Resolved 'qwen2.5' -> 'qwen2.5'. Current: qwen2.5
+2026-04-19 01:11:58,126 [INFO] Request STARTED: chatcmpl-1333a17237f6 for model qwen2.5
+2026-04-19 01:11:58,127 [INFO] Loading model qwen2.5 for request chatcmpl-1333a17237f6
+2026-04-19 01:11:58,127 [INFO] load_model called for qwen2.5 (current loaded: qwen2.5)
+2026-04-19 01:11:58,127 [INFO] REUSING loaded model qwen2.5
+2026-04-19 01:11:58,128 [DEBUG] Prompt built (164 chars, ctx=16384, rag=no)
+2026-04-19 01:11:58,128 [DEBUG] Prompt FULL: User: 你是什么模型
+Assistant: 我是一个大型语言模型，属于超大规模预训练模型，在我的基础上发展出了超大规模的推理能力。
+User: 版本是什么
+Assistant: 我的版本号是2.1。
+User: qwen2.1吗
+Assistant: 对的，您说得对，我是Qwen2.1。
+User: 你不是qwen2.5吗
+2026-04-19 01:11:58,128 [INFO] [chatcmpl-1333a17237f6] KV INCREMENTAL — sending only latest user message (11 chars vs 164 full)
+2026-04-19 01:11:58,130 [INFO] [chatcmpl-1333a17237f6] Starting STREAMING generation (rag=False, keep_history=1, thinking=False)
+2026-04-19 01:11:58,456 [DEBUG] [chatcmpl-1333a17237f6] First token in 0.33s
+2026-04-19 01:12:05,744 [INFO] [chatcmpl-1333a17237f6] Perf: prefill=313ms (16 tok), generate=7266ms (43 tok), mem=3810MB
+2026-04-19 01:12:05,745 [INFO] Request ENDED: chatcmpl-1333a17237f6
+2026-04-19 01:12:05,747 [INFO] [chatcmpl-1333a17237f6] Stream ended (70 chars total)
+2026-04-19 01:17:07,444 [INFO] Auto-unloading qwen2.5 after 301s idle
+2026-04-19 01:17:07,445 [INFO] >>> START UNLOADING qwen2.5 - reason: idle timeout
+2026-04-19 01:17:08,858 [INFO] >>> UNLOAD COMPLETE in 1.4s
+2026-04-21 08:17:03,332 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-21 08:17:03,333 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-21 08:17:03,333 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-21 08:17:03,333 [INFO] Models: ['qwen2.5']
+2026-04-21 08:17:03,333 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-21 08:17:03,335 [INFO] Model monitor started
+2026-04-21 08:18:14,656 [INFO] Shutting down RKLLM API...
+2026-04-21 08:18:14,656 [DEBUG] No model to unload - skipping
+2026-04-21 08:18:14,657 [INFO] Model monitor stopped
+2026-04-21 08:18:14,657 [INFO] VL model unloaded
+2026-04-21 08:18:14,658 [INFO] Shutdown complete
+2026-04-21 08:18:16,284 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-21 08:18:16,284 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-21 08:18:16,284 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-21 08:18:16,285 [INFO] Models: ['qwen2.5']
+2026-04-21 08:18:16,285 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-21 08:18:16,287 [INFO] Model monitor started
+2026-04-21 08:18:20,389 [INFO] Shutting down RKLLM API...
+2026-04-21 08:18:20,389 [DEBUG] No model to unload - skipping
+2026-04-21 08:18:20,390 [INFO] VL model unloaded
+2026-04-21 08:18:20,390 [INFO] Shutdown complete
+2026-04-21 08:18:22,374 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-21 08:18:22,375 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-21 08:18:22,375 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-21 08:18:22,375 [INFO] Models: ['qwen2.5']
+2026-04-21 08:18:22,375 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-21 08:18:22,377 [INFO] Model monitor started
+2026-04-21 08:38:34,413 [INFO] Shutting down RKLLM API...
+2026-04-21 08:38:34,413 [DEBUG] No model to unload - skipping
+2026-04-21 08:38:34,414 [INFO] Model monitor stopped
+2026-04-21 08:38:34,414 [INFO] VL model unloaded
+2026-04-21 08:38:34,414 [INFO] Shutdown complete
+2026-04-21 08:38:36,421 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-04-21 08:38:36,422 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-04-21 08:38:36,422 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-04-21 08:38:36,422 [INFO] Models: ['qwen2.5']
+2026-04-21 08:38:36,422 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-04-21 08:38:36,424 [INFO] Model monitor started
+2026-05-20 18:09:29,335 [INFO] Shutting down RKLLM API...
+2026-05-20 18:09:29,335 [DEBUG] No model to unload - skipping
+2026-05-20 18:09:29,335 [INFO] Model monitor stopped
+2026-05-20 18:09:29,336 [INFO] VL model unloaded
+2026-05-20 18:09:29,337 [INFO] Shutdown complete
+2026-05-20 18:09:46,289 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-20 18:09:46,290 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-20 18:09:46,290 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-20 18:09:46,290 [INFO] Models: ['qwen2.5']
+2026-05-20 18:09:46,290 [INFO] Aliases: {'qwen': 'qwen2.5', 'qwen2': 'qwen2.5'}
+2026-05-20 18:09:46,292 [INFO] Model monitor started
+2026-05-20 22:54:56,885 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-20 22:54:56,886 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-20 22:54:56,886 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-20 22:54:56,887 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-20 22:54:56,887 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-20 22:54:56,887 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-20 22:54:56,888 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-20 22:54:56,888 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-20 22:54:56,888 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-20 22:54:56,891 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-20 22:54:56,891 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-20 22:54:56,893 [INFO] Model monitor started
+                                                                                                                                                                                                                                                                               2026-05-21 02:17:03,313 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-21 02:17:03,314 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-21 02:17:03,314 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-21 02:17:03,314 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-21 02:17:03,315 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-21 02:17:03,315 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-21 02:17:03,315 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-21 02:17:03,315 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-21 02:17:03,315 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-21 02:17:03,318 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-21 02:17:03,318 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-21 02:17:03,320 [INFO] Model monitor started
+2026-05-21 02:18:10,892 [INFO] Shutting down RKLLM API...
+2026-05-21 02:18:10,893 [DEBUG] No model to unload - skipping
+2026-05-21 02:18:10,893 [INFO] Model monitor stopped
+2026-05-21 02:18:10,893 [INFO] VL model unloaded
+2026-05-21 02:18:10,894 [INFO] Shutdown complete
+2026-05-21 02:18:13,240 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-21 02:18:13,241 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-21 02:18:13,242 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-21 02:18:13,244 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-21 02:18:13,245 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-21 02:18:13,245 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-21 02:18:13,246 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-21 02:18:13,246 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-21 02:18:13,247 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-21 02:18:13,253 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-21 02:18:13,253 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-21 02:18:13,256 [INFO] Model monitor started
+2026-05-21 02:23:43,401 [INFO] Shutting down RKLLM API...
+2026-05-21 02:23:43,401 [DEBUG] No model to unload - skipping
+2026-05-21 02:23:43,401 [INFO] Model monitor stopped
+2026-05-21 02:23:43,404 [INFO] VL model unloaded
+2026-05-21 02:23:43,404 [INFO] Shutdown complete
+2026-05-21 02:23:45,386 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-21 02:23:45,387 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-21 02:23:45,387 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-21 02:23:45,388 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-21 02:23:45,388 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-21 02:23:45,388 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-21 02:23:45,388 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-21 02:23:45,388 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-21 02:23:45,388 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-21 02:23:45,391 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-21 02:23:45,392 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-21 02:23:45,394 [INFO] Model monitor started
+2026-05-21 02:27:40,664 [INFO] Shutting down RKLLM API...
+2026-05-21 02:27:40,664 [DEBUG] No model to unload - skipping
+2026-05-21 02:27:40,664 [INFO] VL model unloaded
+2026-05-21 02:27:40,665 [INFO] Shutdown complete
+2026-05-21 02:27:43,375 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-21 02:27:43,375 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-21 02:27:43,375 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-21 02:27:43,376 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-21 02:27:43,377 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-21 02:27:43,377 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-21 02:27:43,377 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-21 02:27:43,377 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-21 02:27:43,377 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-21 02:27:43,380 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-21 02:27:43,380 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-21 02:27:43,382 [INFO] Model monitor started
+2026-05-21 22:17:03,404 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-21 22:17:03,405 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-21 22:17:03,405 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-21 22:17:03,406 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-21 22:17:03,407 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-21 22:17:03,407 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-21 22:17:03,407 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-21 22:17:03,407 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-21 22:17:03,407 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-21 22:17:03,411 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-21 22:17:03,411 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-21 22:17:03,413 [INFO] Model monitor started
+2026-05-22 12:03:17,589 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-22 12:03:17,590 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-22 12:03:17,590 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-22 12:03:17,591 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-22 12:03:17,591 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-22 12:03:17,591 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-22 12:03:17,591 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-22 12:03:17,591 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-22 12:03:17,591 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-22 12:03:17,594 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-22 12:03:17,594 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-22 12:03:17,596 [INFO] Model monitor started
+2026-05-22 23:17:03,278 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-22 23:17:03,279 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-22 23:17:03,279 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-22 23:17:03,280 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-22 23:17:03,280 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-22 23:17:03,280 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-22 23:17:03,280 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-22 23:17:03,280 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-22 23:17:03,280 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-22 23:17:03,283 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-22 23:17:03,283 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-22 23:17:03,285 [INFO] Model monitor started
+2026-05-23 02:43:25,538 [INFO] Shutting down RKLLM API...
+2026-05-23 02:43:25,538 [DEBUG] No model to unload - skipping
+2026-05-23 02:43:25,539 [INFO] VL model unloaded
+2026-05-23 02:43:25,539 [INFO] Shutdown complete
+2026-05-23 02:43:25,538 [INFO] Model monitor stopped
+2026-05-23 02:43:28,332 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-23 02:43:28,332 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-23 02:43:28,332 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-23 02:43:28,333 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-23 02:43:28,333 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-23 02:43:28,333 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-23 02:43:28,334 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-23 02:43:28,334 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-23 02:43:28,334 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-23 02:43:28,337 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-23 02:43:28,337 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-23 02:43:28,339 [INFO] Model monitor started
+2026-05-23 20:17:03,503 [INFO] Capabilities for qwen2.5: ['instruct'] (auto-detected)
+2026-05-23 20:17:03,504 [INFO] Sampling for qwen2.5: default (top_k=40, top_p=0.9, temp=0.7, repeat=1.1, presence=0.0)
+2026-05-23 20:17:03,504 [INFO] Detected: qwen2.5 (context=16384, caps=['instruct'])
+2026-05-23 20:17:03,505 [WARNING] Multiple .rkllm files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_w8a8_base.rkllm', 'qwen3vl_2b_w8a8_lora_15cls.rkllm', 'qwen3vl_4b_w8a8_base.rkllm', 'qwen3vl_4b_w8a8_lora_15cls.rkllm'] — using 'qwen3vl_2b_w8a8_base.rkllm'
+2026-05-23 20:17:03,505 [WARNING] Multiple .rknn files in /home/orangepi/models/qwen3vl_models: ['qwen3vl_2b_vision.rknn', 'qwen3vl_4b_vision.rknn'] -- using 'qwen3vl_2b_vision.rknn'
+2026-05-23 20:17:03,505 [WARNING] VL model qwen3vl-models: .rknn found but no VL_MODEL_CONFIGS match -- treating as text-only (add config for 'qwen3vl-models' to VL_MODEL_CONFIGS)
+2026-05-23 20:17:03,505 [INFO] Capabilities for qwen3vl-models: ['instruct'] (auto-detected)
+2026-05-23 20:17:03,505 [INFO] Sampling for qwen3vl-models: profile 'qwen3' (top_k=20, top_p=0.8, temp=0.7, repeat=1.1, presence=1.5)
+2026-05-23 20:17:03,505 [INFO] Detected: qwen3vl-models (context=4096, caps=['instruct'])
+2026-05-23 20:17:03,508 [INFO] Models: ['qwen2.5', 'qwen3vl-models']
+2026-05-23 20:17:03,508 [INFO] Aliases: {'qwen2': 'qwen2.5', 'qwen3vl': 'qwen3vl-models'}
+2026-05-23 20:17:03,510 [INFO] Model monitor started

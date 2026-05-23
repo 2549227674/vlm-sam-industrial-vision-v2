@@ -1,0 +1,62 @@
+# edge/config.phase8b_4b_base_smoke_3img.yaml
+# Phase 8B-4B-Path: 3-image smoke test for 4B base.
+# 3 representative samples: tile defect, carpet defect, screw good.
+
+device_id: rk3588-line-A-cam01
+line_id: "L1"
+
+backend_url: http://192.168.137.1:8000
+upload_timeout_s: 30
+upload_max_retries: 5
+
+vlm_variant: "base"
+vlm_model_size: "4B"
+
+capture_mode: image_loop
+
+image_loop_dir: /home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_4b_smoke/fixed_sample_images_3
+image_loop_categories:
+  - tile
+  - carpet
+  - screw
+image_loop_beat_ms: 30000
+image_loop_jitter_ms: 0
+
+efficientad_model_dir: /home/orangepi/models/efficientad_models
+efficientad_threshold: 0.5
+efficientad_input_size: 256
+efficientad_threshold_default: 49.17
+efficientad_score_mode: raw_score
+efficientad_gate_mode: pass_all
+per_category_threshold:
+  bottle: 49.17
+  cable: 99.84
+  capsule: 668.60
+  carpet: 38.70
+  grid: 46.72
+  hazelnut: 1142.50
+  leather: 619.70
+  metal_nut: 119.47
+  pill: 218.69
+  screw: 28.00
+  tile: 38.31
+  toothbrush: 429.01
+  transistor: 631.65
+  wood: 809.40
+  zipper: 36.42
+
+fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s.rknn
+fastsam_input_size: 640
+fastsam_conf: 0.5
+
+vlm_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+vlm_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+vlm_4b_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_base.rkllm
+vlm_4b_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_vision.rknn
+vlm_2b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+vlm_4b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_4b_w8a8_lora_15cls.rkllm
+vlm_max_new_tokens: 300
+vlm_max_context: 4096
+vlm_npu_core_num: 3
+
+jpeg_quality: 85

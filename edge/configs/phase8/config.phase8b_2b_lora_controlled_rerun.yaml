@@ -1,0 +1,76 @@
+# ── edge/config.phase8b_2b_lora_controlled_rerun.yaml ──────────
+# Phase 8B-Board-2B-LoRA-Controlled-Rerun: 2B LoRA controlled rerun.
+#
+# Goal: Determine if previous 11/14 was caused by timeout/drain/queue pressure
+# rather than inherent LoRA failure. Use conservative 60s beat to eliminate
+# queue pressure as a confound.
+#
+# Usage:
+#   ./edge_pipeline edge/config.phase8b_2b_lora_controlled_rerun.yaml
+
+# ── Device ──
+device_id: rk3588-phase8b-lora-rerun
+line_id: "L1"
+
+# ── Backend ──
+backend_url: http://192.168.137.1:8000
+upload_timeout_s: 30
+upload_max_retries: 5
+
+# ── AB test: 2B LoRA ──
+vlm_variant: "lora"
+vlm_model_size: "2B"
+
+# ── Capture: fixed sample directory v2 ──
+capture_mode: image_loop
+image_loop_dir: /home/orangepi/vlm-sam-industrial-vision-v2/results/phase8_vlm_ab/fixed_sample_images_v2
+image_loop_categories:
+  - tile
+  - carpet
+  - grid
+  - metal_nut
+  - zipper
+  - pill
+  - screw
+image_loop_beat_ms: 60000
+image_loop_jitter_ms: 0
+
+# ── Stage 1: EfficientAD-S ──
+efficientad_model_dir: /home/orangepi/models/efficientad_models
+efficientad_threshold: 0.5
+efficientad_input_size: 256
+efficientad_threshold_default: 49.17
+efficientad_score_mode: raw_score
+efficientad_gate_mode: pass_all
+per_category_threshold:
+  bottle: 49.17
+  cable: 99.84
+  capsule: 668.60
+  carpet: 38.70
+  grid: 46.72
+  hazelnut: 1142.50
+  leather: 619.70
+  metal_nut: 119.47
+  pill: 218.69
+  screw: 28.00
+  tile: 38.31
+  toothbrush: 429.01
+  transistor: 631.65
+  wood: 809.40
+  zipper: 36.42
+
+# ── Stage 2: FastSAM ──
+fastsam_model_path: /home/orangepi/models/fastsam_models/fastsam_s.rknn
+fastsam_input_size: 640
+fastsam_conf: 0.5
+
+# ── Stage 3: Qwen3-VL 2B LoRA ──
+vlm_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_base.rkllm
+vlm_vision_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_vision.rknn
+vlm_2b_lora_model_path: /home/orangepi/models/qwen3vl_models/qwen3vl_2b_w8a8_lora_15cls.rkllm
+vlm_max_new_tokens: 500
+vlm_max_context: 4096
+vlm_npu_core_num: 3
+
+# ── Image output ──
+jpeg_quality: 85
