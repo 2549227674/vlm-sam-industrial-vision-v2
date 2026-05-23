@@ -22,5 +22,8 @@ dev = [
     "websockets>=13",
 ]
 
+[tool.setuptools.packages.find]
+include = ["backend*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
