@@ -75,16 +75,16 @@ flowchart TD
   subgraph Edge["EDGE DEVICE | RK3588 16GB (Orange Pi 5 Plus) | 6 TOPS NPU x3"]
     subgraph Pipeline["4-Thread C++ Pipeline"]
       T1["T1: Capture\nV4L2 / Image Loop"]
-      Q1["Q1\ncap=2"]
-      T2["T2: Pipeline\nEfficientAD-S INT8\n256x256 + RGA"]
+      Q1["Q1\ncap=4"]
+      T2["T2: Pipeline\nEfficientAD-S FP16\n256x256 + RGA"]
       Q2["Q2\ncap=2"]
       T3["T3: VLM Worker\nFastSAM FP16 640x640\nQwen3-VL-2B/4B W8A8"]
-      Q3["Q3\ncap=2"]
+      Q3["Q3\ncap=4"]
       T4["T4: Upload\nlibcurl"]
-      T1 -->|frame| Q1 -->|frame| T2 -->|anomaly + mask| Q2 -->|candidates| T3 -->|defect JSON + img| Q3 -->|result| T4
+      T1 -->|frame| Q1 -->|frame| T2 -->|frame + score| Q2 -->|candidates| T3 -->|defect JSON + img| Q3 -->|result| T4
     end
     subgraph ModelZoo["Model Zoo (RKNN / RKLLM)"]
-      EAD["EfficientAD-S\nINT8 RKNN"]
+      EAD["EfficientAD-S\nFP16 RKNN (no-quant)"]
       FS["FastSAM-s\nFP16 RKNN (no-quant)"]
       QV["Qwen3-VL-2B/4B\nW8A8 RKLLM + Vision RKNN"]
     end
@@ -258,13 +258,13 @@ flowchart LR
 
   T1S -->|raw frames| Q1
 
-  Q1[("Q1\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+  Q1[("Q1\nBoundedQueue\ncapacity=4\ndrop-oldest")]
 
   Q1 -->|frame| T2S
 
   subgraph T2S["T2 Pipeline Thread"]
     direction LR
-    EAD["EfficientAD-S\nRKNN Inference\n256x256 INT8"] --> GD{{"Gate Decision\nThreshold Mode"}}
+    EAD["EfficientAD-S\nRKNN Inference\n256x256 FP16"] --> GD{{"Gate Decision\nThreshold Mode"}}
     GD -->|PASS| ATT["Attach Score\n+ Metadata"]
     GD -->|DROP| DROP["DROP\nead_gate_drop++"]
   end
@@ -282,7 +282,7 @@ flowchart LR
 
   T3S -->|result| Q3
 
-  Q3[("Q3\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+  Q3[("Q3\nBoundedQueue\ncapacity=4\ndrop-oldest")]
 
   Q3 -->|result| T4S
 
@@ -432,7 +432,7 @@ flowchart LR
 
 ## 8. Phase 8C：beat_ms 队列压力测试
 
-![Beat Sweep 双面板：队列丢帧 + VLM 瓶颈分析（beat_ms=10000 为甜蜜点）](../figures/fig8_beat_sweep.png)
+![Beat Sweep 双面板：队列丢帧 + VLM 瓶颈分析（beat_ms=13000 推荐，10000 最小稳定边界）](../figures/fig8_beat_sweep.png)
 
 Phase 8C 使用 2B base、pass_all、14 张固定样本做最坏情况压力扫描。pass_all 意味着所有帧都进入 T3 VLM，是压力最大的场景。
 

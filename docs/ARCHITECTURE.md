@@ -70,16 +70,16 @@ flowchart TD
   subgraph Edge["EDGE DEVICE | RK3588 16GB (Orange Pi 5 Plus) | 6 TOPS NPU x3"]
     subgraph Pipeline["4-Thread C++ Pipeline"]
       T1["T1: Capture\nV4L2 / Image Loop"]
-      Q1["Q1\ncap=2"]
-      T2["T2: Pipeline\nEfficientAD-S INT8\n256x256 + RGA"]
+      Q1["Q1\ncap=4"]
+      T2["T2: Pipeline\nEfficientAD-S FP16\n256x256 + RGA"]
       Q2["Q2\ncap=2"]
       T3["T3: VLM Worker\nFastSAM FP16 640x640\nQwen3-VL-2B/4B W8A8"]
-      Q3["Q3\ncap=2"]
+      Q3["Q3\ncap=4"]
       T4["T4: Upload\nlibcurl"]
-      T1 -->|frame| Q1 -->|frame| T2 -->|anomaly + mask| Q2 -->|candidates| T3 -->|defect JSON + img| Q3 -->|result| T4
+      T1 -->|frame| Q1 -->|frame| T2 -->|frame + score| Q2 -->|candidates| T3 -->|defect JSON + img| Q3 -->|result| T4
     end
     subgraph ModelZoo["Model Zoo (RKNN / RKLLM)"]
-      EAD["EfficientAD-S\nINT8 RKNN"]
+      EAD["EfficientAD-S\nFP16 RKNN (no-quant)"]
       FS["FastSAM-s\nFP16 RKNN (no-quant)"]
       QV["Qwen3-VL-2B/4B\nW8A8 RKLLM + Vision RKNN"]
     end
@@ -138,13 +138,13 @@ flowchart LR
 
   T1S -->|raw frames| Q1
 
-  Q1[("Q1\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+  Q1[("Q1\nBoundedQueue\ncapacity=4\ndrop-oldest")]
 
   Q1 -->|frame| T2S
 
   subgraph T2S["T2 Pipeline Thread"]
     direction LR
-    EAD["EfficientAD-S\nRKNN Inference\n256x256 INT8"] --> GD{{"Gate Decision\nThreshold Mode"}}
+    EAD["EfficientAD-S\nRKNN Inference\n256x256 FP16"] --> GD{{"Gate Decision\nThreshold Mode"}}
     GD -->|PASS| ATT["Attach Score\n+ Metadata"]
     GD -->|DROP| DROP["DROP\nead_gate_drop++"]
   end
@@ -162,7 +162,7 @@ flowchart LR
 
   T3S -->|result| Q3
 
-  Q3[("Q3\nBoundedQueue\ncapacity=2\ndrop-oldest")]
+  Q3[("Q3\nBoundedQueue\ncapacity=4\ndrop-oldest")]
 
   Q3 -->|result| T4S
 
@@ -175,10 +175,10 @@ flowchart LR
 
 ### 3.2 三段模型定位
 
-| Stage | 模型 | 输入 | 输出 | RK3588 INT8 延迟 | 备注 |
+| Stage | 模型 | 输入 | 输出 | RK3588 延迟 | 备注 |
 |---|---|---|---|---|---|
-| 1 | EfficientAD-S | 256×256 RGB | anomaly_map + score | 6–12 ms（单核）/ 3–5 ms（三核）TBD-上板实测 | Anomalib 将 Teacher/Student/AE 三子网络封装为**单一 ONNX**，转**单个 RKNN**文件 |
-| 2 | FastSAM-s | **640×640** | mask + bbox | ~30–60 ms | 仅 Stage 1 触发后跑；分辨率固定 640（MVTec 900×900 降采样对厘米级缺陷无影响；如需检测微米级特征可调至 1024，延迟约增 2–3 倍） |
+| 1 | EfficientAD-S | 256×256 RGB | anomaly_map + score (FP16 raw) | 6–12 ms（单核）/ 3–5 ms（三核）TBD-上板实测 | Anomalib 将 Teacher/Student/AE 三子网络封装为**单一 ONNX**，转**单个 RKNN**文件；FP16/no-quant（INT8 分布失真，已弃用） |
+| 2 | FastSAM-s | **640×640** | bbox proposal (mask decode TODO) | ~30–60 ms | 仅 Stage 1 触发后跑；FP16/no-quant；分辨率固定 640（MVTec 900×900 降采样对厘米级缺陷无影响；如需检测微米级特征可调至 1024，延迟约增 2–3 倍） |
 | 3 | Qwen3-VL-2B | 448×448 + prompt | JSON 文本 | TTFT 2–3 s（短 prompt）/ 5–10 s（长 prompt），decode 11.5 tokens/s，RAM 3.1 GB | 异步 worker，drop-oldest |
 | 3 | Qwen3-VL-4B | 448×448 + prompt | JSON 文本 | TTFT 热 ~5–6 s，decode 5.7 tokens/s，RAM 8.7 GB，Pipeline 总峰值 ~11.4 GB | 异步 worker，drop-oldest；rknn-llm v1.2.3 支持 |
 

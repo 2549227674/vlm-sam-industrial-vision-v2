@@ -9,7 +9,7 @@ upload_max_retries: 5            # 指数退避最多 5 次（500ms × 2ⁿ + ji
 
 # ── AB 测试 ───────────────────────────────────────
 vlm_variant: "base"              # "base"=Base+Prompt工程 / "lora"=LoRA+极简Prompt
-vlm_model_size: "4B"             # "2B" | "4B"，切换后需重启进程
+vlm_model_size: "2B"             # "2B" (mainline) | "4B" (experimental, spatial merge fix pending)
 
 # ── 取帧模式 ──────────────────────────────────────
 capture_mode: image_loop         # "v4l2" | "image_loop"
