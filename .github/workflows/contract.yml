@@ -25,7 +25,7 @@ jobs:
           pip install jsonschema
 
       - name: Backend contract tests
-        run: PYTHONPATH=. pytest backend/tests/contract/ -v
+        run: PYTHONPATH=. pytest backend/tests/contract/ -v --tb=short 2>&1
 
       - name: Contract schema drift check
         run: python scripts/check_contract_drift.py
