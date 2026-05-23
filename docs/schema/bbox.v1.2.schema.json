@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "x": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "X",
+      "type": "number"
+    },
+    "y": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Y",
+      "type": "number"
+    },
+    "w": {
+      "exclusiveMinimum": 0.0,
+      "maximum": 1.0,
+      "title": "W",
+      "type": "number"
+    },
+    "h": {
+      "exclusiveMinimum": 0.0,
+      "maximum": 1.0,
+      "title": "H",
+      "type": "number"
+    }
+  },
+  "required": [
+    "x",
+    "y",
+    "w",
+    "h"
+  ],
+  "title": "BBox",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vision.example.com/schema/bbox.v1.2.schema.json"
+}

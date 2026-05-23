@@ -435,7 +435,7 @@ RK3588 C++ pipeline                              backend                  fronte
   │ T1: V4L2 DQBUF (dma_buf fd) 或 图片集循环      │                         │
   │ T2: RGA resize → EfficientAD-S NPU             │                         │
   │     score > thr ? 是 → Q2                      │                         │
-  │ T3: FastSAM mask → bbox 净化 → Qwen3-VL JSON   │                         │
+  │ T3: FastSAM bbox proposal → bbox 净化 → Qwen3-VL JSON   │                         │
   │ T4: libcurl multipart POST ───────────────────►│                         │
   │                                       200 / err│ broadcast ─────────────►│
   │  (失败入 retry 队列，指数退避 0.5/1/2/4/8 s)    │                         │
@@ -524,7 +524,7 @@ Phase 5 v2 重做采用双轨评估，两条线路目标不同、产出不同：
 
 | 阶段 | 目标 | 实测（Phase 7） | 备注 |
 |---|---|---|---|
-| EfficientAD-S (T2) | 6–12 ms（单核） | **avg 350 ms**（含预处理 + RKNN 推理 + 后处理） | FP16/no-quant raw RKNN，map_mean 模式 |
+| EfficientAD-S (T2) | 6–12 ms（单核） | **avg 350 ms**（含预处理 + RKNN 推理 + 后处理） | FP16/no-quant raw RKNN；Phase 7 实测时使用 map_mean 模式，当前部署已切换为 raw_score（Phase 8A-Fix），推理延迟在同一 FP16 RKNN 下基本等价 |
 | FastSAM-s (T3 pre) | 30–60 ms | **avg 250 ms**（preprocess ~95ms + infer ~140ms + post ~7ms） | FP16/no-quant，640×640 |
 | Qwen3-VL-2B Vision | — | **avg 2380 ms** | 448×448，4 头并行输出 |
 | Qwen3-VL-2B TTFT | 2–3 s | **avg 2174 ms** | W8A8，max_context=4096 |

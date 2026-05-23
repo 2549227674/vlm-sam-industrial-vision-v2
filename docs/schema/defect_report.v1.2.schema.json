@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vision.example.com/schema/defect_report.v1.2.schema.json",
+  "title": "Industrial Vision Defect Report Contract v1.2",
+  "description": "Auto-generated from backend/app/schemas/defect.py — do not edit manually.",
+  "$defs": {
+    "BBox": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Y",
+          "type": "number"
+        },
+        "w": {
+          "exclusiveMinimum": 0.0,
+          "maximum": 1.0,
+          "title": "W",
+          "type": "number"
+        },
+        "h": {
+          "exclusiveMinimum": 0.0,
+          "maximum": 1.0,
+          "title": "H",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "TraceEvent": {
+      "description": "Chrome Trace format single complete event.\n\nts/dur unit: microseconds, origin=0 corresponds to frame start.\nextra=\"ignore\" to accept future C++ / Perfetto extension fields (args/pid).",
+      "properties": {
+        "name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "ts": {
+          "minimum": 0,
+          "title": "Ts",
+          "type": "number"
+        },
+        "dur": {
+          "minimum": 0,
+          "title": "Dur",
+          "type": "number"
+        },
+        "tid": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Tid",
+          "type": "string"
+        },
+        "ph": {
+          "const": "X",
+          "title": "Ph",
+          "type": "string"
+        },
+        "cat": {
+          "default": "",
+          "maxLength": 64,
+          "title": "Cat",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "ts",
+        "dur",
+        "tid",
+        "ph"
+      ],
+      "title": "TraceEvent",
+      "type": "object"
+    },
+    "VlmMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "ttft_ms": {
+          "minimum": 0,
+          "title": "Ttft Ms",
+          "type": "number"
+        },
+        "decode_tps": {
+          "minimum": 0,
+          "title": "Decode Tps",
+          "type": "number"
+        },
+        "prompt_tokens": {
+          "minimum": 0,
+          "title": "Prompt Tokens",
+          "type": "integer"
+        },
+        "output_tokens": {
+          "minimum": 0,
+          "title": "Output Tokens",
+          "type": "integer"
+        },
+        "rss_mb": {
+          "minimum": 0,
+          "title": "Rss Mb",
+          "type": "number"
+        },
+        "json_parse_ok": {
+          "title": "Json Parse Ok",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ttft_ms",
+        "decode_tps",
+        "prompt_tokens",
+        "output_tokens",
+        "rss_mb",
+        "json_parse_ok"
+      ],
+      "title": "VlmMetrics",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "line_id": {
+      "maxLength": 32,
+      "minLength": 1,
+      "title": "Line Id",
+      "type": "string"
+    },
+    "category": {
+      "enum": [
+        "bottle",
+        "cable",
+        "capsule",
+        "carpet",
+        "grid",
+        "hazelnut",
+        "leather",
+        "metal_nut",
+        "pill",
+        "screw",
+        "tile",
+        "toothbrush",
+        "transistor",
+        "wood",
+        "zipper"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "defect_type": {
+      "maxLength": 64,
+      "minLength": 1,
+      "title": "Defect Type",
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "confidence": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Confidence",
+      "type": "number"
+    },
+    "anomaly_score": {
+      "minimum": 0,
+      "title": "Anomaly Score",
+      "type": "number"
+    },
+    "bboxes": {
+      "items": {
+        "$ref": "#/$defs/BBox"
+      },
+      "maxItems": 16,
+      "title": "Bboxes",
+      "type": "array"
+    },
+    "description": {
+      "default": "",
+      "maxLength": 1024,
+      "title": "Description",
+      "type": "string"
+    },
+    "variant": {
+      "title": "Variant",
+      "type": "string"
+    },
+    "edge_ts": {
+      "format": "date-time",
+      "title": "Edge Ts",
+      "type": "string"
+    },
+    "pipeline_ms": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "propertyNames": {
+        "enum": [
+          "efficientad",
+          "fastsam",
+          "qwen3vl"
+        ]
+      },
+      "title": "Pipeline Ms",
+      "type": "object"
+    },
+    "vlm_metrics": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VlmMetrics"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "trace_events": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/TraceEvent"
+          },
+          "maxItems": 64,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trace Events"
+    },
+    "schema_version": {
+      "const": "v1",
+      "default": "v1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "line_id",
+    "category",
+    "defect_type",
+    "severity",
+    "confidence",
+    "anomaly_score",
+    "variant",
+    "edge_ts",
+    "pipeline_ms"
+  ],
+  "type": "object",
+  "additionalProperties": false
+}

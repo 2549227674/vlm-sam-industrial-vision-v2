@@ -1,7 +1,7 @@
 // V4 mock data — matches API_CONTRACT v1.1
 // 15 MVTec AD categories · 4 variant keys · Chrome-trace generation · 4-variant buildStats()
 
-import type { DefectRead, TraceEvent, VariantKey } from "@/types/defect";
+import type { DefectRead, MvtecCategory, TraceEvent, VariantKey } from "@/types/defect";
 import type { DashboardStatsLike, VariantMetrics } from "@/types/stats";
 
 // Backwards-compat alias for v2 components
@@ -234,7 +234,7 @@ export function makeTraceEvents(pipeline_ms: { efficientad: number; fastsam: num
 export function makeDefect(opts: Partial<{
   ts: Date; category: string; variant: string; severity: string; id: number; defect_type: string;
 }> = {}): DefectRead {
-  const category = opts.category ?? pick(MVTEC_CATEGORIES);
+  const category = (opts.category ?? pick(MVTEC_CATEGORIES)) as MvtecCategory;
   const variant = normalizeVariant(opts.variant ?? pickWeighted(VARIANTS, VARIANT_WEIGHTS)) as VariantKey;
   const severity = (opts.severity ?? pickWeighted(SEVERITIES, SEVERITY_WEIGHTS)) as "low" | "medium" | "high";
   const dt = opts.defect_type ?? pick(DEFECT_TYPES[category] ?? ["defective"]);

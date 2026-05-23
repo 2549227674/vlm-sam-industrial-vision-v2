@@ -184,8 +184,10 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 | **P1** | config.yaml 默认值 4B → 2B | edge/config.yaml:12 | 2 min | 低 | **已完成** |
 | **P1** | Stage 2 输出标签 mask+bbox → bbox | ARCHITECTURE.md:181 | 5 min | 低 | **已完成** |
 | **P1** | 表头 "RK3588 INT8 延迟" → "RK3588 延迟" | ARCHITECTURE.md:178 | 5 min | 低 | **已完成** |
+| **P1** | 性能表 map_mean → raw_score 注释 + ASCII 图 T3 标签 | ARCHITECTURE.md:527, :438 | 10 min | 低 | **已完成**（CLAUDE_02） |
 | **P1** | 实现 4B spatial merge（2x2 permute） | qwen3vl_runner.cpp | 2-4 hr | 中高 | 待处理（CLAUDE_04） |
 | **P1** | 增加实时队列深度 / 高水位线指标 | edge 代码 | 2-3 hr | 中 | 待处理（CLAUDE_04） |
+| **P1** | API Contract schema 自动化 + CI + 跨端类型同步 | scripts/, tests/, .github/ | 3-4 hr | 中高 | **已完成**（CLAUDE_03） → `phase9_contract_ci_hardening.md` |
 | **P2** | Threshold soak test（30 分钟以上） | 板端硬件 | 1 hr 运行时间 | 中 | 待处理（CLAUDE_05） |
 | **P2** | FastSAM mask decode（可选 v1.3 contract） | fastsam_worker.cpp + contract | 4-6 hr | 低 | 待处理 |
 
@@ -193,11 +195,26 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 
 ## 4. 本次审计修改的文件
 
-1. `docs/ARCHITECTURE.md` — 行 74, 77, 79, 82, 141, 147, 154, 165, 178, 180, 181（工作树已修正）
-2. `docs/reports/edge_deployment_summary.md` — 行 78-82, 84, 87, 261, 267, 274, 285, 435（工作树已修正）
-3. `edge/config.yaml` — 行 12：vlm_model_size "4B" → "2B"
-4. `README.md` — 新建
-5. `docs/experiments/phase9_repo_audit.md` — 本文件（更新修复状态）
+1. `docs/ARCHITECTURE.md` — 行 74, 77, 79, 82, 141, 147, 154, 165, 178, 180, 181（CLAUDE_01 工作树已修正）; 行 438, 527（CLAUDE_02 doc consistency patch）
+2. `docs/reports/edge_deployment_summary.md` — 行 78-82, 84, 87, 261, 267, 274, 285, 435（CLAUDE_01 工作树已修正）
+3. `edge/config.yaml` — 行 12：vlm_model_size "4B" → "2B"（CLAUDE_01）
+4. `README.md` — 新建（CLAUDE_01）
+5. `docs/experiments/phase9_repo_audit.md` — 本文件（CLAUDE_01 + CLAUDE_02 更新修复状态）
+6. `docs/experiments/phase9_doc_consistency_patch.md` — CLAUDE_02 执行报告（新建）
+7. `docs/experiments/phase9_contract_ci_hardening.md` — CLAUDE_03 执行报告（新建）
+8. `scripts/export_contract_schema.py` — JSON Schema 导出（新建）
+9. `scripts/check_contract_drift.py` — Schema 漂移检测（新建）
+10. `scripts/validate_contract.py` — 单文件 contract 校验（新建）
+11. `docs/schema/*.v1.2.schema.json` — 6 个 schema 文件（新建）
+12. `backend/tests/contract/fixtures/*.json` — 9 个 fixture 文件（新建）
+13. `backend/tests/contract/test_contract_fixtures.py` — fixture 验证测试（新建）
+14. `backend/tests/contract/test_post_report_extended.py` — 扩展验证测试（新建）
+15. `backend/tests/contract/test_golden_alignment.py` — golden sample 对齐测试（新建）
+16. `.github/workflows/contract.yml` — GitHub Actions CI（新建）
+17. `Makefile` — 本地 CI 快捷命令（新建）
+18. `frontend/src/types/defect.ts` — +MvtecCategory, +Severity 类型（修改）
+19. `frontend/src/lib/mock-data.ts` — category 类型对齐（修改）
+20. `frontend/package.json` — +typecheck script（修改）
 
 ---
 
@@ -207,19 +224,27 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 - `docs/API_CONTRACT.md` v1.2 — 与代码一致
 - `edge/config.yaml` 类别级阈值 — Phase 8A-Fix-Fix 校准值
 - `edge/src/vlm/qwen3vl_runner.cpp` — spatial merge 检测逻辑正确（修复路径已知但排列未实现）
-- Phase 7/8 实验报告 — 内部自洽
+- Phase 7 实验报告（phase7_edge_pipeline_report.md, phase7_prompt2e, phase7_prompt2f）— map_mean 引用为历史准确记录，Phase 8 已说明切换原因
+- Phase 8 实验报告（phase8_execution_report.md）— 内部自洽，正确区分 pass_all vs threshold、PC vs Board
 - 后端 Pydantic schema — 与 contract 一致
 - 前端 TypeScript 类型 — 与 contract 一致
-- `docs/PROJECT_TIMELINE.md` — 队列容量引用正确
+- 前端源码（app/, components/, lib/, types/）— 无夸大 defect_type 分类、无 INT8 部署、无 mask 完成等误导表述
+- `docs/PROJECT_TIMELINE.md` — 队列容量引用正确，W8A8 LoRA 坍塌描述准确
+- `docs/reports/edge_deployment_summary.md` — threshold 推算明确标注 "推算不是实测"，FastSAM 明确标注 "bbox proposal"，前端截图明确标注 "Phase 4 模拟器数据驱动"
+- `README.md` — 所有叙事守卫已落实（T2=load shedding gate, LoRA=W8A8 collapse, threshold=inferred, mask=TODO）
+- 后端 contract tests 从 31 扩展到 74，覆盖全 15 类 category、extra field 拒绝、negative bbox、trace_events WS round-trip
+- JSON Schema 快照已生成并可自动检测漂移
+- 前端 TypeScript 类型已对齐（MvtecCategory union type、Severity type）
+- CI workflow 和 Makefile 已建立
 
 ---
 
 ## 6. 后续工作（延后至后续文档）
 
-| 文档 | 范围 |
-|---|---|
-| `CLAUDE_02_DOC_CONSISTENCY_AND_REPORT_PATCH.md` | 实验报告中剩余文档不一致项深度扫描 |
-| `CLAUDE_03_API_CONTRACT_AND_CI_HARDENING.md` | Contract schema 自动化、CI 检查、跨端类型同步 |
-| `CLAUDE_04_EDGE_RUNTIME_AND_MODEL_FIXES.md` | 4B spatial merge 修复、队列指标、JSON watchdog |
-| `CLAUDE_05_EXPERIMENT_VALIDATION_AND_RELEASE_GATES.md` | Threshold soak test、4B 修复后复测、校准集分离 |
-| `CLAUDE_06_FRONTEND_DEMO_TRUTHFULNESS_GUARDRAILS.md` | 前端 mock/real 标识、AB matrix 口径控制 |
+| 文档 | 范围 | 状态 |
+|---|---|---|
+| `CLAUDE_02_DOC_CONSISTENCY_AND_REPORT_PATCH.md` | 实验报告中剩余文档不一致项深度扫描 | **已完成** → `phase9_doc_consistency_patch.md` |
+| `CLAUDE_03_API_CONTRACT_AND_CI_HARDENING.md` | Contract schema 自动化、CI 检查、跨端类型同步 | **已完成** → `phase9_contract_ci_hardening.md` |
+| `CLAUDE_04_EDGE_RUNTIME_AND_MODEL_FIXES.md` | 4B spatial merge 修复、队列指标、JSON watchdog | 待开始 |
+| `CLAUDE_05_EXPERIMENT_VALIDATION_AND_RELEASE_GATES.md` | Threshold soak test、4B 修复后复测、校准集分离 | 待开始 |
+| `CLAUDE_06_FRONTEND_DEMO_TRUTHFULNESS_GUARDRAILS.md` | 前端 mock/real 标识、AB matrix 口径控制 | 待开始 |

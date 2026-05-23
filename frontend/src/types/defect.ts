@@ -2,6 +2,13 @@ export type VariantKey =
   | "2B_base" | "2B_lora" | "4B_base" | "4B_lora"
   | "A" | "B";
 
+export type MvtecCategory =
+  | "bottle" | "cable" | "capsule" | "carpet" | "grid"
+  | "hazelnut" | "leather" | "metal_nut" | "pill" | "screw"
+  | "tile" | "toothbrush" | "transistor" | "wood" | "zipper";
+
+export type Severity = "low" | "medium" | "high";
+
 export type ModelSize = "2B" | "4B";
 export type ModelVariant = "base" | "lora";
 
@@ -39,9 +46,9 @@ export interface DefectRead {
   id: number;
   image_url: string;
   line_id: string;
-  category: string;
+  category: MvtecCategory;
   defect_type: string;
-  severity: "low" | "medium" | "high";
+  severity: Severity;
   confidence: number;
   anomaly_score: number;
   bboxes: BBox[];

@@ -1,0 +1,15 @@
+{
+  "line_id": "L1",
+  "category": "metal_nut",
+  "defect_type": "scratch",
+  "severity": "high",
+  "confidence": 0.92,
+  "anomaly_score": 3.41,
+  "variant": "2B_base",
+  "edge_ts": "2026-05-22T12:34:56+08:00",
+  "pipeline_ms": {
+    "efficientad": 4.2,
+    "fastsam": 48.1,
+    "qwen3vl": 2310.5
+  }
+}
