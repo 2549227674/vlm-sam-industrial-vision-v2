@@ -5,7 +5,7 @@ import { fmtDateTime } from "@/lib/mock-data";
 import type { ActiveConfig } from "@/types/defect";
 
 interface BottomBarProps {
-  now: Date;
+  now: Date | null;
   live: boolean;
   route: string;
   activeConfig: ActiveConfig;
@@ -31,7 +31,7 @@ export function BottomBar({ now, live, route, activeConfig, totalDefects }: Bott
         <span>事件数 n={totalDefects}</span>
         <span>变体 · {activeConfig.model_size}_{activeConfig.variant}</span>
       </div>
-      <div>build 2026.05.18 · UTC+8 · {fmtDateTime(now)}</div>
+      <div>build 2026.05.18 · UTC+8 · {now ? fmtDateTime(now) : "—"}</div>
     </footer>
   );
 }

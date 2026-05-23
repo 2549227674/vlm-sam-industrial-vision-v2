@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   // Global state
   const [defects, setDefects] = useState<DefectRead[]>([]);
-  const [now, setNow] = useState(new Date());
+  const [now, setNow] = useState<Date | null>(null);
   const [selectedDefect, setSelectedDefect] = useState<DefectRead | null>(null);
   const [profileSeedIdx, setProfileSeedIdx] = useState(0);
   const [activeConfig, setActiveConfig] = useState<ActiveConfig>({ model_size: "2B", variant: "lora" });

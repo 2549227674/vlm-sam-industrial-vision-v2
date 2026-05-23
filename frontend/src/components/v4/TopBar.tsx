@@ -4,7 +4,7 @@ import React from "react";
 import { fmtTime } from "@/lib/mock-data";
 
 interface TopBarProps {
-  now: Date;
+  now: Date | null;
   live: boolean;
   route: string;
   navigate?: (key: string) => void;
@@ -71,7 +71,7 @@ export function TopBar({ now, live, route, accent = "var(--acc)" }: TopBarProps)
             {live ? "实时" : "已暂停"}
           </span>
         </span>
-        <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)" }} suppressHydrationWarning>{fmtTime(now)}</span>
+        <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)" }} suppressHydrationWarning>{now ? fmtTime(now) : "—"}</span>
       </div>
     </header>
   );
