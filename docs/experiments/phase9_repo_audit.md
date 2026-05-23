@@ -118,6 +118,8 @@
 
 待做：4B 推理回归实验（carpet/tile 纹理敏感样本）。
 
+**4B 回归结果（CLAUDE_05）**：carpet 5/5 json_ok=1，spatial merge 修复确认有效。RSS=5736MB，vlm_total_ms avg=36473ms，decode_tps=4.8。详见 `docs/experiments/phase9_experiment_validation_release_gates.md`。
+
 #### F-P1-03：FastSAM Stage 2 输出标签写成"segmentation" / "mask"
 
 **状态**：已修复
@@ -149,12 +151,10 @@
 
 #### F-P2-01：无 threshold 模式 soak test
 
-**状态**：未完成
+**状态**：已修复（CLAUDE_05）
 **影响**：中
 
-Phase 7 Prompt 2F 仅在短时间运行（~30s）下验证了 threshold 模式。无长时间（30 分钟以上）soak test。"threshold 模式吞吐边界"的说法是基于 pass_all 数据推算，非实测结论。
-
-延后至 CLAUDE_05 处理。
+Phase 7 Prompt 2F 仅在短时间运行（~30s）下验证了 threshold 模式。Phase 9 CLAUDE_05 已完成 30.2 分钟 soak test：366 帧，37 gate passes，36 VLM completions，33 uploads，0 queue drops，0 crashes，100% json_parse_ok，RSS 稳定在 3322MB。详见 `docs/experiments/phase9_experiment_validation_release_gates.md`。
 
 #### F-P2-02：FastSAM mask decode 未实现
 
@@ -188,7 +188,7 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 | **P1** | 实现 4B spatial merge（2x2 permute） | qwen3vl_runner.hpp/cpp | 2-4 hr | 中高 | **已完成**（CLAUDE_04） → `phase9_edge_runtime_model_fixes.md` |
 | **P1** | 增加实时队列深度 / 高水位线指标 | bounded_queue.hpp, metrics.hpp, main.cpp | 2-3 hr | 中 | **已完成**（CLAUDE_04） → `phase9_edge_runtime_model_fixes.md` |
 | **P1** | API Contract schema 自动化 + CI + 跨端类型同步 | scripts/, tests/, .github/ | 3-4 hr | 中高 | **已完成**（CLAUDE_03） → `phase9_contract_ci_hardening.md` |
-| **P2** | Threshold soak test（30 分钟以上） | 板端硬件 | 1 hr 运行时间 | 中 | 待处理（CLAUDE_05） |
+| **P2** | Threshold soak test（30 分钟以上） | 板端硬件 | 1 hr 运行时间 | 中 | **已完成**（CLAUDE_05） |
 | **P2** | FastSAM mask decode（可选 v1.3 contract） | fastsam_worker.cpp + contract | 4-6 hr | 低 | 待处理 |
 
 ---
@@ -246,5 +246,5 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 | `CLAUDE_02_DOC_CONSISTENCY_AND_REPORT_PATCH.md` | 实验报告中剩余文档不一致项深度扫描 | **已完成** → `phase9_doc_consistency_patch.md` |
 | `CLAUDE_03_API_CONTRACT_AND_CI_HARDENING.md` | Contract schema 自动化、CI 检查、跨端类型同步 | **已完成** → `phase9_contract_ci_hardening.md` |
 | `CLAUDE_04_EDGE_RUNTIME_AND_MODEL_FIXES.md` | 4B spatial merge 修复、队列指标、JSON watchdog | **已完成** → `phase9_edge_runtime_model_fixes.md` |
-| `CLAUDE_05_EXPERIMENT_VALIDATION_AND_RELEASE_GATES.md` | Threshold soak test、4B 修复后复测、校准集分离 | 待开始 |
+| `CLAUDE_05_EXPERIMENT_VALIDATION_AND_RELEASE_GATES.md` | Threshold soak test、4B 修复后复测、校准集分离 | **已完成** → `phase9_experiment_validation_release_gates.md` |
 | `CLAUDE_06_FRONTEND_DEMO_TRUTHFULNESS_GUARDRAILS.md` | 前端 mock/real 标识、AB matrix 口径控制 | 待开始 |
