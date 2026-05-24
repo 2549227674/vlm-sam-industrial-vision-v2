@@ -35,9 +35,22 @@ export function OverviewPage({
   dataSource,
   manifestCaveats,
 }: OverviewProps) {
-  const fps = "1.85";
-  const e2eMs = Math.round(1000 / parseFloat(fps));
-  const ttftAvg = Math.round(stats.ab_compare["2B_lora"]?.avg_ttft_ms || 1100);
+  // E2E latency: prefer stats.avg_pipeline_ms, fallback to defects average, then 0
+  const e2eFromStats = stats.avg_pipeline_ms
+    ? Math.round(stats.avg_pipeline_ms.efficientad + stats.avg_pipeline_ms.fastsam + stats.avg_pipeline_ms.qwen3vl)
+    : 0;
+  const e2eFromDefects = defects.length
+    ? Math.round(defects.reduce((s, d) => s + d.pipeline_ms.efficientad + d.pipeline_ms.fastsam + d.pipeline_ms.qwen3vl, 0) / defects.length)
+    : 0;
+  const e2eMs = e2eFromStats || e2eFromDefects || 0;
+
+  // TTFT: prefer 2B_base (mainline), fallback to 2B_lora, then 1877
+  const primaryVariant = "2B_base";
+  const ttftAvg = Math.round(
+    stats.ab_compare[primaryVariant]?.avg_ttft_ms
+    || stats.ab_compare["2B_lora"]?.avg_ttft_ms
+    || 1877,
+  );
   const jsonRate = Math.round(
     Object.values(stats.ab_compare).reduce((s, v) => s + (v.json_ok_rate || 0) * (v.count || 0), 0) /
     Math.max(1, Object.values(stats.ab_compare).reduce((s, v) => s + (v.count || 0), 0)) * 100,

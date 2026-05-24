@@ -129,7 +129,8 @@ export function RK3588Twin({ phase, npuLoads, cpuLoads, mode, showTraces = true,
       <div style={{ padding: "14px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--line)", background: "var(--bg-2)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <span style={{ width: 8, height: 8, background: accent, boxShadow: `0 0 8px ${accent}`, animation: "pulse-dot 1.4s infinite" }} />
-          <span className="eyebrow" style={{ fontSize: 10, color: accent }}>边缘节点-001 · 实时</span>
+          <span className="eyebrow" style={{ fontSize: 10, color: accent }}>边缘节点-001 · 架构可视化</span>
+          <span className="mono" style={{ fontSize: 9, color: "var(--fg-3)", marginLeft: 4 }}>非实时硬件监控</span>
           <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)" }}>Orange Pi 5 Plus · RK3588 16GB · 6 TOPS NPU · 8 ARM 核</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
@@ -201,10 +202,11 @@ export function RK3588Twin({ phase, npuLoads, cpuLoads, mode, showTraces = true,
 
           {/* NPU label */}
           <text x={250} y={npuY - 12} fontFamily="var(--font-mono)" fontSize="9" fill="var(--fg-3)" letterSpacing="0.14em">── NPU 集群 ──────────────────────────────────────────</text>
+          <text x={820} y={npuY - 12} fontFamily="var(--font-mono)" fontSize="8" fill="var(--fg-3)" letterSpacing="0.08em" opacity={0.6}>架构可视化 · 非实时监控</text>
 
           {/* NPU cores */}
           {[
-            { x: 278, title: "NPU.0", model: "EfficientAD-S", task: "异常检测", load: npuLoads[0], ms: STAGE_REAL_MS.core0, color: "var(--core-0)", gradId: "cg0", active: c0Active, detail: "PDN · 256×256 · INT8", thru: "≈ 208 fps" },
+            { x: 278, title: "NPU.0", model: "EfficientAD-S", task: "异常检测", load: npuLoads[0], ms: STAGE_REAL_MS.core0, color: "var(--core-0)", gradId: "cg0", active: c0Active, detail: "PDN · 256×256 · FP16", thru: "≈ 208 fps" },
             { x: 528, title: "NPU.1", model: "FastSAM-s", task: "bbox 提案", load: npuLoads[1], ms: STAGE_REAL_MS.core1, color: "var(--core-1)", gradId: "cg1", active: c1Active, detail: "YOLOv8-seg · 640×640 · FP16", thru: "≈ 20 fps" },
             { x: 778, title: "NPU.2", model: "Qwen3-VL", task: "VLM 描述", load: npuLoads[2], ms: STAGE_REAL_MS.core2, color: "var(--core-2)", gradId: "cg2", active: c2Active, detail: "W8A8 · ctx 4096 · RKLLM", thru: "≈ 0.43 fps" },
           ].map(npu => {

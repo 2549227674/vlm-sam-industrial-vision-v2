@@ -27,7 +27,7 @@ function toChromeTrace(defect: DefectRead) {
   }));
   return { traceEvents: [...metadataEvents, ...traceEvents], displayTimeUnit: "ms" as const };
 }
-import { VariantPill, SimulatedSample } from "./primitives";
+import { VariantPill, RealImageWithFallback } from "./primitives";
 import { CaveatBanner, TraceSourceNote } from "./CaveatBanner";
 
 const LANE_GROUPS = [
@@ -38,7 +38,7 @@ const LANE_GROUPS = [
 const LANE_LABELS: Record<string, { name: string; hint: string }> = {
   "T1.capture": { name: "T1 · capture", hint: "V4L2 dequeue" }, "T2.pipeline": { name: "T2 · pipeline", hint: "RGA + EAD + FastSAM" },
   "T3.fastsam": { name: "T3 · fastsam", hint: "FastSAM bbox proposal" }, "T3.vlm": { name: "T3 · vlm", hint: "Qwen3-VL prompt + decode" }, "T4.upload": { name: "T4 · upload", hint: "libcurl POST" },
-  "NPU.core0": { name: "NPU.0", hint: "EfficientAD-S [INT8]" }, "NPU.core1": { name: "NPU.1", hint: "FastSAM-s [INT8]" },
+  "NPU.core0": { name: "NPU.0", hint: "EfficientAD-S [FP16]" }, "NPU.core1": { name: "NPU.1", hint: "FastSAM-s [FP16]" },
   "NPU.core2": { name: "NPU.2", hint: "Qwen3-VL [W8A8]" },
   "CPU.A76_0": { name: "A76.0", hint: "2.4 GHz" }, "CPU.A76_1": { name: "A76.1", hint: "2.4 GHz" },
   "CPU.A76_2": { name: "A76.2", hint: "2.4 GHz" }, "CPU.A76_3": { name: "A76.3", hint: "2.4 GHz" },
@@ -133,7 +133,7 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
                 cursor: "pointer", position: "relative", overflow: "hidden", boxShadow: active ? "0 0 12px var(--acc-glow)" : "none",
               }}>
                 <div style={{ position: "relative", width: "100%", aspectRatio: "16/10", overflow: "hidden" }}>
-                  <SimulatedSample category={d.category} />
+                  <RealImageWithFallback imageUrl={d.image_url} category={d.category} showBadge={false} />
                   <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
                     {d.bboxes.slice(0, 1).map((b, j) => (
                       <rect key={j} x={b.x * 100} y={b.y * 100} width={b.w * 100} height={b.h * 100} fill="none" stroke={sevColor} strokeWidth="0.4" vectorEffect="non-scaling-stroke" />

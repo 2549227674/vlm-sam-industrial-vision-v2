@@ -46,7 +46,7 @@ export function ModelsPage({ activeConfig, onChangeConfig, accent = "var(--acc)"
 
       {/* 3 NPU cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-        <NPUDeployCard core="NPU.0" coreColor="var(--core-0)" model="EfficientAD-S" task="异常检测" input="256×256" quant="INT8 · RKNN" latencyMs={4.8} latencyRange="3.0 – 6.1" outputs={["anomaly_score", "anomaly_map"]} memMb={86} />
+        <NPUDeployCard core="NPU.0" coreColor="var(--core-0)" model="EfficientAD-S" task="异常检测" input="256×256" quant="FP16 · RKNN" latencyMs={4.8} latencyRange="3.0 – 6.1" outputs={["anomaly_score", "anomaly_map"]} memMb={86} />
         <NPUDeployCard core="NPU.1" coreColor="var(--core-1)" model="FastSAM-s" task="bbox 提案" input="640×640" quant="FP16 · RKNN" latencyMs={50} latencyRange="38 – 62" outputs={["bboxes"]} memMb={340} />
         <NPUDeployCard core="NPU.2" coreColor="var(--core-2)" model={`Qwen3-VL-${activeConfig.model_size}`} task={`VLM JSON · ${activeConfig.variant}`} input="448×448 + prompt" quant="W8A8 · RKLLM" latencyMs={is4B ? 3400 : 1800} latencyRange={is4B ? "3200 – 4100" : "1800 – 2700"} outputs={["structured JSON"]} memMb={is4B ? 8700 : 3100} variants="2B_base · 2B_lora · 4B_base · 4B_lora" bottleneck />
       </div>

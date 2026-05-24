@@ -1,4 +1,4 @@
-// V4 mock data — matches API_CONTRACT v1.1
+// V4 mock data — matches API_CONTRACT v1.2
 // 15 MVTec AD categories · 4 variant keys · Chrome-trace generation · 4-variant buildStats()
 
 import type { DefectRead, MvtecCategory, TraceEvent, VariantKey } from "@/types/defect";
@@ -185,14 +185,14 @@ export function makeTraceEvents(pipeline_ms: { efficientad: number; fastsam: num
   cur += rga;
   const eff = ms(pipeline_ms.efficientad);
   events.push({ name: "rknn_run · EfficientAD-S", tid: "T2.pipeline", ph: "X", ts: cur, dur: eff, cat: "infer" });
-  events.push({ name: "EfficientAD-S [INT8]", tid: "NPU.core0", ph: "X", ts: cur, dur: eff, cat: "npu" });
+  events.push({ name: "EfficientAD-S [FP16]", tid: "NPU.core0", ph: "X", ts: cur, dur: eff, cat: "npu" });
   events.push({ name: "anomaly_score · postproc", tid: "CPU.A76_0", ph: "X", ts: cur, dur: ms(rand(0.4, 0.9)), cat: "cpu" });
   cur += eff + 200;
 
   // T2 → NPU.1 FastSAM
   const fs = ms(pipeline_ms.fastsam);
   events.push({ name: "rknn_run · FastSAM-s", tid: "T2.pipeline", ph: "X", ts: cur, dur: fs, cat: "infer" });
-  events.push({ name: "FastSAM-s [INT8]", tid: "NPU.core1", ph: "X", ts: cur, dur: fs, cat: "npu" });
+  events.push({ name: "FastSAM-s [FP16]", tid: "NPU.core1", ph: "X", ts: cur, dur: fs, cat: "npu" });
   events.push({ name: "bbox.nms+filter", tid: "CPU.A76_1", ph: "X", ts: cur + fs - ms(4), dur: ms(rand(1.8, 3.6)), cat: "cpu" });
   cur += fs + 400;
 
@@ -340,6 +340,14 @@ export function buildStats(defects: DefectRead[]): MockStats {
     }
   }
 
+  const avg_pipeline_ms = defects.length
+    ? {
+        efficientad: defects.reduce((s, d) => s + d.pipeline_ms.efficientad, 0) / defects.length,
+        fastsam: defects.reduce((s, d) => s + d.pipeline_ms.fastsam, 0) / defects.length,
+        qwen3vl: defects.reduce((s, d) => s + d.pipeline_ms.qwen3vl, 0) / defects.length,
+      }
+    : undefined;
+
   return {
     total: defects.length,
     today_defects: defects.length,
@@ -347,6 +355,7 @@ export function buildStats(defects: DefectRead[]): MockStats {
     by_category,
     by_severity,
     ab_compare: ab,
+    avg_pipeline_ms,
   };
 }
 
