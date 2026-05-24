@@ -3,8 +3,8 @@
 > **项目**：`vlm-sam-industrial-vision-v2`
 > **硬件**：Orange Pi 5 Plus / RK3588 / 16GB RAM
 > **主线部署**：EfficientAD-S FP16 raw RKNN -> FastSAM FP16 RKNN -> Qwen3-VL-2B base W8A8 RKLLM
-> **报告状态**：Phase 8D 求职展示报告
-> **生成日期**：2026-05-22
+> **报告状态**：Phase 9 最终 Demo Release 补充报告
+> **生成日期**：2026-05-25
 
 ## 1. 摘要
 
@@ -20,8 +20,8 @@
 | EfficientAD score mode | `raw_score`，不是 `map_mean` |
 | T2 EfficientAD 定位 | load shedding gate，不是可靠 detector |
 | 2B LoRA | PC bf16 有效，RK3588 W8A8 细粒度能力坍塌 |
-| 4B base | runtime path 已打通，内存安全但更慢，且有 carpet spatial merge issue |
-| pass_all 安全节拍 | 2B base 推荐 13000ms，10000ms 是边界 |
+| 4B base | runtime path 已打通，内存安全但更慢；spatial merge 已修复（2x2 permute），carpet 回归 5/5 json_ok，回归覆盖有限 |
+| pass_all 安全节拍 | 2B base 推荐 13000ms，10000ms 是边界；threshold soak test 30.2 分钟已通过 |
 | 前端展示重点 | 实时流水线可观测性与工程指标，不承诺完美 defect_type 分类 |
 
 ## 2. 项目背景与求职定位
@@ -217,7 +217,7 @@ Phase 4 轨道 A 已验证端云联调全链路：
 
 ### 3.7 前端 Dashboard 截图
 
-> 以下截图来自 Phase 4 前端联调与视觉验收（Playwright 截图，模拟器数据驱动），用于展示前端 Profile Trace 的可视化能力。真实 RK3588 端侧瓶颈分析以 Phase 7/8 的 qwen3vl_ms、TTFT、decode_tps 和 beat_ms sweep 数据为准。
+> 以下截图来自 Phase 4 前端联调与视觉验收（Playwright 截图，模拟器数据驱动），用于展示前端可视化能力。真实 RK3588 端侧瓶颈分析以 Phase 7/8 的 qwen3vl_ms、TTFT、decode_tps 和 beat_ms sweep 数据为准。Phase 9 已将前端数据源改为优先使用 Live API 或真实 RK3588 快照，但以下截图仍为 Phase 4 历史截图。
 
 ![Frontend overview dashboard（Phase 4 联调验收 + Orange Pi 5 标题）](../figures/fig9_dashboard.png)
 
@@ -485,9 +485,9 @@ Phase 8B 最重要的发现之一不是模型精度本身，而是**对失效机
 | pass_all 安全 beat | ~25000ms | 约 1.9× |
 | carpet VLM | 静默失败 | 2B 正常 |
 
-4B 的已知问题是 vision encoder spatial patch merge。4B vision encoder output[0] 为 `[784,1024]`（merge 前），RKLLM 期望 196 image tokens 和 4096 embed dim。当前 contiguous reshape `[784,1024] → [196,4096]` 对 6/7 类别有效，但 carpet 触发静默失败——carpet 纹理对空间位置敏感，错误排列产生 RKLLM 无法处理的 embedding。正确修复路径是 `[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]`。
+4B 的已知问题是 vision encoder spatial patch merge。4B vision encoder output[0] 为 `[784,1024]`（merge 前），RKLLM 期望 196 image tokens 和 4096 embed dim。Phase 8 当时使用 contiguous reshape `[784,1024] → [196,4096]`，对 6/7 类别有效但 carpet 触发静默失败——carpet 纹理对空间位置敏感，错误排列产生 RKLLM 无法处理的 embedding。
 
-4B base 是扩展候选，不改变当前 2B base 部署主线。RSS 5.7GB 在 16GB 板上安全（余量 ~9GB），但延迟 1.8× 慢和 carpet 问题限制了其适用性。
+**Phase 9 已修复**：实现正确 spatial permutation `[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]`，carpet 回归 5/5 json_ok。但 4B 回归覆盖仍有限（仅 carpet 单类验证），延迟 1.8× 慢，因此 4B base 仍为扩展候选，不改变当前 2B base 部署主线。
 
 ## 11. 最终部署决策
 
@@ -495,7 +495,7 @@ Phase 8B 最重要的发现之一不是模型精度本身，而是**对失效机
 |---|---|---|
 | RK3588 当前部署 | 2B base W8A8 | 稳定、RSS 约 3.3GB、无 LoRA repeated bracket 退化 |
 | PC 高质量离线推理 | 2B LoRA bf16 | defect_type_exact 51.8%，bbox_iou>=0.5 47.7% |
-| RK3588 扩展候选 | 4B base | RSS 5.7GB 内存安全，但慢且需修复 carpet spatial merge |
+| RK3588 扩展候选 | 4B base | RSS 5.7GB 内存安全，spatial merge 已修复，但慢且回归覆盖有限 |
 | 不作为当前主线 | 2B LoRA W8A8 | fine-grained defect_type 增益坍塌 |
 | 不作为当前主线 | 4B LoRA | 未形成可部署主线，且 W8A8 LoRA 风险已知 |
 
@@ -525,8 +525,9 @@ EfficientAD-S FP16 raw RKNN
 1. **系统目标**：把工业缺陷检测从 PC 侧实验推进到 RK3588 16GB 真机端侧部署，并接入后端和前端 dashboard。
 2. **架构选择**：端侧使用四线程 C++ pipeline，T1 采集，T2 EfficientAD raw_score gate，T3 FastSAM + Qwen3-VL，T4 multipart 上传；后端只负责 ingestion、存储、WebSocket，前端只消费 REST/WS。
 3. **关键排障**：EfficientAD post-processor 与 RKNN 不兼容，切到 FP16 raw；FastSAM INT8 置信度坍塌，切到 FP16；Qwen3-VL 修复 runtime 版本、n_image_tokens 和 JSON 截断问题。
-4. **Phase 8 发现**：T2 gate 是 load shedding，不是 reliable detector；LoRA 在 PC bf16 有效但在 RK3588 W8A8 细粒度能力坍塌；2B base pass_all 推荐 beat 为 13000ms；4B base 可运行但慢且有 carpet spatial merge issue。
-5. **最终决策**：当前 RK3588 主线是 2B base W8A8，前端展示重点是实时可观测性和工程诊断，而不是夸大 defect_type 精确分类。
+4. **Phase 8 发现**：T2 gate 是 load shedding，不是 reliable detector；LoRA 在 PC bf16 有效但在 RK3588 W8A8 细粒度能力坍塌；2B base pass_all 推荐 beat 为 13000ms；4B base 可运行但慢（Phase 9 已修复 carpet spatial merge，carpet 回归 5/5 json_ok）。
+5. **Phase 9 验证**：2B base threshold soak test 30.2 分钟通过（366 帧、0 崩溃、0 队列丢帧、100% json_parse_ok）；契约测试 74/74 通过；前端 build 无错误。
+6. **最终决策**：当前 RK3588 主线是 2B base W8A8，前端展示重点是实时可观测性和工程诊断，而不是夸大 defect_type 精确分类。
 
 ### 12.3 前端 Demo 讲解顺序
 
@@ -548,7 +549,7 @@ EfficientAD-S FP16 raw RKNN
 |---|---|
 | 板端 defect_type 精确分类已经成功 | Phase 8B 板端 defect_type_exact 为 0% |
 | LoRA 是当前 RK3588 最优部署方案 | LoRA W8A8 细粒度能力坍塌，且有 repeated bracket 退化 |
-| 4B 已全面替代 2B | 4B 只是扩展候选，仍有 carpet spatial merge issue |
+| 4B 已全面替代 2B | 4B 只是扩展候选，spatial merge 已修复但回归覆盖有限，延迟 1.8× 慢 |
 | EfficientAD T2 是可靠 detector | raw_score mean AUROC 仅 0.5320，T2 是 load shedding gate |
 | LoRA 转换失败了 | 审计确认 merge-then-convert 正确，SHA256 一致，问题在 W8A8 量化 |
 
@@ -562,11 +563,51 @@ EfficientAD-S FP16 raw RKNN
 |---|---|---|
 | EfficientAD raw_score AUROC 低 | T2 只能做负载控制 | 实现 C++ post-processor（Clip+Normalize+Sigmoid），重新校准 |
 | LoRA W8A8 fine-grained collapse | 板端不部署 LoRA | 等待更高精度 RKLLM 量化（W4A16 仅 RK3576）或改 PC 离线推理 |
-| 4B carpet spatial merge | 4B 不能作为主线 | 实现正确 spatial permutation：`[28,28,1024] → permute[14,2,14,2,1024] → [196,4096]` |
+| ~~4B carpet spatial merge~~ | ~~4B 不能作为主线~~ | **Phase 9 已修复**（2x2 permute），carpet 5/5 json_ok；回归覆盖有限，扩展候选 |
 | FastSAM mask decode 未实现 | 只输出 bbox，无像素级分割 | 补 prototype mask decode |
 | calibration-on-test | 阈值在 test split 上校准，非生产认证 | 采集生产 good/defect 样本重做校准 |
-| pass_all beat sweep vs threshold 模式 | threshold 模式下 beat 边界是推算不是实测 | 做真实 threshold 长时间 soak test |
+| ~~pass_all beat sweep vs threshold 模式~~ | ~~threshold 模式下 beat 边界是推算不是实测~~ | **Phase 9 已完成** soak test（30.2 min, 366 帧, 0 崩溃, 0 队列丢帧, 100% json_parse_ok） |
 | MVTec AD 局限性 | 15 类工业件，非真实产线数据 | 外部同类数据集或真实产线验证 |
+| 阈值为工程起始值 | 不是生产认证阈值 | 需基于真实产线 good/defect 样本重新校准 per-category threshold |
+| 历史快照非实时流 | demo 数据为 soak test 历史记录 | 可补数据到 100+ 条扩大覆盖 |
+
+## 14. Phase 9 Release Gate 验证结果
+
+### 14.1 发布门控
+
+| 验证项 | 结果 |
+|---|---|
+| 契约测试 | 74/74 通过 |
+| Schema drift 检查 | OK（defect_report.v1.2.schema.json） |
+| 前端 typecheck / build | 0 errors，build 成功 |
+| 2B base threshold soak test | 30.2 分钟，366 帧 |
+| soak test capture | 366 次 |
+| soak test gate pass | 37 次 |
+| soak test VLM completions | 36 次 |
+| soak test uploads | 33 次成功 |
+| 崩溃 | 0 |
+| 队列丢帧 | 0 |
+| json_parse_ok | 100% |
+| RSS | ~3322 MB 稳定 |
+| 4B carpet 回归 | 5/5 json_ok（spatial merge 修复后） |
+
+### 14.2 公网 Demo 状态
+
+| 项目 | 状态 |
+|---|---|
+| 前端 | https://vision.hanlab.app/ |
+| API | https://api.vision.hanlab.app/api/health |
+| Seed 数据 | 20 条真实 RK3588 记录，3 类别，2 变体 |
+| 数据说明 | 历史 soak test 快照，非实时板端流 |
+
+### 14.3 已验证 Caveats
+
+- T2 EfficientAD 是 load shedding gate，不是 precision detector
+- FastSAM mask decode 未实现，仅输出 bbox proposal
+- 仅 MVTec AD 数据验证，非生产数据
+- threshold 是工程起始值，非生产认证阈值
+- 前端数字孪生 NPU/CPU 面板为架构可视化，非实时硬件监控
+- 快照为历史真实 RK3588 数据，非实时板端流
 
 ## Appendix A：环境与版本
 
@@ -647,7 +688,7 @@ scripts/                  Training, conversion, evaluation and plotting scripts
 | `fig6_board_perf.png` | Phase 8B board A/B + 4B smoke |
 | `fig7_pc_vs_board.png` | PC eval + board LoRA + audit |
 | `fig8_beat_sweep.png` | `phase8c_beat_sweep_results.csv` |
-| `fig9_dashboard.png` | Phase 4 Playwright dashboard screenshot |
-| `fig_frontend_profile.png` | Phase 4 Playwright profile screenshot |
+| `fig9_dashboard.png` | Phase 4 Playwright dashboard 截图（模拟器数据驱动，历史截图） |
+| `fig_frontend_profile.png` | Phase 4 Playwright profile 截图（模拟器数据驱动，历史截图） |
 
-说明：所有图表位于 `docs/figures/`。fig1-fig3 由 Mermaid 代码块渲染为 PNG 高清图，原生 Mermaid 代码块同时内嵌于文档中；fig4-fig8 由 `.venv` 中的 `pandas` + `matplotlib` 从 CSV/config 生成；fig9 和 fig_frontend_profile 由 Playwright 截图。
+说明：所有图表位于 `docs/figures/`。fig1-fig3 由 Mermaid 代码块渲染为 PNG 高清图，原生 Mermaid 代码块同时内嵌于文档中；fig4-fig8 由 `.venv` 中的 `pandas` + `matplotlib` 从 CSV/config 生成；fig9 和 fig_frontend_profile 来自 Phase 4 联调验收（Playwright 截图，模拟器数据驱动），用于展示前端可视化能力，不代表 Phase 9 的真实 RK3588 快照数据。
