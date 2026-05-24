@@ -1,13 +1,18 @@
+import os
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import AsyncGenerator
 
 from sqlalchemy import DateTime, event, TypeDecorator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-_DB_PATH = Path(__file__).resolve().parent.parent / "vision.db"
-engine = create_async_engine(f"sqlite+aiosqlite:///{_DB_PATH}", echo=False)
+_DATABASE_URL = os.environ.get("DATABASE_URL")
+if not _DATABASE_URL:
+    from pathlib import Path
+    _DB_PATH = Path(__file__).resolve().parent.parent / "vision.db"
+    _DATABASE_URL = f"sqlite+aiosqlite:///{_DB_PATH}"
+
+engine = create_async_engine(_DATABASE_URL, echo=False)
 async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 

@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 
 import aiofiles
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Header, Request, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
@@ -16,8 +16,10 @@ from backend.app.schemas.defect import DefectCreatedResponse, DefectCreate
 
 router = APIRouter(prefix="/api/edge", tags=["edge"])
 
-_STATIC_DEFECTS = Path(__file__).resolve().parent.parent.parent / "static" / "defects"
+_DEFECT_STORAGE_DIR = os.environ.get("DEFECT_STORAGE_DIR")
+_STATIC_DEFECTS = Path(_DEFECT_STORAGE_DIR) if _DEFECT_STORAGE_DIR else Path(__file__).resolve().parent.parent.parent / "static" / "defects"
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2 MB
+_EDGE_UPLOAD_TOKEN = os.environ.get("EDGE_UPLOAD_TOKEN", "")
 
 
 def _error(status_code: int, code: str, message: str, details=None):
@@ -43,6 +45,7 @@ async def report_defect(
     crop: UploadFile = File(None),
     db: AsyncSession = Depends(get_db),
 ):
+
     # --- 415: Content-Type guard ---
     content_type = request.headers.get("content-type", "")
     if "multipart/form-data" not in content_type:

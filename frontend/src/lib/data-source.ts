@@ -31,31 +31,31 @@ export interface DataSourceStatus {
 export const DATA_SOURCE_PRESETS: Record<DataSourceKind, DataSourceStatus> = {
   live: {
     kind: "live",
-    label: "Live RK3588 API",
+    label: "实时 RK3588 API",
     labelEn: "Live RK3588 API",
     color: "var(--ok)",
-    description: "Connected to live backend. Data is from real-time RK3588 edge pipeline.",
+    description: "已连接实时后端，数据来自 RK3588 边缘流水线。 / Connected to live backend. Data is from real-time RK3588 edge pipeline.",
   },
   snapshot: {
     kind: "snapshot",
-    label: "Real RK3588 Snapshot",
+    label: "真实 RK3588 快照",
     labelEn: "Real RK3588 Snapshot",
     color: "#7cdcff",
-    description: "Showing historical real RK3588 test data. Not a live stream.",
+    description: "展示历史真实 RK3588 测试数据，非实时流。 / Showing historical real RK3588 test data. Not a live stream.",
   },
   mock: {
     kind: "mock",
-    label: "Mock Fallback",
+    label: "Mock 演示数据",
     labelEn: "Mock Fallback",
     color: "var(--warn)",
-    description: "Backend unreachable. Using synthetic mock data for demo purposes only.",
+    description: "后端不可达，使用合成 mock 数据，仅供演示。 / Backend unreachable. Using synthetic mock data for demo purposes only.",
   },
   reconnecting: {
     kind: "reconnecting",
     label: "WebSocket 重连中",
     labelEn: "Reconnecting",
     color: "var(--warn)",
-    description: "WebSocket connection lost. Attempting to reconnect to live backend.",
+    description: "WebSocket 连接断开，正在重连。 / WebSocket connection lost. Attempting to reconnect to live backend.",
   },
 };
 

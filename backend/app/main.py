@@ -7,18 +7,42 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.app.db import Base, engine
 import backend.app.models  # noqa: F401 — ensure Defect is registered with Base.metadata
 from backend.app.ws.manager import ConnectionManager
 
-_STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+_DEFECT_STORAGE_DIR = os.environ.get("DEFECT_STORAGE_DIR")
+if _DEFECT_STORAGE_DIR:
+    _STATIC_DIR = Path(_DEFECT_STORAGE_DIR).parent
+    _DEFECT_DIR = Path(_DEFECT_STORAGE_DIR)
+else:
+    _STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+    _DEFECT_DIR = _STATIC_DIR / "defects"
+
+_EDGE_UPLOAD_TOKEN = os.environ.get("EDGE_UPLOAD_TOKEN", "")
+
+
+async def _auth_middleware(request: Request, call_next):
+    if (
+        _EDGE_UPLOAD_TOKEN
+        and request.method == "POST"
+        and request.url.path == "/api/edge/report"
+    ):
+        auth = request.headers.get("authorization", "")
+        if not auth.startswith("Bearer ") or auth.removeprefix("Bearer ").strip() != _EDGE_UPLOAD_TOKEN:
+            return JSONResponse(
+                status_code=401,
+                content={"error": {"code": "UNAUTHORIZED", "message": "Missing or invalid upload token"}},
+            )
+    return await call_next(request)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # startup
-    os.makedirs(_STATIC_DIR / "defects", exist_ok=True)
+    os.makedirs(_DEFECT_DIR, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     app.state.ws_manager = ConnectionManager()
@@ -43,17 +67,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"error": {"code": "SCHEMA_MISMATCH", "message": str(exc.errors())}},
     )
 
-# CORS — registered first to handle OPTIONS preflight
+# CORS — configurable via CORS_ORIGINS env var (comma-separated)
+_cors_env = os.environ.get("CORS_ORIGINS", "")
+_cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()] if _cors_env else []
+
 app.add_middleware(
     CORSMiddleware,
     allow_origin_regex=r"https?://localhost(:\d+)?",
-    allow_origins=["https://vision.example.com"],
+    allow_origins=_cors_origins if _cors_origins else ["https://vision.example.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["X-Request-ID"],
     max_age=3600,
 )
+
+# Auth middleware for upload token (runs before FastAPI form validation)
+app.add_middleware(BaseHTTPMiddleware, dispatch=_auth_middleware)
 
 # Static files
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")

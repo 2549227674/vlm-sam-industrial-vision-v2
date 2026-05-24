@@ -89,6 +89,11 @@ export function DataSourceBadge({ status, compact = false }: DataSourceBadgeProp
         }}
       >
         {status.label}
+        {status.label !== status.labelEn && (
+          <span style={{ opacity: 0.7, marginLeft: 4, fontSize: compact ? 8 : 9 }}>
+            / {status.labelEn}
+          </span>
+        )}
       </span>
     </span>
   );
@@ -99,7 +104,7 @@ export function DataSourceBadge({ status, compact = false }: DataSourceBadgeProp
 export function VlmDefectTooltip({ defectType }: { defectType: string }) {
   return (
     <span
-      title="VLM-generated structured description. Not a guaranteed exact class on RK3588."
+      title="VLM 生成的结构化描述，不等同于板端精确 defect_type 分类。 / VLM-generated structured description. Not a guaranteed exact class on RK3588."
       style={{ cursor: "help", borderBottom: "1px dashed var(--fg-3)" }}
     >
       {defectType.replace(/_/g, " ")}
