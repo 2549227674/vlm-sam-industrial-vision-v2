@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { seedDefects, buildStats, makeDefect } from "@/lib/mock-data";
+import { buildStats, makeDefect } from "@/lib/mock-data";
 import type { DefectRead, ActiveConfig } from "@/types/defect";
-import type { DashboardStatsLike, StatsResponse } from "@/types/stats";
+import type { DashboardStatsLike } from "@/types/stats";
 import { useDefectWebSocket } from "@/lib/ws";
-import { API_BASE } from "@/lib/api";
+import { useDataSource, type DataSourceStatus } from "@/lib/data-source";
 
 import { TopBar } from "@/components/v4/TopBar";
 import { BottomBar } from "@/components/v4/BottomBar";
@@ -30,17 +30,43 @@ export default function Dashboard() {
 
   const navigate = useCallback((key: string) => { window.location.hash = "#" + key; }, []);
 
-  // Global state
+  // Data source — Live API > Real Snapshot > Mock
+  const { defects: dsDefects, stats: dsStats, status: dsStatus, manifest, refresh } = useDataSource();
+
+  // Defects state — merged from data source + WS updates
   const [defects, setDefects] = useState<DefectRead[]>([]);
+  const [wsDefects, setWsDefects] = useState<DefectRead[]>([]);
+  const [apiStats, setApiStats] = useState<DashboardStatsLike | null>(null);
   const [now, setNow] = useState<Date | null>(null);
   const [selectedDefect, setSelectedDefect] = useState<DefectRead | null>(null);
   const [profileSeedIdx, setProfileSeedIdx] = useState(0);
   const [activeConfig, setActiveConfig] = useState<ActiveConfig>({ model_size: "2B", variant: "lora" });
   const [twinMode, setTwinMode] = useState("xray");
-  const [live] = useState(true);
 
-  const [apiStats, setApiStats] = useState<StatsResponse | null>(null);
-  const [usingMock, setUsingMock] = useState(false);
+  // Sync data source defects into local state
+  useEffect(() => {
+    setDefects(dsDefects);
+  }, [dsDefects]);
+
+  // Track if we ever had a live connection (for WS reconnecting state)
+  const [everHadLive, setEverHadLive] = useState(false);
+  useEffect(() => {
+    if (dsStatus.kind === "live") setEverHadLive(true);
+  }, [dsStatus.kind]);
+
+  // Effective data source status (overlay WS reconnecting if live was detected)
+  const dataSourceStatus: DataSourceStatus = useMemo(() => {
+    if (everHadLive && dsStatus.kind === "mock") {
+      return {
+        kind: "reconnecting",
+        label: "WebSocket 重连中",
+        labelEn: "Reconnecting",
+        color: "var(--warn)",
+        description: "Lost connection to live backend. Attempting to reconnect.",
+      };
+    }
+    return dsStatus;
+  }, [dsStatus, everHadLive]);
 
   // Clock
   useEffect(() => {
@@ -49,64 +75,13 @@ export default function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
-  // Stats refresh helper
-  const loadStats = useCallback(async (signal?: AbortSignal) => {
-    const statsResp = await fetch(`${API_BASE}/api/stats`, { signal });
-    if (!statsResp.ok) {
-      throw new Error(`stats fetch failed: ${statsResp.status}`);
-    }
-    const statsData: StatsResponse = await statsResp.json();
-    setApiStats(statsData);
-    return statsData;
-  }, []);
-
-  // Initial data load — real API with mock fallback
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadInitialData() {
-      try {
-        const defectsResp = await fetch(
-          `${API_BASE}/api/defects?page=1&page_size=100&sort=-edge_ts`,
-          { signal: AbortSignal.timeout(5000) },
-        );
-
-        if (!defectsResp.ok) {
-          throw new Error(`defects fetch failed: ${defectsResp.status}`);
-        }
-
-        const data = await defectsResp.json();
-        if (cancelled) return;
-
-        setDefects(data.items ?? []);
-        setUsingMock(false);
-
-        try {
-          await loadStats(AbortSignal.timeout(5000));
-        } catch (statsErr) {
-          console.warn("[Dashboard] Stats API unavailable, using client-side stats fallback:", statsErr);
-          if (!cancelled) setApiStats(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.warn("[Dashboard] Backend unreachable, using mock data:", err);
-          setDefects(seedDefects(80));
-          setApiStats(null);
-          setUsingMock(true);
-        }
-      }
-    }
-
-    loadInitialData();
-    return () => { cancelled = true; };
-  }, [loadStats]);
-
   // Frame simulator + loads
   const npuLoads = useNpuLoads();
+  const isSimulatorMode = dataSourceStatus.kind === "mock";
   const phase = useFrameSimulator({
-    live,
+    live: true,
     onComplete: () => {
-      if (!usingMock) return;
+      if (!isSimulatorMode) return;
       const d = makeDefect({ ts: new Date() });
       setDefects(prev => [d, ...prev].slice(0, 100));
     },
@@ -115,17 +90,15 @@ export default function Dashboard() {
 
   // WebSocket — real-time defects from backend
   useDefectWebSocket((newDefect) => {
-    setUsingMock(false);
+    setWsDefects(prev => [newDefect, ...prev].slice(0, 50));
     setDefects(prev => [newDefect, ...prev].slice(0, 100));
-
-    loadStats().catch((err) => {
-      console.warn("[Dashboard] Failed to refresh stats after WS event:", err);
-    });
+    // When WS delivers, we know live is working
+    setEverHadLive(true);
   });
 
-  // Unified stats: prefer real API, fallback to client-side computed
+  // Unified stats: prefer data source stats, fallback to client-side computed
   const mockStats = useMemo(() => buildStats(defects), [defects]);
-  const stats: DashboardStatsLike = apiStats ?? mockStats;
+  const stats: DashboardStatsLike = apiStats ?? dsStats ?? mockStats;
 
   const ramUsed = (activeConfig.model_size === "4B" ? 11.4 : 5.0) + (npuLoads[2] / 100) * 0.6;
 
@@ -138,7 +111,7 @@ export default function Dashboard() {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <TopBar now={now} live={live} route={route} navigate={navigate} />
+      <TopBar now={now} live={dataSourceStatus.kind === "live"} route={route} navigate={navigate} dataSource={dataSourceStatus} />
 
       <main style={{ maxWidth: 1480, margin: "0 auto", padding: "20px 32px 80px", display: "flex", flexDirection: "column", gap: 28 }}>
         {route === "overview" && (
@@ -150,6 +123,8 @@ export default function Dashboard() {
             selectedDefect={selectedDefect} setSelectedDefect={setSelectedDefect}
             onOpenProfile={openProfileForDefect}
             activeConfig={activeConfig}
+            dataSource={dataSourceStatus}
+            manifestCaveats={manifest?.caveats}
           />
         )}
 
@@ -168,7 +143,12 @@ export default function Dashboard() {
                 聚焦瓶颈，逐帧分析：Chrome-trace 精度追踪每一个事件，NPU.2（Qwen3-VL）——占关键路径的 98%，但仅需 1ms 无需过度优化。
               </p>
             </section>
-            <ProfilePage defects={defects} initialFrameIdx={profileSeedIdx} />
+            <ProfilePage
+              defects={defects}
+              initialFrameIdx={profileSeedIdx}
+              dataSource={dataSourceStatus}
+              manifestCaveats={manifest?.caveats}
+            />
           </>
         )}
 
@@ -184,20 +164,25 @@ export default function Dashboard() {
                 <span style={{ display: "block", color: "var(--fg-3)" }}>一个<span style={{ color: "var(--acc)" }}>已部署</span>方案。</span>
               </h1>
             </section>
-            <ABMatrix stats={stats} activeConfig={activeConfig} />
+            <ABMatrix
+              stats={stats}
+              activeConfig={activeConfig}
+              dataSource={dataSourceStatus}
+              manifestCaveats={manifest?.caveats}
+            />
           </>
         )}
 
         {route === "models" && (
-          <ModelsPage activeConfig={activeConfig} onChangeConfig={setActiveConfig} />
+          <ModelsPage activeConfig={activeConfig} onChangeConfig={setActiveConfig} dataSource={dataSourceStatus} />
         )}
 
         {route === "logs" && (
-          <LogsPage />
+          <LogsPage dataSource={dataSourceStatus} />
         )}
       </main>
 
-      <BottomBar now={now} live={live} route={route} activeConfig={activeConfig} totalDefects={defects.length} />
+      <BottomBar now={now} live={dataSourceStatus.kind === "live"} route={route} activeConfig={activeConfig} totalDefects={defects.length} dataSource={dataSourceStatus} />
 
       <DetailDrawer
         defect={selectedDefect}

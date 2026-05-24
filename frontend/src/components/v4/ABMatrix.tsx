@@ -3,15 +3,19 @@
 import React from "react";
 import type { ActiveConfig } from "@/types/defect";
 import type { AbMetrics, DashboardStatsLike } from "@/types/stats";
+import type { DataSourceStatus } from "@/lib/data-source";
 import { variantLabel, variantColor, fmtNumber } from "@/lib/mock-data";
+import { CaveatBanner, VariantCaveatBadge } from "./CaveatBanner";
 
 interface ABProps {
   stats: DashboardStatsLike;
   activeConfig: ActiveConfig;
   accent?: string;
+  dataSource?: DataSourceStatus;
+  manifestCaveats?: string[];
 }
 
-export function ABMatrix({ stats, activeConfig }: ABProps) {
+export function ABMatrix({ stats, activeConfig, dataSource, manifestCaveats }: ABProps) {
   const ab = stats.ab_compare;
   const active = `${activeConfig.model_size}_${activeConfig.variant}`;
   const totalN = Object.values(ab).reduce((s, x) => s + (x.count || 0), 0);
@@ -73,6 +77,11 @@ export function ABMatrix({ stats, activeConfig }: ABProps) {
       <div className="mono" style={{ fontSize: 10, color: "var(--fg-3)", marginTop: -8 }}>
         ↳ 旧版调用者使用 <span style={{ color: "var(--fg-2)" }}>variant=A/B</span> 将被映射至 <span style={{ color: "var(--fg-2)" }}>2B_base / 2B_lora</span> 以保持向后兼容。
       </div>
+
+      {/* Data source caveat banner */}
+      {dataSource && (
+        <CaveatBanner dataSource={dataSource} caveats={manifestCaveats} style="ab" />
+      )}
     </div>
   );
 }
@@ -128,6 +137,7 @@ function Cell({ variant, data, active, winner, altWinner }: { variant: string; d
           {winner && <span className="mono" style={{ fontSize: 9, padding: "3px 8px", border: "1px solid var(--acc)", color: "var(--acc)", background: "color-mix(in srgb, var(--acc) 14%, transparent)", letterSpacing: "0.16em", fontWeight: 700 }}>★ 已部署</span>}
           {altWinner && <span className="mono" style={{ fontSize: 9, padding: "3px 8px", border: "1px solid #ff9f6c", color: "#ff9f6c", background: "color-mix(in srgb, #ff9f6c 14%, transparent)", letterSpacing: "0.16em", fontWeight: 700 }}>质量替代</span>}
         </div>
+        <VariantCaveatBadge variant={variant} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "var(--line)" }}>
           {[
             { l: "样本数", v: fmtNumber(d.count) },

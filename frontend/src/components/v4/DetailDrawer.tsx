@@ -5,6 +5,7 @@ import type { DefectRead } from "@/types/defect";
 import { fmtTime, fmtDateTime, variantLabel, variantColor } from "@/lib/mock-data";
 import { SevPill, CatPill, VariantPill, FrameGantt, highlightJson } from "./primitives";
 import { FrameCanvas } from "./FrameInspector";
+import { VlmDefectTooltip } from "./DataSourceBadge";
 
 interface DrawerProps {
   defect: DefectRead | null;
@@ -58,7 +59,7 @@ export function DetailDrawer({ defect, onClose, onOpenProfile }: DrawerProps) {
       {/* Body */}
       <div style={{ flex: 1, overflowY: "auto", padding: 18, display: "flex", flexDirection: "column", gap: 16 }}>
         <div>
-          <div className="eyebrow" style={{ marginBottom: 8 }}>帧 · {defect.defect_type.replace(/_/g, " ")}</div>
+          <div className="eyebrow" style={{ marginBottom: 8 }}>帧 · <VlmDefectTooltip defectType={defect.defect_type} /></div>
           <FrameCanvas defect={defect} aspect="16/10" />
         </div>
         <div>

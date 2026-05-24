@@ -3,10 +3,12 @@
 import React from "react";
 import type { DefectRead, ActiveConfig } from "@/types/defect";
 import type { DashboardStatsLike } from "@/types/stats";
+import type { DataSourceStatus } from "@/lib/data-source";
 import { KPITile, SectionHeader } from "./primitives";
 import { RK3588Twin, FramePhase } from "./RK3588Twin";
 import { FrameInspector } from "./FrameInspector";
 import { RecentStream } from "./RecentStream";
+import { CaveatBanner } from "./CaveatBanner";
 
 interface OverviewProps {
   stats: DashboardStatsLike;
@@ -22,12 +24,16 @@ interface OverviewProps {
   onOpenProfile: (d: DefectRead) => void;
   activeConfig: ActiveConfig;
   accent?: string;
+  dataSource?: DataSourceStatus;
+  manifestCaveats?: string[];
 }
 
 export function OverviewPage({
   stats, defects, phase, npuLoads, cpuLoads, ramUsed,
   twinMode, setTwinMode, selectedDefect, setSelectedDefect,
   accent = "var(--acc)",
+  dataSource,
+  manifestCaveats,
 }: OverviewProps) {
   const fps = "1.85";
   const e2eMs = Math.round(1000 / parseFloat(fps));
@@ -71,6 +77,11 @@ export function OverviewPage({
           </div>
         </div>
       </section>
+
+      {/* Data source + caveats */}
+      {dataSource && (
+        <CaveatBanner dataSource={dataSource} caveats={manifestCaveats} style="overview" />
+      )}
 
       {/* Digital twin */}
       <section>

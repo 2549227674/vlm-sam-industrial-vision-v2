@@ -2,6 +2,8 @@
 
 import React from "react";
 import { fmtTime } from "@/lib/mock-data";
+import type { DataSourceStatus } from "@/lib/data-source";
+import { DataSourceBadge } from "./DataSourceBadge";
 
 interface TopBarProps {
   now: Date | null;
@@ -9,9 +11,10 @@ interface TopBarProps {
   route: string;
   navigate?: (key: string) => void;
   accent?: string;
+  dataSource?: DataSourceStatus;
 }
 
-export function TopBar({ now, live, route, accent = "var(--acc)" }: TopBarProps) {
+export function TopBar({ now, live, route, accent = "var(--acc)", dataSource }: TopBarProps) {
   const navItems = [
     { key: "overview", label: "总览" },
     { key: "profile", label: "性能剖析" },
@@ -58,19 +61,23 @@ export function TopBar({ now, live, route, accent = "var(--acc)" }: TopBarProps)
         })}
       </nav>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span
-            style={{
-              width: 7, height: 7, background: live ? "var(--ok)" : "var(--warn)",
-              borderRadius: "50%", boxShadow: `0 0 6px ${live ? "var(--ok)" : "var(--warn)"}`,
-              animation: live ? "pulse-dot 1.4s infinite" : "none",
-            }}
-          />
-          <span className="mono" style={{ fontSize: 11, color: live ? "var(--ok)" : "var(--warn)" }}>
-            {live ? "实时" : "已暂停"}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {dataSource ? (
+          <DataSourceBadge status={dataSource} />
+        ) : (
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 7, height: 7, background: live ? "var(--ok)" : "var(--warn)",
+                borderRadius: "50%", boxShadow: `0 0 6px ${live ? "var(--ok)" : "var(--warn)"}`,
+                animation: live ? "pulse-dot 1.4s infinite" : "none",
+              }}
+            />
+            <span className="mono" style={{ fontSize: 11, color: live ? "var(--ok)" : "var(--warn)" }}>
+              {live ? "实时" : "已暂停"}
+            </span>
           </span>
-        </span>
+        )}
         <span className="mono" style={{ fontSize: 11, color: "var(--fg-2)" }} suppressHydrationWarning>{now ? fmtTime(now) : "—"}</span>
       </div>
     </header>

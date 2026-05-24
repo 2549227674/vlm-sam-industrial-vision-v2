@@ -3,6 +3,7 @@
 import React from "react";
 import { fmtDateTime } from "@/lib/mock-data";
 import type { ActiveConfig } from "@/types/defect";
+import type { DataSourceStatus } from "@/lib/data-source";
 
 interface BottomBarProps {
   now: Date | null;
@@ -10,9 +11,10 @@ interface BottomBarProps {
   route: string;
   activeConfig: ActiveConfig;
   totalDefects: number;
+  dataSource?: DataSourceStatus;
 }
 
-export function BottomBar({ now, live, route, activeConfig, totalDefects }: BottomBarProps) {
+export function BottomBar({ now, live, route, activeConfig, totalDefects, dataSource }: BottomBarProps) {
   return (
     <footer
       style={{
@@ -24,14 +26,15 @@ export function BottomBar({ now, live, route, activeConfig, totalDefects }: Bott
       }}
     >
       <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-        <span>● WS /ws/dashboard {live ? "已连接" : "已暂停"}</span>
+        <span style={{ color: dataSource?.color }}>● {dataSource?.label ?? (live ? "Live" : "Paused")}</span>
+        <span>WS /ws/dashboard {live ? "已连接" : "已暂停"}</span>
         <span>schema v1.1</span>
         <span>vision.db · WAL</span>
         <span>路由 · #{route}</span>
         <span>事件数 n={totalDefects}</span>
         <span>变体 · {activeConfig.model_size}_{activeConfig.variant}</span>
       </div>
-      <div>build 2026.05.18 · UTC+8 · {now ? fmtDateTime(now) : "—"}</div>
+      <div>build 2026.05.24 · UTC+8 · {now ? fmtDateTime(now) : "—"}</div>
     </footer>
   );
 }

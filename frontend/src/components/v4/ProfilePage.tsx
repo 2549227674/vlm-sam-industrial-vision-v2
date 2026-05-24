@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import type { DefectRead } from "@/types/defect";
+import type { DataSourceStatus } from "@/lib/data-source";
 import { CATEGORY_LABEL, variantColor, variantIsLora } from "@/lib/mock-data";
 
 // ── Chrome Trace export ─────────────────────────────────────────────────────
 
 const THREAD_NAMES: [string, string][] = [
   ["T1.capture", "T1 · capture"], ["T2.pipeline", "T2 · pipeline"],
-  ["T3.vlm", "T3 · VLM worker"], ["T4.upload", "T4 · upload"],
+  ["T3.fastsam", "T3 · FastSAM"], ["T3.vlm", "T3 · VLM worker"], ["T4.upload", "T4 · upload"],
   ["NPU.core0", "NPU.0 · EfficientAD-S"], ["NPU.core1", "NPU.1 · FastSAM-s"], ["NPU.core2", "NPU.2 · Qwen3-VL"],
   ["CPU.A76_0", "A76.0"], ["CPU.A76_1", "A76.1"], ["CPU.A76_2", "A76.2"], ["CPU.A76_3", "A76.3"],
   ["CPU.A55_0", "A55.0"], ["CPU.A55_1", "A55.1"], ["CPU.A55_2", "A55.2"], ["CPU.A55_3", "A55.3"],
@@ -27,15 +28,16 @@ function toChromeTrace(defect: DefectRead) {
   return { traceEvents: [...metadataEvents, ...traceEvents], displayTimeUnit: "ms" as const };
 }
 import { VariantPill, SimulatedSample } from "./primitives";
+import { CaveatBanner, TraceSourceNote } from "./CaveatBanner";
 
 const LANE_GROUPS = [
-  { label: "SOFTWARE THREADS", tids: ["T1.capture", "T2.pipeline", "T3.vlm", "T4.upload"] },
+  { label: "SOFTWARE THREADS", tids: ["T1.capture", "T2.pipeline", "T3.fastsam", "T3.vlm", "T4.upload"] },
   { label: "NPU HARDWARE", tids: ["NPU.core0", "NPU.core1", "NPU.core2"] },
   { label: "ARM CORES", tids: ["CPU.A76_0", "CPU.A76_1", "CPU.A76_2", "CPU.A76_3", "CPU.A55_0", "CPU.A55_1", "CPU.A55_2", "CPU.A55_3"] },
 ];
 const LANE_LABELS: Record<string, { name: string; hint: string }> = {
   "T1.capture": { name: "T1 · capture", hint: "V4L2 dequeue" }, "T2.pipeline": { name: "T2 · pipeline", hint: "RGA + EAD + FastSAM" },
-  "T3.vlm": { name: "T3 · vlm", hint: "Qwen3-VL prompt + decode" }, "T4.upload": { name: "T4 · upload", hint: "libcurl POST" },
+  "T3.fastsam": { name: "T3 · fastsam", hint: "FastSAM bbox proposal" }, "T3.vlm": { name: "T3 · vlm", hint: "Qwen3-VL prompt + decode" }, "T4.upload": { name: "T4 · upload", hint: "libcurl POST" },
   "NPU.core0": { name: "NPU.0", hint: "EfficientAD-S [INT8]" }, "NPU.core1": { name: "NPU.1", hint: "FastSAM-s [INT8]" },
   "NPU.core2": { name: "NPU.2", hint: "Qwen3-VL [W8A8]" },
   "CPU.A76_0": { name: "A76.0", hint: "2.4 GHz" }, "CPU.A76_1": { name: "A76.1", hint: "2.4 GHz" },
@@ -45,10 +47,11 @@ const LANE_LABELS: Record<string, { name: string; hint: string }> = {
 };
 const CAT_COLOR: Record<string, string> = {
   io: "#7cdcff", mem: "#7d869c", rga: "#ffbf5c", infer: "var(--acc)", npu: "var(--acc)", cpu: "#b07cff", sync: "#555d72",
+  pipeline: "var(--acc)", upload: "#7cdcff", vlm: "#ff7a90",
   "vlm-prompt": "#ff7a90", "vlm-decode": "#ff5c7a", "vlm-encode": "#f472b6",
 };
 
-export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 0 }: { defects: DefectRead[]; accent?: string; initialFrameIdx?: number }) {
+export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 0, dataSource, manifestCaveats }: { defects: DefectRead[]; accent?: string; initialFrameIdx?: number; dataSource?: DataSourceStatus; manifestCaveats?: string[] }) {
   const [frameIdx, setFrameIdx] = useState(initialFrameIdx);
   const [pinnedId, setPinnedId] = useState<number | null>(null);
   const initPinnedRef = useRef(false);
@@ -87,15 +90,27 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
   if (!defect) return <div style={{ background: "var(--bg-1)", border: "1px solid var(--line)", padding: 60, textAlign: "center", color: "var(--fg-3)" }}><span className="mono" style={{ fontSize: 14 }}>暂无追踪事件。</span></div>;
 
   const total_us = defect.trace_events ? Math.max(...defect.trace_events.map(e => e.ts + e.dur)) : 0;
-  const npu2 = (byTid["NPU.core2"] || []).reduce((s, e) => s + e.dur, 0);
-  const npu0 = (byTid["NPU.core0"] || []).reduce((s, e) => s + e.dur, 0);
-  const npu1 = (byTid["NPU.core1"] || []).reduce((s, e) => s + e.dur, 0);
+
+  // NPU durations — try NPU.core* events first (mock), then thread-level events (snapshot), then pipeline_ms
+  const hasNpuEvents = !!(byTid["NPU.core0"]?.length || byTid["NPU.core1"]?.length || byTid["NPU.core2"]?.length);
+  const npu2 = hasNpuEvents
+    ? (byTid["NPU.core2"] || []).reduce((s, e) => s + e.dur, 0)
+    : (byTid["T3.vlm"] || []).reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.qwen3vl * 1000;
+  const npu0 = hasNpuEvents
+    ? (byTid["NPU.core0"] || []).reduce((s, e) => s + e.dur, 0)
+    : (byTid["T2.pipeline"] || []).filter(e => e.name.includes("efficientad") || e.cat === "pipeline").reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.efficientad * 1000;
+  const npu1 = hasNpuEvents
+    ? (byTid["NPU.core1"] || []).reduce((s, e) => s + e.dur, 0)
+    : (byTid["T3.fastsam"] || []).reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.fastsam * 1000;
   const npuTotal = npu0 + npu1 + npu2;
-  const prompt = defect.trace_events?.filter(e => e.cat === "vlm-prompt" && e.tid === "NPU.core2").reduce((s, e) => s + e.dur, 0) || 0;
-  const decode = defect.trace_events?.filter(e => e.cat === "vlm-decode" && e.tid === "NPU.core2").reduce((s, e) => s + e.dur, 0) || 0;
+  const prompt = defect.trace_events?.filter(e => e.cat === "vlm-prompt" && (e.tid === "NPU.core2" || e.tid === "T3.vlm")).reduce((s, e) => s + e.dur, 0) || 0;
+  const decode = defect.trace_events?.filter(e => e.cat === "vlm-decode" && (e.tid === "NPU.core2" || e.tid === "T3.vlm")).reduce((s, e) => s + e.dur, 0) || 0;
   const upload = (byTid["T4.upload"] || []).reduce((s, e) => s + e.dur, 0);
   const npu2Share = npuTotal > 0 ? npu2 / npuTotal : 0;
-  const promptShare = prompt + decode > 0 ? prompt / (prompt + decode) : 0;
+  // When snapshot data lacks prompt/decode split, estimate from pipeline_ms
+  const effectivePrompt = prompt || (defect.pipeline_ms.qwen3vl * 1000 * (variantIsLora(defect.variant) ? 0.55 : 0.62));
+  const effectiveDecode = decode || (defect.pipeline_ms.qwen3vl * 1000 - effectivePrompt);
+  const promptShare = effectivePrompt + effectiveDecode > 0 ? effectivePrompt / (effectivePrompt + effectiveDecode) : 0;
 
   const legend = [["NPU 推理", "infer"], ["VLM 提示", "vlm-prompt"], ["VLM 解码", "vlm-decode"], ["CPU", "cpu"], ["IO", "io"], ["RGA", "rga"], ["同步", "sync"]] as const;
 
@@ -137,12 +152,20 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
         </div>
       </div>
 
+      {/* Data source + caveats */}
+      {dataSource && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <CaveatBanner dataSource={dataSource} caveats={manifestCaveats} style="profile" />
+          <TraceSourceNote source={dataSource.kind === "snapshot" ? "snapshot" : dataSource.kind === "live" ? "edge" : "simulator"} />
+        </div>
+      )}
+
       {/* Bottleneck summary */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--line)", border: "1px solid var(--line)" }}>
         {[
           { l: "关键路径", v: (npuTotal / 1000).toFixed(1), u: "ms", sub: "NPU 串行累积", c: accent, big: true },
           { l: "NPU.2 占比", v: `${Math.round(npu2Share * 100)}`, u: "%", sub: `${(npu2 / 1000).toFixed(1)} ms / ${(npuTotal / 1000).toFixed(1)} ms`, c: "var(--core-2)", big: true },
-          { l: "提示 vs 解码", v: `${Math.round(promptShare * 100)}/${Math.round((1 - promptShare) * 100)}`, u: "%", sub: `${(prompt / 1000).toFixed(0)} ms prompt · ${(decode / 1000).toFixed(0)} ms decode`, c: "var(--fg)" },
+          { l: "提示 vs 解码", v: `${Math.round(promptShare * 100)}/${Math.round((1 - promptShare) * 100)}`, u: "%", sub: `${(effectivePrompt / 1000).toFixed(0)} ms prompt · ${(effectiveDecode / 1000).toFixed(0)} ms decode${!prompt ? " (est.)" : ""}`, c: "var(--fg)" },
           { l: "上传开销", v: (upload / 1000).toFixed(0), u: "ms", sub: `${total_us > 0 ? ((upload / total_us) * 100).toFixed(1) : 0}% of E2E`, c: "var(--fg)" },
         ].map((s) => (
           <div key={s.l} style={{ background: "var(--bg-1)", padding: "14px 16px" }}>

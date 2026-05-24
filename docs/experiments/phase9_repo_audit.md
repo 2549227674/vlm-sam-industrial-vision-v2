@@ -215,6 +215,21 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 18. `frontend/src/types/defect.ts` — +MvtecCategory, +Severity 类型（修改）
 19. `frontend/src/lib/mock-data.ts` — category 类型对齐（修改）
 20. `frontend/package.json` — +typecheck script（修改）
+21. `frontend/src/lib/data-source.ts` — CLAUDE_06 多数据源解析 hook（新建）
+22. `frontend/src/components/v4/DataSourceBadge.tsx` — CLAUDE_06 数据源状态徽章（新建）
+23. `frontend/src/components/v4/CaveatBanner.tsx` — CLAUDE_06 能力边界提示横幅（新建）
+24. `frontend/src/app/page.tsx` — CLAUDE_06 接入 useDataSource hook（修改）
+25. `frontend/src/components/v4/TopBar.tsx` — CLAUDE_06 集成 DataSourceBadge（修改）
+26. `frontend/src/components/v4/BottomBar.tsx` — CLAUDE_06 显示数据来源（修改）
+27. `frontend/src/components/v4/OverviewPage.tsx` — CLAUDE_06 +CaveatBanner（修改）
+28. `frontend/src/components/v4/ABMatrix.tsx` — CLAUDE_06 +CaveatBanner +VariantCaveatBadge（修改）
+29. `frontend/src/components/v4/ProfilePage.tsx` — CLAUDE_06 +CaveatBanner +TraceSourceNote（修改）
+30. `frontend/src/components/v4/LogsPage.tsx` — CLAUDE_06 状态栏显示数据来源（修改）
+31. `frontend/src/components/v4/ModelsPage.tsx` — CLAUDE_06 接收 dataSource prop（修改）
+32. `frontend/src/components/v4/FrameInspector.tsx` — CLAUDE_06 VLM tooltip + bbox clamping（修改）
+33. `frontend/src/components/v4/RecentStream.tsx` — CLAUDE_06 VLM defect_type tooltip（修改）
+34. `frontend/src/components/v4/DetailDrawer.tsx` — CLAUDE_06 VLM defect_type tooltip（修改）
+35. `docs/experiments/phase9_frontend_truthfulness_guardrails.md` — CLAUDE_06 执行报告（新建）
 
 ---
 
@@ -247,4 +262,4 @@ Phase 8A 使用 MVTec test split 同时进行阈值校准和 AUROC 评估。详�
 | `CLAUDE_03_API_CONTRACT_AND_CI_HARDENING.md` | Contract schema 自动化、CI 检查、跨端类型同步 | **已完成** → `phase9_contract_ci_hardening.md` |
 | `CLAUDE_04_EDGE_RUNTIME_AND_MODEL_FIXES.md` | 4B spatial merge 修复、队列指标、JSON watchdog | **已完成** → `phase9_edge_runtime_model_fixes.md` |
 | `CLAUDE_05_EXPERIMENT_VALIDATION_AND_RELEASE_GATES.md` | Threshold soak test、4B 修复后复测、校准集分离 | **已完成** → `phase9_experiment_validation_release_gates.md` |
-| `CLAUDE_06_FRONTEND_DEMO_TRUTHFULNESS_GUARDRAILS.md` | 前端 mock/real 标识、AB matrix 口径控制 | 待开始 |
+| `CLAUDE_06_FRONTEND_DEMO_TRUTHFULNESS_GUARDRAILS.md` | 前端 mock/real 标识、AB matrix 口径控制 | **已完成** → `phase9_frontend_truthfulness_guardrails.md` |

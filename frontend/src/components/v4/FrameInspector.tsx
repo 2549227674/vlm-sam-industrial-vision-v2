@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import type { DefectRead } from "@/types/defect";
 import { fmtTime, fmtDateTime, variantLabel, variantColor, variantModel } from "@/lib/mock-data";
 import { SevPill, CatPill, VariantPill, FrameGantt, SimulatedSample, highlightJson } from "./primitives";
+import { VlmDefectTooltip } from "./DataSourceBadge";
 
 // ── FrameInspector ──────────────────────────────────────────────────────────
 
@@ -69,14 +70,21 @@ export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { 
       )}
       <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}>
         {defect.bboxes.map((b, i) => {
-          const x = b.x * 100, y = b.y * 100, w = b.w * 100, h = b.h * 100;
+          // Clamp bbox to [0, 1] range to prevent SVG overflow
+          const x = Math.max(0, Math.min(100, b.x * 100));
+          const y = Math.max(0, Math.min(100, b.y * 100));
+          const w = Math.min(100 - x, b.w * 100);
+          const h = Math.min(100 - y, b.h * 100);
+          const isClamped = b.x + b.w > 1 || b.y + b.h > 1 || b.x < 0 || b.y < 0;
           return (
             <g key={i}>
               <rect x={x} y={y} width={w} height={h} fill="color-mix(in srgb, var(--acc) 8%, transparent)" stroke="var(--acc)" strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
               {cornerLabels && (
                 <foreignObject x={x} y={Math.max(0, y - 4)} width={Math.max(w, 20)} height="4">
                   <div style={{ display: "inline-block", fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--bg)", background: "var(--acc)", padding: "1px 4px", letterSpacing: "0.06em", fontWeight: 700 } as React.CSSProperties}>
-                    {defect.defect_type}<span style={{ opacity: 0.6, marginLeft: 4 }}>{(defect.confidence * 100).toFixed(0)}</span>
+                    <span title="VLM-generated structured description. Not a guaranteed exact class on RK3588." style={{ cursor: "help" }}>
+                      {defect.defect_type}<span style={{ opacity: 0.6, marginLeft: 4 }}>{(defect.confidence * 100).toFixed(0)}</span>
+                    </span>
                   </div>
                 </foreignObject>
               )}

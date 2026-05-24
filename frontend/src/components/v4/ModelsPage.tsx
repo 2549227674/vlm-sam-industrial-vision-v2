@@ -2,15 +2,17 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import type { ActiveConfig } from "@/types/defect";
+import type { DataSourceStatus } from "@/lib/data-source";
 import { variantColor } from "@/lib/mock-data";
 
 interface ModelsProps {
   activeConfig: ActiveConfig;
   onChangeConfig: (c: ActiveConfig) => void;
   accent?: string;
+  dataSource?: DataSourceStatus;
 }
 
-export function ModelsPage({ activeConfig, onChangeConfig, accent = "var(--acc)" }: ModelsProps) {
+export function ModelsPage({ activeConfig, onChangeConfig, accent = "var(--acc)", dataSource }: ModelsProps) {
   const is4B = activeConfig.model_size === "4B";
   const variant_key = `${activeConfig.model_size}_${activeConfig.variant}`;
   const segments = [

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import type { DefectRead } from "@/types/defect";
 import { fmtTime, MVTEC_CATEGORIES, CATEGORY_LABEL, VARIANTS, VARIANT_LABEL, normalizeVariant } from "@/lib/mock-data";
 import { SevPill, VariantPill, SimulatedSample } from "./primitives";
+import { VlmDefectTooltip } from "./DataSourceBadge";
 
 interface StreamProps {
   defects: DefectRead[];
@@ -115,7 +116,7 @@ function DetectionCard({ defect, selected, onClick }: { defect: DefectRead; sele
         <div style={{ position: "absolute", top: 4, left: 6, fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--fg-3)" }}>{defect.line_id} · {CATEGORY_LABEL[defect.category] || defect.category}</div>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <span style={{ fontSize: 13, color: "var(--fg)", fontWeight: 500 }}>{defect.defect_type.replace(/_/g, " ")}</span>
+        <span style={{ fontSize: 13, color: "var(--fg)", fontWeight: 500 }}><VlmDefectTooltip defectType={defect.defect_type} /></span>
         <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)" }}>{(defect.confidence * 100).toFixed(0)}%</span>
       </div>
       <div style={{ display: "flex", height: 4, background: "var(--bg-3)" }}>

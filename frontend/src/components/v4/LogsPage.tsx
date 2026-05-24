@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { fmtTime } from "@/lib/mock-data";
+import type { DataSourceStatus } from "@/lib/data-source";
+import { DataSourceBadge } from "./DataSourceBadge";
 
 const COMPONENTS = ["EfficientAD", "FastSAM", "Qwen3VL", "Pipeline", "WS", "HTTP"];
 const LEVELS = ["INFO", "WARN", "ERROR", "DEBUG"] as const;
@@ -57,7 +59,7 @@ function seedLogs(n = 40): LogLine[] {
   return out;
 }
 
-export function LogsPage({ accent = "var(--acc)" }: { accent?: string }) {
+export function LogsPage({ accent = "var(--acc)", dataSource }: { accent?: string; dataSource?: DataSourceStatus }) {
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [paused, setPaused] = useState(false);
   const [filterLevel, setFilterLevel] = useState("ALL");
@@ -107,7 +109,7 @@ export function LogsPage({ accent = "var(--acc)" }: { accent?: string }) {
       {/* Status rail */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "var(--line)", border: "1px solid var(--line)" }}>
         {[
-          { l: "后端", v: "健康", c: "var(--ok)", dot: true },
+          { l: "数据来源", v: dataSource?.label ?? "Mock", c: dataSource?.color ?? "var(--warn)", dot: true, badge: true },
           { l: "WS 客户端", v: "2 已连接", c: "var(--fg)" },
           { l: "最近事件", v: fmtTime(lastTs), c: "var(--fg)" },
           { l: "事件速率", v: `${eventRate} /s`, c: "var(--fg)" },
