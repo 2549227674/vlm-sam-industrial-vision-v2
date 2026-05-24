@@ -38,6 +38,19 @@
 **解决方案**：改为枚举实际 unique score 值（非离散化网格），比较算子改为 `>`，锁定搜索方向为 `score > threshold`（与运行时一致），添加单调性断言验证。结果：0/75 recall@FPR 违规。
 **工程影响**：确保诊断指标正确反映运行时决策边界，防止报告中出现误导性 recall@FPR 值。
 
+### F-EAD-05：EfficientAD spatial localization reliability is defect-type dependent
+
+**阶段**：Phase 9 Stage 0.5 / 0.6
+**现象**：从 `raw_anomaly_map` 提取 bbox 作为主定位框的方案，在 6 类 MVTec 类别中仅 capsule（mean IoU=0.24）和 cable（0.22）通过 IoU>0.2 阈值；carpet（0.0006）、metal_nut（0.01）、pill（0.04）、screw（0.009）全部失败。
+**根因**：EfficientAD-S 的 anomaly map 空间分辨率（256×256）对细粒度缺陷（螺纹、色差、细裂缝）不足；纹理类（carpet）产生弥漫性激活而非局部化信号。空间区分度（diff=max-min）是必要但不充分条件：metal_nut diff=121 但 IoU=0.01（信号存在但不指向缺陷）。
+**关键发现**：
+- `raw_anomaly_map` 可用于诊断（score aggregation），但不能全局替代 bbox 定位
+- 定位可靠性取决于缺陷的空间集中度和对比度，而非仅取决于类别
+- 大面积、高对比度、空间集中的缺陷（capsule squeeze, cable swap）可靠定位
+- 纹理类、细裂缝、色差、螺纹类不可靠
+**解决方案**：不将 EAD bbox 作为全局主定位框。保留 FastSAM/VLM bbox 为主，EAD 作为辅助/诊断信号。前端文案改为 "proposal bbox / 候选框"，对纹理类显示 caveat。
+**工程影响**：Stage 1 原计划（EAD bbox → report.bboxes 主替换）被否决。public demo 中 bbox overlay 必须标注为 proposal-level，不能称为 ground-truth localization。
+
 ---
 
 ## 2. FastSAM 部署

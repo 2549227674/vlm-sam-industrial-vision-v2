@@ -49,6 +49,7 @@ Next.js 15 仪表盘 (纯静态导出, WebSocket 实时推送, TanStack Table, S
 - **EfficientAD-S**：负载削减门控，非精确缺陷分类器（raw_score mean AUROC 0.5320）
 - **LoRA**：PC bf16 有效；RK3588 W8A8 下细粒度 defect_type 增益坍塌
 - **FastSAM**：仅输出 bbox 提案；mask decode 仍为未来工作
+- **BBox overlay**：proposal-level，非 verified ground-truth localization。EAD heatmap 定位已评估，发现对类别/缺陷类型有依赖性（详见 `docs/experiments/phase9_ead_localization_reliability.md`）
 - **前端 Demo**：优先 Live API → 真实 RK3588 快照 → Mock 回退。数字孪生 NPU/CPU 面板为架构可视化，非实时硬件监控
 
 ## 数据源真实性说明

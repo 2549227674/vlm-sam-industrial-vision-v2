@@ -82,7 +82,7 @@ export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { 
               {cornerLabels && (
                 <foreignObject x={x} y={Math.max(0, y - 4)} width={Math.max(w, 20)} height="4">
                   <div style={{ display: "inline-block", fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--bg)", background: "var(--acc)", padding: "1px 4px", letterSpacing: "0.06em", fontWeight: 700 } as React.CSSProperties}>
-                    <span title="VLM-generated structured description. Not a guaranteed exact class on RK3588." style={{ cursor: "help" }}>
+                    <span title="Proposal bbox from FastSAM/VLM. Not verified ground-truth localization. / FastSAM/VLM 候选框，非可靠定位。" style={{ cursor: "help" }}>
                       {defect.defect_type}<span style={{ opacity: 0.6, marginLeft: 4 }}>{(defect.confidence * 100).toFixed(0)}</span>
                     </span>
                   </div>
@@ -137,7 +137,7 @@ function JsonTab({ defect }: { defect: DefectRead }) {
   const target = JSON.stringify({
     category: defect.category, defect_type: defect.defect_type, severity: defect.severity,
     confidence: defect.confidence, bboxes: defect.bboxes.map(b => ({ x: +b.x.toFixed(3), y: +b.y.toFixed(3), w: +b.w.toFixed(3), h: +b.h.toFixed(3) })),
-    description: defect.description,
+    description: defect.description?.trim() ? defect.description : "(omitted by compact VLM output)",
   }, null, 2);
 
   useEffect(() => {
