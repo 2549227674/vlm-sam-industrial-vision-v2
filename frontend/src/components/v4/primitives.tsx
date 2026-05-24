@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState, useCallback } from "react";
 import { CATEGORY_LABEL, variantLabel, variantColor } from "@/lib/mock-data";
+import { resolveImageUrl } from "@/lib/api";
 
 // ── Severity chip ───────────────────────────────────────────────────────────
 
@@ -302,6 +303,66 @@ const SAMPLE_MAP: Record<string, React.ReactNode> = {
 
 export function SimulatedSample({ category }: { category: string }) {
   return <>{SAMPLE_MAP[category] || <NutSample />}</>;
+}
+
+/** Real image with loading state and SimulatedSample fallback. */
+export function RealImageWithFallback({
+  imageUrl,
+  category,
+  showBadge = false,
+  style: containerStyle,
+}: {
+  imageUrl: string;
+  category: string;
+  showBadge?: boolean;
+  style?: React.CSSProperties;
+}) {
+  const resolved = resolveImageUrl(imageUrl);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(!resolved);
+
+  const onLoad = useCallback(() => setLoaded(true), []);
+  const onError = useCallback(() => setFailed(true), []);
+
+  if (!resolved || failed) {
+    return (
+      <>
+        <SimulatedSample category={category} />
+        {showBadge && (
+          <span style={{ position: "absolute", bottom: 4, right: 4, fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--warn)", background: "rgba(0,0,0,0.6)", padding: "1px 5px", borderRadius: 2 }}>
+            Placeholder
+          </span>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {!loaded && <SimulatedSample category={category} />}
+      <img
+        src={resolved}
+        alt={`${category} defect`}
+        onLoad={onLoad}
+        onError={onError}
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: loaded ? 1 : 0,
+          transition: "opacity 0.2s",
+          ...containerStyle,
+        }}
+      />
+      {showBadge && loaded && (
+        <span style={{ position: "absolute", bottom: 4, right: 4, fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--ok)", background: "rgba(0,0,0,0.6)", padding: "1px 5px", borderRadius: 2 }}>
+          Real Image
+        </span>
+      )}
+    </>
+  );
 }
 
 // ── JSON highlighter ────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import type { DefectRead } from "@/types/defect";
 import { fmtTime, MVTEC_CATEGORIES, CATEGORY_LABEL, VARIANTS, VARIANT_LABEL, normalizeVariant } from "@/lib/mock-data";
-import { SevPill, VariantPill, SimulatedSample } from "./primitives";
+import { SevPill, VariantPill, SimulatedSample, RealImageWithFallback } from "./primitives";
 import { VlmDefectTooltip } from "./DataSourceBadge";
 
 interface StreamProps {
@@ -107,7 +107,7 @@ function DetectionCard({ defect, selected, onClick }: { defect: DefectRead; sele
         </span>
       </div>
       <div style={{ position: "relative", width: "100%", aspectRatio: "16/10", background: "var(--bg)", border: "1px solid var(--line)", overflow: "hidden" }}>
-        <SimulatedSample category={defect.category} />
+        <RealImageWithFallback imageUrl={defect.image_url} category={defect.category} />
         <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
           {defect.bboxes.slice(0, 2).map((b, i) => (
             <rect key={i} x={b.x * 100} y={b.y * 100} width={b.w * 100} height={b.h * 100} fill="none" stroke={sevColor} strokeWidth="0.3" vectorEffect="non-scaling-stroke" />

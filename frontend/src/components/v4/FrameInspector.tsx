@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import type { DefectRead } from "@/types/defect";
 import { fmtTime, fmtDateTime, variantLabel, variantColor, variantModel } from "@/lib/mock-data";
-import { SevPill, CatPill, VariantPill, FrameGantt, SimulatedSample, highlightJson } from "./primitives";
+import { SevPill, CatPill, VariantPill, FrameGantt, SimulatedSample, RealImageWithFallback, highlightJson } from "./primitives";
 import { VlmDefectTooltip } from "./DataSourceBadge";
 
 // ── FrameInspector ──────────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ function FramePane({ defect }: { defect: DefectRead }) {
 export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { defect: DefectRead; cornerLabels?: boolean; aspect?: string }) {
   return (
     <div style={{ position: "relative", width: "100%", aspectRatio: aspect, background: "var(--bg)", border: "1px solid var(--line)", overflow: "hidden" }}>
-      <SimulatedSample category={defect.category} />
+      <RealImageWithFallback imageUrl={defect.image_url} category={defect.category} showBadge={cornerLabels} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 2, background: "linear-gradient(90deg, transparent, var(--acc), transparent)", opacity: 0.5, animation: "scan-line 4s linear infinite" }} />
       {cornerLabels && (
         <>
