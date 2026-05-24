@@ -71,7 +71,7 @@ Capability Caveats section shows bilingual (Chinese + English) caveats.
 
 ## 8. NOPASSWD Sudo
 
-Status: **Retained** for ongoing deployment automation. The `deploy` user retains `NOPASSWD:ALL` in `/etc/sudoers.d/deploy`. This is a known risk — should be revoked once no further automated server maintenance is needed, or replaced with targeted sudo rules.
+Status: **Revoked**. The `/etc/sudoers.d/deploy` file has been removed. The `deploy` user now requires a password for sudo operations. Verified via `sudo -n true` returning "a password is required".
 
 ## 9. New Files
 
@@ -95,13 +95,12 @@ Status: **Retained** for ongoing deployment automation. The `deploy` user retain
 | Upload auth 401 | PASS |
 | No secrets in diff | PASS |
 | Text polish (old copy) | PASS |
-| Sudo cleanup | RETAINED (documented) |
+| Sudo cleanup | PASS |
 | README demo link | PASS |
 
 ## 11. Remaining Risks
 
-1. **NOPASSWD sudo** retained on deploy user — should be hardened or revoked.
-2. **No HTTPS for IP fallback** — `http://157.245.60.152` still serves HTTP; `.app` TLD forces HTTPS for domain access.
+1. **No HTTPS for IP fallback** — `http://157.245.60.152` still serves HTTP; `.app` TLD forces HTTPS for domain access.
 3. **SQLite on 1 vCPU** — adequate for demo load, not for production concurrency.
 4. **Snapshot data is historical** — 20 records from Phase 9 soak test, not live RK3588 stream. Documented in manifest caveats.
 5. **FastSAM mask decode** still TODO — current output is bbox proposals only.
