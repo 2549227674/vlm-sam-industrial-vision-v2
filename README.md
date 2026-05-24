@@ -40,6 +40,14 @@ Next.js 15 Dashboard (static export, WebSocket real-time stream, TanStack Table,
 - Structured VLM output with JSON schema validation
 - Real-time observability dashboard with per-frame trace events and 4-variant metrics
 
+## Public Demo
+
+- **Frontend**: https://vision.hanlab.app/
+- **API Health**: https://api.vision.hanlab.app/api/health
+- **Data source**: Live backend API seeded with real RK3588 test snapshot (20 records, 3 MVTec AD categories). Future RK3588 uploads append to the same backend.
+
+The dashboard explicitly labels whether it is displaying live backend data, a saved real RK3588 test snapshot, simulator data, or mock fallback data (bilingual: Chinese + English).
+
 ## Current Status
 
 - **Mainline**: EfficientAD-S FP16 -> FastSAM FP16 -> Qwen3-VL-2B base W8A8

@@ -52,10 +52,10 @@ export function ABMatrix({ stats, activeConfig, dataSource, manifestCaveats }: A
         <div style={{ background: "var(--bg-2)" }} />
         <HeadCell label="基础提示词" sub="≈ 1140 tok" />
         <HeadCell label="LoRA 精简提示词" sub="≈ 78 tok · r=16 α=32" />
-        <RowHead label="Qwen3-VL-2B" sub="约 5.0 GB · INT8/W8A8" />
+        <RowHead label="Qwen3-VL-2B" sub="约 5.0 GB · W8A8" />
         <Cell variant="2B_base" data={ab["2B_base"]} active={active} />
         <Cell variant="2B_lora" data={ab["2B_lora"]} active={active} winner />
-        <RowHead label="Qwen3-VL-4B" sub="约 11.4 GB · INT8/W8A8" />
+        <RowHead label="Qwen3-VL-4B" sub="约 11.4 GB · W8A8" />
         <Cell variant="4B_base" data={ab["4B_base"]} active={active} />
         <Cell variant="4B_lora" data={ab["4B_lora"]} active={active} altWinner />
       </div>

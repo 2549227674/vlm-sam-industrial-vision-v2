@@ -118,7 +118,7 @@ export function RK3588Twin({ phase, npuLoads, cpuLoads, mode, showTraces = true,
   const journey = [
     { stage: "capture", label: "摄像头", out: "frame", color: accent },
     { stage: "core0", label: "EfficientAD-S", out: "anomaly_score", color: "var(--core-0)" },
-    { stage: "core1", label: "FastSAM-s", out: "bboxes + mask", color: "var(--core-1)" },
+    { stage: "core1", label: "FastSAM-s", out: "bbox proposal", color: "var(--core-1)" },
     { stage: "core2", label: "Qwen3-VL", out: "JSON", color: "var(--core-2)" },
     { stage: "upload", label: "上行", out: "POST /api/edge/report", color: accent },
   ];
@@ -205,7 +205,7 @@ export function RK3588Twin({ phase, npuLoads, cpuLoads, mode, showTraces = true,
           {/* NPU cores */}
           {[
             { x: 278, title: "NPU.0", model: "EfficientAD-S", task: "异常检测", load: npuLoads[0], ms: STAGE_REAL_MS.core0, color: "var(--core-0)", gradId: "cg0", active: c0Active, detail: "PDN · 256×256 · INT8", thru: "≈ 208 fps" },
-            { x: 528, title: "NPU.1", model: "FastSAM-s", task: "分割掩码", load: npuLoads[1], ms: STAGE_REAL_MS.core1, color: "var(--core-1)", gradId: "cg1", active: c1Active, detail: "YOLOv8-seg · 640×640 · INT8", thru: "≈ 20 fps" },
+            { x: 528, title: "NPU.1", model: "FastSAM-s", task: "bbox 提案", load: npuLoads[1], ms: STAGE_REAL_MS.core1, color: "var(--core-1)", gradId: "cg1", active: c1Active, detail: "YOLOv8-seg · 640×640 · FP16", thru: "≈ 20 fps" },
             { x: 778, title: "NPU.2", model: "Qwen3-VL", task: "VLM 描述", load: npuLoads[2], ms: STAGE_REAL_MS.core2, color: "var(--core-2)", gradId: "cg2", active: c2Active, detail: "W8A8 · ctx 4096 · RKLLM", thru: "≈ 0.43 fps" },
           ].map(npu => {
             const ny = npuY, nh = 170;

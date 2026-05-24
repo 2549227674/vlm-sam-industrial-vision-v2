@@ -32,7 +32,7 @@ function makeLogLine(): LogLine {
 
   const lines: [string, string, string][] = [
     ["EfficientAD", "INFO", `anomaly_score=${(Math.random() * 3 + 1).toFixed(2)} · threshold=3.50 → ${Math.random() > 0.6 ? "TRIGGER" : "pass"}`],
-    ["FastSAM", "INFO", `bbox_count=${1 + Math.floor(Math.random() * 4)} · mask_area=${(Math.random() * 0.2).toFixed(3)}`],
+    ["FastSAM", "INFO", `bbox_count=${1 + Math.floor(Math.random() * 4)} · proposal_conf=${(0.7 + Math.random() * 0.2).toFixed(3)}`],
     ["Qwen3VL", "INFO", `variant=${v} · TTFT=${800 + Math.floor(Math.random() * 1800)}ms · decode=${600 + Math.floor(Math.random() * 900)}ms · tps=${(9 + Math.random() * 4).toFixed(1)}`],
     ["Pipeline", "INFO", `frame F-${Date.now().toString().slice(-5)} complete · total=${2200 + Math.floor(Math.random() * 800)}ms`],
     ["WS", "INFO", `broadcast defect_created → ${1 + Math.floor(Math.random() * 4)} clients`],

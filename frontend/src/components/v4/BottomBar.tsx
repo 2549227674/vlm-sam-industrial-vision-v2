@@ -28,7 +28,7 @@ export function BottomBar({ now, live, route, activeConfig, totalDefects, dataSo
       <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
         <span style={{ color: dataSource?.color }}>● {dataSource?.label ?? (live ? "Live" : "Paused")}</span>
         <span>WS /ws/dashboard {live ? "已连接" : "已暂停"}</span>
-        <span>schema v1.1</span>
+        <span>contract v1.2</span>
         <span>vision.db · WAL</span>
         <span>路由 · #{route}</span>
         <span>事件数 n={totalDefects}</span>

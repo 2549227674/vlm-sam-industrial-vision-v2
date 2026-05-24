@@ -49,7 +49,7 @@ export function OverviewPage({
       <section>
         <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "4px 12px", border: "1px solid var(--line)", borderRadius: 100, marginBottom: 18 }}>
           <span style={{ width: 6, height: 6, background: accent, borderRadius: "50%", boxShadow: `0 0 6px ${accent}` }} />
-          <span className="mono" style={{ fontSize: 10, color: "var(--fg-2)", letterSpacing: "0.1em" }}>边缘节点 001 · RK3588 16GB · FastAPI + WS · Schema v1.1</span>
+          <span className="mono" style={{ fontSize: 10, color: "var(--fg-2)", letterSpacing: "0.1em" }}>边缘节点 001 · RK3588 16GB · FastAPI + WS · Contract v1.2</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.3fr) minmax(0, 1fr)", gap: 60, alignItems: "flex-end" }}>
           <div>
@@ -58,11 +58,11 @@ export function OverviewPage({
               <span style={{ display: "block", color: "var(--fg-3)" }}>量化部署在一块 <span style={{ color: accent }}>Orange Pi 5</span> 上。</span>
             </h1>
             <p style={{ color: "var(--fg-2)", fontSize: 15, lineHeight: 1.65, marginTop: 20, maxWidth: 620 }}>
-              EfficientAD-S 检测异常，FastSAM-s 精确定位，Qwen3-VL 输出描述——全部运行在同一块 Rockchip RK3588 NPU 上，
-              INT8 / W8A8 量化，跨三核异步流水线。前端仅消费 FastAPI REST + WebSocket，不直连 RK3588。
+              EfficientAD-S 门控异常，FastSAM-s bbox 提案，Qwen3-VL 输出结构化描述——全部运行在同一块 Rockchip RK3588 NPU 上，
+              EAD/FastSAM FP16 · Qwen3-VL W8A8，跨三核异步流水线。前端仅消费 FastAPI REST + WebSocket，不直连 RK3588。
             </p>
             <div style={{ display: "flex", gap: 8, marginTop: 20, flexWrap: "wrap" }}>
-              {["INT8 / W8A8 量化", "4 线程 C++ 流水线", "REST + WebSocket"].map(t => (
+              {["EAD/FastSAM FP16", "Qwen3-VL W8A8", "4 线程 C++ 流水线", "REST + WebSocket"].map(t => (
                 <span key={t} className="mono" style={{ fontSize: 11, padding: "5px 11px", border: "1px solid var(--line)", background: "var(--bg-1)", color: "var(--fg-2)", letterSpacing: "0.04em", display: "inline-flex", alignItems: "center", gap: 6 }}>
                   <span style={{ width: 4, height: 4, background: "var(--acc)" }} />{t}
                 </span>
