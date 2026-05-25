@@ -96,10 +96,12 @@ augmentation:
 
 **Retrieve from AutoDL:**
 ```bash
-sshpass -p '<pwd>' rsync -avz -e "ssh -p 28728" \
-  root@connect.westb.seetacloud.com:/root/vlm-sam-industrial-vision-v2/runs/detect/runs/phase10/yolov8n_metal_nut_cable/weights/best.pt \
+rsync -avz autodl-phase10:/root/vlm-sam-industrial-vision-v2/runs/detect/runs/phase10/yolov8n_metal_nut_cable/weights/best.pt \
   models/yolov8n_phase10/yolov8n_metal_nut_cable_best.pt
 ```
+
+> **Security note:** `autodl-phase10` is an SSH host alias configured in `~/.ssh/config`.
+> Never commit passwords, tokens, private keys, host-specific credentials, or `sshpass` commands to the repository.
 
 ### Other Artifacts
 
