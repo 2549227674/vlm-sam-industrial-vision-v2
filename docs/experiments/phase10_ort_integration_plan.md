@@ -378,6 +378,18 @@ Requires extended run. Deferred to user verification.
 | Bbox correctness | N/A (RKNN BLOCKED) | PASS (PyTorch ref) | class match PASS |
 | Fallback rate | varies | 0% (on matching classes) | < 5% PASS |
 
+### pipeline_ms.upload Behavior (Gate 3 — 2026-05-26)
+
+`pipeline_ms.upload` in the POST payload is always 0.0. This is a sequencing constraint:
+the JSON meta is serialized before the HTTP POST, so the actual upload duration is unknown
+at serialization time. The real upload_ms is measured after POST completes and logged to
+stderr (`[T4] upload_ms=...`), but cannot be retroactively inserted into the already-sent
+payload.
+
+This does not affect correctness of other pipeline_ms fields (efficientad, localizer) which
+are measured before the upload. The trace_events array includes an `upload` event with
+`dur=0.0` for the same reason.
+
 ## Deployment Checklist
 
 1. Copy `ort_localizer.py` to RK3588 at config path
