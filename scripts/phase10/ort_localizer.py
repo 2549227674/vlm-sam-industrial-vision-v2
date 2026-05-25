@@ -157,14 +157,14 @@ def decode(output: np.ndarray, conf_thresh: float, img_size: int,
         cls_scores = max_scores[cm]
         for k in keep:
             b = cls_boxes[k]
-            # Output center-x, center-y, w, h format (matches frontend bbox rendering)
+            # Convert xyxy to top-left xywh (API contract: x,y = top-left corner)
             # Clamp to [0, 1] to prevent API validation errors
-            cx = max(0.0, min(1.0, float((b[0] + b[2]) / 2)))
-            cy = max(0.0, min(1.0, float((b[1] + b[3]) / 2)))
-            w = max(0.0, min(1.0, float(b[2] - b[0])))
-            h = max(0.0, min(1.0, float(b[3] - b[1])))
+            x = max(0.0, min(1.0, float(b[0])))
+            y = max(0.0, min(1.0, float(b[1])))
+            w = max(0.0, min(1.0 - x, float(b[2] - b[0])))
+            h = max(0.0, min(1.0 - y, float(b[3] - b[1])))
             if w > 0.0 and h > 0.0:
-                results.append((int(cls), float(cls_scores[k]), [cx, cy, w, h]))
+                results.append((int(cls), float(cls_scores[k]), [x, y, w, h]))
 
     results.sort(key=lambda x: x[1], reverse=True)
     return results

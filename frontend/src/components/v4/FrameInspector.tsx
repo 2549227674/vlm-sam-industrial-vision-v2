@@ -75,9 +75,7 @@ export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { 
 
   return (
     <div style={{ position: "relative", width: "100%", aspectRatio: aspect, background: "var(--bg)", border: "1px solid var(--line)", overflow: "hidden" }}>
-      <div key={defect.id} style={{ position: "absolute", inset: 0 }}>
-        <RealImageWithFallback imageUrl={defect.image_url} category={defect.category} showBadge={cornerLabels} />
-      </div>
+      <RealImageWithFallback imageUrl={defect.image_url} category={defect.category} showBadge={cornerLabels} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 2, background: "linear-gradient(90deg, transparent, var(--acc), transparent)", opacity: 0.5, animation: "scan-line 4s linear infinite" }} />
       {cornerLabels && (
         <>
