@@ -1,0 +1,1858 @@
+{
+  "items": [
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "high",
+      "confidence": 0.772,
+      "anomaly_score": 21.25,
+      "bboxes": [
+        {
+          "x": 0.1823,
+          "y": 0.4036,
+          "w": 0.2581,
+          "h": 0.0814
+        },
+        {
+          "x": 0.5335,
+          "y": 0.4689,
+          "w": 0.1549,
+          "h": 0.1142
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:00+00:00",
+      "server_ts": "2026-05-25T15:00:00.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/be0b6d8b38e67ff36f1f17a9c9975212.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 24.4,
+        "localizer": 176.9,
+        "upload": 8.9
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 24400.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 34400.0,
+          "dur": 3500.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 37900.0,
+          "dur": 172400.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 211300.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 212300.0,
+          "dur": 8900.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80000
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "low",
+      "confidence": 0.813,
+      "anomaly_score": 13.6,
+      "bboxes": [
+        {
+          "x": 0.5343,
+          "y": 0.4878,
+          "w": 0.198,
+          "h": 0.2941
+        },
+        {
+          "x": 0.2771,
+          "y": 0.3812,
+          "w": 0.2625,
+          "h": 0.2161
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:03+00:00",
+      "server_ts": "2026-05-25T15:00:03.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/13772ab1a9c87709d510403bb97a0975.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 23.2,
+        "localizer": 192.5,
+        "upload": 15.0
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 23200.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 33200.0,
+          "dur": 3900.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 37100.0,
+          "dur": 187600.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 225700.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 226700.0,
+          "dur": 15000.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80001
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "low",
+      "confidence": 0.892,
+      "anomaly_score": 24.33,
+      "bboxes": [
+        {
+          "x": 0.5632,
+          "y": 0.5699,
+          "w": 0.1636,
+          "h": 0.1798
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:06+00:00",
+      "server_ts": "2026-05-25T15:00:06.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/32b36efbadef19865a3355cf6eb987de.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 22.8,
+        "localizer": 165.6,
+        "upload": 11.6
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 22800.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 32800.0,
+          "dur": 3300.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 36100.0,
+          "dur": 161300.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 198400.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 199400.0,
+          "dur": 11600.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80002
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "high",
+      "confidence": 0.789,
+      "anomaly_score": 28.42,
+      "bboxes": [
+        {
+          "x": 0.4155,
+          "y": 0.1527,
+          "w": 0.2404,
+          "h": 0.1159
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:09+00:00",
+      "server_ts": "2026-05-25T15:00:09.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/d6644ae625a5ed185a58278851b8780a.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 16.9,
+        "localizer": 219.3,
+        "upload": 14.4
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 16900.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 26900.0,
+          "dur": 4400.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 31300.0,
+          "dur": 213900.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 246200.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 247200.0,
+          "dur": 14400.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80003
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "high",
+      "confidence": 0.777,
+      "anomaly_score": 13.11,
+      "bboxes": [
+        {
+          "x": 0.1874,
+          "y": 0.0693,
+          "w": 0.1494,
+          "h": 0.1389
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:12+00:00",
+      "server_ts": "2026-05-25T15:00:12.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/d8580580d08b55baa34547f16a990452.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 14.7,
+        "localizer": 216.3,
+        "upload": 16.8
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 14700.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 24700.0,
+          "dur": 4300.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 29000.0,
+          "dur": 211000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 241000.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 242000.0,
+          "dur": 16800.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80004
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "medium",
+      "confidence": 0.775,
+      "anomaly_score": 17.48,
+      "bboxes": [
+        {
+          "x": 0.1357,
+          "y": 0.1338,
+          "w": 0.2439,
+          "h": 0.1986
+        },
+        {
+          "x": 0.4982,
+          "y": 0.3071,
+          "w": 0.2084,
+          "h": 0.1596
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:15+00:00",
+      "server_ts": "2026-05-25T15:00:15.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/9ae2b0e84e1a79fa448b223e184e4e35.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 25.0,
+        "localizer": 164.0,
+        "upload": 12.9
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 25000.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 35000.0,
+          "dur": 3300.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 38300.0,
+          "dur": 159700.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 199000.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 200000.0,
+          "dur": 12900.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80005
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "low",
+      "confidence": 0.944,
+      "anomaly_score": 8.82,
+      "bboxes": [
+        {
+          "x": 0.5252,
+          "y": 0.3033,
+          "w": 0.094,
+          "h": 0.164
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:18+00:00",
+      "server_ts": "2026-05-25T15:00:18.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/d7a875b331093acd673e0202a6ae7033.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 24.9,
+        "localizer": 189.4,
+        "upload": 17.7
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 24900.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 34900.0,
+          "dur": 3800.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 38700.0,
+          "dur": 184600.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 224300.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 225300.0,
+          "dur": 17700.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80006
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "low",
+      "confidence": 0.897,
+      "anomaly_score": 7.86,
+      "bboxes": [
+        {
+          "x": 0.5112,
+          "y": 0.2541,
+          "w": 0.1446,
+          "h": 0.1148
+        },
+        {
+          "x": 0.0519,
+          "y": 0.4833,
+          "w": 0.2383,
+          "h": 0.2938
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:21+00:00",
+      "server_ts": "2026-05-25T15:00:21.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/186584830165a0eaaf456643efe09da4.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 21.9,
+        "localizer": 188.0,
+        "upload": 9.1
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 21900.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 31900.0,
+          "dur": 3800.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 35700.0,
+          "dur": 183200.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 219900.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 220900.0,
+          "dur": 9100.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80007
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "high",
+      "confidence": 0.798,
+      "anomaly_score": 20.97,
+      "bboxes": [
+        {
+          "x": 0.1417,
+          "y": 0.5075,
+          "w": 0.1987,
+          "h": 0.2513
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:24+00:00",
+      "server_ts": "2026-05-25T15:00:24.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/d126c521e5f4f4ab9eecb2c8dd74f051.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 18.9,
+        "localizer": 155.0,
+        "upload": 11.2
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 18900.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 28900.0,
+          "dur": 3100.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 32000.0,
+          "dur": 150900.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 183900.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 184900.0,
+          "dur": 11200.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80008
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "low",
+      "confidence": 0.749,
+      "anomaly_score": 14.07,
+      "bboxes": [
+        {
+          "x": 0.1937,
+          "y": 0.1945,
+          "w": 0.2048,
+          "h": 0.0973
+        },
+        {
+          "x": 0.4891,
+          "y": 0.5396,
+          "w": 0.2952,
+          "h": 0.1972
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:27+00:00",
+      "server_ts": "2026-05-25T15:00:27.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/84de410c453e53a249fa39c49cfa1012.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 13.6,
+        "localizer": 197.9,
+        "upload": 17.5
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 13600.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 23600.0,
+          "dur": 4000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 27600.0,
+          "dur": 192900.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 221500.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 222500.0,
+          "dur": 17500.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80009
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "low",
+      "confidence": 0.789,
+      "anomaly_score": 26.81,
+      "bboxes": [
+        {
+          "x": 0.6286,
+          "y": 0.6073,
+          "w": 0.2462,
+          "h": 0.2318
+        },
+        {
+          "x": 0.4778,
+          "y": 0.2894,
+          "w": 0.2278,
+          "h": 0.1622
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:30+00:00",
+      "server_ts": "2026-05-25T15:00:30.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/cfc004e0511e76133f5be5f5ec9ab934.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 23.7,
+        "localizer": 184.3,
+        "upload": 10.5
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 23700.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 33700.0,
+          "dur": 3700.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 37400.0,
+          "dur": 179600.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 218000.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 219000.0,
+          "dur": 10500.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80010
+    },
+    {
+      "line_id": "L4",
+      "category": "metal_nut",
+      "defect_type": "bent",
+      "severity": "low",
+      "confidence": 0.808,
+      "anomaly_score": 19.71,
+      "bboxes": [
+        {
+          "x": 0.4031,
+          "y": 0.0543,
+          "w": 0.2357,
+          "h": 0.093
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:33+00:00",
+      "server_ts": "2026-05-25T15:00:33.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/4c70778d62cf5d429d0fa83df3a7e1a2.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 12.9,
+        "localizer": 157.0,
+        "upload": 11.3
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 12900.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 22900.0,
+          "dur": 3100.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 26000.0,
+          "dur": 152900.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 179900.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 180900.0,
+          "dur": 11300.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80011
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "cable_swap",
+      "severity": "medium",
+      "confidence": 0.83,
+      "anomaly_score": 16.68,
+      "bboxes": [
+        {
+          "x": 0.454,
+          "y": 0.6405,
+          "w": 0.1017,
+          "h": 0.1686
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:36+00:00",
+      "server_ts": "2026-05-25T15:00:36.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/9d25c7a85777e3cbd95480a067e29960.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 16.4,
+        "localizer": 211.0,
+        "upload": 10.5
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 16400.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 26400.0,
+          "dur": 4200.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 30600.0,
+          "dur": 205800.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 237400.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 238400.0,
+          "dur": 10500.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80012
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "bent_wire",
+      "severity": "low",
+      "confidence": 0.859,
+      "anomaly_score": 8.5,
+      "bboxes": [
+        {
+          "x": 0.2171,
+          "y": 0.1999,
+          "w": 0.2831,
+          "h": 0.1775
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:39+00:00",
+      "server_ts": "2026-05-25T15:00:39.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/5a56bae83ff7de0e6a9418870a4d4aec.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 23.2,
+        "localizer": 190.8,
+        "upload": 8.5
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 23200.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 33200.0,
+          "dur": 3800.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 37000.0,
+          "dur": 186000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 224000.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 225000.0,
+          "dur": 8500.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80013
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "bent_wire",
+      "severity": "high",
+      "confidence": 0.937,
+      "anomaly_score": 29.22,
+      "bboxes": [
+        {
+          "x": 0.1498,
+          "y": 0.3414,
+          "w": 0.127,
+          "h": 0.1682
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:42+00:00",
+      "server_ts": "2026-05-25T15:00:42.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/43f09700f6b458cf20f513012f8dd549.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 12.8,
+        "localizer": 179.6,
+        "upload": 17.9
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 12800.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 22800.0,
+          "dur": 3600.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 26400.0,
+          "dur": 175000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 202400.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 203400.0,
+          "dur": 17900.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80014
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "bent_wire",
+      "severity": "medium",
+      "confidence": 0.961,
+      "anomaly_score": 24.63,
+      "bboxes": [
+        {
+          "x": 0.3038,
+          "y": 0.6244,
+          "w": 0.299,
+          "h": 0.2023
+        },
+        {
+          "x": 0.481,
+          "y": 0.1429,
+          "w": 0.1453,
+          "h": 0.2931
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:45+00:00",
+      "server_ts": "2026-05-25T15:00:45.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/e95234fb45ffd3d5d03a5476b0b54bcf.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 19.5,
+        "localizer": 190.2,
+        "upload": 15.5
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 19500.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 29500.0,
+          "dur": 3800.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 33300.0,
+          "dur": 185400.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 219700.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 220700.0,
+          "dur": 15500.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80015
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "bent_wire",
+      "severity": "low",
+      "confidence": 0.733,
+      "anomaly_score": 16.92,
+      "bboxes": [
+        {
+          "x": 0.0841,
+          "y": 0.3547,
+          "w": 0.2673,
+          "h": 0.0951
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:48+00:00",
+      "server_ts": "2026-05-25T15:00:48.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/5734f360e6b97a609c94720f8b083d54.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 12.9,
+        "localizer": 211.0,
+        "upload": 12.0
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 12900.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 22900.0,
+          "dur": 4200.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 27100.0,
+          "dur": 205800.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 233900.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 234900.0,
+          "dur": 12000.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80016
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "cable_swap",
+      "severity": "high",
+      "confidence": 0.784,
+      "anomaly_score": 19.86,
+      "bboxes": [
+        {
+          "x": 0.3015,
+          "y": 0.4002,
+          "w": 0.195,
+          "h": 0.2856
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:51+00:00",
+      "server_ts": "2026-05-25T15:00:51.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/3ef0f9227cc43cbc17f7b5bf5ce0f0ca.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 14.7,
+        "localizer": 201.6,
+        "upload": 10.4
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 14700.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 24700.0,
+          "dur": 4000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 28700.0,
+          "dur": 196600.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 226300.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 227300.0,
+          "dur": 10400.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80017
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "cable_swap",
+      "severity": "medium",
+      "confidence": 0.754,
+      "anomaly_score": 21.14,
+      "bboxes": [
+        {
+          "x": 0.2397,
+          "y": 0.5011,
+          "w": 0.096,
+          "h": 0.1808
+        },
+        {
+          "x": 0.6491,
+          "y": 0.6477,
+          "w": 0.0961,
+          "h": 0.1269
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:54+00:00",
+      "server_ts": "2026-05-25T15:00:54.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/1b2b6712f2f4d04408495d20fd2904f2.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 15.4,
+        "localizer": 215.7,
+        "upload": 16.8
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 15400.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 25400.0,
+          "dur": 4300.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 29700.0,
+          "dur": 210400.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 241100.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 242100.0,
+          "dur": 16800.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80018
+    },
+    {
+      "line_id": "L5",
+      "category": "cable",
+      "defect_type": "bent_wire",
+      "severity": "low",
+      "confidence": 0.816,
+      "anomaly_score": 8.94,
+      "bboxes": [
+        {
+          "x": 0.417,
+          "y": 0.6423,
+          "w": 0.2239,
+          "h": 0.0817
+        },
+        {
+          "x": 0.5403,
+          "y": 0.2296,
+          "w": 0.2259,
+          "h": 0.2866
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-25T15:00:57+00:00",
+      "server_ts": "2026-05-25T15:00:57.050000+00:00",
+      "image_url": "/demo-data/phase10_ort_latest/images/71ded8fa961506dee19b103cba3b5535.jpg",
+      "schema_version": "v1",
+      "pipeline_ms": {
+        "efficientad": 13.7,
+        "localizer": 162.5,
+        "upload": 9.1
+      },
+      "vlm_metrics": null,
+      "trace_events": [
+        {
+          "name": "V4L2_dequeue",
+          "ts": 0.0,
+          "dur": 6000.0,
+          "tid": "T1.capture",
+          "ph": "X",
+          "cat": "io"
+        },
+        {
+          "name": "RGA_preprocess",
+          "ts": 6000.0,
+          "dur": 4000.0,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "rga"
+        },
+        {
+          "name": "EfficientAD_infer",
+          "ts": 10000.0,
+          "dur": 13700.0,
+          "tid": "NPU.core0",
+          "ph": "X",
+          "cat": "infer"
+        },
+        {
+          "name": "localizer_preprocess",
+          "ts": 23700.0,
+          "dur": 3200.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_infer",
+          "ts": 26900.0,
+          "dur": 158300.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "localizer_postprocess",
+          "ts": 186200.0,
+          "dur": 1000.0,
+          "tid": "T3.localizer",
+          "ph": "X",
+          "cat": "localizer"
+        },
+        {
+          "name": "HTTP_upload",
+          "ts": 187200.0,
+          "dur": 9100.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "io"
+        }
+      ],
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation_source": "template",
+      "id": 80019
+    }
+  ]
+}
