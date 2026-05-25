@@ -77,7 +77,7 @@ c4833b3 docs: plan corrections — schema_version stays v1, frame handoff spec
 ## 待完成
 
 1. ~~**Frontend smoke test**~~：**PASS** (2026-05-26) — ORT variant rendering, YOLO Localizer Gantt, variant filter, bbox tooltip 全部验证通过
-2. **30-min soak test**：需要在 RK3588 上长时间运行验证无 OOM/泄漏
+2. **30-min soak test**：**RUNNING** (2026-05-26) — Orange Pi tmux session "soak", uploading to droplet, monitoring via scheduled wakeup
 3. **pipeline_ms.upload**：已文档化 — JSON 在 POST 前序列化，upload_ms 始终为 0.0，实际值记录在 stderr
 4. **RKNN 方向**：Track B issue repro 已准备好，等用户决策是否提交 GitHub issue
 
