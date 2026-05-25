@@ -244,9 +244,20 @@ curl -X POST https://vision.example.com/api/edge/report \
     "2B_lora": { "count": 312, "json_ok_rate": 0.946, "avg_ttft_ms": 1180, "avg_decode_tps": 11.8, "avg_rss_mb": 3080, "avg_prompt_tokens": 78, "avg_output_tokens": 98 },
     "4B_base": { "count": 312, "json_ok_rate": 0.850, "avg_ttft_ms": 5500, "avg_decode_tps": 5.7, "avg_rss_mb": 8900, "avg_prompt_tokens": 78, "avg_output_tokens": 98 },
     "4B_lora": { "count": 312, "json_ok_rate": 0.960, "avg_ttft_ms": 5200, "avg_decode_tps": 5.8, "avg_rss_mb": 8700, "avg_prompt_tokens": 78, "avg_output_tokens": 98 }
-  }
+  },
+  "avg_pipeline_ms": {
+    "efficientad": 12.3,
+    "fastsam": 48.1,
+    "qwen3vl": 2310.5,
+    "localizer": 0,
+    "upload": 0,
+    "enrichment": 0
+  },
+  "category_severity_matrix": { "metal_nut": { "low": 300, "high": 112 } }
 }
 ```
+
+> **v1.3**: `avg_pipeline_ms` 新增 `localizer`、`upload`、`enrichment` 三个键。旧数据中这些键为 0。
 
 ## 7. GET `/api/health`
 

@@ -69,6 +69,7 @@ async def get_stats(
     timeline = [{"ts": r[0], "count": r[1]} for r in tl_rows]
 
     # avg_pipeline_ms (json_extract on pipeline_ms JSON column)
+    # v1.3: support both old (fastsam/qwen3vl) and new (localizer/upload/enrichment) stage keys
     avg_eff = await db.scalar(
         select(func.avg(func.json_extract(Defect.pipeline_ms, "$.efficientad"))).where(*base)
     )
@@ -78,10 +79,22 @@ async def get_stats(
     avg_qwen = await db.scalar(
         select(func.avg(func.json_extract(Defect.pipeline_ms, "$.qwen3vl"))).where(*base)
     )
+    avg_loc = await db.scalar(
+        select(func.avg(func.json_extract(Defect.pipeline_ms, "$.localizer"))).where(*base)
+    )
+    avg_upld = await db.scalar(
+        select(func.avg(func.json_extract(Defect.pipeline_ms, "$.upload"))).where(*base)
+    )
+    avg_enrich = await db.scalar(
+        select(func.avg(func.json_extract(Defect.pipeline_ms, "$.enrichment"))).where(*base)
+    )
     avg_pipeline_ms = {
         "efficientad": round(float(avg_eff or 0), 2),
         "fastsam": round(float(avg_fsam or 0), 2),
         "qwen3vl": round(float(avg_qwen or 0), 2),
+        "localizer": round(float(avg_loc or 0), 2),
+        "upload": round(float(avg_upld or 0), 2),
+        "enrichment": round(float(avg_enrich or 0), 2),
     }
 
     # category_severity_matrix
