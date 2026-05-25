@@ -84,10 +84,53 @@ augmentation:
 
 ## Artifacts
 
-- Weights: `models/yolov8n_phase10/yolov8n_metal_nut_cable_best.pt` (6.3 MB)
-- Results CSV: `models/yolov8n_phase10/results.csv`
-- Remote log: `/root/autodl-tmp/yolov8n_phase10_train.log`
-- Remote runs: `/root/vlm-sam-industrial-vision-v2/runs/detect/runs/phase10/yolov8n_metal_nut_cable/`
+### PyTorch Weights (best.pt)
+
+| Property | Value |
+|----------|-------|
+| Local path | `models/yolov8n_phase10/yolov8n_metal_nut_cable_best.pt` |
+| AutoDL path | `/root/vlm-sam-industrial-vision-v2/runs/detect/runs/phase10/yolov8n_metal_nut_cable/weights/best.pt` |
+| Size | 6,258,474 bytes (6.3 MB) |
+| SHA256 | `36cdd96cf4b71422eebc2ff37f43955efd37744f702f15e653db596523455a26` |
+| Git status | NOT tracked (under `/models/` gitignore) |
+
+**Retrieve from AutoDL:**
+```bash
+sshpass -p '<pwd>' rsync -avz -e "ssh -p 28728" \
+  root@connect.westb.seetacloud.com:/root/vlm-sam-industrial-vision-v2/runs/detect/runs/phase10/yolov8n_metal_nut_cable/weights/best.pt \
+  models/yolov8n_phase10/yolov8n_metal_nut_cable_best.pt
+```
+
+### Other Artifacts
+
+| File | Local path | Notes |
+|------|-----------|-------|
+| Results CSV | `models/yolov8n_phase10/results.csv` | Per-epoch metrics |
+| Remote log | `/root/autodl-tmp/yolov8n_phase10_train.log` | Full training output |
+| Remote runs dir | `runs/detect/runs/phase10/yolov8n_metal_nut_cable/` | Ultralytics run artifacts |
+
+### ONNX Export
+
+| Property | Value |
+|----------|-------|
+| Local path | `models/yolov8n_phase10/yolov8n_metal_nut_cable_best.onnx` |
+| Size | 12,274,111 bytes (11.7 MB) |
+| SHA256 | `731ca448252eb9613072d16e0efac2fc84bef02e8d5aef8fa63fd525052d1cd3` |
+| Opset | 20 |
+| Input | `images` — shape `[1, 3, 640, 640]` BCHW |
+| Output | `output0` — shape `[1, 16, 8400]` |
+| ONNX check | PASS |
+| Git status | NOT tracked (under `/models/` gitignore) |
+
+**Export command:**
+```bash
+yolo export model=models/yolov8n_phase10/yolov8n_metal_nut_cable_best.pt format=onnx imgsz=640 simplify=True
+```
+
+**Verify command:**
+```bash
+python -c "import onnx; m=onnx.load('models/yolov8n_phase10/yolov8n_metal_nut_cable_best.onnx'); onnx.checker.check_model(m); print('PASS')"
+```
 
 ## Next Steps
 
