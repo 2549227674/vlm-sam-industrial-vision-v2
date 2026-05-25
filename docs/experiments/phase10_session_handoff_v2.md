@@ -47,11 +47,14 @@ branch: phase10/localization-refactor-v1（已推送到 origin）
 | C++ integration (RK3588 build+run) | **PASS** |
 | API contract (83/83 tests) | **PASS** |
 | Performance (T3=172ms < 500ms) | **PASS** |
-| Frontend smoke test | PENDING |
+| Frontend smoke test | **PASS** |
 | 30-min soak test | PENDING |
 
 ### Commit 历史（最新在前）
 ```
+7a8543d docs: Gate 3 — document pipeline_ms.upload sequencing constraint
+ebd29d2 feat: Phase 10 frontend smoke test — ORT variant support + trace viewer localizer lane
+1e2b647 docs: Phase 10 v2 session handoff prompt
 6213154 docs: Phase 10 ORT integration test results
 e8f59e7 fix: JSON parser whitespace handling + subprocess error logging
 982dfc4 fix: ORT subprocess readline buffering + ready check + float32 JSON
@@ -73,9 +76,10 @@ c4833b3 docs: plan corrections — schema_version stays v1, frame handoff spec
 
 ## 待完成
 
-1. **Frontend smoke test**：需要启动后端+前端验证
+1. ~~**Frontend smoke test**~~：**PASS** (2026-05-26) — ORT variant rendering, YOLO Localizer Gantt, variant filter, bbox tooltip 全部验证通过
 2. **30-min soak test**：需要在 RK3588 上长时间运行验证无 OOM/泄漏
-3. **RKNN 方向**：Track B issue repro 已准备好，等用户决策是否提交 GitHub issue
+3. **pipeline_ms.upload**：已文档化 — JSON 在 POST 前序列化，upload_ms 始终为 0.0，实际值记录在 stderr
+4. **RKNN 方向**：Track B issue repro 已准备好，等用户决策是否提交 GitHub issue
 
 ## 关键文件位置
 
@@ -91,6 +95,7 @@ c4833b3 docs: plan corrections — schema_version stays v1, frame handoff spec
 | ORT smoke test | `scripts/phase10/smoke_test_ort.py` |
 | C++ LocalizerWorker | `edge/src/pipeline/localizer_worker.cpp` |
 | Edge config | `edge/config.yaml` |
+| Frontend smoke test screenshot | `screenshots/phase10_frontend_smoke_test_v2.png` |
 
 ## SSH 环境
 
