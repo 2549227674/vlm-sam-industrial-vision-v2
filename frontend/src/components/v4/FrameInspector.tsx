@@ -61,10 +61,17 @@ function FramePane({ defect }: { defect: DefectRead }) {
 export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { defect: DefectRead; cornerLabels?: boolean; aspect?: string }) {
   // v1.3: source-aware tooltip and label
   const isYoloLocalizer = !!(defect.localization_source && defect.localization_source.includes("yolo"));
-  const bboxTooltip = isYoloLocalizer
+  // Detect fallback placeholder: confidence=0, defect_type="anomaly", bbox={0.3,0.3,0.4,0.4}
+  const isFallback = isYoloLocalizer && defect.confidence === 0 && defect.defect_type === "anomaly"
+    && defect.bboxes.length === 1
+    && defect.bboxes[0].x === 0.3 && defect.bboxes[0].y === 0.3
+    && defect.bboxes[0].w === 0.4 && defect.bboxes[0].h === 0.4;
+  const bboxTooltip = isFallback
+    ? "Fallback bbox / unsupported category — no YOLO detection / 回退框 / 不支持的类别"
+    : isYoloLocalizer
     ? "Model bbox from YOLOv8n localizer / YOLOv8n 定位器输出"
     : "Proposal bbox from FastSAM/VLM. Not verified ground-truth localization. / FastSAM/VLM 候选框，非可靠定位。";
-  const labelSource = defect.label_source === "yolo_class_head" ? "YOLO" : "VLM";
+  const labelSource = isFallback ? "Fallback" : defect.label_source === "yolo_class_head" ? "YOLO" : "VLM";
 
   return (
     <div style={{ position: "relative", width: "100%", aspectRatio: aspect, background: "var(--bg)", border: "1px solid var(--line)", overflow: "hidden" }}>
@@ -90,12 +97,16 @@ export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { 
           const isClamped = b.x + b.w > 1 || b.y + b.h > 1 || b.x < 0 || b.y < 0;
           return (
             <g key={i}>
-              <rect x={x} y={y} width={w} height={h} fill="color-mix(in srgb, var(--acc) 8%, transparent)" stroke="var(--acc)" strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
+              <rect x={x} y={y} width={w} height={h}
+                fill={isFallback ? "color-mix(in srgb, var(--warn) 8%, transparent)" : "color-mix(in srgb, var(--acc) 8%, transparent)"}
+                stroke={isFallback ? "var(--warn)" : "var(--acc)"}
+                strokeDasharray={isFallback ? "2 2" : "none"}
+                strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
               {cornerLabels && (
                 <foreignObject x={x} y={Math.max(0, y - 4)} width={Math.max(w, 20)} height="4">
-                  <div style={{ display: "inline-block", fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--bg)", background: isYoloLocalizer ? "var(--acc)" : "var(--warn)", padding: "1px 4px", letterSpacing: "0.06em", fontWeight: 700 } as React.CSSProperties}>
+                  <div style={{ display: "inline-block", fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--bg)", background: isFallback ? "var(--warn)" : isYoloLocalizer ? "var(--acc)" : "var(--warn)", padding: "1px 4px", letterSpacing: "0.06em", fontWeight: 700 } as React.CSSProperties}>
                     <span title={bboxTooltip} style={{ cursor: "help" }}>
-                      {defect.defect_type}<span style={{ opacity: 0.6, marginLeft: 4 }}>{(defect.confidence * 100).toFixed(0)}</span>
+                      {isFallback ? "unsupported" : defect.defect_type}<span style={{ opacity: 0.6, marginLeft: 4 }}>{isFallback ? "—" : (defect.confidence * 100).toFixed(0)}</span>
                       <span style={{ opacity: 0.5, marginLeft: 3, fontSize: 7 }}>({labelSource})</span>
                     </span>
                   </div>

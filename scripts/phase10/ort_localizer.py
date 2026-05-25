@@ -139,11 +139,12 @@ def decode(output: np.ndarray, conf_thresh: float, img_size: int,
         cls_scores = max_scores[cm]
         for k in keep:
             b = cls_boxes[k]
-            cx = (b[0] + b[2]) / 2
-            cy = (b[1] + b[3]) / 2
+            # Convert xyxy to top-left xywh (API contract: x,y = top-left corner)
+            x = b[0]
+            y = b[1]
             w = b[2] - b[0]
             h = b[3] - b[1]
-            results.append((int(cls), float(cls_scores[k]), [cx, cy, w, h]))
+            results.append((int(cls), float(cls_scores[k]), [x, y, w, h]))
 
     results.sort(key=lambda x: x[1], reverse=True)
     return results

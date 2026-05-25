@@ -366,14 +366,34 @@ Fixes applied during smoke test:
 
 Screenshots: `screenshots/phase10_frontend_smoke_test_v2.png`
 
-### 5. 30-Minute Soak Test — RUNNING (2026-05-26)
+### 5. 30-Minute Soak Test — RESTARTING (2026-05-26)
 
-Running on Orange Pi 5 (RK3588). Config: `gate_mode=pass_all`, `localizer_backend=ort`.
-Backend: droplet at `157.245.60.152` (port 80, nginx proxy).
+**Preliminary run (20 min, all 15 categories): stability-only, NOT localization correctness.**
+- 1622 frames, 684 records uploaded, 0 crashes, 0 HTTP 400, RSS=34MB stable.
+- Issue: ORT localizer supports only metal_nut + cable (12 classes). Unsupported categories
+  produce fallback center-box `{0.3, 0.3, 0.4, 0.4}` with confidence=0, defect_type="anomaly".
+- Issue: ort_localizer.py emitted center-x/cy bbox format instead of top-left x/y. Fixed.
+
+**Fixes applied before final run:**
+1. `ort_localizer.py`: bbox converted from center `[cx, cy, w, h]` to top-left `[x, y, w, h]`.
+2. C++ `json_bboxes()`: fixed search for `"bboxes":[` → `"bboxes"` then `[` (handles space after colon).
+3. `config.yaml`: `image_loop_categories` restricted to `[metal_nut, cable]` only.
+4. `FrameInspector.tsx`: fallback detection added — confidence=0 + anomaly + center-box
+   labeled as "Fallback / unsupported" with dashed warn-colored border.
+5. Recompiled edge_pipeline on Orange Pi with C++ bbox fix.
+
+**Note on anomaly/confidence=0 frames:** These are "no YOLO detection found" (below conf_thresh=0.25),
+NOT unsupported-category fallback. The localizer returns empty bboxes, C++ inserts placeholder.
+Frontend correctly labels these as fallback.
+
+**Final run: 30 min, metal_nut + cable only.**
+
+**Phase 10 v1 localizer scope: metal_nut + cable (12 YOLO classes).**
+Unsupported categories produce fallback/no-detection reports. Fallback frames must not
+be counted as localization success.
+
 Auth temporarily disabled for soak test uploads (C++ edge_pipeline does not send auth headers).
 Will be re-enabled after soak completes.
-
-Final metrics pending wakeup check.
 
 ### 6. Snapshot Demo — PRELIMINARY (2026-05-26)
 
