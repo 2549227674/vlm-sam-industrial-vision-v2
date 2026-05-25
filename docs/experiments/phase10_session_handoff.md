@@ -84,9 +84,9 @@ rknn-toolkit2 2.3.2 编译 YOLOv8 检测头存在根本性问题：
 
 ## SSH 环境
 
-- **AutoDL**（RTX 4090 训练）：`ssh -p 28728 root@connect.westb.seetacloud.com`，密码 `Y0qZqSuy9xzp`
-- **Orange Pi 5**（RK3588 推理）：`ssh orangepi@192.168.137.66`，密码 `orangepi`
-- 详细凭据在 `~/.claude/projects/.../memory/reference_ssh_credentials_phase10.md`
+- **AutoDL**（RTX 4090 训练）：`ssh <AUTODL_HOST_ALIAS>`（配置在 `~/.ssh/config`）
+- **Orange Pi 5**（RK3588 推理）：`ssh <RK3588_HOST_ALIAS>`（配置在 `~/.ssh/config`）
+- 详细凭据在本地 `~/.ssh/config`，不要提交到仓库
 - **不要在代码或文档中提交密码/IP/sshpass 命令**
 
 ## 约束
