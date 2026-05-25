@@ -47,14 +47,23 @@ Output range: [0, 635.0]
 
 ## Root Cause Analysis
 
-The RKNN compiler (rknn-toolkit2 2.3.2) appears to mishandle the YOLOv8
-detection head. The class score branch produces values ~10x higher than ONNX
-and at completely different anchor positions.
+Standard Ultralytics YOLOv8 ONNX exports a single-output graph `[1, 16, 8400]`
+where DFL (Distribution Focal Loss) decode is baked into the graph. The RKNN
+compiler's handling of the DFL softmax/gather ops corrupts class score channels
+while leaving box regression channels mostly intact (box_cx/cy r=0.99, but
+class scores r≈0).
 
-Possible causes:
-1. FP16 precision loss in the class head's sigmoid/split operations
-2. Op fusion bug in the RKNN compiler for YOLOv8's specific head architecture
-3. Output tensor reordering by the RKNN runtime
+**Attempted fix:** Use `airockchip/ultralytics_yolov8` which exports a
+multi-output ONNX (9 tensors: 3 per scale) with raw DFL logits, moving DFL
+decode and NMS to CPU post-processing. **This also failed** — all 9 output
+tensors show near-zero correlation with ONNX reference (class scores r≈0,
+box r=0.6-0.7).
+
+**Conclusion:** rknn-toolkit2 2.3.2 has a fundamental issue with YOLOv8
+detection head compilation, regardless of export format (single-output or
+multi-output airockchip).
+
+See: `docs/experiments/phase10_rknn_airockchip_reexport_plan.md`
 
 ## What Was Tried
 
@@ -67,6 +76,7 @@ Possible causes:
 | uint8 RGB input | Same wrong output |
 | float32 /255 input | Different wrong output (scores ~0.002) |
 | uint8 BGR input | Same wrong output |
+| **airockchip multi-output (9 tensors)** | **Same class of failure: class r≈0, box r=0.6-0.7** |
 
 ## Environment
 
@@ -89,11 +99,25 @@ Possible causes:
 | best_fp16.rknn | e1277067...daf | opset=12, opt_level=0 |
 | onnx_output.npy | — | Reference ONNX output for comparison |
 
+## airockchip Multi-Output Correlation (Attempt 2)
+
+| Output | Shape | ONNX range | RKNN range | r | Status |
+|--------|-------|-----------|-----------|---|--------|
+| box_s8 | [1,64,80,80] | [-6.5, 13.5] | [-7.1, 18.2] | 0.70 | FAIL |
+| cls_s8 | [1,12,80,80] | [0.0, 0.003] | [0.002, 0.17] | 0.001 | FAIL |
+| sum_s8 | [1,1,80,80] | [0.0002, 0.004] | [0.02, 0.19] | -0.02 | FAIL |
+| box_s16 | [1,64,40,40] | [-5.8, 12.2] | [-3.9, 14.3] | 0.69 | FAIL |
+| cls_s16 | [1,12,40,40] | [0.0, 0.92] | [0.002, 0.46] | 0.000 | FAIL |
+| sum_s16 | [1,1,40,40] | [0.001, 0.93] | [0.02, 0.52] | -0.01 | FAIL |
+| box_s32 | [1,64,20,20] | [-4.6, 10.1] | [-4.3, 11.7] | 0.62 | FAIL |
+| cls_s32 | [1,12,20,20] | [0.0001, 0.16] | [0.002, 0.55] | -0.000 | FAIL |
+| sum_s32 | [1,1,20,20] | [0.007, 0.17] | [0.02, 0.58] | 0.09 | FAIL |
+
 ## Decision Points
 
 1. **Try rknn-toolkit2 from GitHub main branch** — may have fixes not in 2.3.2 release
-2. **Try rknn_model_zoo YOLOv8 example** — airockchip may have a working conversion recipe
-3. **File issue on rknn-toolkit2 GitHub** — provide reproducible case
-4. **Use ONNX runtime on RK3588 instead** — CPU inference, slower but correct
-5. **Defer RKNN, continue with PyTorch pipeline on PC** — focus on integration logic first
-6. **Try YOLOv8s instead of YOLOv8n** — different head architecture may avoid the bug
+2. **File issue on rknn-toolkit2 GitHub** — provide reproducible case
+3. **Use ONNX runtime on RK3588 instead** — CPU inference, slower but correct
+4. **Try INT8 quantization** — may avoid FP16 precision issues in class head
+5. **Try YOLOv8s instead of YOLOv8n** — different head architecture may avoid the bug
+6. **Defer RKNN, continue with PyTorch pipeline on PC** — focus on integration logic first
