@@ -2,6 +2,22 @@
 
 ## Status: PASS — CPU fallback validated on RK3588
 
+## Phase 10 Status Summary (2026-05-25)
+
+| Track | Status | Notes |
+|-------|--------|-------|
+| A — ORT CPU fallback | **PASS** | RK3588: 2/2 images, 201.2ms avg, class correctness 2/2 |
+| B — RKNN issue repro | Prepared | Doc ready for GitHub issue; rknn-toolkit2 2.3.2 BLOCKED |
+
+**Current deployment recommendation:** ORT CPU fallback for interim RK3588 demo.
+
+**Caveat:** This is CPU inference, NOT NPU/RKNN deployment. RKNN remains blocked
+pending rknn-toolkit2 investigation. ORT fallback provides correct output at ~5 FPS.
+
+**Next step (requires user approval):** Integrate ORT fallback into edge demo path
+(not RKNN path). Do NOT proceed to RKNN C++ localizer_worker, RKNN threshold tuning,
+INT8 as main path, or YOLOv8s retraining without explicit approval.
+
 ## Context
 
 RKNN numeric consistency is BLOCKED for YOLOv8 detection head (see
