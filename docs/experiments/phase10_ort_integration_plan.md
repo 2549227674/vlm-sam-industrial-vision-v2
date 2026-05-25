@@ -381,6 +381,8 @@ Screenshots: `screenshots/phase10_frontend_smoke_test_v2.png`
 4. `FrameInspector.tsx`: fallback detection added — confidence=0 + anomaly + center-box
    labeled as "Fallback / unsupported" with dashed warn-colored border.
 5. Recompiled edge_pipeline on Orange Pi with C++ bbox fix.
+6. ort_localizer.py: bbox coordinates clamped to [0,1] to prevent API 400 errors from
+   slightly negative or overflow YOLO output coordinates.
 
 **Note on anomaly/confidence=0 frames:** These are "no YOLO detection found" (below conf_thresh=0.25),
 NOT unsupported-category fallback. The localizer returns empty bboxes, C++ inserts placeholder.
