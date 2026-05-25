@@ -112,8 +112,14 @@ def nms(boxes: np.ndarray, scores: np.ndarray, iou_thresh: float) -> list[int]:
 
 
 def decode(output: np.ndarray, conf_thresh: float, img_size: int,
-           nms_iou: float) -> list[tuple[int, float, list[float]]]:
-    """Decode YOLOv8 output [1, 16, 8400] -> sorted by conf desc."""
+           nms_iou: float, pad: tuple[int, int] = (0, 0),
+           orig_w: int = 0, orig_h: int = 0) -> list[tuple[int, float, list[float]]]:
+    """Decode YOLOv8 output [1, 16, 8400] -> sorted by conf desc.
+
+    Args:
+        pad: (pad_w, pad_h) letterbox padding in pixels.
+        orig_w, orig_h: original image dimensions for unpadding.
+    """
     preds = output[0]
     boxes = preds[:4, :].T
     class_scores = preds[4:, :].T
@@ -125,10 +131,22 @@ def decode(output: np.ndarray, conf_thresh: float, img_size: int,
     if len(boxes) == 0:
         return []
 
-    boxes[:, 0] /= img_size
-    boxes[:, 1] /= img_size
-    boxes[:, 2] /= img_size
-    boxes[:, 3] /= img_size
+    # Unpad: subtract letterbox padding, then normalize by original image size
+    if orig_w > 0 and orig_h > 0:
+        pad_w, pad_h = pad
+        # Scale factor used in letterbox
+        scale = min(img_size / orig_h, img_size / orig_w)
+        # Convert from padded pixel coords to original image pixel coords
+        boxes[:, 0] = (boxes[:, 0] - pad_w) / (orig_w * scale)
+        boxes[:, 1] = (boxes[:, 1] - pad_h) / (orig_h * scale)
+        boxes[:, 2] /= (orig_w * scale)
+        boxes[:, 3] /= (orig_h * scale)
+    else:
+        # Fallback: normalize by img_size (less accurate with padding)
+        boxes[:, 0] /= img_size
+        boxes[:, 1] /= img_size
+        boxes[:, 2] /= img_size
+        boxes[:, 3] /= img_size
     xyxy = xywh_to_xyxy(boxes)
 
     results: list[tuple[int, float, list[float]]] = []
@@ -166,7 +184,8 @@ def process_image(sess, input_name: str, output_name: str,
         return {"image_path": image_path, "ok": False,
                 "error": "image_read_failed exists=%s path=%s" % (exists, image_path)}
 
-    padded, _, _ = letterbox(img, img_size)
+    orig_h, orig_w = img.shape[:2]
+    padded, _, (pad_w, pad_h) = letterbox(img, img_size)
     padded = cv2.cvtColor(padded, cv2.COLOR_BGR2RGB)
     padded = padded.astype(np.float32) / 255.0
     padded = np.transpose(padded, (2, 0, 1))[np.newaxis, ...]
@@ -177,7 +196,8 @@ def process_image(sess, input_name: str, output_name: str,
     t_infer = time.perf_counter() - t1
 
     t2 = time.perf_counter()
-    detections = decode(outputs[0], conf_thresh, img_size, nms_iou)
+    detections = decode(outputs[0], conf_thresh, img_size, nms_iou,
+                        pad=(pad_w, pad_h), orig_w=orig_w, orig_h=orig_h)
     t_post = time.perf_counter() - t2
 
     t_total = t_pre + t_infer + t_post
