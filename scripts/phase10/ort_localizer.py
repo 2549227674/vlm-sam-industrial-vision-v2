@@ -158,8 +158,10 @@ def process_image(sess, input_name: str, output_name: str,
 
     img = cv2.imread(image_path)
     if img is None:
+        import os
+        exists = os.path.exists(image_path)
         return {"image_path": image_path, "ok": False,
-                "error": f"failed to read image: {image_path}"}
+                "error": "image_read_failed exists=%s path=%s" % (exists, image_path)}
 
     padded, _, _ = letterbox(img, img_size)
     padded = cv2.cvtColor(padded, cv2.COLOR_BGR2RGB)
@@ -255,9 +257,15 @@ def main() -> None:
         if path == "__EXIT__":
             break
 
-        result = process_image(
-            sess, input_name, output_name,
-            path, classes, args.conf, args.iou, args.img_size)
+        try:
+            result = process_image(
+                sess, input_name, output_name,
+                path, classes, args.conf, args.iou, args.img_size)
+        except Exception as e:
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            result = {"image_path": path, "ok": False,
+                      "error": "exception: %s" % str(e)}
         print(json.dumps(result), flush=True)
 
 

@@ -27,48 +27,54 @@ static constexpr int kSubprocessTimeoutMs = 5000;
 namespace {
 
 // Extract a string value for a given key from a flat JSON object.
+// Handles both "key":"val" and "key": "val" (optional space after colon).
 // Returns empty string if key not found.
 std::string json_str(const std::string& json, const char* key) {
   std::string needle = "\"";
   needle += key;
-  needle += "\":\"";
-  auto pos = json.find(needle);
-  if (pos == std::string::npos) return {};
-  pos += needle.size();
-  auto end = json.find('"', pos);
+  needle += "\"";
+  auto key_pos = json.find(needle);
+  if (key_pos == std::string::npos) return {};
+  auto colon = json.find(':', key_pos + needle.size());
+  if (colon == std::string::npos) return {};
+  auto quote = json.find('"', colon + 1);
+  if (quote == std::string::npos) return {};
+  auto end = json.find('"', quote + 1);
   if (end == std::string::npos) return {};
-  return json.substr(pos, end - pos);
+  return json.substr(quote + 1, end - quote - 1);
 }
 
-// Extract a numeric value for a given key from a flat JSON object.
-// Returns default_val if key not found.
-float json_float(const std::string& json, const char* key, float default_val) {
+// Find the position just after "key": (with optional space).
+// Returns std::string::npos if not found.
+static size_t find_value_pos(const std::string& json, const char* key) {
   std::string needle = "\"";
   needle += key;
-  needle += "\":";
-  auto pos = json.find(needle);
+  needle += "\"";
+  auto key_pos = json.find(needle);
+  if (key_pos == std::string::npos) return std::string::npos;
+  auto colon = json.find(':', key_pos + needle.size());
+  if (colon == std::string::npos) return std::string::npos;
+  // Skip optional whitespace after colon.
+  size_t pos = colon + 1;
+  while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) ++pos;
+  return pos;
+}
+
+float json_float(const std::string& json, const char* key, float default_val) {
+  auto pos = find_value_pos(json, key);
   if (pos == std::string::npos) return default_val;
-  pos += needle.size();
   return std::strtof(json.c_str() + pos, nullptr);
 }
 
 int json_int(const std::string& json, const char* key, int default_val) {
-  std::string needle = "\"";
-  needle += key;
-  needle += "\":";
-  auto pos = json.find(needle);
+  auto pos = find_value_pos(json, key);
   if (pos == std::string::npos) return default_val;
-  pos += needle.size();
   return static_cast<int>(std::strtol(json.c_str() + pos, nullptr, 10));
 }
 
 bool json_bool(const std::string& json, const char* key, bool default_val) {
-  std::string needle = "\"";
-  needle += key;
-  needle += "\":";
-  auto pos = json.find(needle);
+  auto pos = find_value_pos(json, key);
   if (pos == std::string::npos) return default_val;
-  pos += needle.size();
   return json.compare(pos, 4, "true") == 0;
 }
 
