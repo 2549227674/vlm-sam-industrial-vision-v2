@@ -116,9 +116,9 @@ rsync -avz autodl-phase10:/root/vlm-sam-industrial-vision-v2/runs/detect/runs/ph
 | Property | Value |
 |----------|-------|
 | Local path | `models/yolov8n_phase10/yolov8n_metal_nut_cable_best.onnx` |
-| Size | 12,274,111 bytes (11.7 MB) |
-| SHA256 | `731ca448252eb9613072d16e0efac2fc84bef02e8d5aef8fa63fd525052d1cd3` |
-| Opset | 20 |
+| Size | 12,274,109 bytes (11.7 MB) |
+| SHA256 | `fe4bfe523fb4476adb9aee344fb930e1de4d2e0988112ea4d096a6113846e72e` |
+| Opset | 19 |
 | Input | `images` — shape `[1, 3, 640, 640]` BCHW |
 | Output | `output0` — shape `[1, 16, 8400]` |
 | ONNX check | PASS |
@@ -126,13 +126,33 @@ rsync -avz autodl-phase10:/root/vlm-sam-industrial-vision-v2/runs/detect/runs/ph
 
 **Export command:**
 ```bash
-yolo export model=models/yolov8n_phase10/yolov8n_metal_nut_cable_best.pt format=onnx imgsz=640 simplify=True
+yolo export model=models/yolov8n_phase10/yolov8n_metal_nut_cable_best.pt format=onnx imgsz=640 simplify=True opset=19
 ```
 
 **Verify command:**
 ```bash
 python -c "import onnx; m=onnx.load('models/yolov8n_phase10/yolov8n_metal_nut_cable_best.onnx'); onnx.checker.check_model(m); print('PASS')"
 ```
+
+### RKNN FP16 Export
+
+| Property | Value |
+|----------|-------|
+| Local path | `models/yolov8n_phase10/yolov8n_metal_nut_cable_best_fp16.rknn` |
+| Size | 7,908,022 bytes (7.5 MB) |
+| SHA256 | `2ecbf5d92cb081f188dbd4e43d5be5f3d83545d2dc172066a8e8fa8be553c95a` |
+| rknn-toolkit2 | 2.3.2 (commit bd980be9) |
+| Target platform | rk3588 |
+| Quantization | None (FP16) |
+| Git status | NOT tracked (under `/models/` gitignore) |
+
+**Conversion command:**
+```bash
+source .venv_rknn/bin/activate
+python scripts/phase10/convert_yolov8n_rknn.py
+```
+
+**Note:** ONNX opset must be <= 19 for rknn-toolkit2 2.3.2. If re-exporting from PyTorch, use `opset=19`.
 
 ## Next Steps
 
