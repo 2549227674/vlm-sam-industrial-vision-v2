@@ -154,9 +154,46 @@ python scripts/phase10/convert_yolov8n_rknn.py
 
 **Note:** ONNX opset must be <= 19 for rknn-toolkit2 2.3.2. If re-exporting from PyTorch, use `opset=19`.
 
+### RK3588 FP16 Smoke Test
+
+| Property | Value |
+|----------|-------|
+| Board | Orange Pi 5 (RK3588 16GB) |
+| Kernel | 6.1.99-rockchip-rk3588 |
+| librknnrt | 2.3.2 (429f97ae6b, 2025-04-09) |
+| Driver | 0.9.8 |
+| rknn-toolkit-lite2 | 2.3.2 |
+| Model sha256 | `2ecbf5d92cb081f188dbd4e43d5be5f3d83545d2dc172066a8e8fa8be553c95a` |
+| Test images | 2 (metal_nut_bent_000, cable_bent_wire_001) |
+| Crashes | 0 |
+| Bbox valid | 5 |
+| Bbox invalid | 0 |
+| **Result** | **PASS** |
+
+**Latency (ms):**
+
+| Stage | Avg |
+|-------|-----|
+| Preprocess | 37.8 |
+| RKNN inference | 95.2 |
+| Postprocess | 3.7 |
+| **Total** | **136.7** |
+
+**Per-image results:**
+
+| Image | Detections | Notes |
+|-------|-----------|-------|
+| metal_nut_bent_000 | 5 (3 bent, 2 scratch) | GT: 2 bent boxes. Extra detections are false positives. |
+| cable_bent_wire_001 | 0 | GT: 1 bent_wire box. Below conf_thresh=0.25. |
+
+**Run command:**
+```bash
+sshpass -p 'orangepi' ssh orangepi@192.168.137.66 "cd ~/phase10 && python3 smoke_test_rknn.py"
+```
+
 ## Next Steps
 
 1. **Per-class threshold tuning**: Current default conf=0.25 may not be optimal for weak classes.
 2. **Data augmentation review**: Consider adding more aggressive augmentation for small defects.
-3. **Export to RKNN**: Convert best.pt → ONNX → RKNN for edge deployment.
-4. **Integration with edge pipeline**: Replace FastSAM bbox with YOLOv8n detection.
+3. **C++ pipeline integration**: `edge/src/pipeline/localizer_worker.cpp` + upload_worker v1.3 payload.
+4. **30-min soak test**: Validate stability under continuous inference.
