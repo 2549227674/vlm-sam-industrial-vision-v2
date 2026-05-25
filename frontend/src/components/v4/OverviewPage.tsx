@@ -37,10 +37,10 @@ export function OverviewPage({
 }: OverviewProps) {
   // E2E latency: prefer stats.avg_pipeline_ms, fallback to defects average, then 0
   const e2eFromStats = stats.avg_pipeline_ms
-    ? Math.round(stats.avg_pipeline_ms.efficientad + stats.avg_pipeline_ms.fastsam + stats.avg_pipeline_ms.qwen3vl)
+    ? Math.round((stats.avg_pipeline_ms.efficientad ?? 0) + (stats.avg_pipeline_ms.fastsam ?? 0) + (stats.avg_pipeline_ms.qwen3vl ?? 0) + (stats.avg_pipeline_ms.localizer ?? 0) + (stats.avg_pipeline_ms.upload ?? 0))
     : 0;
   const e2eFromDefects = defects.length
-    ? Math.round(defects.reduce((s, d) => s + d.pipeline_ms.efficientad + d.pipeline_ms.fastsam + d.pipeline_ms.qwen3vl, 0) / defects.length)
+    ? Math.round(defects.reduce((s, d) => s + (d.pipeline_ms.efficientad ?? 0) + (d.pipeline_ms.fastsam ?? 0) + (d.pipeline_ms.qwen3vl ?? 0) + (d.pipeline_ms.localizer ?? 0) + (d.pipeline_ms.upload ?? 0), 0) / defects.length)
     : 0;
   const e2eMs = e2eFromStats || e2eFromDefects || 0;
 

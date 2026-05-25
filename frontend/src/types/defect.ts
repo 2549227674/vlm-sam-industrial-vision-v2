@@ -57,8 +57,11 @@ export interface DefectRead {
   edge_ts: string;
   pipeline_ms: {
     efficientad: number;
-    fastsam: number;
-    qwen3vl: number;
+    fastsam?: number;       // v1.2 legacy
+    qwen3vl?: number;       // v1.2 legacy
+    localizer?: number;     // v1.3 new
+    upload?: number;        // v1.3 new
+    enrichment?: number;    // v1.3 new
   };
   vlm_metrics?: VlmMetrics;
   trace_events?: TraceEvent[];

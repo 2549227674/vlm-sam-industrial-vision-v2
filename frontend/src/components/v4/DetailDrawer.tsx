@@ -23,7 +23,7 @@ export function DetailDrawer({ defect, onClose, onOpenProfile }: DrawerProps) {
 
   if (!defect) return null;
   const m = defect.vlm_metrics;
-  const total = Math.round(defect.pipeline_ms.efficientad + defect.pipeline_ms.fastsam + defect.pipeline_ms.qwen3vl);
+  const total = Math.round((defect.pipeline_ms.efficientad ?? 0) + (defect.pipeline_ms.fastsam ?? 0) + (defect.pipeline_ms.qwen3vl ?? 0) + (defect.pipeline_ms.localizer ?? 0) + (defect.pipeline_ms.upload ?? 0));
 
   return (
     <aside

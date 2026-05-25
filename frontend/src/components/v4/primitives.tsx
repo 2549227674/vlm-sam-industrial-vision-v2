@@ -110,18 +110,27 @@ export function SectionHeader({
 
 // ── Pipeline Gantt bar ──────────────────────────────────────────────────────
 
-export function FrameGantt({ defect }: { defect: { pipeline_ms: { efficientad: number; fastsam: number; qwen3vl: number } } }) {
-  const stages = [
-    { k: "efficientad", color: "var(--core-0)", ms: defect.pipeline_ms.efficientad, label: "EfficientAD" },
-    { k: "fastsam", color: "var(--core-1)", ms: defect.pipeline_ms.fastsam, label: "FastSAM" },
-    { k: "qwen3vl", color: "var(--core-2)", ms: defect.pipeline_ms.qwen3vl, label: "Qwen3-VL" },
-  ];
+export function FrameGantt({ defect }: { defect: { pipeline_ms: { efficientad: number; fastsam?: number; qwen3vl?: number; localizer?: number; upload?: number; enrichment?: number } } }) {
+  const pm = defect.pipeline_ms;
+  // v1.3: show old chain (EAD/FastSAM/VLM) or new chain (EAD/Localizer/Upload) based on data
+  const hasNewChain = (pm.localizer ?? 0) > 0 || (pm.upload ?? 0) > 0;
+  const stages = hasNewChain
+    ? [
+        { k: "efficientad", color: "var(--core-0)", ms: pm.efficientad ?? 0, label: "EfficientAD" },
+        { k: "localizer", color: "var(--core-1)", ms: pm.localizer ?? 0, label: "YOLO Localizer" },
+        { k: "upload", color: "var(--core-2)", ms: pm.upload ?? 0, label: "Upload" },
+      ]
+    : [
+        { k: "efficientad", color: "var(--core-0)", ms: pm.efficientad ?? 0, label: "EfficientAD" },
+        { k: "fastsam", color: "var(--core-1)", ms: pm.fastsam ?? 0, label: "FastSAM" },
+        { k: "qwen3vl", color: "var(--core-2)", ms: pm.qwen3vl ?? 0, label: "Qwen3-VL" },
+      ];
   const total = stages.reduce((s, x) => s + x.ms, 0);
   return (
     <div>
       <div style={{ display: "flex", height: 8, border: "1px solid var(--line)", overflow: "hidden", background: "var(--bg-3)" }}>
         {stages.map(s => (
-          <div key={s.k} title={`${s.label}: ${s.ms.toFixed(1)} ms`} style={{ width: `${(s.ms / total) * 100}%`, background: s.color }} />
+          <div key={s.k} title={`${s.label}: ${s.ms.toFixed(1)} ms`} style={{ width: total > 0 ? `${(s.ms / total) * 100}%` : "0%", background: s.color }} />
         ))}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", marginTop: 8, gap: 8 }}>

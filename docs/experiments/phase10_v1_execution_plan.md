@@ -16,7 +16,7 @@ Concrete deliverables:
 2. PC-side YOLOv8n-detect training on `metal_nut + cable` (12 classes).
 3. ONNX export + RKNN conversion scripts (FP16 primary, INT8 optional).
 4. C++ `localizer_worker.cpp` integrated into T3 (replacing FastSAM's primary role).
-5. VLM demoted to async observation generator (template first, no bbox/defect_type output).
+5. VLM disabled in Phase 10 v1; template observation only. Edge/cloud VLM enrichment is Phase 10.1.
 6. API contract bumped to v1.3 with `localization_source` / `observation_source` fields.
 7. Frontend overlay distinguishes model bbox vs proposal vs GT reference.
 8. Documentation: supervised POC caveat, per-class metrics, honesty framing.

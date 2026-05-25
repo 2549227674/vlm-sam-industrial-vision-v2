@@ -16,7 +16,7 @@ export function DetailDrawer({
   if (!defect) return null;
 
   const total = Math.round(
-    defect.pipeline_ms.efficientad + defect.pipeline_ms.fastsam + defect.pipeline_ms.qwen3vl
+    (defect.pipeline_ms.efficientad ?? 0) + (defect.pipeline_ms.fastsam ?? 0) + (defect.pipeline_ms.qwen3vl ?? 0)
   );
   const stages = [
     { k: 'efficientad' as const, name: 'EfficientAD-S', color: 'var(--color-stage-1)' },
@@ -105,7 +105,7 @@ export function DetailDrawer({
           {(() => {
             let acc = 0;
             return stages.map(s => {
-              const ms = defect.pipeline_ms[s.k];
+              const ms = defect.pipeline_ms[s.k] ?? 0;
               const x = (acc / total) * 100;
               const w = (ms / total) * 100;
               acc += ms;

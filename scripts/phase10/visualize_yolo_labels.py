@@ -49,22 +49,36 @@ def xywh_center_to_xyxy(cx: float, cy: float, w: float, h: float, img_w: int, im
 
 
 def find_mask_path(stem: str) -> Path | None:
-    """Derive MVTec GT mask path from flat stem (category_defect_type_id)."""
-    parts = stem.split("_", 1)
+    """Derive MVTec GT mask path from flat stem (category_defect_type_id).
+
+    Stems are like: metal_nut_bent_000, cable_cut_outer_insulation_010
+    Strategy: category is always first, img_id is always last (3 digits).
+    Split from right to get img_id, then match known categories for the prefix.
+    """
+    # Split from right: last part is always the numeric id
+    parts = stem.rsplit("_", 1)
     if len(parts) < 2:
         return None
-    category = parts[0]
-    rest = parts[1]
-    # rest is defect_type_id, e.g. "bent_000" or "cut_outer_insulation_000"
-    # Split from the right to get id
-    rest_parts = rest.rsplit("_", 1)
-    if len(rest_parts) < 2:
-        return None
-    defect_type = rest_parts[0]
-    img_id = rest_parts[1]
-    mask_path = MVTEC_DIR / category / "ground_truth" / defect_type / f"{img_id}_mask.png"
-    if mask_path.exists():
-        return mask_path
+    prefix, img_id = parts[0], parts[1]
+
+    # Known categories that contain underscores
+    known_categories = ["metal_nut"]
+    for cat in known_categories:
+        if prefix.startswith(cat + "_"):
+            category = cat
+            defect_type = prefix[len(cat) + 1:]
+            mask_path = MVTEC_DIR / category / "ground_truth" / defect_type / f"{img_id}_mask.png"
+            if mask_path.exists():
+                return mask_path
+
+    # Single-word categories: split on first underscore
+    first_parts = prefix.split("_", 1)
+    if len(first_parts) == 2:
+        category, defect_type = first_parts
+        mask_path = MVTEC_DIR / category / "ground_truth" / defect_type / f"{img_id}_mask.png"
+        if mask_path.exists():
+            return mask_path
+
     return None
 
 

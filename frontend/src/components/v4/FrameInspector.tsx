@@ -26,7 +26,12 @@ export function FrameInspector({ defect }: { defect: DefectRead | null }) {
 }
 
 function FramePane({ defect }: { defect: DefectRead }) {
-  const total = Math.round(defect.pipeline_ms.efficientad + defect.pipeline_ms.fastsam + defect.pipeline_ms.qwen3vl);
+  // v1.3: support both old (fastsam/qwen3vl) and new (localizer/upload) stage keys
+  const pm = defect.pipeline_ms;
+  const total = Math.round(
+    (pm.efficientad ?? 0) + (pm.fastsam ?? 0) + (pm.qwen3vl ?? 0)
+    + (pm.localizer ?? 0) + (pm.upload ?? 0) + (pm.enrichment ?? 0)
+  );
   return (
     <div style={{ padding: 18, borderRight: "1px solid var(--line)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>

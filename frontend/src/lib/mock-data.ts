@@ -190,7 +190,7 @@ export function makeTraceEvents(pipeline_ms: { efficientad: number; fastsam: num
   cur += eff + 200;
 
   // T2 → NPU.1 FastSAM
-  const fs = ms(pipeline_ms.fastsam);
+  const fs = ms(pipeline_ms.fastsam ?? 0);
   events.push({ name: "rknn_run · FastSAM-s", tid: "T2.pipeline", ph: "X", ts: cur, dur: fs, cat: "infer" });
   events.push({ name: "FastSAM-s [FP16]", tid: "NPU.core1", ph: "X", ts: cur, dur: fs, cat: "npu" });
   events.push({ name: "bbox.nms+filter", tid: "CPU.A76_1", ph: "X", ts: cur + fs - ms(4), dur: ms(rand(1.8, 3.6)), cat: "cpu" });
@@ -342,9 +342,9 @@ export function buildStats(defects: DefectRead[]): MockStats {
 
   const avg_pipeline_ms = defects.length
     ? {
-        efficientad: defects.reduce((s, d) => s + d.pipeline_ms.efficientad, 0) / defects.length,
-        fastsam: defects.reduce((s, d) => s + d.pipeline_ms.fastsam, 0) / defects.length,
-        qwen3vl: defects.reduce((s, d) => s + d.pipeline_ms.qwen3vl, 0) / defects.length,
+        efficientad: defects.reduce((s, d) => s + (d.pipeline_ms.efficientad ?? 0), 0) / defects.length,
+        fastsam: defects.reduce((s, d) => s + (d.pipeline_ms.fastsam ?? 0), 0) / defects.length,
+        qwen3vl: defects.reduce((s, d) => s + (d.pipeline_ms.qwen3vl ?? 0), 0) / defects.length,
       }
     : undefined;
 

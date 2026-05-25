@@ -95,21 +95,21 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
   const hasNpuEvents = !!(byTid["NPU.core0"]?.length || byTid["NPU.core1"]?.length || byTid["NPU.core2"]?.length);
   const npu2 = hasNpuEvents
     ? (byTid["NPU.core2"] || []).reduce((s, e) => s + e.dur, 0)
-    : (byTid["T3.vlm"] || []).reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.qwen3vl * 1000;
+    : (byTid["T3.vlm"] || []).reduce((s, e) => s + e.dur, 0) || (defect.pipeline_ms.qwen3vl ?? 0) * 1000;
   const npu0 = hasNpuEvents
     ? (byTid["NPU.core0"] || []).reduce((s, e) => s + e.dur, 0)
     : (byTid["T2.pipeline"] || []).filter(e => e.name.includes("efficientad") || e.cat === "pipeline").reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.efficientad * 1000;
   const npu1 = hasNpuEvents
     ? (byTid["NPU.core1"] || []).reduce((s, e) => s + e.dur, 0)
-    : (byTid["T3.fastsam"] || []).reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.fastsam * 1000;
+    : (byTid["T3.fastsam"] || []).reduce((s, e) => s + e.dur, 0) || (defect.pipeline_ms.fastsam ?? 0) * 1000;
   const npuTotal = npu0 + npu1 + npu2;
   const prompt = defect.trace_events?.filter(e => e.cat === "vlm-prompt" && (e.tid === "NPU.core2" || e.tid === "T3.vlm")).reduce((s, e) => s + e.dur, 0) || 0;
   const decode = defect.trace_events?.filter(e => e.cat === "vlm-decode" && (e.tid === "NPU.core2" || e.tid === "T3.vlm")).reduce((s, e) => s + e.dur, 0) || 0;
   const upload = (byTid["T4.upload"] || []).reduce((s, e) => s + e.dur, 0);
   const npu2Share = npuTotal > 0 ? npu2 / npuTotal : 0;
   // When snapshot data lacks prompt/decode split, estimate from pipeline_ms
-  const effectivePrompt = prompt || (defect.pipeline_ms.qwen3vl * 1000 * (variantIsLora(defect.variant) ? 0.55 : 0.62));
-  const effectiveDecode = decode || (defect.pipeline_ms.qwen3vl * 1000 - effectivePrompt);
+  const effectivePrompt = prompt || ((defect.pipeline_ms.qwen3vl ?? 0) * 1000 * (variantIsLora(defect.variant) ? 0.55 : 0.62));
+  const effectiveDecode = decode || ((defect.pipeline_ms.qwen3vl ?? 0) * 1000 - effectivePrompt);
   const promptShare = effectivePrompt + effectiveDecode > 0 ? effectivePrompt / (effectivePrompt + effectiveDecode) : 0;
 
   const legend = [["NPU 推理", "infer"], ["VLM 提示", "vlm-prompt"], ["VLM 解码", "vlm-decode"], ["CPU", "cpu"], ["IO", "io"], ["RGA", "rga"], ["同步", "sync"]] as const;
@@ -124,7 +124,7 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
         </div>
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(14, defects.length)}, 1fr)`, gap: 4 }}>
           {defects.slice(0, 14).map((d, i) => {
-            const totalMs = Math.round(d.pipeline_ms.efficientad + d.pipeline_ms.fastsam + d.pipeline_ms.qwen3vl);
+            const totalMs = Math.round((d.pipeline_ms.efficientad ?? 0) + (d.pipeline_ms.fastsam ?? 0) + (d.pipeline_ms.qwen3vl ?? 0) + (d.pipeline_ms.localizer ?? 0) + (d.pipeline_ms.upload ?? 0));
             const sevColor = { low: "var(--ok)", medium: "var(--warn)", high: "var(--crit)" }[d.severity];
             const active = i === resolvedIdx;
             return (
