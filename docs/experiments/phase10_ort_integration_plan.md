@@ -82,6 +82,36 @@ Each output line:
 The C++ `LocalizerWorker` spawns the process once, writes image paths to stdin,
 reads JSON from stdout. Model loads once at startup.
 
+### Frame Handoff: Temp Image Files
+
+The Python subprocess receives image file paths over stdin. The C++ worker
+writes each frame to a temp file before sending the path.
+
+**image_loop mode:** CaptureFrame already has `image_path` pointing to a real
+file on disk. No temp file needed — send the path directly.
+
+**V4L2 mode (future):** Raw frame bytes must be written to a temp JPEG before
+sending to Python. This is deferred; v1 demo uses image_loop only.
+
+**Temp dir:** `/tmp/edge_localizer/` (created at worker startup)
+- Each temp file: `{frame_id}_{timestamp_us}.jpg`
+- Cleanup: delete immediately after Python returns the result for that frame
+- Bounded: max 1 file exists at a time (sequential: write → send → read → delete)
+- On worker shutdown: purge all remaining temp files
+- No unbounded disk growth: cleanup is synchronous, not deferred
+
+**Timeout:** 5 seconds per frame. If Python does not produce a JSON line within
+5s of receiving the image path, the worker kills the subprocess, logs the error,
+emits a fallback VlmReport, and restarts the subprocess.
+
+**Error fallback:** On any failure (timeout, parse error, subprocess crash),
+LocalizerWorker emits a fallback VlmReport:
+- `defect_type: "anomaly"`
+- `confidence: 0.0`
+- `bboxes: [{0.3, 0.3, 0.4, 0.4}]` (center placeholder)
+- `localization_source: "ort_fallback"`
+- `label_source: "template"`
+
 ## v1.3 Field Emission
 
 ### VlmReport Changes (`edge/include/edge/common/types.hpp`)
@@ -112,7 +142,7 @@ struct VlmReport {
 1. Emit `pipeline_ms.localizer` and `pipeline_ms.upload`
 2. Emit `localization_source`, `label_source`, `observation_source` when non-empty
 3. Keep `pipeline_ms.fastsam` and `pipeline_ms.qwen3vl` (set to 0.0) for backward compat
-4. Update `schema_version` to `"v1.3"`
+4. Keep `schema_version` as `"v1"`; emit v1.3 optional fields alongside it
 
 ### Config Changes (`edge/config.yaml`)
 
