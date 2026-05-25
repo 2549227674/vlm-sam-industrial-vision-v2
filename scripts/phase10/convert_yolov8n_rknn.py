@@ -68,13 +68,14 @@ def create_calib_list(num_samples: int) -> list[str]:
     return [str(p) for p in selected]
 
 
-def convert_fp16() -> None:
+def convert_fp16(opt_level: int = 0) -> None:
     """Convert ONNX to RKNN FP16 (no quantization)."""
     from rknn.api import RKNN
 
     print(f"=== RKNN FP16 Conversion ===")
     print(f"Input:  {ONNX_PATH}")
     print(f"Output: {RKNN_FP16_PATH}")
+    print(f"Optimization level: {opt_level}")
 
     rknn = RKNN(verbose=False)
 
@@ -83,6 +84,7 @@ def convert_fp16() -> None:
         target_platform="rk3588",
         mean_values=MEAN_VALUES,
         std_values=STD_VALUES,
+        optimization_level=opt_level,
     )
 
     # Load ONNX
@@ -172,6 +174,10 @@ def main() -> None:
         "--calib-samples", type=int, default=50,
         help="Number of calibration images for INT8 (default: 50)",
     )
+    parser.add_argument(
+        "--opt-level", type=int, default=0, choices=[0, 1, 2, 3],
+        help="RKNN optimization level (default: 0)",
+    )
     args = parser.parse_args()
 
     if not ONNX_PATH.exists():
@@ -181,7 +187,7 @@ def main() -> None:
     if args.quantized:
         convert_int8(args.calib_samples)
     else:
-        convert_fp16()
+        convert_fp16(opt_level=args.opt_level)
 
 
 if __name__ == "__main__":

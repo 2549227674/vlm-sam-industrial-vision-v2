@@ -188,8 +188,12 @@ python scripts/phase10/convert_yolov8n_rknn.py
 
 **Run command:**
 ```bash
-sshpass -p 'orangepi' ssh orangepi@192.168.137.66 "cd ~/phase10 && python3 smoke_test_rknn.py"
+ssh rk3588-phase10 "cd ~/phase10 && python3 smoke_test_rknn.py"
 ```
+
+> **Security note:** `rk3588-phase10` is an SSH host alias configured in `~/.ssh/config`.
+> The default Orange Pi password (`orangepi`) should be changed before any network exposure.
+> Never commit passwords, IPs, private keys, or `sshpass` commands to the repository.
 
 ## Next Steps
 
