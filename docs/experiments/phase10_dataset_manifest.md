@@ -98,3 +98,50 @@ simulator/mvtec/metal_nut/ground_truth/{defect_type}/{id}_mask.png
 simulator/mvtec/cable/test/{defect_type}/{id}.png
 simulator/mvtec/cable/ground_truth/{defect_type}/{id}_mask.png
 ```
+
+## QA Results (2026-05-25)
+
+**QA visualizations:** `datasets/phase10/qa_viz/val/` (50 images with bbox + GT mask overlay)
+
+### Bbox Quality Statistics (val split, 59 images)
+
+| Metric | Value |
+|---|---|
+| Total val images | 59 |
+| Total bboxes | 82 |
+| Empty labels | 0 |
+| Bboxes/image | min=1, max=6, avg=1.4 |
+| Bbox area (normalized) | min=0.0009, max=0.8649, median=0.0488 |
+| Large bboxes (>50% area) | 7/82 (all metal_nut/flip) |
+| Tiny bboxes (<0.01% area) | 0 |
+
+### Per-Class Bbox Counts (all splits, 185 images, 283 bboxes)
+
+| Class | BBoxes |
+|---|---:|
+| metal_nut/bent | 35 |
+| metal_nut/color | 30 |
+| metal_nut/flip | 23 |
+| metal_nut/scratch | 44 |
+| cable/bent_wire | 18 |
+| cable/cable_swap | 12 |
+| cable/combined | 41 |
+| cable/cut_inner_insulation | 20 |
+| cable/cut_outer_insulation | 17 |
+| cable/missing_cable | 12 |
+| cable/missing_wire | 12 |
+| cable/poke_insulation | 19 |
+
+### QA Observations
+
+- **metal_nut/flip**: All 7 large bboxes are `flip` — this is expected. `flip` is an object-level pose anomaly (180-degree rotation), not a localized scratch. The GT mask covers most of the object. Plan execution §11 notes this: "Label as object-level anomaly, separate report section."
+- **cable/combined**: Highest bbox count (41 from 11 images, avg 3.7 per image). Multi-component defect with many small regions. Bboxes look reasonable — they cover individual defect fragments, not the whole cable.
+- **cable/cut_outer_insulation**: 3 val images generated, all parsed correctly with proper category/defect_type splitting despite the underscore in `cut_outer_insulation`.
+- **No empty labels**: Every defect image has at least 1 bbox after mask-to-bbox conversion.
+- **No anomaly filtering**: 0 images were filtered out (all components >= 16px^2).
+
+### Known Issues / Decisions
+
+1. `metal_nut/flip` bboxes will appear as "whole object" boxes in the dashboard. This is a data characteristic, not a bug. Will be annotated as "object-level pose anomaly" in frontend.
+2. `cable/combined` has many small bboxes per image. YOLO training may need `max_det` tuning if 16-box limit is hit during inference.
+3. No copy-paste augmentation applied yet — small-sample classes (cable/bent_wire=13, cable/missing_wire=10) may need it if AP is low.

@@ -3,6 +3,28 @@
 > Template for recording YOLOv8n-detect training runs.
 > Fill in after training completes.
 
+## Preflight Status (2026-05-25)
+
+**Data pipeline:** COMPLETE
+- `mvtec_mask_to_yolo.py`: 185 images, 283 bboxes, 0 filtered
+- `split_mvtec_localization.py`: 126 train, 59 val (seed=42, ratio=0.7)
+- `visualize_yolo_labels.py`: 50 val QA images with bbox + GT mask overlay
+
+**QA checks:** PASS
+- All 12 classes have labels
+- 0 empty labels
+- metal_nut mask overlay renders correctly
+- cable/cut_outer_insulation parses correctly (underscore in defect_type)
+- Bboxes cover defects, not whole objects (except metal_nut/flip — expected)
+- No anomaly filtering needed (all components >= 16px^2)
+
+**Known data characteristics:**
+- metal_nut/flip: large bboxes (~85% area) — object-level pose anomaly, not localized defect
+- cable/combined: multi-component, avg 3.7 bboxes/image
+- cable/bent_wire (13 images) and cable/missing_wire (10 images): small sample classes
+
+**Ready for training:** YES — awaiting GPU compute (local or AutoDL)
+
 ## Run 1: YOLOv8n 640 baseline
 
 **Status:** PENDING (awaiting GPU compute)
