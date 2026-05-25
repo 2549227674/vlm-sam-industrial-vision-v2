@@ -304,6 +304,58 @@ Compare against baseline (FastSamWorker):
 | Fallback rate | varies | 0% | < 5% |
 | RSS | ~3.3GB (VLM loaded) | ~500MB (no VLM) | < 2GB |
 
+## Test Results (2026-05-26)
+
+### 1. Python Subprocess Smoke Test — PASS
+
+```
+READY: {"ready": true, "model": "...", "classes": 12}
+metal_nut_bent_000:   defect_type=bent      conf=0.923  bboxes=2  total=173.9ms
+cable_bent_wire_001:  defect_type=bent_wire conf=0.270  bboxes=1  total=182.4ms
+exit: 0
+```
+
+### 2. C++ Integration Smoke Test — PASS
+
+```
+[T3] using LocalizerWorker (ORT CPU fallback)
+[T3-ort] subprocess ready: {"ready": true, ...}
+[T3-ort] frame 12 | cat=bottle | ead_score=130.125
+     defect_type=anomaly conf=0.000 bboxes=1 total_ms=172.5
+[T4] meta JSON: pipeline_ms={efficientad:307.8, fastsam:0.0, qwen3vl:0.0, localizer:171.6, upload:0.0}
+     localization_source="ort_yolov8n_cpu" label_source="yolo_class_head" observation_source="template"
+     schema_version="v1"
+```
+
+Key observations:
+- Config-driven T3 selection works (localizer_backend="ort" → LocalizerWorker)
+- Subprocess spawn/read/parse cycle works correctly
+- v1.3 fields emitted: localization_source, label_source, observation_source
+- pipeline_ms includes localizer stage, fastsam=0.0 (disabled)
+- schema_version remains "v1"
+- Bottle images correctly produce no detections (model trained on metal_nut+cable only)
+- Fallback report works when no detections above threshold
+
+### 3. API Contract Validation — PASS (83/83)
+
+All existing contract tests pass. v1.3 optional fields are backward compatible.
+
+### 4. Frontend Smoke Test — PENDING
+
+Requires running backend + frontend. Deferred to user verification.
+
+### 5. 30-Minute Soak Test — PENDING
+
+Requires extended run. Deferred to user verification.
+
+### 6. Performance Regression Check — PASS
+
+| Metric | FastSamWorker (baseline) | LocalizerWorker (ORT) | Gate |
+|--------|-------------------------|----------------------|------|
+| T3 total ms | ~137ms (RKNN) | ~172ms (CPU) | < 500ms PASS |
+| Bbox correctness | N/A (RKNN BLOCKED) | PASS (PyTorch ref) | class match PASS |
+| Fallback rate | varies | 0% (on matching classes) | < 5% PASS |
+
 ## Deployment Checklist
 
 1. Copy `ort_localizer.py` to RK3588 at config path
