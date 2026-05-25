@@ -124,6 +124,13 @@ async def report_defect(
         vlm_metrics=meta_data.vlm_metrics.model_dump() if meta_data.vlm_metrics else None,
         trace_events=[e.model_dump() for e in meta_data.trace_events] if meta_data.trace_events else None,
         schema_version=meta_data.schema_version,
+        # v1.3: Phase 10 source fields
+        localization_source=meta_data.localization_source,
+        label_source=meta_data.label_source,
+        observation_source=meta_data.observation_source,
+        defect_family=meta_data.defect_family,
+        observation=meta_data.observation,
+        severity_reason=meta_data.severity_reason,
     )
     db.add(db_defect)
 

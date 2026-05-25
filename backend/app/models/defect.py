@@ -1,4 +1,5 @@
 # v1.1 schema: trace_events column added for frontend v4 ProfilePage tracing.
+# v1.3 schema: source fields for Phase 10 localization refactor.
 
 from datetime import datetime, timezone
 
@@ -40,3 +41,11 @@ class Defect(Base):
     vlm_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     trace_events: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     schema_version: Mapped[str] = mapped_column(String(8), default="v1")
+
+    # v1.3: Phase 10 source fields (all nullable for backward compat)
+    localization_source: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    label_source: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    observation_source: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    defect_family: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    observation: Mapped[str | None] = mapped_column(String(1024), nullable=True, default=None)
+    severity_reason: Mapped[str | None] = mapped_column(String(512), nullable=True, default=None)

@@ -64,4 +64,14 @@ export interface DefectRead {
   trace_events?: TraceEvent[];
   schema_version: "v1";
   server_ts: string;
+
+  // v1.3: Phase 10 source fields
+  localization_source?: string;
+  label_source?: string;
+  observation_source?: string;
+  defect_family?: string;
+  observation?: string;
+  severity_reason?: string;
+  object_proposals?: BBox[];
+  gt_reference_bboxes?: BBox[];
 }

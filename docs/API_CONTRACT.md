@@ -1,6 +1,13 @@
-# API 接口契约 v1.2
+# API 接口契约 v1.3
 
 本文档是 RK3588 边缘端、Python 模拟器、FastAPI 后端、Next.js 前端之间的**唯一权威接口定义**。任何字段或语义变更必须先改本文档（bump 版本），再改实现。模拟器是契约测试客户端，覆盖所有路径。
+
+> **v1.3 变更摘要**（2026-05-25）：
+> - Phase 10 localization refactor: 新增 `localization_source`、`label_source`、`observation_source`、`defect_family`、`observation`、`severity_reason` 可选字段
+> - `pipeline_ms` 接受新 stage key `localizer` / `upload`（旧 key `fastsam` / `qwen3vl` 仍向下兼容）
+> - `bboxes` 语义从 FastSAM/VLM proposal 改为 primary localizer output（YOLOv8n-detect）
+> - `defect_type` 语义从 VLM 输出改为 YOLO class head 输出
+> - `confidence` 语义从 VLM confidence 改为 YOLO detection score
 
 > **v1.2 变更摘要**（2026-05-19）：
 > - 新增 `TraceEvent` schema，`DefectCreate` / `DefectRead` 增加可选 `trace_events` 字段
@@ -38,7 +45,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Severity = Literal["low", "medium", "high"]
 Variant  = Literal["2B_base", "2B_lora", "4B_base", "4B_lora", "A", "B"]  # v1.1: 新增 4 变体，保留 A/B 向下兼容
-Stage    = Literal["efficientad", "fastsam", "qwen3vl"]
+Stage    = Literal["efficientad", "fastsam", "qwen3vl", "localizer", "upload", "enrichment"]  # v1.3: 新增 localizer/upload/enrichment
 
 class BBox(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -90,6 +97,14 @@ class DefectCreate(BaseModel):
     trace_events:   Optional[list[TraceEvent]] = Field(default=None, max_length=64)  # v1.2: Chrome Trace 时序事件
     schema_version: Literal["v1"] = "v1"
 
+    # v1.3: Phase 10 source fields (all optional for backward compat)
+    localization_source: Optional[str] = Field(default=None, max_length=64)  # e.g. "yolov8n_detect_rknn"
+    label_source:       Optional[str] = Field(default=None, max_length=64)  # e.g. "yolo_class_head"
+    observation_source:  Optional[str] = Field(default=None, max_length=64)  # e.g. "template", "edge_vlm", "cloud_vlm"
+    defect_family:      Optional[str] = Field(default=None, max_length=64)  # e.g. "surface_damage"
+    observation:        Optional[str] = Field(default=None, max_length=1024)  # replaces description in v1.3
+    severity_reason:    Optional[str] = Field(default=None, max_length=512)
+
     @field_validator("edge_ts")
     @classmethod
     def must_be_aware(cls, v: datetime) -> datetime:
@@ -100,10 +115,18 @@ class DefectCreate(BaseModel):
     @field_validator("pipeline_ms")
     @classmethod
     def all_stages_required(cls, v: dict) -> dict:
-        required = {"efficientad", "fastsam", "qwen3vl"}
-        if missing := required - v.keys():
-            raise ValueError(f"pipeline_ms missing stages: {missing}")
-        return v
+        # v1.3: accept either old (fastsam/qwen3vl) or new (localizer) stage keys
+        old_required = {"efficientad", "fastsam", "qwen3vl"}
+        new_required = {"efficientad", "localizer", "upload"}
+        if old_required <= v.keys():
+            return v
+        if new_required <= v.keys():
+            return v
+        # Backward compat: efficientad + fastsam without qwen3vl (VLM disabled)
+        if "efficientad" in v and "fastsam" in v:
+            return v
+        missing = new_required - v.keys()
+        raise ValueError(f"pipeline_ms missing stages: {missing}")
 
 class DefectRead(DefectCreate):
     model_config = ConfigDict(from_attributes=True, extra="forbid")

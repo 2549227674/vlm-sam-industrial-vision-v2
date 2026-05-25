@@ -86,7 +86,9 @@ async def test_negative_bbox_y_rejected(async_client, dummy_jpeg, valid_meta):
 
 
 async def test_pipeline_ms_missing_stage(async_client, dummy_jpeg, valid_meta):
-    valid_meta["pipeline_ms"] = {"efficientad": 10.0, "fastsam": 40.0}  # missing qwen3vl
+    # v1.3: efficientad+fastsam without qwen3vl is accepted (backward compat for Phase 10).
+    # Test that missing efficientad is rejected instead.
+    valid_meta["pipeline_ms"] = {"fastsam": 40.0, "qwen3vl": 500.0}  # missing efficientad
     resp = await _post(async_client, dummy_jpeg, valid_meta)
     assert resp.status_code == 400
     assert resp.json()["error"]["code"] == "VALIDATION_ERROR"

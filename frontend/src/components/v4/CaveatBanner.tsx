@@ -16,6 +16,8 @@ const SNAPSHOT_CAVEAT_ZH = "数据来自历史真实 RK3588 测试运行，非�
 const SNAPSHOT_CAVEAT_EN = "Data is from a historical real RK3588 test run, not a live stream.";
 const BBOX_CAVEAT_ZH = "bbox overlay 为 FastSAM/VLM 候选框，非可靠定位。纹理类（如 carpet）模型仅产生图像级异常信号。";
 const BBOX_CAVEAT_EN = "BBox overlay is proposal-level (FastSAM/VLM), not verified localization. Texture categories produce image-level anomaly signal only.";
+const PHASE10_CAVEAT_ZH = "Phase 10 使用 MVTec GT mask 训练的有监督定位器，非标准无监督 benchmark。";
+const PHASE10_CAVEAT_EN = "Phase 10 localizer is supervised-trained from MVTec GT masks, not the standard unsupervised benchmark.";
 
 // ── Page-level caveat banners ────────────────────────────────────────────────
 
@@ -32,11 +34,13 @@ export function CaveatBanner({ dataSource, caveats, style = "overview" }: Caveat
     items.push({ zh: GATE_CAVEAT_ZH, en: GATE_CAVEAT_EN });
     items.push({ zh: FASTSAM_CAVEAT_ZH, en: FASTSAM_CAVEAT_EN });
     items.push({ zh: BBOX_CAVEAT_ZH, en: BBOX_CAVEAT_EN });
+    items.push({ zh: PHASE10_CAVEAT_ZH, en: PHASE10_CAVEAT_EN });
   }
   if (style === "ab") {
     items.push({ zh: GATE_CAVEAT_ZH, en: GATE_CAVEAT_EN });
     items.push({ zh: FASTSAM_CAVEAT_ZH, en: FASTSAM_CAVEAT_EN });
     items.push({ zh: BBOX_CAVEAT_ZH, en: BBOX_CAVEAT_EN });
+    items.push({ zh: PHASE10_CAVEAT_ZH, en: PHASE10_CAVEAT_EN });
     items.push({ zh: FOUR_B_CAVEAT_ZH, en: FOUR_B_CAVEAT_EN });
   }
   if (dataSource.kind === "snapshot") {
