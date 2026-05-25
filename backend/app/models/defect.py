@@ -13,7 +13,7 @@ class Defect(Base):
     __tablename__ = "defects"
     __table_args__ = (
         UniqueConstraint("line_id", "edge_ts", name="uq_line_edge_ts"),
-        CheckConstraint("variant IN ('2B_base', '2B_lora', '4B_base', '4B_lora', 'A', 'B')", name="ck_variant"),
+        CheckConstraint("variant IN ('2B_base', '2B_lora', '4B_base', '4B_lora', 'A', 'B', 'ort_2B', 'ort_4B')", name="ck_variant"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)

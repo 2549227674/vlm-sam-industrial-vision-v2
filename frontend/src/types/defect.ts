@@ -1,6 +1,7 @@
 export type VariantKey =
   | "2B_base" | "2B_lora" | "4B_base" | "4B_lora"
-  | "A" | "B";
+  | "A" | "B"
+  | "ort_2B" | "ort_4B";
 
 export type MvtecCategory =
   | "bottle" | "cable" | "capsule" | "carpet" | "grid"

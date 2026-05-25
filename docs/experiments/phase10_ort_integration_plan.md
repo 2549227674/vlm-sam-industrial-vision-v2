@@ -340,9 +340,31 @@ Key observations:
 
 All existing contract tests pass. v1.3 optional fields are backward compatible.
 
-### 4. Frontend Smoke Test — PENDING
+### 4. Frontend Smoke Test — PASS (2026-05-26)
 
-Requires running backend + frontend. Deferred to user verification.
+Tested with simulator emitting ORT-compatible data (variant=ort_2B, pipeline_ms={efficientad, localizer, upload}, v1.3 source fields, T3.localizer trace events).
+
+| Checkpoint | Result |
+|---|---|
+| ORT records appear in detection stream | PASS — "ort" badge visible, L4 metal_nut records |
+| defect_type / category / confidence / bboxes render | PASS — all fields displayed correctly |
+| FrameGantt shows "YOLO Localizer" (not FastSAM) | PASS — 3-stage bar: EfficientAD → YOLO Localizer → Upload |
+| Variant filter includes "ORT · 2B" | PASS — dropdown option present, filtering works |
+| BBox tooltip shows "Model bbox from YOLOv8n localizer" | PASS — localization_source check matches "ort_yolov8n_cpu" |
+| BBox label shows "(YOLO)" | PASS — label_source="yolo_class_head" renders correctly |
+| Source fields do not break UI | PASS — no JS errors, clean page render |
+
+Fixes applied during smoke test:
+- `backend/app/schemas/defect.py`: added "ort_2B"/"ort_4B" to VALID_VARIANTS
+- `backend/app/models/defect.py`: added "ort_2B"/"ort_4B" to CHECK constraint
+- `frontend/src/types/defect.ts`: added "ort_2B"/"ort_4B" to VariantKey
+- `frontend/src/lib/mock-data.ts`: added "ort_2B" to VARIANTS, VARIANT_LABEL, VARIANT_PROFILE
+- `frontend/src/components/v4/FrameInspector.tsx`: localization_source check broadened to .includes("yolo")
+- `frontend/src/components/v4/ProfilePage.tsx`: added T3.localizer lane + LANE_LABELS + CAT_COLOR
+- `frontend/src/components/v4/LogsPage.tsx`: added "ort_2B" to variants list
+- `simulator/line_runner.py`: added ORT line (L4 metal_nut) with fabricate_ort_metadata() + generate_ort_trace_events()
+
+Screenshots: `screenshots/phase10_frontend_smoke_test_v2.png`
 
 ### 5. 30-Minute Soak Test — PENDING
 

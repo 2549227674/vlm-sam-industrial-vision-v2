@@ -60,7 +60,7 @@ function FramePane({ defect }: { defect: DefectRead }) {
 // FrameCanvas — reusable in inspector, drawer, cards
 export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { defect: DefectRead; cornerLabels?: boolean; aspect?: string }) {
   // v1.3: source-aware tooltip and label
-  const isYoloLocalizer = defect.localization_source === "yolov8n_detect_rknn";
+  const isYoloLocalizer = !!(defect.localization_source && defect.localization_source.includes("yolo"));
   const bboxTooltip = isYoloLocalizer
     ? "Model bbox from YOLOv8n localizer / YOLOv8n 定位器输出"
     : "Proposal bbox from FastSAM/VLM. Not verified ground-truth localization. / FastSAM/VLM 候选框，非可靠定位。";

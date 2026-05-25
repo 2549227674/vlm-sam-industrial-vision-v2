@@ -27,7 +27,7 @@ function makeLogLine(): LogLine {
   else if (r > 0.78) level = "DEBUG";
 
   const ts = new Date();
-  const variants = ["2B_base", "2B_lora", "4B_base", "4B_lora"];
+  const variants = ["2B_base", "2B_lora", "4B_base", "4B_lora", "ort_2B"];
   const v = variants[Math.floor(Math.random() * variants.length)];
 
   const lines: [string, string, string][] = [

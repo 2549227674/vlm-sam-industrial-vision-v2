@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Severity = Literal["low", "medium", "high"]
 # v1.1: 新增 4 变体，保留 A/B 向下兼容
-VALID_VARIANTS = {"2B_base", "2B_lora", "4B_base", "4B_lora", "A", "B"}
+VALID_VARIANTS = {"2B_base", "2B_lora", "4B_base", "4B_lora", "A", "B", "ort_2B", "ort_4B"}
 
 # v1.3: accept both old stage keys (fastsam/qwen3vl) and new ones (localizer/enrichment)
 Stage = Literal["efficientad", "fastsam", "qwen3vl", "localizer", "upload", "enrichment"]
