@@ -366,11 +366,24 @@ Fixes applied during smoke test:
 
 Screenshots: `screenshots/phase10_frontend_smoke_test_v2.png`
 
-### 5. 30-Minute Soak Test — PENDING
+### 5. 30-Minute Soak Test — RUNNING (2026-05-26)
 
-Requires extended run. Deferred to user verification.
+Running on Orange Pi 5 (RK3588). Config: `gate_mode=pass_all`, `localizer_backend=ort`.
+Backend: droplet at `157.245.60.152` (port 80, nginx proxy).
+Auth temporarily disabled for soak test uploads (C++ edge_pipeline does not send auth headers).
+Will be re-enabled after soak completes.
 
-### 6. Performance Regression Check — PASS
+Final metrics pending wakeup check.
+
+### 6. Snapshot Demo — PRELIMINARY (2026-05-26)
+
+**Snapshot mechanism: PASS** — data-source.ts fallback, manifest/defects/stats loading, frontend rendering all verified.
+**Snapshot data: PRELIMINARY** — generated from simulator data before soak test completed.
+Will be regenerated from actual soak test backend records after soak finishes.
+
+See `docs/experiments/phase10_snapshot_demo_plan.md` for full details.
+
+### 7. Performance Regression Check — PASS
 
 | Metric | FastSamWorker (baseline) | LocalizerWorker (ORT) | Gate |
 |--------|-------------------------|----------------------|------|

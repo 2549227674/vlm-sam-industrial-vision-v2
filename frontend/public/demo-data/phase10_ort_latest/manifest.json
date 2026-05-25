@@ -1,16 +1,16 @@
 {
   "schema": "real_run_manifest.v1",
   "source": "ort_cpu_fallback",
-  "run_id": "phase10_ort_demo_20260526",
+  "run_id": "phase10_ort_preliminary_20260526",
   "created_at": "2026-05-25T17:43:09.744718+00:00",
   "is_mock": false,
   "is_live": false,
-  "mode": "threshold",
+  "mode": "pass_all",
   "duration_min": 0,
   "edge_device": "Orange Pi 5 Plus / RK3588 / 16GB",
   "contract_version": "v1.3",
-  "snapshot_type": "phase10_ort_cpu_fallback",
-  "description": "Phase 10 ORT CPU fallback demo. YOLOv8n-detect via ONNX Runtime on CPU replaces FastSAM/VLM. NOT RKNN/NPU deployment.",
+  "snapshot_type": "phase10_ort_cpu_fallback_preliminary",
+  "description": "PRELIMINARY snapshot generated before 30-min soak test. Data is from simulator-generated ORT records, NOT from a completed RK3588 soak run. Will be regenerated from soak test backend records after the soak completes.",
   "mainline": {
     "efficientad": "EfficientAD-S RKNN INT8",
     "localizer": "YOLOv8n-detect ORT CPU FP32"
@@ -26,11 +26,13 @@
       "ort_2B"
     ]
   },
-  "data_source_label": "Phase 10 ORT CPU Fallback",
+  "data_source_label": "Phase 10 ORT Preliminary",
   "caveats": [
+    "PRELIMINARY: This snapshot was generated from simulator data before the 30-min soak test. NOT derived from completed soak run.",
     "This is ORT CPU fallback, NOT RKNN/NPU deployment. RKNN remains BLOCKED.",
     "pipeline_ms.upload is 0.0 in edge payloads because upload_ms is measured after POST completes.",
-    "VLM is not called \u2014 severity is fixed to 'medium', observation_source is 'template'.",
-    "localization_source='ort_yolov8n_cpu' indicates ONNX Runtime on CPU, not NPU."
+    "VLM is not called — severity is fixed to 'medium', observation_source is 'template'.",
+    "localization_source='ort_yolov8n_cpu' indicates ONNX Runtime on CPU, not NPU.",
+    "Backend auth was temporarily disabled for soak test uploads. Not part of production config."
   ]
 }
