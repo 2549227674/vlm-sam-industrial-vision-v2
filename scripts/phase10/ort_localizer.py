@@ -140,11 +140,13 @@ def decode(output: np.ndarray, conf_thresh: float, img_size: int,
         for k in keep:
             b = cls_boxes[k]
             # Convert xyxy to top-left xywh (API contract: x,y = top-left corner)
-            x = b[0]
-            y = b[1]
-            w = b[2] - b[0]
-            h = b[3] - b[1]
-            results.append((int(cls), float(cls_scores[k]), [x, y, w, h]))
+            # Clamp to [0, 1] to prevent API validation errors
+            x = max(0.0, min(1.0, float(b[0])))
+            y = max(0.0, min(1.0, float(b[1])))
+            w = max(0.0, min(1.0 - x, float(b[2] - b[0])))
+            h = max(0.0, min(1.0 - y, float(b[3] - b[1])))
+            if w > 0.0 and h > 0.0:
+                results.append((int(cls), float(cls_scores[k]), [x, y, w, h]))
 
     results.sort(key=lambda x: x[1], reverse=True)
     return results
