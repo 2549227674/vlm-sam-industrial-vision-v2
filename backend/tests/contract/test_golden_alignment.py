@@ -105,7 +105,7 @@ try:
     def _load_schema():
         schema_path = (
             __import__("pathlib").Path(__file__).resolve().parent.parent.parent.parent
-            / "docs" / "schema" / "defect_report.v1.2.schema.json"
+            / "docs" / "schema" / "defect_report.v1.3.schema.json"
         )
         return json.loads(schema_path.read_text(encoding="utf-8"))
 

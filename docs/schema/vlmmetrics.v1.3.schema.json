@@ -1,0 +1,46 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "ttft_ms": {
+      "minimum": 0,
+      "title": "Ttft Ms",
+      "type": "number"
+    },
+    "decode_tps": {
+      "minimum": 0,
+      "title": "Decode Tps",
+      "type": "number"
+    },
+    "prompt_tokens": {
+      "minimum": 0,
+      "title": "Prompt Tokens",
+      "type": "integer"
+    },
+    "output_tokens": {
+      "minimum": 0,
+      "title": "Output Tokens",
+      "type": "integer"
+    },
+    "rss_mb": {
+      "minimum": 0,
+      "title": "Rss Mb",
+      "type": "number"
+    },
+    "json_parse_ok": {
+      "title": "Json Parse Ok",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "ttft_ms",
+    "decode_tps",
+    "prompt_tokens",
+    "output_tokens",
+    "rss_mb",
+    "json_parse_ok"
+  ],
+  "title": "VlmMetrics",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vision.example.com/schema/vlmmetrics.v1.3.schema.json"
+}

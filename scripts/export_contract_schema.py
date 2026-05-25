@@ -17,8 +17,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from backend.app.schemas.defect import BBox, DefectCreate, DefectRead, VlmMetrics, TraceEvent
 
-SCHEMA_VERSION = "v1.2"
-SCHEMA_VER_NUM = "1.2"  # without "v" prefix for file names
+SCHEMA_VERSION = "v1.3"
+SCHEMA_VER_NUM = "1.3"  # without "v" prefix for file names
 OUT_DIR = Path(__file__).resolve().parent.parent / "docs" / "schema"
 
 

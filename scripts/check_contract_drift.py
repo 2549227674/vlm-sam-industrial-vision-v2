@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from backend.app.schemas.defect import DefectCreate
 
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.3"
 SCHEMA_DIR = Path(__file__).resolve().parent.parent / "docs" / "schema"
 SNAPSHOT_PATH = SCHEMA_DIR / f"defect_report.v{SCHEMA_VERSION}.schema.json"
 
