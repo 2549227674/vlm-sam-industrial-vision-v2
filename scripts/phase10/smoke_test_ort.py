@@ -9,8 +9,8 @@ Tests:
   2. Run inference on 1 metal_nut + 1 cable image
   3. Decode YOLOv8 output (output0 [1, 16, 8400])
   4. Apply NMS
-  5. Check bbox validity (0<=x,y,w,h<=1, x+w<=1, y+h<=1)
-  6. Compare top detection with PyTorch/ONNX reference
+  5. Check bbox validity for ALL detections
+  6. Compare top detection (confidence-sorted) with PyTorch/ONNX reference
   7. Log latency per stage
 
 Usage:
@@ -18,11 +18,16 @@ Usage:
     python scripts/phase10/smoke_test_ort.py
 
     # On RK3588 (after pip install onnxruntime):
-    python3 smoke_test_ort.py
+    python3 smoke_test_ort.py --conf 0.25
+
+    # Low-confidence run for weak images:
+    python3 smoke_test_ort.py --conf 0.10
+    python3 smoke_test_ort.py --conf 0.05
 """
 
 from __future__ import annotations
 
+import argparse
 import sys
 import time
 from pathlib import Path
@@ -31,16 +36,8 @@ import cv2
 import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-MODEL_PATH = PROJECT_ROOT / "models" / "yolov8n_phase10" / "yolov8n_metal_nut_cable_best.onnx"
-CLASSES_PATH = PROJECT_ROOT / "configs" / "phase10_classes.yaml"
-TEST_IMAGES = [
-    (PROJECT_ROOT / "datasets" / "phase10" / "images" / "val" / "metal_nut_bent_000.png", "metal_nut/bent"),
-    (PROJECT_ROOT / "datasets" / "phase10" / "images" / "val" / "cable_bent_wire_001.png", "cable/bent_wire"),
-]
 
 IMG_SIZE = 640
-CONF_THRESH = 0.25
-IOU_THRESH = 0.45
 NUM_CLASSES = 12
 
 # PyTorch reference for metal_nut_bent_000 (from diagnostic report)
@@ -50,8 +47,32 @@ PYTORCH_REF = {
         "class_id": 0,
         "conf": 0.923,
         "bbox_norm": [0.8757, 0.5328, 0.1528, 0.1613],
+        "iou_gate": 0.7,
     },
 }
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Phase 10 ORT CPU smoke test")
+    parser.add_argument(
+        "--conf", type=float, default=0.25,
+        help="Confidence threshold (default: 0.25)",
+    )
+    parser.add_argument(
+        "--iou", type=float, default=0.45,
+        help="NMS IoU threshold (default: 0.45)",
+    )
+    parser.add_argument(
+        "--model", type=str,
+        default=str(PROJECT_ROOT / "models" / "yolov8n_phase10" / "yolov8n_metal_nut_cable_best.onnx"),
+        help="Path to ONNX model",
+    )
+    parser.add_argument(
+        "--classes", type=str,
+        default=str(PROJECT_ROOT / "configs" / "phase10_classes.yaml"),
+        help="Path to classes YAML",
+    )
+    return parser.parse_args()
 
 
 def load_classes(path: Path) -> dict[int, str]:
@@ -116,9 +137,12 @@ def nms(boxes: np.ndarray, scores: np.ndarray, iou_thresh: float) -> list[int]:
 
 
 def decode_yolov8_output(
-    output: np.ndarray, conf_thresh: float, img_size: int
+    output: np.ndarray, conf_thresh: float, img_size: int, nms_iou_thresh: float
 ) -> list[tuple[int, float, list[float]]]:
-    """Decode YOLOv8 output0 [1, 16, 8400] -> list of (class_id, conf, [cx, cy, w, h])."""
+    """Decode YOLOv8 output0 [1, 16, 8400] -> list of (class_id, conf, [cx, cy, w, h]).
+
+    Returns detections sorted by confidence descending (global, not per-class).
+    """
     preds = output[0]  # [16, 8400]
     boxes = preds[:4, :].T  # [8400, 4] cx cy w h (pixel coords)
     class_scores = preds[4:, :].T  # [8400, num_classes]
@@ -147,7 +171,7 @@ def decode_yolov8_output(
         cls_mask = class_ids == cls
         cls_boxes = xyxy[cls_mask]
         cls_scores = max_scores[cls_mask]
-        keep = nms(cls_boxes, cls_scores, IOU_THRESH)
+        keep = nms(cls_boxes, cls_scores, nms_iou_thresh)
         for k in keep:
             b = cls_boxes[k]
             cx = (b[0] + b[2]) / 2
@@ -156,6 +180,8 @@ def decode_yolov8_output(
             h = b[3] - b[1]
             results.append((int(cls), float(cls_scores[k]), [cx, cy, w, h]))
 
+    # Sort globally by confidence descending
+    results.sort(key=lambda x: x[1], reverse=True)
     return results
 
 
@@ -199,23 +225,37 @@ def compute_iou(a: list[float], b: list[float]) -> float:
 
 
 def main() -> None:
+    args = parse_args()
+
+    model_path = Path(args.model)
+    classes_path = Path(args.classes)
+    conf_thresh = args.conf
+    nms_iou_thresh = args.iou
+
+    test_images = [
+        (PROJECT_ROOT / "datasets" / "phase10" / "images" / "val" / "metal_nut_bent_000.png", "metal_nut/bent"),
+        (PROJECT_ROOT / "datasets" / "phase10" / "images" / "val" / "cable_bent_wire_001.png", "cable/bent_wire"),
+    ]
+
     print("=" * 60)
     print("Phase 10 ONNX Runtime CPU Smoke Test")
     print("NOTE: This is a CPU fallback, NOT NPU/RKNN deployment.")
     print("      RKNN remains blocked pending toolkit investigation.")
     print("=" * 60)
+    print(f"  conf_thresh:    {conf_thresh}")
+    print(f"  nms_iou_thresh: {nms_iou_thresh}")
 
     # Check files
-    for p in [MODEL_PATH, CLASSES_PATH]:
+    for p in [model_path, classes_path]:
         if not p.exists():
             print(f"ERROR: {p} not found")
             sys.exit(1)
-    for img_path, _ in TEST_IMAGES:
+    for img_path, _ in test_images:
         if not img_path.exists():
             print(f"ERROR: {img_path} not found")
             sys.exit(1)
 
-    classes = load_classes(CLASSES_PATH)
+    classes = load_classes(classes_path)
     print(f"Classes: {len(classes)} ({', '.join(classes.values())})")
 
     # Import onnxruntime
@@ -229,9 +269,9 @@ def main() -> None:
     print(f"Available providers: {ort.get_available_providers()}")
 
     # Load model
-    print(f"\nLoading model: {MODEL_PATH}")
+    print(f"\nLoading model: {model_path}")
     t0 = time.perf_counter()
-    sess = ort.InferenceSession(str(MODEL_PATH), providers=["CPUExecutionProvider"])
+    sess = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
     t_load = time.perf_counter() - t0
     print(f"  Load time: {t_load:.3f}s")
 
@@ -246,6 +286,8 @@ def main() -> None:
     total_crashes = 0
     class_correct = 0
     class_total = 0
+    iou_gate_pass = 0
+    iou_gate_fail = 0
     latencies: dict[str, list[float]] = {
         "preprocess": [],
         "inference": [],
@@ -253,7 +295,7 @@ def main() -> None:
         "total": [],
     }
 
-    for img_path, expected_class in TEST_IMAGES:
+    for img_path, expected_class in test_images:
         print(f"\n{'='*60}")
         print(f"Image: {img_path.name}")
         print(f"Expected class: {expected_class}")
@@ -290,7 +332,7 @@ def main() -> None:
 
         # Postprocess
         t0 = time.perf_counter()
-        detections = decode_yolov8_output(output0, CONF_THRESH, IMG_SIZE)
+        detections = decode_yolov8_output(output0, conf_thresh, IMG_SIZE, nms_iou_thresh)
         t_post = time.perf_counter() - t0
 
         t_total = t_pre + t_infer + t_post
@@ -302,34 +344,41 @@ def main() -> None:
         print(f"  Latency: pre={t_pre*1000:.1f}ms infer={t_infer*1000:.1f}ms post={t_post*1000:.1f}ms total={t_total*1000:.1f}ms")
         print(f"  Detections: {len(detections)}")
 
-        for cls_id, conf, bbox in detections[:5]:  # Show top 5
+        # Validate bbox for ALL detections; print top 5
+        for i, (cls_id, conf, bbox) in enumerate(detections):
             cls_name = classes.get(cls_id, f"unknown_{cls_id}")
             valid, reason = check_bbox_valid(bbox)
-            status = "OK" if valid else "INVALID"
             if valid:
                 total_bbox_valid += 1
             else:
                 total_bbox_invalid += 1
-            print(f"    [{status}] {cls_name} conf={conf:.3f} bbox=[{bbox[0]:.4f}, {bbox[1]:.4f}, {bbox[2]:.4f}, {bbox[3]:.4f}] {reason}")
+            if i < 5:
+                status = "OK" if valid else "INVALID"
+                print(f"    [{status}] {cls_name} conf={conf:.3f} bbox=[{bbox[0]:.4f}, {bbox[1]:.4f}, {bbox[2]:.4f}, {bbox[3]:.4f}] {reason}")
 
-        # Check class correctness against reference
+        # Check class correctness and IoU gate against reference
         if detections:
             top_cls_id, top_conf, top_bbox = detections[0]
             top_cls_name = classes.get(top_cls_id, f"unknown_{top_cls_id}")
             class_total += 1
 
-            # Check against PyTorch reference
             ref_key = img_path.name
             if ref_key in PYTORCH_REF:
                 ref = PYTORCH_REF[ref_key]
                 if top_cls_name == ref["class"]:
                     class_correct += 1
                     iou = compute_iou(top_bbox, ref["bbox_norm"])
-                    print(f"  REF CHECK: PASS (class={top_cls_name}, conf={top_conf:.3f} vs ref={ref['conf']:.3f}, IoU={iou:.3f})")
+                    iou_gate = ref["iou_gate"]
+                    if iou >= iou_gate:
+                        iou_gate_pass += 1
+                        print(f"  REF CHECK: PASS (class={top_cls_name}, conf={top_conf:.3f} vs ref={ref['conf']:.3f}, IoU={iou:.3f} >= {iou_gate})")
+                    else:
+                        iou_gate_fail += 1
+                        print(f"  REF CHECK: FAIL IoU gate (class={top_cls_name}, IoU={iou:.3f} < {iou_gate})")
                 else:
-                    print(f"  REF CHECK: FAIL (got {top_cls_name}, expected {ref['class']})")
+                    print(f"  REF CHECK: FAIL class (got {top_cls_name}, expected {ref['class']})")
             else:
-                # No reference, just check expected class
+                # No PyTorch reference; check expected class presence in top detection
                 if expected_class in top_cls_name:
                     class_correct += 1
                     print(f"  CLASS CHECK: PASS ({top_cls_name})")
@@ -340,14 +389,18 @@ def main() -> None:
     print(f"\n{'='*60}")
     print("SMOKE TEST SUMMARY")
     print(f"{'='*60}")
-    print(f"Model:         {MODEL_PATH.name}")
-    print(f"Model size:    {MODEL_PATH.stat().st_size / 1024 / 1024:.1f} MB")
-    print(f"Provider:      CPUExecutionProvider")
-    print(f"Test images:   {len(TEST_IMAGES)}")
-    print(f"Crashes:       {total_crashes}")
-    print(f"Bbox valid:    {total_bbox_valid}")
-    print(f"Bbox invalid:  {total_bbox_invalid}")
-    print(f"Class correct: {class_correct}/{class_total}")
+    print(f"Model:          {model_path.name}")
+    print(f"Model size:     {model_path.stat().st_size / 1024 / 1024:.1f} MB")
+    print(f"Provider:       CPUExecutionProvider")
+    print(f"conf_thresh:    {conf_thresh}")
+    print(f"nms_iou_thresh: {nms_iou_thresh}")
+    print(f"Test images:    {len(test_images)}")
+    print(f"Crashes:        {total_crashes}")
+    print(f"Bbox valid:     {total_bbox_valid}")
+    print(f"Bbox invalid:   {total_bbox_invalid}")
+    print(f"Class correct:  {class_correct}/{class_total}")
+    print(f"IoU gate pass:  {iou_gate_pass}")
+    print(f"IoU gate fail:  {iou_gate_fail}")
 
     if latencies["total"]:
         print(f"\nLatency (ms):")
@@ -362,6 +415,7 @@ def main() -> None:
         total_bbox_invalid == 0,
         total_bbox_valid > 0,
         class_correct == class_total,
+        iou_gate_fail == 0,
     ]
     if all(pass_conditions):
         print(f"\nRESULT: PASS")

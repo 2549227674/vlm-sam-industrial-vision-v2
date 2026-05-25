@@ -52,10 +52,23 @@ Tests:
 1. Load ONNX model via `onnxruntime.InferenceSession`
 2. Run inference on `metal_nut_bent_000.png` and `cable_bent_wire_001.png`
 3. Decode YOLOv8 output `[1, 16, 8400]` (same as RKNN smoke test)
-4. Apply NMS (IoU threshold 0.45)
-5. Check bbox validity
-6. Compare top detection with PyTorch reference
-7. Log per-stage latency
+4. Apply NMS (IoU threshold configurable via `--iou`, default 0.45)
+5. **Sort detections globally by confidence descending** so `detections[0]` is the
+   real top detection regardless of class id order
+6. **Validate bbox for ALL detections** (not just top 5) — pass/fail counts
+   invalid bboxes across the full result set
+7. **IoU gate for metal_nut_bent_000**: top detection must have IoU >= 0.7 vs
+   PyTorch reference bbox `[0.8757, 0.5328, 0.1528, 0.1613]`. If class matches
+   but IoU < 0.7, RESULT is FAIL.
+8. For cable_bent_wire_001 (no PyTorch reference): checks expected class presence
+   in top detection. A PyTorch reference can be added later for stricter gating.
+9. Log per-stage latency
+
+CLI args:
+- `--conf` (default 0.25): confidence threshold
+- `--iou` (default 0.45): NMS IoU threshold
+- `--model` (default best.onnx): ONNX model path
+- `--classes` (default phase10_classes.yaml): classes YAML path
 
 ### 3. Latency Benchmark
 
