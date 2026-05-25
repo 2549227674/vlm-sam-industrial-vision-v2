@@ -1,10 +1,590 @@
 {
-  "schema": "defects_snapshot.v1",
-  "source": "real_rk3588",
-  "exported_at": "2026-05-24T01:46:58.324033+08:00",
-  "count": 20,
   "items": [
     {
+      "id": 198,
+      "image_url": "/demo-data/real_run_latest/images/a3baacf12deb45baaec1e308954099ec.jpg",
+      "line_id": "L1",
+      "category": "capsule",
+      "defect_type": "crack",
+      "severity": "high",
+      "confidence": 0.9,
+      "anomaly_score": 454.0,
+      "bboxes": [
+        {
+          "x": 0.082,
+          "y": 0.362,
+          "w": 0.4367,
+          "h": 0.2768
+        },
+        {
+          "x": 0.5156,
+          "y": 0.368,
+          "w": 0.4172,
+          "h": 0.2602
+        },
+        {
+          "x": 0.582,
+          "y": 0.4525,
+          "w": 0.2227,
+          "h": 0.1074
+        },
+        {
+          "x": 0.742,
+          "y": 0.4885,
+          "w": 0.0645,
+          "h": 0.073
+        }
+      ],
+      "description": "major crack on capsule",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:14:59Z",
+      "pipeline_ms": {
+        "efficientad": 230.6,
+        "fastsam": 146.6,
+        "qwen3vl": 10824.3
+      },
+      "vlm_metrics": {
+        "ttft_ms": 2459.7,
+        "decode_tps": 9.5,
+        "prompt_tokens": 532,
+        "output_tokens": 58,
+        "rss_mb": 3352.4,
+        "json_parse_ok": true
+      },
+      "trace_events": [
+        {
+          "name": "efficientad_infer",
+          "ts": 0.0,
+          "dur": 230568.4,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_preprocess",
+          "ts": 230568.4,
+          "dur": 47077.4,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_infer",
+          "ts": 277645.8,
+          "dur": 98929.0,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_postprocess",
+          "ts": 376574.8,
+          "dur": 602.6,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "qwen3vl_generate",
+          "ts": 377177.3,
+          "dur": 10824255.0,
+          "tid": "T3.vlm",
+          "ph": "X",
+          "cat": "vlm"
+        },
+        {
+          "name": "upload",
+          "ts": 0.0,
+          "dur": 0.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "upload"
+        }
+      ],
+      "schema_version": "v1",
+      "server_ts": "2026-05-25T08:11:37.646018Z"
+    },
+    {
+      "id": 197,
+      "image_url": "/demo-data/real_run_latest/images/206e8af60ad442f48d622a9e3736123f.jpg",
+      "line_id": "L1",
+      "category": "capsule",
+      "defect_type": "improper labeling",
+      "severity": "low",
+      "confidence": 0.95,
+      "anomaly_score": 704.0,
+      "bboxes": [
+        {
+          "x": 0.0758,
+          "y": 0.36,
+          "w": 0.4383,
+          "h": 0.277
+        },
+        {
+          "x": 0.5117,
+          "y": 0.3682,
+          "w": 0.4289,
+          "h": 0.259
+        },
+        {
+          "x": 0.6529,
+          "y": 0.4697,
+          "w": 0.0629,
+          "h": 0.0777
+        },
+        {
+          "x": 0.7365,
+          "y": 0.4717,
+          "w": 0.0629,
+          "h": 0.077
+        },
+        {
+          "x": 0.575,
+          "y": 0.4697,
+          "w": 0.0562,
+          "h": 0.0762
+        }
+      ],
+      "description": "incorrect dosage marked on capsule",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:14:44Z",
+      "pipeline_ms": {
+        "efficientad": 223.5,
+        "fastsam": 204.2,
+        "qwen3vl": 12609.1
+      },
+      "vlm_metrics": {
+        "ttft_ms": 2793.5,
+        "decode_tps": 10.0,
+        "prompt_tokens": 575,
+        "output_tokens": 70,
+        "rss_mb": 3352.4,
+        "json_parse_ok": true
+      },
+      "trace_events": [
+        {
+          "name": "efficientad_infer",
+          "ts": 0.0,
+          "dur": 223479.7,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_preprocess",
+          "ts": 223479.7,
+          "dur": 47853.5,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_infer",
+          "ts": 271333.2,
+          "dur": 154834.5,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_postprocess",
+          "ts": 426167.8,
+          "dur": 1466.5,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "qwen3vl_generate",
+          "ts": 427634.2,
+          "dur": 12609097.0,
+          "tid": "T3.vlm",
+          "ph": "X",
+          "cat": "vlm"
+        },
+        {
+          "name": "upload",
+          "ts": 0.0,
+          "dur": 0.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "upload"
+        }
+      ],
+      "schema_version": "v1",
+      "server_ts": "2026-05-25T08:11:27.535463Z"
+    },
+    {
+      "id": 196,
+      "image_url": "/demo-data/real_run_latest/images/8995f46394344949a2833a3f08a2f6ce.jpg",
+      "line_id": "L1",
+      "category": "capsule",
+      "defect_type": "anomaly",
+      "severity": "low",
+      "confidence": 0.95,
+      "anomaly_score": 594.5,
+      "bboxes": [
+        {
+          "x": 0.0781,
+          "y": 0.3627,
+          "w": 0.4371,
+          "h": 0.273
+        },
+        {
+          "x": 0.5127,
+          "y": 0.369,
+          "w": 0.4246,
+          "h": 0.258
+        },
+        {
+          "x": 0.6461,
+          "y": 0.4807,
+          "w": 0.0633,
+          "h": 0.0777
+        },
+        {
+          "x": 0.7301,
+          "y": 0.482,
+          "w": 0.0625,
+          "h": 0.0766
+        },
+        {
+          "x": 0.5664,
+          "y": 0.4807,
+          "w": 0.0562,
+          "h": 0.0746
+        }
+      ],
+      "description": "text on capsule is visible",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:14:29Z",
+      "pipeline_ms": {
+        "efficientad": 232.3,
+        "fastsam": 146.6,
+        "qwen3vl": 11217.1
+      },
+      "vlm_metrics": {
+        "ttft_ms": 2613.9,
+        "decode_tps": 10.0,
+        "prompt_tokens": 578,
+        "output_tokens": 62,
+        "rss_mb": 3352.4,
+        "json_parse_ok": true
+      },
+      "trace_events": [
+        {
+          "name": "efficientad_infer",
+          "ts": 0.0,
+          "dur": 232289.8,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_preprocess",
+          "ts": 232289.8,
+          "dur": 46722.2,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_infer",
+          "ts": 279012.0,
+          "dur": 99240.4,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_postprocess",
+          "ts": 378252.4,
+          "dur": 608.1,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "qwen3vl_generate",
+          "ts": 378860.5,
+          "dur": 11217077.0,
+          "tid": "T3.vlm",
+          "ph": "X",
+          "cat": "vlm"
+        },
+        {
+          "name": "upload",
+          "ts": 0.0,
+          "dur": 0.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "upload"
+        }
+      ],
+      "schema_version": "v1",
+      "server_ts": "2026-05-25T08:11:13.066184Z"
+    },
+    {
+      "id": 194,
+      "image_url": "/demo-data/real_run_latest/images/446ec422fe7241d085561a83fc3c880e.jpg",
+      "line_id": "L1",
+      "category": "cable",
+      "defect_type": "anomaly",
+      "severity": "medium",
+      "confidence": 0.95,
+      "anomaly_score": 46.0938,
+      "bboxes": [
+        {
+          "x": 0.507,
+          "y": 0.4166,
+          "w": 0.3414,
+          "h": 0.3262
+        }
+      ],
+      "description": "Insulation layer missing in center",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:13:58Z",
+      "pipeline_ms": {
+        "efficientad": 225.9,
+        "fastsam": 145.1,
+        "qwen3vl": 23405.1
+      },
+      "vlm_metrics": {
+        "ttft_ms": 2962.4,
+        "decode_tps": 9.9,
+        "prompt_tokens": 576,
+        "output_tokens": 179,
+        "rss_mb": 3352.4,
+        "json_parse_ok": true
+      },
+      "trace_events": [
+        {
+          "name": "efficientad_infer",
+          "ts": 0.0,
+          "dur": 225899.4,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_preprocess",
+          "ts": 225899.4,
+          "dur": 47300.2,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_infer",
+          "ts": 273199.7,
+          "dur": 96992.3,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_postprocess",
+          "ts": 370191.9,
+          "dur": 784.9,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "qwen3vl_generate",
+          "ts": 370976.8,
+          "dur": 23405070.0,
+          "tid": "T3.vlm",
+          "ph": "X",
+          "cat": "vlm"
+        },
+        {
+          "name": "upload",
+          "ts": 0.0,
+          "dur": 0.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "upload"
+        }
+      ],
+      "schema_version": "v1",
+      "server_ts": "2026-05-25T08:10:52.044870Z"
+    },
+    {
+      "id": 193,
+      "image_url": "/demo-data/real_run_latest/images/f69fc8ed3d8d48b181f1e566d94dfa7a.jpg",
+      "line_id": "L1",
+      "category": "cable",
+      "defect_type": "anomaly",
+      "severity": "medium",
+      "confidence": 0.93,
+      "anomaly_score": 78.9375,
+      "bboxes": [
+        {
+          "x": 0.3113,
+          "y": 0.1729,
+          "w": 0.3461,
+          "h": 0.3018
+        }
+      ],
+      "description": "Insulation layer missing in center",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:13:43Z",
+      "pipeline_ms": {
+        "efficientad": 226.3,
+        "fastsam": 148.9,
+        "qwen3vl": 12521.8
+      },
+      "vlm_metrics": {
+        "ttft_ms": 2786.0,
+        "decode_tps": 9.9,
+        "prompt_tokens": 576,
+        "output_tokens": 74,
+        "rss_mb": 3352.4,
+        "json_parse_ok": true
+      },
+      "trace_events": [
+        {
+          "name": "efficientad_infer",
+          "ts": 0.0,
+          "dur": 226296.1,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_preprocess",
+          "ts": 226296.1,
+          "dur": 48266.2,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_infer",
+          "ts": 274562.3,
+          "dur": 99899.2,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_postprocess",
+          "ts": 374461.5,
+          "dur": 772.9,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "qwen3vl_generate",
+          "ts": 375234.4,
+          "dur": 12521785.0,
+          "tid": "T3.vlm",
+          "ph": "X",
+          "cat": "vlm"
+        },
+        {
+          "name": "upload",
+          "ts": 0.0,
+          "dur": 0.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "upload"
+        }
+      ],
+      "schema_version": "v1",
+      "server_ts": "2026-05-25T08:10:25.838746Z"
+    },
+    {
+      "id": 192,
+      "image_url": "/demo-data/real_run_latest/images/ba1b0e75e29d4b38ac0a0c6490e948d1.jpg",
+      "line_id": "L1",
+      "category": "cable",
+      "defect_type": "anomaly",
+      "severity": "medium",
+      "confidence": 0.9,
+      "anomaly_score": 52.375,
+      "bboxes": [
+        {
+          "x": 0.482,
+          "y": 0.406,
+          "w": 0.314,
+          "h": 0.327
+        }
+      ],
+      "description": "Insulation layer missing in center",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:13:28Z",
+      "pipeline_ms": {
+        "efficientad": 262.3,
+        "fastsam": 147.9,
+        "qwen3vl": 21433.1
+      },
+      "vlm_metrics": {
+        "ttft_ms": 2591.5,
+        "decode_tps": 9.8,
+        "prompt_tokens": 575,
+        "output_tokens": 162,
+        "rss_mb": 3352.4,
+        "json_parse_ok": true
+      },
+      "trace_events": [
+        {
+          "name": "efficientad_infer",
+          "ts": 0.0,
+          "dur": 262345.7,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_preprocess",
+          "ts": 262345.7,
+          "dur": 48420.8,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_infer",
+          "ts": 310766.5,
+          "dur": 98718.1,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_postprocess",
+          "ts": 409484.5,
+          "dur": 748.7,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "qwen3vl_generate",
+          "ts": 410233.2,
+          "dur": 21433076.0,
+          "tid": "T3.vlm",
+          "ph": "X",
+          "cat": "vlm"
+        },
+        {
+          "name": "upload",
+          "ts": 0.0,
+          "dur": 0.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "upload"
+        }
+      ],
+      "schema_version": "v1",
+      "server_ts": "2026-05-25T08:10:14.169458Z"
+    },
+    {
+      "id": 134,
+      "image_url": "/demo-data/real_run_latest/images/cb2c7b0ada5347f09a151694830b4aa5.jpg",
       "line_id": "L1",
       "category": "carpet",
       "defect_type": "anomaly",
@@ -25,7 +605,7 @@
           "h": 0.05
         }
       ],
-      "description": "",
+      "description": "small thread protrusion in weave",
       "variant": "4B_base",
       "edge_ts": "2026-05-23T13:43:35Z",
       "pipeline_ms": {
@@ -92,9 +672,11 @@
         }
       ],
       "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/cb2c7b0ada5347f09a151694830b4aa5.jpg"
+      "server_ts": "2026-05-23T17:25:21.692287Z"
     },
     {
+      "id": 133,
+      "image_url": "/demo-data/real_run_latest/images/4b79f30ab1164433a7c725b2d117682f.jpg",
       "line_id": "L1",
       "category": "carpet",
       "defect_type": "anomaly",
@@ -109,7 +691,7 @@
           "h": 0.0519
         }
       ],
-      "description": "",
+      "description": "small thread protrusion in weave",
       "variant": "4B_base",
       "edge_ts": "2026-05-23T13:42:48Z",
       "pipeline_ms": {
@@ -176,76 +758,78 @@
         }
       ],
       "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/4b79f30ab1164433a7c725b2d117682f.jpg"
+      "server_ts": "2026-05-23T17:24:53.017596Z"
     },
     {
+      "id": 199,
+      "image_url": "/demo-data/real_run_latest/images/126915926d6b45c0a9747bc95ca1857c.jpg",
       "line_id": "L1",
-      "category": "carpet",
+      "category": "metal_nut",
       "defect_type": "anomaly",
       "severity": "medium",
-      "confidence": 0.8,
-      "anomaly_score": 41.9688,
+      "confidence": 0.95,
+      "anomaly_score": 114.812,
       "bboxes": [
         {
-          "x": 0.2697,
-          "y": 0.9414,
-          "w": 0.0324,
-          "h": 0.0516
+          "x": 0.05,
+          "y": 0.088,
+          "w": 0.87,
+          "h": 0.82
         }
       ],
-      "description": "",
-      "variant": "4B_base",
-      "edge_ts": "2026-05-23T13:42:19Z",
+      "description": "metal nut with visible surface scratches",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:15:29Z",
       "pipeline_ms": {
-        "efficientad": 241.5,
-        "fastsam": 210.3,
-        "qwen3vl": 28977.4
+        "efficientad": 252.5,
+        "fastsam": 173.3,
+        "qwen3vl": 12635.0
       },
       "vlm_metrics": {
-        "ttft_ms": 5051.9,
-        "decode_tps": 4.8,
-        "prompt_tokens": 437,
-        "output_tokens": 103,
-        "rss_mb": 5737.0,
+        "ttft_ms": 1960.4,
+        "decode_tps": 10.2,
+        "prompt_tokens": 441,
+        "output_tokens": 81,
+        "rss_mb": 3352.4,
         "json_parse_ok": true
       },
       "trace_events": [
         {
           "name": "efficientad_infer",
           "ts": 0.0,
-          "dur": 241542.8,
+          "dur": 252473.8,
           "tid": "T2.pipeline",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "fastsam_preprocess",
-          "ts": 241542.8,
-          "dur": 52713.8,
+          "ts": 252473.8,
+          "dur": 26275.5,
           "tid": "T3.fastsam",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "fastsam_infer",
-          "ts": 294256.6,
-          "dur": 155409.7,
+          "ts": 278749.3,
+          "dur": 145794.1,
           "tid": "T3.fastsam",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "fastsam_postprocess",
-          "ts": 449666.2,
-          "dur": 2203.2,
+          "ts": 424543.5,
+          "dur": 1214.8,
           "tid": "T3.fastsam",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "qwen3vl_generate",
-          "ts": 451869.5,
-          "dur": 28977448.0,
+          "ts": 425758.3,
+          "dur": 12634999.0,
           "tid": "T3.vlm",
           "ph": "X",
           "cat": "vlm"
@@ -260,268 +844,164 @@
         }
       ],
       "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/442c72eeeba7462ba48e43e4e6e099e1.jpg"
+      "server_ts": "2026-05-25T08:12:02.277860Z"
     },
     {
+      "id": 190,
+      "image_url": "/demo-data/real_run_latest/images/dbdc78f7efc246a5b612395221432477.jpg",
       "line_id": "L1",
-      "category": "carpet",
-      "defect_type": "anomaly",
-      "severity": "low",
-      "confidence": 0.8,
-      "anomaly_score": 36.4375,
-      "bboxes": [
-        {
-          "x": 0.5867,
-          "y": 0.2193,
-          "w": 0.0352,
-          "h": 0.0539
-        }
-      ],
-      "description": "",
-      "variant": "4B_base",
-      "edge_ts": "2026-05-23T13:41:34Z",
-      "pipeline_ms": {
-        "efficientad": 239.9,
-        "fastsam": 152.7,
-        "qwen3vl": 55056.4
-      },
-      "vlm_metrics": {
-        "ttft_ms": 6924.2,
-        "decode_tps": 4.8,
-        "prompt_tokens": 582,
-        "output_tokens": 218,
-        "rss_mb": 5737.0,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 239903.8,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 239903.8,
-          "dur": 51702.3,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 291606.1,
-          "dur": 99696.6,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 391302.7,
-          "dur": 1265.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 392568.5,
-          "dur": 55056376.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/273b15211632445d8550e4231f37c724.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "carpet",
-      "defect_type": "anomaly",
-      "severity": "medium",
-      "confidence": 0.8,
-      "anomaly_score": 48.375,
-      "bboxes": [
-        {
-          "x": 0.9656,
-          "y": 0.5148,
-          "w": 0.025,
-          "h": 0.0523
-        }
-      ],
-      "description": "",
-      "variant": "4B_base",
-      "edge_ts": "2026-05-23T13:41:04Z",
-      "pipeline_ms": {
-        "efficientad": 787.5,
-        "fastsam": 209.4,
-        "qwen3vl": 30319.4
-      },
-      "vlm_metrics": {
-        "ttft_ms": 5310.5,
-        "decode_tps": 4.8,
-        "prompt_tokens": 443,
-        "output_tokens": 107,
-        "rss_mb": 5735.9,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 787537.6,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 787537.6,
-          "dur": 53446.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 840983.8,
-          "dur": 154383.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 995367.5,
-          "dur": 1570.6,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 996938.1,
-          "dur": 30319440.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/1e458ae33e2c4db1843836d54058c52e.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
+      "category": "screw",
       "defect_type": "anomaly",
       "severity": "low",
       "confidence": 0.95,
-      "anomaly_score": 719.5,
+      "anomaly_score": 23.5781,
       "bboxes": [
         {
-          "x": 0.0828,
-          "y": 0.3576,
-          "w": 0.4402,
-          "h": 0.2801
-        },
-        {
-          "x": 0.5234,
-          "y": 0.3653,
-          "w": 0.4125,
-          "h": 0.2646
-        },
-        {
-          "x": 0.7477,
-          "y": 0.4809,
-          "w": 0.0625,
-          "h": 0.0781
-        },
-        {
-          "x": 0.6641,
-          "y": 0.4795,
-          "w": 0.0633,
-          "h": 0.077
-        },
-        {
-          "x": 0.5852,
-          "y": 0.4793,
-          "w": 0.0562,
-          "h": 0.0773
+          "x": 0.0762,
+          "y": 0.2109,
+          "w": 0.8926,
+          "h": 0.7549
         }
       ],
-      "description": "",
+      "description": "minor edge artifacts on screw",
       "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:38:56Z",
+      "edge_ts": "2026-05-24T07:12:58Z",
       "pipeline_ms": {
-        "efficientad": 263.2,
-        "fastsam": 147.5,
-        "qwen3vl": 11742.9
+        "efficientad": 300.4,
+        "fastsam": 181.4,
+        "qwen3vl": 10334.4
       },
       "vlm_metrics": {
-        "ttft_ms": 2862.5,
-        "decode_tps": 9.4,
+        "ttft_ms": 2758.8,
+        "decode_tps": 10.0,
+        "prompt_tokens": 582,
+        "output_tokens": 53,
+        "rss_mb": 3352.4,
+        "json_parse_ok": true
+      },
+      "trace_events": [
+        {
+          "name": "efficientad_infer",
+          "ts": 0.0,
+          "dur": 300442.3,
+          "tid": "T2.pipeline",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_preprocess",
+          "ts": 300442.3,
+          "dur": 24719.2,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_infer",
+          "ts": 325161.5,
+          "dur": 155159.4,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "fastsam_postprocess",
+          "ts": 480320.9,
+          "dur": 1557.2,
+          "tid": "T3.fastsam",
+          "ph": "X",
+          "cat": "pipeline"
+        },
+        {
+          "name": "qwen3vl_generate",
+          "ts": 481878.1,
+          "dur": 10334385.0,
+          "tid": "T3.vlm",
+          "ph": "X",
+          "cat": "vlm"
+        },
+        {
+          "name": "upload",
+          "ts": 0.0,
+          "dur": 0.0,
+          "tid": "T4.upload",
+          "ph": "X",
+          "cat": "upload"
+        }
+      ],
+      "schema_version": "v1",
+      "server_ts": "2026-05-25T08:09:29.042180Z"
+    },
+    {
+      "id": 203,
+      "image_url": "/demo-data/real_run_latest/images/9c00a606768a4156bb9b1b79b5b8f847.jpg",
+      "line_id": "L1",
+      "category": "cable",
+      "defect_type": "anomaly",
+      "severity": "medium",
+      "confidence": 0.93,
+      "anomaly_score": 78.9375,
+      "bboxes": [
+        {
+          "x": 0.3113,
+          "y": 0.1729,
+          "w": 0.3461,
+          "h": 0.3018
+        }
+      ],
+      "description": "Insulation layer missing in center",
+      "variant": "2B_base",
+      "edge_ts": "2026-05-24T07:16:29Z",
+      "pipeline_ms": {
+        "efficientad": 223.6,
+        "fastsam": 145.8,
+        "qwen3vl": 12554.7
+      },
+      "vlm_metrics": {
+        "ttft_ms": 2832.4,
+        "decode_tps": 9.9,
         "prompt_tokens": 576,
-        "output_tokens": 62,
-        "rss_mb": 3334.4,
+        "output_tokens": 74,
+        "rss_mb": 3352.4,
         "json_parse_ok": true
       },
       "trace_events": [
         {
           "name": "efficientad_infer",
           "ts": 0.0,
-          "dur": 263170.6,
+          "dur": 223636.5,
           "tid": "T2.pipeline",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "fastsam_preprocess",
-          "ts": 263170.6,
-          "dur": 46881.4,
+          "ts": 223636.5,
+          "dur": 48108.4,
           "tid": "T3.fastsam",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "fastsam_infer",
-          "ts": 310052.0,
-          "dur": 99943.5,
+          "ts": 271744.9,
+          "dur": 96906.9,
           "tid": "T3.fastsam",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "fastsam_postprocess",
-          "ts": 409995.5,
-          "dur": 653.6,
+          "ts": 368651.8,
+          "dur": 770.6,
           "tid": "T3.fastsam",
           "ph": "X",
           "cat": "pipeline"
         },
         {
           "name": "qwen3vl_generate",
-          "ts": 410649.2,
-          "dur": 11742867.0,
+          "ts": 369422.4,
+          "dur": 12554746.0,
           "tid": "T3.vlm",
           "ph": "X",
           "cat": "vlm"
@@ -536,1375 +1016,8 @@
         }
       ],
       "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/d4ee6c911ad643918c6722f4763d8226.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "improper labeling",
-      "severity": "low",
-      "confidence": 0.95,
-      "anomaly_score": 704.0,
-      "bboxes": [
-        {
-          "x": 0.0758,
-          "y": 0.36,
-          "w": 0.4383,
-          "h": 0.277
-        },
-        {
-          "x": 0.5117,
-          "y": 0.3682,
-          "w": 0.4289,
-          "h": 0.259
-        },
-        {
-          "x": 0.6529,
-          "y": 0.4697,
-          "w": 0.0629,
-          "h": 0.0777
-        },
-        {
-          "x": 0.7365,
-          "y": 0.4717,
-          "w": 0.0629,
-          "h": 0.077
-        },
-        {
-          "x": 0.575,
-          "y": 0.4697,
-          "w": 0.0562,
-          "h": 0.0762
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:38:46Z",
-      "pipeline_ms": {
-        "efficientad": 262.4,
-        "fastsam": 164.8,
-        "qwen3vl": 12460.7
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2665.2,
-        "decode_tps": 9.3,
-        "prompt_tokens": 575,
-        "output_tokens": 70,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 262363.6,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 262363.6,
-          "dur": 48204.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 310567.8,
-          "dur": 115957.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 426525.6,
-          "dur": 654.2,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 427179.8,
-          "dur": 12460748.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/00ecc6bbbc4f4f2cad4f5880b4270c83.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "anomaly",
-      "severity": "low",
-      "confidence": 0.95,
-      "anomaly_score": 694.0,
-      "bboxes": [
-        {
-          "x": 0.0777,
-          "y": 0.3596,
-          "w": 0.4285,
-          "h": 0.273
-        },
-        {
-          "x": 0.5047,
-          "y": 0.3665,
-          "w": 0.4352,
-          "h": 0.2584
-        },
-        {
-          "x": 0.6469,
-          "y": 0.4846,
-          "w": 0.0633,
-          "h": 0.0762
-        },
-        {
-          "x": 0.7311,
-          "y": 0.4857,
-          "w": 0.0629,
-          "h": 0.0754
-        },
-        {
-          "x": 0.5686,
-          "y": 0.484,
-          "w": 0.0566,
-          "h": 0.0742
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:35:26Z",
-      "pipeline_ms": {
-        "efficientad": 255.6,
-        "fastsam": 205.5,
-        "qwen3vl": 11852.2
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2892.4,
-        "decode_tps": 9.5,
-        "prompt_tokens": 580,
-        "output_tokens": 63,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 255593.4,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 255593.4,
-          "dur": 49286.5,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 304879.9,
-          "dur": 155154.5,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 460034.4,
-          "dur": 1106.6,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 461140.9,
-          "dur": 11852187.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/14c70611cfed4d31aca2d2f8bfdd4f64.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "color_mismatch",
-      "severity": "low",
-      "confidence": 0.95,
-      "anomaly_score": 669.0,
-      "bboxes": [
-        {
-          "x": 0.0816,
-          "y": 0.3617,
-          "w": 0.4289,
-          "h": 0.2773
-        },
-        {
-          "x": 0.5123,
-          "y": 0.3682,
-          "w": 0.4223,
-          "h": 0.2621
-        },
-        {
-          "x": 0.725,
-          "y": 0.4719,
-          "w": 0.0633,
-          "h": 0.0781
-        },
-        {
-          "x": 0.6406,
-          "y": 0.4711,
-          "w": 0.0633,
-          "h": 0.0773
-        },
-        {
-          "x": 0.5609,
-          "y": 0.4711,
-          "w": 0.0578,
-          "h": 0.075
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:35:01Z",
-      "pipeline_ms": {
-        "efficientad": 257.0,
-        "fastsam": 188.3,
-        "qwen3vl": 12606.3
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2825.4,
-        "decode_tps": 9.5,
-        "prompt_tokens": 574,
-        "output_tokens": 71,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 256999.3,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 256999.3,
-          "dur": 48758.3,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 305757.5,
-          "dur": 138892.0,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 444649.6,
-          "dur": 652.4,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 445302.0,
-          "dur": 12606344.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/f40852af9bfa45cc84baaa1da46e0794.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "anomaly",
-      "severity": "medium",
-      "confidence": 0.9,
-      "anomaly_score": 705.0,
-      "bboxes": [
-        {
-          "x": 0.0812,
-          "y": 0.3621,
-          "w": 0.4371,
-          "h": 0.275
-        },
-        {
-          "x": 0.5164,
-          "y": 0.3662,
-          "w": 0.4156,
-          "h": 0.2613
-        },
-        {
-          "x": 0.7203,
-          "y": 0.4865,
-          "w": 0.0633,
-          "h": 0.077
-        },
-        {
-          "x": 0.6361,
-          "y": 0.4859,
-          "w": 0.0637,
-          "h": 0.0758
-        },
-        {
-          "x": 0.5561,
-          "y": 0.4861,
-          "w": 0.0582,
-          "h": 0.0746
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:33:57Z",
-      "pipeline_ms": {
-        "efficientad": 252.4,
-        "fastsam": 204.7,
-        "qwen3vl": 11688.0
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2850.9,
-        "decode_tps": 9.4,
-        "prompt_tokens": 577,
-        "output_tokens": 60,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 252416.4,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 252416.4,
-          "dur": 48823.9,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 301240.3,
-          "dur": 154400.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 455641.1,
-          "dur": 1523.6,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 457164.7,
-          "dur": 11688046.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/0973a9a9abb04547a033cc7b55c39272.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "anomaly",
-      "severity": "medium",
-      "confidence": 0.95,
-      "anomaly_score": 706.5,
-      "bboxes": [
-        {
-          "x": 0.077,
-          "y": 0.3615,
-          "w": 0.4406,
-          "h": 0.2738
-        },
-        {
-          "x": 0.5154,
-          "y": 0.3678,
-          "w": 0.4238,
-          "h": 0.2582
-        },
-        {
-          "x": 0.7299,
-          "y": 0.483,
-          "w": 0.0637,
-          "h": 0.0793
-        },
-        {
-          "x": 0.6467,
-          "y": 0.4816,
-          "w": 0.0629,
-          "h": 0.0797
-        },
-        {
-          "x": 0.5672,
-          "y": 0.4811,
-          "w": 0.057,
-          "h": 0.0785
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:33:42Z",
-      "pipeline_ms": {
-        "efficientad": 259.6,
-        "fastsam": 203.8,
-        "qwen3vl": 12480.4
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2989.8,
-        "decode_tps": 9.4,
-        "prompt_tokens": 582,
-        "output_tokens": 67,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 259609.7,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 259609.7,
-          "dur": 48641.3,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 308251.0,
-          "dur": 153636.5,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 461887.4,
-          "dur": 1551.6,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 463439.1,
-          "dur": 12480398.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/2f702d94612840b290012681c7507323.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "anomaly",
-      "severity": "low",
-      "confidence": 0.95,
-      "anomaly_score": 690.5,
-      "bboxes": [
-        {
-          "x": 0.0844,
-          "y": 0.3607,
-          "w": 0.4367,
-          "h": 0.2754
-        },
-        {
-          "x": 0.5219,
-          "y": 0.3671,
-          "w": 0.4094,
-          "h": 0.258
-        },
-        {
-          "x": 0.7273,
-          "y": 0.4564,
-          "w": 0.0625,
-          "h": 0.0809
-        },
-        {
-          "x": 0.6439,
-          "y": 0.4557,
-          "w": 0.0637,
-          "h": 0.0699
-        },
-        {
-          "x": 0.5654,
-          "y": 0.4545,
-          "w": 0.0566,
-          "h": 0.0785
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:33:18Z",
-      "pipeline_ms": {
-        "efficientad": 400.7,
-        "fastsam": 150.8,
-        "qwen3vl": 12595.2
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2838.8,
-        "decode_tps": 9.6,
-        "prompt_tokens": 578,
-        "output_tokens": 71,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 400697.1,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 400697.1,
-          "dur": 46861.9,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 447558.9,
-          "dur": 103117.9,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 550676.9,
-          "dur": 783.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 551460.0,
-          "dur": 12595183.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/c4ef7d124cec4afc821e004290364a8b.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "cracking",
-      "severity": "low",
-      "confidence": 0.95,
-      "anomaly_score": 680.5,
-      "bboxes": [
-        {
-          "x": 0.0777,
-          "y": 0.3492,
-          "w": 0.4316,
-          "h": 0.2969
-        },
-        {
-          "x": 0.5104,
-          "y": 0.3475,
-          "w": 0.4184,
-          "h": 0.3051
-        },
-        {
-          "x": 0.6477,
-          "y": 0.492,
-          "w": 0.0562,
-          "h": 0.077
-        },
-        {
-          "x": 0.7223,
-          "y": 0.498,
-          "w": 0.057,
-          "h": 0.0758
-        },
-        {
-          "x": 0.5756,
-          "y": 0.4924,
-          "w": 0.052,
-          "h": 0.0746
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:31:11Z",
-      "pipeline_ms": {
-        "efficientad": 226.8,
-        "fastsam": 160.2,
-        "qwen3vl": 11825.8
-      },
-      "vlm_metrics": {
-        "ttft_ms": 3096.4,
-        "decode_tps": 9.4,
-        "prompt_tokens": 582,
-        "output_tokens": 59,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 226846.6,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 226846.6,
-          "dur": 47118.0,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 273964.5,
-          "dur": 112310.7,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 386275.2,
-          "dur": 727.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 387002.4,
-          "dur": 11825796.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/f29ea41553b54315914766e29c2f7378.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "capsule",
-      "defect_type": "crack",
-      "severity": "high",
-      "confidence": 0.95,
-      "anomaly_score": 836.0,
-      "bboxes": [
-        {
-          "x": 0.0852,
-          "y": 0.3234,
-          "w": 0.4367,
-          "h": 0.3516
-        },
-        {
-          "x": 0.5201,
-          "y": 0.3344,
-          "w": 0.4066,
-          "h": 0.3234
-        },
-        {
-          "x": 0.7059,
-          "y": 0.4637,
-          "w": 0.0609,
-          "h": 0.0766
-        },
-        {
-          "x": 0.6248,
-          "y": 0.4598,
-          "w": 0.0598,
-          "h": 0.0766
-        },
-        {
-          "x": 0.5551,
-          "y": 0.4537,
-          "w": 0.0477,
-          "h": 0.0738
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:30:51Z",
-      "pipeline_ms": {
-        "efficientad": 259.4,
-        "fastsam": 196.8,
-        "qwen3vl": 11561.8
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2974.3,
-        "decode_tps": 9.5,
-        "prompt_tokens": 582,
-        "output_tokens": 60,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 259399.1,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 259399.1,
-          "dur": 49141.5,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 308540.6,
-          "dur": 146293.5,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 454834.1,
-          "dur": 1400.0,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 456234.0,
-          "dur": 11561816.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/8223a78c1df045d69b1078444852e171.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "cable",
-      "defect_type": "anomaly",
-      "severity": "medium",
-      "confidence": 0.95,
-      "anomaly_score": 113.312,
-      "bboxes": [
-        {
-          "x": 0.4588,
-          "y": 0.4111,
-          "w": 0.3418,
-          "h": 0.3293
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:28:15Z",
-      "pipeline_ms": {
-        "efficientad": 267.0,
-        "fastsam": 169.2,
-        "qwen3vl": 28389.7
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2849.7,
-        "decode_tps": 9.4,
-        "prompt_tokens": 578,
-        "output_tokens": 219,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 266996.8,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 266996.8,
-          "dur": 47933.4,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 314930.2,
-          "dur": 119596.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 434527.0,
-          "dur": 1678.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 436205.8,
-          "dur": 28389720.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/b462585f7df243d0baba563295860dce.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "cable",
-      "defect_type": "anomaly",
-      "severity": "medium",
-      "confidence": 0.95,
-      "anomaly_score": 106.125,
-      "bboxes": [
-        {
-          "x": 0.2047,
-          "y": 0.4242,
-          "w": 0.318,
-          "h": 0.343
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:27:56Z",
-      "pipeline_ms": {
-        "efficientad": 267.6,
-        "fastsam": 202.3,
-        "qwen3vl": 28755.7
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2941.9,
-        "decode_tps": 9.3,
-        "prompt_tokens": 576,
-        "output_tokens": 217,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 267606.6,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 267606.6,
-          "dur": 48463.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 316069.7,
-          "dur": 152148.0,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 468217.7,
-          "dur": 1649.3,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 469867.0,
-          "dur": 28755696.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/0bee1950b06740cf83ee57126ab77b1a.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "cable",
-      "defect_type": "anomaly",
-      "severity": "low",
-      "confidence": 0.98,
-      "anomaly_score": 111.188,
-      "bboxes": [
-        {
-          "x": 0.4914,
-          "y": 0.3943,
-          "w": 0.3047,
-          "h": 0.3988
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:26:25Z",
-      "pipeline_ms": {
-        "efficientad": 261.1,
-        "fastsam": 206.7,
-        "qwen3vl": 28902.5
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2958.2,
-        "decode_tps": 9.4,
-        "prompt_tokens": 578,
-        "output_tokens": 219,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 261101.5,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 261101.5,
-          "dur": 49653.4,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 310754.8,
-          "dur": 155929.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 466684.0,
-          "dur": 1159.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 467843.1,
-          "dur": 28902486.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/5e05febf1a3842589a33ad33158499ea.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "cable",
-      "defect_type": "anomaly",
-      "severity": "medium",
-      "confidence": 0.95,
-      "anomaly_score": 106.312,
-      "bboxes": [
-        {
-          "x": 0.4359,
-          "y": 0.4311,
-          "w": 0.3938,
-          "h": 0.341
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:24:21Z",
-      "pipeline_ms": {
-        "efficientad": 320.5,
-        "fastsam": 147.7,
-        "qwen3vl": 28313.3
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2731.9,
-        "decode_tps": 9.3,
-        "prompt_tokens": 576,
-        "output_tokens": 215,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 320535.5,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 320535.5,
-          "dur": 46633.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 367169.3,
-          "dur": 100258.0,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 467427.4,
-          "dur": 779.0,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 468206.4,
-          "dur": 28313330.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/0c3187be3d69489a81a77a15c775ddcd.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "cable",
-      "defect_type": "anomaly",
-      "severity": "low",
-      "confidence": 0.97,
-      "anomaly_score": 151.375,
-      "bboxes": [
-        {
-          "x": 0.4523,
-          "y": 0.4383,
-          "w": 0.3266,
-          "h": 0.3187
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:24:16Z",
-      "pipeline_ms": {
-        "efficientad": 222.5,
-        "fastsam": 206.2,
-        "qwen3vl": 28615.6
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2831.5,
-        "decode_tps": 9.4,
-        "prompt_tokens": 578,
-        "output_tokens": 218,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 222463.8,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 222463.8,
-          "dur": 47847.1,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 270310.9,
-          "dur": 156488.8,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 426799.7,
-          "dur": 1899.0,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 428698.7,
-          "dur": 28615624.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/9c6f119c3b47457c80642cb3da9ed67e.jpg"
-    },
-    {
-      "line_id": "L1",
-      "category": "cable",
-      "defect_type": "anomaly",
-      "severity": "low",
-      "confidence": 0.95,
-      "anomaly_score": 128.25,
-      "bboxes": [
-        {
-          "x": 0.191,
-          "y": 0.405,
-          "w": 0.302,
-          "h": 0.328
-        }
-      ],
-      "description": "",
-      "variant": "2B_base",
-      "edge_ts": "2026-05-23T13:23:57Z",
-      "pipeline_ms": {
-        "efficientad": 259.1,
-        "fastsam": 204.8,
-        "qwen3vl": 23349.7
-      },
-      "vlm_metrics": {
-        "ttft_ms": 2880.1,
-        "decode_tps": 9.4,
-        "prompt_tokens": 580,
-        "output_tokens": 169,
-        "rss_mb": 3334.4,
-        "json_parse_ok": true
-      },
-      "trace_events": [
-        {
-          "name": "efficientad_infer",
-          "ts": 0.0,
-          "dur": 259052.5,
-          "tid": "T2.pipeline",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_preprocess",
-          "ts": 259052.5,
-          "dur": 48743.4,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_infer",
-          "ts": 307795.9,
-          "dur": 154298.9,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "fastsam_postprocess",
-          "ts": 462094.8,
-          "dur": 1752.9,
-          "tid": "T3.fastsam",
-          "ph": "X",
-          "cat": "pipeline"
-        },
-        {
-          "name": "qwen3vl_generate",
-          "ts": 463847.7,
-          "dur": 23349742.0,
-          "tid": "T3.vlm",
-          "ph": "X",
-          "cat": "vlm"
-        },
-        {
-          "name": "upload",
-          "ts": 0.0,
-          "dur": 0.0,
-          "tid": "T4.upload",
-          "ph": "X",
-          "cat": "upload"
-        }
-      ],
-      "schema_version": "v1",
-      "image_url": "/demo-data/real_run_latest/images/c3289e4f07cf4ad29dd3e83e243ce062.jpg"
+      "server_ts": "2026-05-25T08:13:13.816077Z"
     }
-  ]
+  ],
+  "total": 11
 }

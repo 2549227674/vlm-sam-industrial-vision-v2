@@ -1,63 +1,58 @@
 {
-  "schema": "stats_snapshot.v1",
-  "source": "real_rk3588",
-  "exported_at": "2026-05-24T01:46:58.326122+08:00",
-  "total": 20,
+  "total": 11,
+  "today_defects": 11,
+  "today_high": 2,
   "by_category": {
-    "carpet": 5,
-    "capsule": 9,
-    "cable": 6
+    "capsule": 3,
+    "cable": 4,
+    "carpet": 2,
+    "metal_nut": 1,
+    "screw": 1
   },
   "by_severity": {
-    "medium": 8,
     "high": 2,
-    "low": 10
+    "low": 3,
+    "medium": 6
   },
+  "timeline": [],
   "ab_compare": {
     "2B_base": {
-      "count": 34,
-      "json_ok_rate": 1.0,
-      "avg_ttft_ms": 2509.6,
-      "avg_decode_tps": 9.46,
-      "avg_rss_mb": 3327.7,
-      "avg_prompt_tokens": 514.0,
-      "avg_output_tokens": 99.0
+      "count": 9,
+      "json_ok_rate": 100.0,
+      "avg_ttft_ms": 2639.8,
+      "avg_decode_tps": 9.9,
+      "avg_rss_mb": 3352.4
     },
     "4B_base": {
-      "count": 5,
-      "json_ok_rate": 1.0,
-      "avg_ttft_ms": 5660.12,
+      "count": 2,
+      "json_ok_rate": 100.0,
+      "avg_ttft_ms": 5507.0,
       "avg_decode_tps": 4.8,
-      "avg_rss_mb": 5736.8,
-      "avg_prompt_tokens": 478.0,
-      "avg_output_tokens": 136.0
+      "avg_rss_mb": 5737.0
     }
   },
   "avg_pipeline_ms": {
-    "efficientad": 265.22,
-    "fastsam": 173.59,
-    "qwen3vl": 18117.93
+    "efficientad": 238.5,
+    "fastsam": 160.6,
+    "qwen3vl": 17776.7
   },
   "category_severity_matrix": {
-    "bottle": {
-      "high": 2,
-      "low": 13,
-      "medium": 1
-    },
-    "cable": {
-      "high": 1,
-      "low": 4,
-      "medium": 4
-    },
     "capsule": {
       "high": 1,
-      "low": 6,
-      "medium": 2
+      "low": 2
+    },
+    "cable": {
+      "medium": 4
     },
     "carpet": {
-      "high": 1,
-      "low": 1,
-      "medium": 3
+      "medium": 1,
+      "high": 1
+    },
+    "metal_nut": {
+      "medium": 1
+    },
+    "screw": {
+      "low": 1
     }
   }
 }

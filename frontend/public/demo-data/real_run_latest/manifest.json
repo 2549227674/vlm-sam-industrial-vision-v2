@@ -1,51 +1,42 @@
 {
   "schema": "real_run_manifest.v1",
   "source": "real_rk3588",
-  "run_id": "phase9_threshold_soak_20260523",
-  "created_at": "2026-05-24T01:46:58.326342+08:00",
+  "run_id": "curated_demo_20260525_161614",
+  "created_at": "2026-05-25T08:16:14.862679+00:00",
   "is_mock": false,
   "is_live": false,
-  "mode": "threshold",
-  "duration_min": 30.2,
+  "mode": "pass_all",
+  "duration_min": 0,
   "edge_device": "Orange Pi 5 Plus / RK3588 / 16GB",
   "contract_version": "v1.2",
+  "snapshot_type": "curated_real_showcase",
+  "description": "Curated real RK3588 showcase snapshot; selected for visual demonstration, not a full benchmark.",
   "mainline": {
     "efficientad": "EfficientAD-S FP16/no-quant raw_score RKNN",
     "fastsam": "FastSAM FP16/no-quant bbox proposal",
     "vlm": "Qwen3-VL-2B base W8A8 RKLLM"
   },
   "data_counts": {
-    "records": 20,
-    "images": 20,
+    "records": 11,
+    "images": 11,
     "categories": [
       "cable",
       "capsule",
-      "carpet"
+      "carpet",
+      "metal_nut",
+      "screw"
     ],
     "variants": [
       "2B_base",
       "4B_base"
     ]
   },
-  "image_export_policy": "all_records",
-  "release_gate": {
-    "current_mainline_release_allowed": true,
-    "threshold_soak_passed": true,
-    "four_b_regression_passed": true,
-    "four_b_regression_scope": "carpet only (5/5 json_ok=1)"
-  },
   "data_source_label": "Real RK3588 Snapshot",
   "caveats": [
-    "T2 is a load shedding gate, not a reliable detector.",
-    "FastSAM mask decode is not implemented; current output is bbox proposal.",
-    "4B is an extension candidate, not the default mainline.",
-    "Threshold values are engineering starting values, not production-certified.",
-    "Data is from MVTec AD test split; no production domain data.",
-    "Snapshot contains 20 unique records (API pagination limit); full run produced 366+ frames."
-  ],
-  "privacy": {
-    "internal_ip_present": false,
-    "secrets_checked": true,
-    "mock_data_excluded": true
-  }
+    "This is a curated selection of real RK3588 pipeline frames, not a complete benchmark.",
+    "BBox overlay is proposal-level (FastSAM/VLM), not verified ground-truth localization.",
+    "Localization reliability varies by category and defect type.",
+    "Success frames demonstrate clear visual cases; limitation frames are included for transparency.",
+    "See docs/experiments/phase9_ead_localization_reliability.md for board-side localization reliability analysis."
+  ]
 }
