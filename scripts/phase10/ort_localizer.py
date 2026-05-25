@@ -192,8 +192,8 @@ def process_image(sess, input_name: str, output_name: str,
     info = classes.get(top_cls, {"full_name": "unknown", "category": "unknown",
                                   "defect_type": "anomaly"})
 
-    bboxes = [{"x": round(b[2][0], 6), "y": round(b[2][1], 6),
-               "w": round(b[2][2], 6), "h": round(b[2][3], 6)}
+    bboxes = [{"x": round(float(b[2][0]), 6), "y": round(float(b[2][1]), 6),
+               "w": round(float(b[2][2]), 6), "h": round(float(b[2][3]), 6)}
               for b in detections]
 
     return {
@@ -242,7 +242,13 @@ def main() -> None:
     dummy = np.zeros((1, 3, args.img_size, args.img_size), dtype=np.float32)
     sess.run([output_name], {input_name: dummy})
 
-    for line in sys.stdin:
+    # Use readline() instead of `for line in sys.stdin:` to avoid
+    # Python's read-ahead buffering, which causes deadlock when the
+    # parent sends one path at a time and waits for the result.
+    while True:
+        line = sys.stdin.readline()
+        if not line:
+            break  # stdin closed (EOF)
         path = line.strip()
         if not path:
             continue

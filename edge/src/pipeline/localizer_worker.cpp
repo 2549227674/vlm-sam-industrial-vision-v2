@@ -206,7 +206,7 @@ bool LocalizerWorker::spawn_subprocess() {
 
   // Read the "ready" line from Python.
   std::string ready = read_line_timeout(proc_stdout_fd_, 30000);
-  if (ready.empty() || ready.find("\"ready\":true") == std::string::npos) {
+  if (ready.empty() || ready.find("\"ready\": true") == std::string::npos) {
     std::fprintf(stderr, "[T3-ort] subprocess did not send ready line: '%s'\n",
                  ready.c_str());
     kill_subprocess();
