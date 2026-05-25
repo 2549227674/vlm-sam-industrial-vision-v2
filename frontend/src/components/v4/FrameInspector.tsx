@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import type { DefectRead } from "@/types/defect";
 import { fmtTime, fmtDateTime, variantLabel, variantColor, variantModel } from "@/lib/mock-data";
 import { SevPill, CatPill, VariantPill, FrameGantt, SimulatedSample, RealImageWithFallback, highlightJson } from "./primitives";
+import { resolveImageUrl } from "@/lib/api";
 import { VlmDefectTooltip } from "./DataSourceBadge";
 
 // ── FrameInspector ──────────────────────────────────────────────────────────
@@ -59,6 +60,21 @@ function FramePane({ defect }: { defect: DefectRead }) {
 
 // FrameCanvas — reusable in inspector, drawer, cards
 export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { defect: DefectRead; cornerLabels?: boolean; aspect?: string }) {
+  // Preload: keep showing old image until new image loads
+  const [displayed, setDisplayed] = useState<DefectRead>(defect);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    if (defect.id === displayed.id) return;
+    const resolved = resolveImageUrl(defect.image_url);
+    if (!resolved) { setDisplayed(defect); return; }
+    const img = new Image();
+    img.onload = () => setDisplayed(defect);
+    img.onerror = () => setDisplayed(defect);
+    img.src = resolved;
+    imgRef.current = img;
+    return () => { img.onload = null; img.onerror = null; };
+  }, [defect, displayed.id]);
+
   // v1.3: source-aware tooltip and label
   const isYoloLocalizer = !!(defect.localization_source && defect.localization_source.includes("yolo"));
   // Detect fallback placeholder: confidence=0, defect_type="anomaly", bbox={0.3,0.3,0.4,0.4}
@@ -75,7 +91,7 @@ export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { 
 
   return (
     <div style={{ position: "relative", width: "100%", aspectRatio: aspect, background: "var(--bg)", border: "1px solid var(--line)", overflow: "hidden" }}>
-      <RealImageWithFallback imageUrl={defect.image_url} category={defect.category} showBadge={cornerLabels} />
+      <RealImageWithFallback imageUrl={displayed.image_url} category={displayed.category} showBadge={cornerLabels} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 2, background: "linear-gradient(90deg, transparent, var(--acc), transparent)", opacity: 0.5, animation: "scan-line 4s linear infinite" }} />
       {cornerLabels && (
         <>
