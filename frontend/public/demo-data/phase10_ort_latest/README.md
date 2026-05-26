@@ -1,6 +1,6 @@
 # Phase 10 v1 ORT Localizer Snapshot
 
-Curated from 30-min soak test on Orange Pi 5 (RK3588). Real YOLOv8n-detect detections.
+Curated from extended RK3588 soak (27m27s) on Orange Pi 5 (RK3588). Real YOLOv8n-detect detections.
 
 ## What this is
 
@@ -33,4 +33,4 @@ Real upload_ms measured after POST and logged to stderr.
 - manifest.json — metadata + caveats
 - defects_snapshot.json — 40 curated records
 - stats_snapshot.json — aggregated stats
-- images/ — 40 JPEG images from soak test
+- images/ — 38 JPEG images from extended RK3588 soak/backend records
