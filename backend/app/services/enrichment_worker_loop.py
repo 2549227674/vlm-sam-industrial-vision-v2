@@ -18,7 +18,12 @@ from collections import deque
 from backend.app.services.enrichment_config import EnrichmentConfig
 from backend.app.services.enrichment_worker import process_next_pending_enrichment
 from backend.app.services.provider_factory import get_provider
-from backend.app.services.vlm_provider import VlmProvider
+from backend.app.services.vlm_provider import (
+    ProviderConfigError,
+    ProviderUnavailableError,
+    VlmProvider,
+    VlmProviderError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +85,15 @@ async def enrichment_worker_loop(
     during FastAPI lifespan shutdown.
     """
     if provider is None:
-        provider = _build_provider(config)
+        try:
+            provider = _build_provider(config)
+        except (
+            ProviderConfigError, ProviderUnavailableError, VlmProviderError, ValueError,
+        ) as exc:
+            logger.error(
+                "Enrichment worker loop aborting: provider construction failed: %s", exc,
+            )
+            return
 
     limiter = _RateLimiter(config.max_per_minute)
 
@@ -129,10 +142,7 @@ async def _poll_once(
     provider: VlmProvider,
 ):
     """Process one pending job (if any). Returns the enrichment or None."""
-    from backend.app.db import Base  # noqa: avoid circular
-    from sqlalchemy.ext.asyncio import AsyncSession
-
-    async with create_session_factory() as db:  # type: AsyncSession
+    async with create_session_factory() as db:
         try:
             result = await process_next_pending_enrichment(db, provider=provider)
             await db.commit()

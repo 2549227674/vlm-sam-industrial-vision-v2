@@ -76,11 +76,18 @@ async def lifespan(app: FastAPI):
 
     # shutdown
     if app.state.enrichment_worker_task is not None:
-        app.state.enrichment_worker_task.cancel()
-        try:
-            await app.state.enrichment_worker_task
-        except asyncio.CancelledError:
-            pass
+        if not app.state.enrichment_worker_task.done():
+            app.state.enrichment_worker_task.cancel()
+            try:
+                await app.state.enrichment_worker_task
+            except (asyncio.CancelledError, Exception):
+                pass
+        elif app.state.enrichment_worker_task.exception():
+            # Task finished with an exception — log it, don't crash shutdown
+            logger.warning(
+                "Enrichment worker task ended with error: %s",
+                app.state.enrichment_worker_task.exception(),
+            )
         logger.info("Enrichment worker loop task stopped")
 
     await app.state.ws_manager.stop_heartbeat()

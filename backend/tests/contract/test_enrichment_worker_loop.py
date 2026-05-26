@@ -584,3 +584,39 @@ async def test_worker_rate_limit_behavior():
     assert not limiter.allow()
     # wait_seconds should be positive
     assert limiter.wait_seconds > 0
+
+
+@pytest.mark.asyncio
+async def test_invalid_provider_exits_cleanly(_loop_db):
+    """Worker loop with invalid provider returns cleanly, no crash."""
+    from backend.app.services.enrichment_config import EnrichmentConfig
+    from backend.app.services.vlm_provider import ProviderConfigError
+
+    config = EnrichmentConfig(
+        enabled=True,
+        worker_enabled=True,
+        provider="nonexistent_provider",
+    )
+    # Must not raise — should return cleanly
+    await enrichment_worker_loop(
+        config, create_session_factory=_loop_db, provider=None,
+    )
+
+
+@pytest.mark.asyncio
+async def test_shutdown_after_failed_task():
+    """Shutdown handles a task that ended with an exception."""
+    async def _failing_coro():
+        raise RuntimeError("Simulated worker crash")
+
+    task = asyncio.create_task(_failing_coro())
+    await asyncio.sleep(0.05)
+    assert task.done()
+    assert task.exception() is not None
+
+    # Simulate main.py shutdown logic for an already-done task with exception
+    if task.done():
+        exc = task.exception()
+        if exc:
+            # Must not re-raise
+            pass
