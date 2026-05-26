@@ -6,7 +6,14 @@
 > Document purpose: planning / control document for Claude Code and reviewer workflow  
 > Status: plan only — do not write implementation code until reviewed
 >
-> **Implementation branch status (2026-05-26):** `phase10.1/vlm-async-enrichment-impl` has Phase 10.1a Steps 1–3b completed (manual enrichment loop + frontend display). Real edge_vlm subprocess/http execution, worker auto-start, and auto-enqueue remain future work. See `docs/experiments/phase10_1_execution_plan.md` §13a for details.
+> **Implementation status (2026-05-26, main HEAD `68b6aaa`):**
+> Phase 10.1a manual enrichment loop merged (PRs #4–#6).
+> EdgeVlmProvider subprocess mode merged (PR #5).
+> Phase 10.1b optional auto-enqueue merged (PR #8).
+> Phase 10.1b optional worker loop behind flags merged (PR #9).
+> 311/311 backend contract tests pass.
+> Remaining: cloud_vlm (10.1c, optional), WebSocket enrichment events, retry schema, PostgreSQL locking.
+> See `docs/experiments/phase10_1_execution_plan.md` §13a for full status.
 >
 > **Primary route:** edge_vlm async observation on RK3588.  
 > **Fallback:** template observation.  

@@ -766,38 +766,48 @@ If enrichment causes problems after merge:
 | Step 2d | `f348d96` | Manual process routes — `POST /api/enrich/{id}/process?provider=`, `POST /api/enrich/process-next?provider=`, provider=template success, 14 process API tests |
 | Step 3a | `cf12ef0` | Frontend enrichment state display — source-aware header, observation panel, provenance labels, safety caveat, `ObsSourcePill`, API helper |
 | Step 3b | (this commit) | Documentation sync — API contract §14, execution plan status update |
+| PR #5 | `d7a2c34` | EdgeVlmProvider subprocess wiring — image_resolver, asyncio.create_subprocess_exec, fake subprocess tests |
+| PR #6 | `6949771` | Phase 10.1a EdgeVlmProvider subprocess manual runbook |
+| PR #7 | `494828e` | Phase 10.1b auto-enqueue / worker loop execution plan doc |
+| PR #8 | `184dadf` | Optional enrichment auto-enqueue on defect creation — config helper, enqueue helper, 57 new tests |
+| PR #9 | `68b6aaa` | Optional enrichment worker loop behind flags — poll cycle, rate limiter, lifespan wiring, hardening, 19 new tests |
 
-**Test count:** 202/202 backend contract tests pass. Frontend: `tsc --noEmit` 0 errors, `npm run build` succeeds.
+**Test count:** 311/311 backend contract tests pass (as of PR #9 merge).
 
-### Current Manual Backend-Only Loop
+### Current Automated Backend Loop (after PRs #8 and #9)
 
 ```
 POST /api/edge/report
-  → creates defect only (no enrichment job, no VLM call)
+  → creates defect only (no VLM call)
+  → if ENRICHMENT_ENABLED=true AND ENRICHMENT_AUTO_ENQUEUE=true:
+      → best-effort auto-enqueue: creates pending defect_enrichments row
+      → does NOT call provider, does NOT process job
 
-POST /api/defects/{id}/enrich
-  → creates pending enrichment job only (no provider call)
+Worker loop (asyncio task in lifespan, started only when
+  ENRICHMENT_ENABLED=true AND ENRICHMENT_WORKER_ENABLED=true):
+  → polls oldest pending enrichment via process_next_pending_enrichment()
+  → respects ENRICHMENT_MAX_PER_MINUTE rate limit
+  → sleeps ENRICHMENT_WORKER_IDLE_SLEEP_S when idle
+  → sleeps ENRICHMENT_WORKER_POLL_INTERVAL_S between jobs
+  → reuses existing process_enrichment_job() → provider → guard pipeline
+  → on success: updates defects.observation / severity_reason / observation_source
+  → on error: marks enrichment failed/rejected, does NOT mutate defect
+  → clean shutdown via asyncio.CancelledError in lifespan
 
-POST /api/enrich/{id}/process?provider=template
-  → processes pending job deterministically (TemplateProvider)
-  → updates defects.observation / severity_reason / observation_source
-  → never updates bboxes / defect_type / confidence / anomaly_score
-
-GET /api/defects/{id}/enrichment
-  → returns latest enrichment status
-
-GET /api/defects/{id}
-  → shows denormalized observation fields after successful process
+POST /api/enrich/{id}/process?provider=   (manual, still works)
+POST /api/enrich/process-next?provider=   (manual, still works)
+GET  /api/defects/{id}/enrichment         (query enrichment status)
 ```
 
 ### Still Not Implemented
 
 | Item | Status | Target |
 |---|---|---|
-| Real EdgeVlmProvider subprocess/http execution | NOT DONE | Phase 10.1a later / 10.1b |
-| Worker auto-start in lifespan loop | NOT DONE | Phase 10.1a later / 10.1b |
-| Auto-enqueue after defect insert (`ENRICHMENT_AUTO_ENQUEUE`) | NOT DONE | Phase 10.1b |
-| Cloud VLM provider | NOT DONE | Phase 10.1c (optional) |
+| Cloud VLM provider | NOT DONE | Phase 10.1c (optional, provider-neutral) |
+| WebSocket enrichment events | NOT DONE | Phase 10.1b-3 (optional) |
+| Worker status endpoint | NOT DONE | Phase 10.1b-3 (optional) |
+| Retry schema (retry_count / last_error_at / next_attempt_at) | NOT DONE | Future |
+| PostgreSQL SKIP LOCKED / multi-process locking | NOT DONE | Future (current worker is single-process only) |
 | LoRA retraining | NOT DONE | Not required for Phase 10.1 |
 | Segmentation / mask | NOT DONE | Out of scope |
 | RKNN integration | NOT DONE | Out of scope (Phase 8/9 blocked) |
