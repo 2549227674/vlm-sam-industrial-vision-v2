@@ -63,6 +63,36 @@ export function VariantPill({ value, compact }: { value: string; compact?: boole
   );
 }
 
+// ── Observation source chip ────────────────────────────────────────────────
+
+const OBS_SOURCE_COLOR: Record<string, string> = {
+  template: "var(--fg-3)",
+  edge_vlm: "var(--acc)",
+  cloud_vlm: "#7cdcff",
+};
+const OBS_SOURCE_LABEL: Record<string, string> = {
+  template: "Template",
+  edge_vlm: "Edge VLM",
+  cloud_vlm: "Cloud VLM",
+};
+
+export function ObsSourcePill({ source }: { source: string }) {
+  const c = OBS_SOURCE_COLOR[source] || "var(--fg-3)";
+  const l = OBS_SOURCE_LABEL[source] || source;
+  return (
+    <span
+      className="mono"
+      style={{
+        fontSize: 8, padding: "1px 6px", border: `1px solid ${c}`, color: c,
+        letterSpacing: "0.1em", fontWeight: 600,
+        background: `color-mix(in srgb, ${c} 12%, transparent)`,
+      }}
+    >
+      {l}
+    </span>
+  );
+}
+
 // ── Metric tile ─────────────────────────────────────────────────────────────
 
 export function KPITile({

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { DefectRead } from "@/types/defect";
-import { fmtTime, fmtDateTime, variantLabel, variantColor, variantModel } from "@/lib/mock-data";
-import { SevPill, CatPill, VariantPill, FrameGantt, SimulatedSample, RealImageWithFallback, highlightJson } from "./primitives";
+import { fmtTime, fmtDateTime, variantLabel, variantColor } from "@/lib/mock-data";
+import { SevPill, CatPill, VariantPill, FrameGantt, RealImageWithFallback, highlightJson, ObsSourcePill } from "./primitives";
 import { resolveImageUrl } from "@/lib/api";
-import { VlmDefectTooltip } from "./DataSourceBadge";
 
 // ── FrameInspector ──────────────────────────────────────────────────────────
 
@@ -136,18 +135,49 @@ export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { 
   );
 }
 
+// ── Source-aware helpers ───────────────────────────────────────────────────
+
+function observationSourceLabel(src?: string | null): string {
+  if (src === "edge_vlm") return "边缘 VLM 增强 · Edge VLM";
+  if (src === "cloud_vlm") return "云端 VLM 增强 · Cloud VLM";
+  if (src === "template") return "检测输出 · Template";
+  return "检测输出 · Detector";
+}
+
+function jsonTabFilename(src?: string | null): string {
+  if (src === "edge_vlm") return "edge_vlm_enrichment.json";
+  if (src === "cloud_vlm") return "cloud_vlm_enrichment.json";
+  if (src === "template") return "template_output.json";
+  return "detector_output.json";
+}
+
+function localizationSourceLabel(src?: string | null): string {
+  if (src && src.includes("yolo")) return "YOLO/ORT localizer";
+  if (src === "ort_yolov8n_cpu") return "YOLO/ORT localizer";
+  return src || "Unknown";
+}
+
+function labelSourceLabel(src?: string | null): string {
+  if (src === "yolo_class_head") return "YOLO class head";
+  return src || "Unknown";
+}
+
 // ── Right pane (JSON / Metrics / Provenance) ────────────────────────────────
 
 function RightPane({ defect, tab, setTab }: { defect: DefectRead; tab: string; setTab: (t: "json" | "metrics" | "provenance") => void }) {
+  const header = observationSourceLabel(defect.observation_source);
   return (
     <div style={{ padding: 18, background: "linear-gradient(180deg, var(--bg-1) 0%, #0a0a10 100%)", display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <div>
-          <div className="eyebrow">VLM 输出 · {variantModel(defect.variant)} · {variantLabel(defect.variant)}</div>
+          <div className="eyebrow">{header}</div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 4 }}>
             <span style={{ fontSize: 14, color: "var(--fg)", fontWeight: 500 }}>
-              {tab === "json" ? "JSON 流输出" : tab === "metrics" ? "VLM 指标" : "溯源"}
+              {tab === "json" ? "JSON 流输出" : tab === "metrics" ? "指标" : "溯源"}
             </span>
+            {defect.observation_source && (
+              <ObsSourcePill source={defect.observation_source} />
+            )}
           </div>
         </div>
         <div style={{ display: "inline-flex", border: "1px solid var(--line)", background: "var(--bg-1)" }}>
@@ -165,9 +195,48 @@ function RightPane({ defect, tab, setTab }: { defect: DefectRead; tab: string; s
           })}
         </div>
       </div>
+      <ObservationPanel defect={defect} />
       {tab === "json" && <JsonTab defect={defect} />}
       {tab === "metrics" && <MetricsTab defect={defect} />}
       {tab === "provenance" && <ProvenanceTab defect={defect} />}
+    </div>
+  );
+}
+
+// ── Observation panel ─────────────────────────────────────────────────────
+
+function ObservationPanel({ defect }: { defect: DefectRead }) {
+  const observation = defect.observation?.trim()
+    || defect.description?.trim()
+    || null;
+  const sevReason = defect.severity_reason?.trim() || null;
+  const src = defect.observation_source;
+
+  return (
+    <div style={{ background: "var(--bg-1)", border: "1px solid var(--line)", padding: "10px 14px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <span className="eyebrow" style={{ fontSize: 9 }}>观察描述 · Observation</span>
+        <span className="mono" style={{ fontSize: 9, color: "var(--fg-3)" }}>
+          {src === "edge_vlm" ? "Edge VLM"
+            : src === "cloud_vlm" ? "Cloud VLM"
+            : src === "template" ? "Template"
+            : "Detector"}
+        </span>
+      </div>
+      <div style={{ fontSize: 12, color: observation ? "var(--fg-1)" : "var(--fg-3)", lineHeight: 1.5 }}>
+        {observation || "Template observation pending / 当前为模板观察，尚无 VLM 增强。"}
+      </div>
+      {sevReason && (
+        <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--line-soft)" }}>
+          <span className="eyebrow" style={{ fontSize: 9, display: "block", marginBottom: 4 }}>严重性依据 · Severity Reason</span>
+          <span style={{ fontSize: 11, color: "var(--fg-2)" }}>{sevReason}</span>
+        </div>
+      )}
+      {!sevReason && (
+        <div style={{ marginTop: 6, fontSize: 10, color: "var(--fg-4)" }}>
+          Severity currently follows template/default rule.
+        </div>
+      )}
     </div>
   );
 }
@@ -177,7 +246,11 @@ function JsonTab({ defect }: { defect: DefectRead }) {
   const target = JSON.stringify({
     category: defect.category, defect_type: defect.defect_type, severity: defect.severity,
     confidence: defect.confidence, bboxes: defect.bboxes.map(b => ({ x: +b.x.toFixed(3), y: +b.y.toFixed(3), w: +b.w.toFixed(3), h: +b.h.toFixed(3) })),
-    description: defect.description?.trim() ? defect.description : "(omitted by compact VLM output)",
+    localization_source: defect.localization_source ?? null,
+    label_source: defect.label_source ?? null,
+    observation_source: defect.observation_source ?? null,
+    observation: defect.observation?.trim() || defect.description?.trim() || null,
+    severity_reason: defect.severity_reason?.trim() || null,
   }, null, 2);
 
   useEffect(() => {
@@ -201,7 +274,7 @@ function JsonTab({ defect }: { defect: DefectRead }) {
         <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#ff6378" }} />
         <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#ffbf5c" }} />
         <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#6dffac" }} />
-        <span className="mono" style={{ marginLeft: 10, fontSize: 9, color: "var(--fg-3)", letterSpacing: "0.1em" }}>vlm_output.json · {variantLabel(defect.variant)}</span>
+        <span className="mono" style={{ marginLeft: 10, fontSize: 9, color: "var(--fg-3)", letterSpacing: "0.1em" }}>{jsonTabFilename(defect.observation_source)} · {variantLabel(defect.variant)}</span>
         <span style={{ flex: 1 }} />
         <span className="mono" style={{ fontSize: 9, color: done && defect.vlm_metrics?.json_parse_ok ? "var(--ok)" : "var(--warn)" }}>
           {!done ? "● 流输出中" : defect.vlm_metrics?.json_parse_ok ? "✓ 已解析" : "✗ 重试"}
@@ -260,6 +333,9 @@ function ProvenanceTab({ defect }: { defect: DefectRead }) {
     ["图像路径", defect.image_url],
     ["版本", defect.schema_version],
     ["追踪事件", `${defect.trace_events?.length ?? 0} 条`],
+    ["BBox 来源", localizationSourceLabel(defect.localization_source)],
+    ["标签来源", labelSourceLabel(defect.label_source)],
+    ["观察来源", defect.observation_source || "template (default)"],
   ];
   return (
     <div style={{ flex: 1, background: "var(--bg-1)", border: "1px solid var(--line)", padding: "12px 0", minHeight: 320, overflow: "auto" }}>
@@ -269,6 +345,11 @@ function ProvenanceTab({ defect }: { defect: DefectRead }) {
           <span className="mono" style={{ fontSize: 11, color: "var(--fg-1)", wordBreak: "break-all" }}>{v}</span>
         </div>
       ))}
+      <div style={{ padding: "10px 16px", marginTop: 4, borderTop: "1px dashed var(--line-soft)" }}>
+        <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)", lineHeight: 1.6 }}>
+          VLM enrichment is narrative-only. It does not modify bbox, defect_type, category, confidence, or anomaly_score.
+        </span>
+      </div>
     </div>
   );
 }

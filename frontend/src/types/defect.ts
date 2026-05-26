@@ -79,3 +79,26 @@ export interface DefectRead {
   object_proposals?: BBox[];
   gt_reference_bboxes?: BBox[];
 }
+
+// Phase 10.1: enrichment types
+
+export type EnrichmentStatus =
+  | "pending" | "running" | "complete" | "failed" | "rejected" | "skipped";
+
+export type EnrichmentProvider = "template" | "edge_vlm" | "cloud_vlm";
+
+export interface DefectEnrichmentRead {
+  id: number;
+  defect_id: number;
+  provider: EnrichmentProvider;
+  provider_model: string;
+  prompt_version: string;
+  status: EnrichmentStatus;
+  observation?: string | null;
+  severity_reason?: string | null;
+  accepted_box_ids?: number[] | null;
+  error_message?: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string | null;
+}
