@@ -1,74 +1,53 @@
-# Phase 10 ORT Snapshot Demo Plan
+# Phase 10 v1 Snapshot Demo Plan
 
-## Snapshot Mechanism: PASS (2026-05-26)
-## 30-min Soak Test: PENDING (running on RK3588)
-## Final Snapshot Source: PRELIMINARY (simulator data; will regenerate from soak records)
+## Status: PASS (2026-05-26)
 
-## Purpose
+## Deliverables
 
-Static frontend demo artifact for merge-main / remote server presentation.
-Demonstrates Phase 10 ORT CPU fallback integration without requiring a live backend or RK3588.
+### 1. Soak Evidence (Engineering Reliability)
+- 30-min RK3588 run, metal_nut + cable only
+- Metrics recorded in `phase10_ort_integration_plan.md` Gate 2
+- Purpose: release gate, not demo artifact
 
-## Current Status
+### 2. Phase 10 v1 Localization Snapshot (Demo Artifact)
+- Curated from soak test backend records
+- 40 records, metal_nut + cable only, 12 defect types
+- Real YOLO detections only (confidence > 0, no fallback boxes)
+- v1.3 fields: localization_source, label_source, observation_source, pipeline_ms.localizer, T3.localizer trace_events
+- Purpose: merge-main / remote frontend static demo
 
-The snapshot mechanism (data-source.ts fallback, manifest/defects/stats loading, frontend rendering)
-is verified PASS. However, the current snapshot data was generated from simulator data before the
-30-min soak test completed. It is labeled **PRELIMINARY** in manifest.json and README.md.
+### 3. Phase 10.1 Roadmap Note
+- VLM is NOT called in Phase 10 v1
+- observation_source="template", severity fixed to "medium"
+- observation/severity_reason enrichment is Phase 10.1 scope
+- Do not present v1 snapshot as full VLM-enriched inspection pipeline
 
-After the soak test completes, the snapshot will be regenerated from the actual backend records
-uploaded by the RK3588 edge_pipeline during the soak run.
-
-## Files
+## Snapshot Files
 
 | File | Description |
 |------|-------------|
-| `frontend/public/demo-data/phase10_ort_latest/manifest.json` | Snapshot metadata + caveats |
-| `frontend/public/demo-data/phase10_ort_latest/defects_snapshot.json` | 20 defect records |
+| `frontend/public/demo-data/phase10_ort_latest/manifest.json` | Metadata + caveats |
+| `frontend/public/demo-data/phase10_ort_latest/defects_snapshot.json` | 40 curated records |
 | `frontend/public/demo-data/phase10_ort_latest/stats_snapshot.json` | Aggregated stats |
-| `frontend/public/demo-data/phase10_ort_latest/images/` | 20 JPEG images |
-| `frontend/public/demo-data/phase10_ort_latest/README.md` | Human-readable docs |
+| `frontend/public/demo-data/phase10_ort_latest/images/` | 40 JPEG images |
+| `frontend/public/demo-data/phase10_ort_latest/README.md` | Docs |
 
-## Data Composition (Preliminary)
+## Data Composition
 
-- 12 metal_nut detections (bent, color, flip, scratch, etc.)
-- 8 cable detections (bent_wire, combined, etc.)
-- All variant="ort_2B" with v1.3 source fields
-- Bounding boxes from YOLOv8n-detect (normalized [0,1])
-- Pipeline: EfficientAD (~18ms) → YOLO Localizer (~188ms) → Upload (~13ms)
-- **Source: simulator-generated data, NOT real RK3588 soak run**
+- 16 metal_nut detections (bent, color, flip, scratch)
+- 24 cable detections (bent_wire, cable_swap, combined, cut_inner_insulation, cut_outer_insulation, missing_cable, missing_wire, poke_insulation)
+- All variant="ort_2B", confidence > 0
+- Bounding boxes from YOLOv8n-detect (normalized [0,1], center-x/y format)
+- Pipeline: EfficientAD → YOLO Localizer → Upload
+
+## Caveats (in manifest.json)
+
+1. ORT CPU fallback, NOT RKNN/NPU. RKNN remains BLOCKED.
+2. VLM NOT called. observation_source=template. Enrichment is Phase 10.1.
+3. Only metal_nut + cable (12 YOLO classes).
+4. pipeline_ms.upload=0.0 (sequencing constraint).
 
 ## Frontend Integration
 
-`data-source.ts` updated to try `phase10_ort_latest` before `real_run_latest`.
-Snapshot tier activates when live API is unreachable (static export / remote demo).
-
-Priority order:
-1. Live API (backend running)
-2. Phase 10 ORT snapshot (new)
-3. Real run latest (existing Phase 9 snapshot)
-4. Mock fallback
-
-## Caveats (included in manifest.json)
-
-1. **PRELIMINARY**: Generated from simulator data, not completed soak run.
-2. This is ORT CPU fallback, NOT RKNN/NPU deployment. RKNN remains BLOCKED.
-3. pipeline_ms.upload is 0.0 in edge payloads (sequencing constraint).
-4. VLM is not called — severity fixed to "medium".
-5. localization_source="ort_yolov8n_cpu" = ONNX Runtime on CPU, not NPU.
-6. Backend auth was temporarily disabled for soak test uploads. Not production config.
-
-## Verification
-
-- Frontend loads snapshot when backend is stopped
-- ORT records render with "ort" badge, YOLO Localizer Gantt bar
-- BBox overlays visible on metal_nut and cable images
-- Stats show ort_2B in ab_compare
-
-## Post-Soak Actions
-
-After 30-min soak test completes:
-1. Collect final metrics from Orange Pi logs and droplet backend
-2. Regenerate snapshot from droplet backend records
-3. Update manifest with soak run_id, duration, and real metrics
-4. Remove "PRELIMINARY" labels
-5. Re-enable backend auth
+`data-source.ts`: phase10_ort_latest > real_run_latest > mock.
+API_BASE built with `NEXT_PUBLIC_API_BASE=https://vision.hanlab.app`.

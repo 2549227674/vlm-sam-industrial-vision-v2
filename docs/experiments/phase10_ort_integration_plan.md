@@ -407,13 +407,19 @@ be counted as localization success.
 Auth temporarily disabled for soak test uploads (C++ edge_pipeline does not send auth headers).
 Will be re-enabled after soak completes.
 
-### 6. Snapshot Demo — PRELIMINARY (2026-05-26)
+### 6. Snapshot Demo — PASS (2026-05-26)
 
 **Snapshot mechanism: PASS** — data-source.ts fallback, manifest/defects/stats loading, frontend rendering all verified.
-**Snapshot data: PRELIMINARY** — generated from simulator data before soak test completed.
-Will be regenerated from actual soak test backend records after soak finishes.
+**Snapshot data: PASS** — 40 curated records from soak test backend, metal_nut + cable only, real YOLO detections (confidence > 0, no fallback boxes).
 
 See `docs/experiments/phase10_snapshot_demo_plan.md` for full details.
+
+### 7. Phase 10.1 Roadmap Note
+
+Phase 10 v1 scope: ORT localizer for bbox + defect_type + confidence. VLM is NOT called.
+- observation_source="template", severity fixed to "medium"
+- observation, severity_reason, defect_family enrichment is Phase 10.1 scope
+- Do not present v1 snapshot as full VLM-enriched inspection pipeline
 
 ### 7. Performance Regression Check — PASS
 

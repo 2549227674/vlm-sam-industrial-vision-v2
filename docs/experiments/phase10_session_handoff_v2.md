@@ -48,7 +48,8 @@ branch: phase10/localization-refactor-v1（已推送到 origin）
 | API contract (83/83 tests) | **PASS** |
 | Performance (T3=172ms < 500ms) | **PASS** |
 | Frontend smoke test | **PASS** |
-| 30-min soak test | PENDING |
+| 30-min soak test | **PASS** |
+| Snapshot demo | **PASS** |
 
 ### Commit 历史（最新在前）
 ```
@@ -76,10 +77,18 @@ c4833b3 docs: plan corrections — schema_version stays v1, frame handoff spec
 
 ## 待完成
 
-1. ~~**Frontend smoke test**~~：**PASS** (2026-05-26) — ORT variant rendering, YOLO Localizer Gantt, variant filter, bbox tooltip 全部验证通过
-2. **30-min soak test**：**RUNNING** (2026-05-26) — Orange Pi tmux session "soak", uploading to droplet, monitoring via scheduled wakeup
-3. **pipeline_ms.upload**：已文档化 — JSON 在 POST 前序列化，upload_ms 始终为 0.0，实际值记录在 stderr
-4. **RKNN 方向**：Track B issue repro 已准备好，等用户决策是否提交 GitHub issue
+1. ~~**Frontend smoke test**~~：**PASS** (2026-05-26)
+2. ~~**30-min soak test**~~：**PASS** (2026-05-26) — 2082 frames, 0 crashes, 0 HTTP 400, RSS=34MB, T3 avg=187.7ms
+3. ~~**pipeline_ms.upload**~~：已文档化 — JSON 在 POST 前序列化，upload_ms 始终为 0.0
+4. ~~**Snapshot demo**~~：**PASS** (2026-05-26) — 40 curated records, metal_nut + cable, real detections only
+5. **RKNN 方向**：Track B issue repro 已准备好，等用户决策是否提交 GitHub issue
+
+## Phase 10.1 路线图
+
+Phase 10 v1 范围：ORT localizer 做 bbox + defect_type + confidence。VLM 未调用。
+- observation_source="template"，severity 固定 "medium"
+- observation / severity_reason / defect_family enrichment 属于 Phase 10.1 范围
+- 不要把 v1 snapshot 当作完整的 VLM enriched inspection pipeline 展示
 
 ## 关键文件位置
 
