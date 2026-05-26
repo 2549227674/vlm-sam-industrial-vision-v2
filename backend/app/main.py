@@ -1,3 +1,5 @@
+import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,6 +14,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from backend.app.db import Base, engine
 import backend.app.models  # noqa: F401 — ensure Defect is registered with Base.metadata
 from backend.app.ws.manager import ConnectionManager
+
+logger = logging.getLogger(__name__)
 
 _DEFECT_STORAGE_DIR = os.environ.get("DEFECT_STORAGE_DIR")
 if _DEFECT_STORAGE_DIR:
@@ -47,8 +51,38 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     app.state.ws_manager = ConnectionManager()
     await app.state.ws_manager.start_heartbeat()
+
+    # Optional enrichment worker loop (Phase 10.1b-2)
+    # Starts only when both flags are true. Defaults off.
+    app.state.enrichment_worker_task = None
+    from backend.app.services.enrichment_config import load_enrichment_config
+    enrichment_cfg = load_enrichment_config()
+    if enrichment_cfg.enabled and enrichment_cfg.worker_enabled:
+        from backend.app.db import async_session
+        from backend.app.services.enrichment_worker_loop import enrichment_worker_loop
+        app.state.enrichment_worker_task = asyncio.create_task(
+            enrichment_worker_loop(
+                enrichment_cfg,
+                create_session_factory=async_session,
+            ),
+        )
+        logger.info(
+            "Enrichment worker loop task started "
+            "(provider=%s, max_per_minute=%d)",
+            enrichment_cfg.provider, enrichment_cfg.max_per_minute,
+        )
+
     yield
+
     # shutdown
+    if app.state.enrichment_worker_task is not None:
+        app.state.enrichment_worker_task.cancel()
+        try:
+            await app.state.enrichment_worker_task
+        except asyncio.CancelledError:
+            pass
+        logger.info("Enrichment worker loop task stopped")
+
     await app.state.ws_manager.stop_heartbeat()
     await engine.dispose()
 
