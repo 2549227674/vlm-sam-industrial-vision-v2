@@ -35,6 +35,11 @@ CATEGORIES: dict[str, str] = {
     "screw":     "L2",
     "pill":      "L3",
 }
+
+# Phase 10: ORT localizer variant (only metal_nut supported by ORT model)
+ORT_CATEGORIES: dict[str, str] = {
+    "metal_nut": "L4",
+}
 BEAT_MS  = 1500   # 产线节拍（毫秒）
 JITTER_MS = 200   # 节拍抖动上限（±）
 
@@ -122,6 +127,105 @@ def fabricate_metadata(
         "trace_events":   generate_trace_events(pipeline_ms, vlm_metrics),
         "schema_version": "v1",
     }
+
+
+def fabricate_ort_metadata(
+    category: str,
+    line_id: str,
+    defect_type: str,
+    edge_ts: datetime,
+) -> dict:
+    """ORT localizer variant metadata — Phase 10 v1.3 fields."""
+    is_defect = defect_type != "good"
+
+    severity  = random.choice(["low", "medium", "high"]) if is_defect else "low"
+    confidence    = round(random.uniform(0.70, 0.99), 3) if is_defect else 0.99
+    anomaly_score = round(random.uniform(5.0, 25.0), 2)  if is_defect else round(random.uniform(0.1, 2.0), 2)
+
+    bboxes: list[dict] = []
+    if is_defect:
+        for _ in range(random.randint(1, 2)):
+            x = round(random.uniform(0.05, 0.70), 4)
+            y = round(random.uniform(0.05, 0.70), 4)
+            w = round(random.uniform(0.05, min(0.25, 0.95 - x)), 4)
+            h = round(random.uniform(0.05, min(0.25, 0.95 - y)), 4)
+            bboxes.append({"x": x, "y": y, "w": w, "h": h})
+        bboxes = bboxes[:16]
+
+    # v1.3 pipeline_ms: efficientad + localizer + upload (no fastsam/qwen3vl)
+    pipeline_ms = {
+        "efficientad": round(random.uniform(10.0, 25.0), 1),
+        "localizer":   round(random.uniform(150.0, 220.0), 1),
+        "upload":      round(random.uniform(8.0, 20.0), 1),
+    }
+
+    # v1.3: no VLM metrics (VLM not called)
+    vlm_metrics = None
+
+    return {
+        "line_id":             line_id,
+        "category":            category,
+        "defect_type":         defect_type,
+        "severity":            severity,
+        "confidence":          confidence,
+        "anomaly_score":       anomaly_score,
+        "bboxes":              bboxes,
+        "description":         "",
+        "variant":             "ort_2B",
+        "edge_ts":             edge_ts.isoformat(),
+        "pipeline_ms":         pipeline_ms,
+        "vlm_metrics":         vlm_metrics,
+        "trace_events":        generate_ort_trace_events(pipeline_ms),
+        "schema_version":      "v1",
+        # v1.3 source fields
+        "localization_source": "ort_yolov8n_cpu",
+        "label_source":        "yolo_class_head",
+        "observation_source":  "template",
+    }
+
+
+def generate_ort_trace_events(pipeline_ms: dict) -> list[dict]:
+    """Generate Chrome Trace events for ORT localizer pipeline.
+
+    Stages: capture → EfficientAD preprocess+infer → localizer preprocess+infer+postprocess → upload
+    """
+    def ms(value: object) -> float:
+        try:
+            return max(0.0, float(value or 0.0))
+        except (TypeError, ValueError):
+            return 0.0
+
+    def us(value_ms: float) -> float:
+        return round(max(0.0, value_ms) * 1000.0, 3)
+
+    ead_ms = ms(pipeline_ms.get("efficientad"))
+    loc_ms = ms(pipeline_ms.get("localizer"))
+    upload_ms = ms(pipeline_ms.get("upload"))
+
+    capture_ms = 6.0
+    preprocess_ms = 4.0
+
+    # Split localizer into pre/infer/post (typical: 3ms / 156ms / 1ms)
+    loc_pre = min(5.0, loc_ms * 0.02)
+    loc_infer = loc_ms - loc_pre - 1.0
+    loc_post = 1.0
+
+    t0 = 0.0
+    t_capture = t0
+    t_pipeline = t_capture + capture_ms
+    t_ead = t_pipeline + preprocess_ms
+    t_loc = t_ead + ead_ms
+    t_upload = t_loc + loc_ms
+
+    return [
+        {"name": "V4L2_dequeue",           "ts": us(t_capture), "dur": us(capture_ms),    "tid": "T1.capture",    "ph": "X", "cat": "io"},
+        {"name": "RGA_preprocess",          "ts": us(t_pipeline), "dur": us(preprocess_ms), "tid": "T2.pipeline",   "ph": "X", "cat": "rga"},
+        {"name": "EfficientAD_infer",       "ts": us(t_ead),     "dur": us(ead_ms),        "tid": "NPU.core0",     "ph": "X", "cat": "infer"},
+        {"name": "localizer_preprocess",    "ts": us(t_loc),     "dur": us(loc_pre),       "tid": "T3.localizer",  "ph": "X", "cat": "localizer"},
+        {"name": "localizer_infer",         "ts": us(t_loc + loc_pre), "dur": us(loc_infer), "tid": "T3.localizer", "ph": "X", "cat": "localizer"},
+        {"name": "localizer_postprocess",   "ts": us(t_loc + loc_pre + loc_infer), "dur": us(loc_post), "tid": "T3.localizer", "ph": "X", "cat": "localizer"},
+        {"name": "HTTP_upload",             "ts": us(t_upload),  "dur": us(upload_ms),     "tid": "T4.upload",     "ph": "X", "cat": "io"},
+    ]
 
 
 def generate_trace_events(pipeline_ms: dict, vlm_metrics: dict) -> list[dict]:
@@ -256,6 +360,43 @@ def run_line(category: str, line_id: str) -> None:
             time.sleep(sleep_s)
 
 
+def run_ort_line(category: str, line_id: str) -> None:
+    """ORT localizer line — Phase 10: sends v1.3 metadata with localizer pipeline."""
+    print(f"[{line_id}] 启动 ORT 产线：category={category}")
+
+    image_paths = sorted((MVTEC_DIR / category / "test").rglob("*.png"))
+    if not image_paths:
+        print(f"[{line_id}] ⚠ 找不到图片：{MVTEC_DIR / category / 'test'}，线程退出")
+        return
+    print(f"[{line_id}] 共 {len(image_paths)} 张图片，开始 ORT 循环…")
+
+    session = requests.Session()
+
+    while True:
+        random.shuffle(image_paths)
+
+        for img_path in image_paths:
+            defect_type = img_path.parent.name
+            filename    = img_path.name
+
+            try:
+                jpeg_bytes = to_jpeg_bytes(img_path)
+            except Exception as exc:
+                print(f"[{line_id}] ⚠ 图片转换失败 {img_path.name}: {exc}")
+                continue
+
+            t0 = datetime.now(timezone.utc)
+
+            post_with_retry(
+                session, line_id, "ort_2B",
+                jpeg_bytes, filename,
+                fabricate_ort_metadata(category, line_id, defect_type, t0),
+            )
+
+            sleep_s = max(0.0, (BEAT_MS + random.uniform(-JITTER_MS, JITTER_MS)) / 1000.0)
+            time.sleep(sleep_s)
+
+
 # ─── 启动入口 ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("=" * 50)
@@ -270,6 +411,17 @@ if __name__ == "__main__":
             target=run_line,
             args=(category, line_id),
             name=f"Line-{line_id}",
+            daemon=True,
+        )
+        threads.append(t)
+        t.start()
+
+    # Phase 10: ORT localizer line (metal_nut only)
+    for category, line_id in ORT_CATEGORIES.items():
+        t = threading.Thread(
+            target=run_ort_line,
+            args=(category, line_id),
+            name=f"ORT-{line_id}",
             daemon=True,
         )
         threads.append(t)

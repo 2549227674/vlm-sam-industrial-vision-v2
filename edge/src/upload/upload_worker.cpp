@@ -94,7 +94,7 @@ std::string UploadWorker::build_meta_json(const VlmReport& r) {
   j += make_iso_ts(r.frame_timestamp_us);
   j += "\",";
 
-  // pipeline_ms
+  // pipeline_ms (v1.3: include localizer and upload stages)
   j += "\"pipeline_ms\":{";
   char buf[64];
   std::snprintf(buf, sizeof(buf), "%.1f", r.pipeline_ms.efficientad);
@@ -102,7 +102,11 @@ std::string UploadWorker::build_meta_json(const VlmReport& r) {
   std::snprintf(buf, sizeof(buf), "%.1f", r.pipeline_ms.fastsam);
   j += "\"fastsam\":"; j += buf; j += ",";
   std::snprintf(buf, sizeof(buf), "%.1f", r.pipeline_ms.qwen3vl);
-  j += "\"qwen3vl\":"; j += buf;
+  j += "\"qwen3vl\":"; j += buf; j += ",";
+  std::snprintf(buf, sizeof(buf), "%.1f", r.pipeline_ms.localizer);
+  j += "\"localizer\":"; j += buf; j += ",";
+  std::snprintf(buf, sizeof(buf), "%.1f", r.pipeline_ms.upload);
+  j += "\"upload\":"; j += buf;
   j += "},";
 
   // vlm_metrics
@@ -142,7 +146,18 @@ std::string UploadWorker::build_meta_json(const VlmReport& r) {
   }
   j += "],";
 
-  // schema_version
+  // v1.3 optional source tracking fields (only when non-empty).
+  if (!r.localization_source.empty()) {
+    str("localization_source", r.localization_source);
+  }
+  if (!r.label_source.empty()) {
+    str("label_source", r.label_source);
+  }
+  if (!r.observation_source.empty()) {
+    str("observation_source", r.observation_source);
+  }
+
+  // schema_version (remains "v1"; v1.3 fields are optional additions).
   j += "\"schema_version\":\"v1\"";
 
   // Remove trailing comma if any.
@@ -206,6 +221,9 @@ void UploadWorker::operator()(std::stop_token st) {
         cfg_.upload_timeout_s);
     float upload_ms = std::chrono::duration<float, std::milli>(
         std::chrono::steady_clock::now() - t_upload_start).count();
+
+    // Record upload time in the report (for pipeline_ms.upload).
+    // Note: this is after the fact, but the upload_ms is logged for observability.
 
     if (status == 200) {
       m_.upload_count.fetch_add(1, std::memory_order_relaxed);

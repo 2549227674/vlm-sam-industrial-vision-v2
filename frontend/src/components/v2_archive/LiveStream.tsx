@@ -75,7 +75,7 @@ export function LiveStream({
       {/* Rows */}
       <div>
         {rows.map((d, i) => {
-          const total = Math.round(d.pipeline_ms.efficientad + d.pipeline_ms.fastsam + d.pipeline_ms.qwen3vl);
+          const total = Math.round((d.pipeline_ms.efficientad ?? 0) + (d.pipeline_ms.fastsam ?? 0) + (d.pipeline_ms.qwen3vl ?? 0));
           const isNew = i === 0 && (d as DefectRead & { _new?: boolean })._new;
           const isSel = d.id === selectedId;
 

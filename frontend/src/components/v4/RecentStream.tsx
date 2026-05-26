@@ -88,7 +88,7 @@ function FilterSelect({ label, value, onChange, options }: { label: string; valu
 }
 
 function DetectionCard({ defect, selected, onClick }: { defect: DefectRead; selected: boolean; onClick: () => void }) {
-  const total = Math.round(defect.pipeline_ms.efficientad + defect.pipeline_ms.fastsam + defect.pipeline_ms.qwen3vl);
+  const total = Math.round((defect.pipeline_ms.efficientad ?? 0) + (defect.pipeline_ms.fastsam ?? 0) + (defect.pipeline_ms.qwen3vl ?? 0) + (defect.pipeline_ms.localizer ?? 0) + (defect.pipeline_ms.upload ?? 0));
   const sevColor = { low: "var(--ok)", medium: "var(--warn)", high: "var(--crit)" }[defect.severity];
 
   return (
@@ -120,9 +120,9 @@ function DetectionCard({ defect, selected, onClick }: { defect: DefectRead; sele
         <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)" }}>{(defect.confidence * 100).toFixed(0)}%</span>
       </div>
       <div style={{ display: "flex", height: 4, background: "var(--bg-3)" }}>
-        <div style={{ width: `${(defect.pipeline_ms.efficientad / total) * 100}%`, background: "var(--core-0)" }} />
-        <div style={{ width: `${(defect.pipeline_ms.fastsam / total) * 100}%`, background: "var(--core-1)" }} />
-        <div style={{ width: `${(defect.pipeline_ms.qwen3vl / total) * 100}%`, background: "var(--core-2)" }} />
+        <div style={{ width: `${((defect.pipeline_ms.efficientad ?? 0) / total) * 100}%`, background: "var(--core-0)" }} />
+        <div style={{ width: `${((defect.pipeline_ms.fastsam ?? defect.pipeline_ms.localizer ?? 0) / total) * 100}%`, background: "var(--core-1)" }} />
+        <div style={{ width: `${((defect.pipeline_ms.qwen3vl ?? defect.pipeline_ms.upload ?? 0) / total) * 100}%`, background: "var(--core-2)" }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)" }}>{fmtTime(defect.edge_ts)}</span>

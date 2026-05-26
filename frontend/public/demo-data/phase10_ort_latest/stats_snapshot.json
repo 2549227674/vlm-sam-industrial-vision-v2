@@ -1,0 +1,36 @@
+{
+  "total": 40,
+  "today_defects": 40,
+  "today_high": 0,
+  "by_category": {
+    "cable": 24,
+    "metal_nut": 16
+  },
+  "by_severity": {
+    "low": 0,
+    "medium": 40,
+    "high": 0
+  },
+  "timeline": [],
+  "ab_compare": {
+    "ort_2B": {
+      "count": 40,
+      "json_ok_rate": 100.0
+    }
+  },
+  "avg_pipeline_ms": {
+    "efficientad": 344.9,
+    "localizer": 183.7,
+    "upload": 0.0,
+    "fastsam": 0.0,
+    "qwen3vl": 0.0
+  },
+  "category_severity_matrix": {
+    "cable": {
+      "medium": 24
+    },
+    "metal_nut": {
+      "medium": 16
+    }
+  }
+}

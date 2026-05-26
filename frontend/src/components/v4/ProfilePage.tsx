@@ -9,7 +9,7 @@ import { CATEGORY_LABEL, variantColor, variantIsLora } from "@/lib/mock-data";
 
 const THREAD_NAMES: [string, string][] = [
   ["T1.capture", "T1 · capture"], ["T2.pipeline", "T2 · pipeline"],
-  ["T3.fastsam", "T3 · FastSAM"], ["T3.vlm", "T3 · VLM worker"], ["T4.upload", "T4 · upload"],
+  ["T3.fastsam", "T3 · FastSAM"], ["T3.localizer", "T3 · Localizer"], ["T3.vlm", "T3 · VLM worker"], ["T4.upload", "T4 · upload"],
   ["NPU.core0", "NPU.0 · EfficientAD-S"], ["NPU.core1", "NPU.1 · FastSAM-s"], ["NPU.core2", "NPU.2 · Qwen3-VL"],
   ["CPU.A76_0", "A76.0"], ["CPU.A76_1", "A76.1"], ["CPU.A76_2", "A76.2"], ["CPU.A76_3", "A76.3"],
   ["CPU.A55_0", "A55.0"], ["CPU.A55_1", "A55.1"], ["CPU.A55_2", "A55.2"], ["CPU.A55_3", "A55.3"],
@@ -31,13 +31,13 @@ import { VariantPill, RealImageWithFallback } from "./primitives";
 import { CaveatBanner, TraceSourceNote } from "./CaveatBanner";
 
 const LANE_GROUPS = [
-  { label: "SOFTWARE THREADS", tids: ["T1.capture", "T2.pipeline", "T3.fastsam", "T3.vlm", "T4.upload"] },
+  { label: "SOFTWARE THREADS", tids: ["T1.capture", "T2.pipeline", "T3.fastsam", "T3.localizer", "T3.vlm", "T4.upload"] },
   { label: "NPU HARDWARE", tids: ["NPU.core0", "NPU.core1", "NPU.core2"] },
   { label: "ARM CORES", tids: ["CPU.A76_0", "CPU.A76_1", "CPU.A76_2", "CPU.A76_3", "CPU.A55_0", "CPU.A55_1", "CPU.A55_2", "CPU.A55_3"] },
 ];
 const LANE_LABELS: Record<string, { name: string; hint: string }> = {
   "T1.capture": { name: "T1 · capture", hint: "V4L2 dequeue" }, "T2.pipeline": { name: "T2 · pipeline", hint: "RGA + EAD + FastSAM" },
-  "T3.fastsam": { name: "T3 · fastsam", hint: "FastSAM bbox proposal" }, "T3.vlm": { name: "T3 · vlm", hint: "Qwen3-VL prompt + decode" }, "T4.upload": { name: "T4 · upload", hint: "libcurl POST" },
+  "T3.fastsam": { name: "T3 · fastsam", hint: "FastSAM bbox proposal" }, "T3.localizer": { name: "T3 · localizer", hint: "YOLOv8n-detect CPU" }, "T3.vlm": { name: "T3 · vlm", hint: "Qwen3-VL prompt + decode" }, "T4.upload": { name: "T4 · upload", hint: "libcurl POST" },
   "NPU.core0": { name: "NPU.0", hint: "EfficientAD-S [FP16]" }, "NPU.core1": { name: "NPU.1", hint: "FastSAM-s [FP16]" },
   "NPU.core2": { name: "NPU.2", hint: "Qwen3-VL [W8A8]" },
   "CPU.A76_0": { name: "A76.0", hint: "2.4 GHz" }, "CPU.A76_1": { name: "A76.1", hint: "2.4 GHz" },
@@ -47,7 +47,7 @@ const LANE_LABELS: Record<string, { name: string; hint: string }> = {
 };
 const CAT_COLOR: Record<string, string> = {
   io: "#7cdcff", mem: "#7d869c", rga: "#ffbf5c", infer: "var(--acc)", npu: "var(--acc)", cpu: "#b07cff", sync: "#555d72",
-  pipeline: "var(--acc)", upload: "#7cdcff", vlm: "#ff7a90",
+  pipeline: "var(--acc)", upload: "#7cdcff", vlm: "#ff7a90", localizer: "#5ce0d8",
   "vlm-prompt": "#ff7a90", "vlm-decode": "#ff5c7a", "vlm-encode": "#f472b6",
 };
 
@@ -95,21 +95,23 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
   const hasNpuEvents = !!(byTid["NPU.core0"]?.length || byTid["NPU.core1"]?.length || byTid["NPU.core2"]?.length);
   const npu2 = hasNpuEvents
     ? (byTid["NPU.core2"] || []).reduce((s, e) => s + e.dur, 0)
-    : (byTid["T3.vlm"] || []).reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.qwen3vl * 1000;
+    : (byTid["T3.vlm"] || []).reduce((s, e) => s + e.dur, 0) || (defect.pipeline_ms.qwen3vl ?? 0) * 1000;
   const npu0 = hasNpuEvents
     ? (byTid["NPU.core0"] || []).reduce((s, e) => s + e.dur, 0)
     : (byTid["T2.pipeline"] || []).filter(e => e.name.includes("efficientad") || e.cat === "pipeline").reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.efficientad * 1000;
   const npu1 = hasNpuEvents
     ? (byTid["NPU.core1"] || []).reduce((s, e) => s + e.dur, 0)
-    : (byTid["T3.fastsam"] || []).reduce((s, e) => s + e.dur, 0) || defect.pipeline_ms.fastsam * 1000;
+    : (byTid["T3.fastsam"] || []).reduce((s, e) => s + e.dur, 0)
+      || (byTid["T3.localizer"] || []).reduce((s, e) => s + e.dur, 0)
+      || (defect.pipeline_ms.fastsam ?? defect.pipeline_ms.localizer ?? 0) * 1000;
   const npuTotal = npu0 + npu1 + npu2;
   const prompt = defect.trace_events?.filter(e => e.cat === "vlm-prompt" && (e.tid === "NPU.core2" || e.tid === "T3.vlm")).reduce((s, e) => s + e.dur, 0) || 0;
   const decode = defect.trace_events?.filter(e => e.cat === "vlm-decode" && (e.tid === "NPU.core2" || e.tid === "T3.vlm")).reduce((s, e) => s + e.dur, 0) || 0;
   const upload = (byTid["T4.upload"] || []).reduce((s, e) => s + e.dur, 0);
   const npu2Share = npuTotal > 0 ? npu2 / npuTotal : 0;
   // When snapshot data lacks prompt/decode split, estimate from pipeline_ms
-  const effectivePrompt = prompt || (defect.pipeline_ms.qwen3vl * 1000 * (variantIsLora(defect.variant) ? 0.55 : 0.62));
-  const effectiveDecode = decode || (defect.pipeline_ms.qwen3vl * 1000 - effectivePrompt);
+  const effectivePrompt = prompt || ((defect.pipeline_ms.qwen3vl ?? 0) * 1000 * (variantIsLora(defect.variant) ? 0.55 : 0.62));
+  const effectiveDecode = decode || ((defect.pipeline_ms.qwen3vl ?? 0) * 1000 - effectivePrompt);
   const promptShare = effectivePrompt + effectiveDecode > 0 ? effectivePrompt / (effectivePrompt + effectiveDecode) : 0;
 
   const legend = [["NPU 推理", "infer"], ["VLM 提示", "vlm-prompt"], ["VLM 解码", "vlm-decode"], ["CPU", "cpu"], ["IO", "io"], ["RGA", "rga"], ["同步", "sync"]] as const;
@@ -124,7 +126,7 @@ export function ProfilePage({ defects, accent = "var(--acc)", initialFrameIdx = 
         </div>
         <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(14, defects.length)}, 1fr)`, gap: 4 }}>
           {defects.slice(0, 14).map((d, i) => {
-            const totalMs = Math.round(d.pipeline_ms.efficientad + d.pipeline_ms.fastsam + d.pipeline_ms.qwen3vl);
+            const totalMs = Math.round((d.pipeline_ms.efficientad ?? 0) + (d.pipeline_ms.fastsam ?? 0) + (d.pipeline_ms.qwen3vl ?? 0) + (d.pipeline_ms.localizer ?? 0) + (d.pipeline_ms.upload ?? 0));
             const sevColor = { low: "var(--ok)", medium: "var(--warn)", high: "var(--crit)" }[d.severity];
             const active = i === resolvedIdx;
             return (

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import type { DefectRead } from "@/types/defect";
 import { fmtTime, fmtDateTime, variantLabel, variantColor, variantModel } from "@/lib/mock-data";
 import { SevPill, CatPill, VariantPill, FrameGantt, SimulatedSample, RealImageWithFallback, highlightJson } from "./primitives";
+import { resolveImageUrl } from "@/lib/api";
 import { VlmDefectTooltip } from "./DataSourceBadge";
 
 // ── FrameInspector ──────────────────────────────────────────────────────────
@@ -26,7 +27,12 @@ export function FrameInspector({ defect }: { defect: DefectRead | null }) {
 }
 
 function FramePane({ defect }: { defect: DefectRead }) {
-  const total = Math.round(defect.pipeline_ms.efficientad + defect.pipeline_ms.fastsam + defect.pipeline_ms.qwen3vl);
+  // v1.3: support both old (fastsam/qwen3vl) and new (localizer/upload) stage keys
+  const pm = defect.pipeline_ms;
+  const total = Math.round(
+    (pm.efficientad ?? 0) + (pm.fastsam ?? 0) + (pm.qwen3vl ?? 0)
+    + (pm.localizer ?? 0) + (pm.upload ?? 0) + (pm.enrichment ?? 0)
+  );
   return (
     <div style={{ padding: 18, borderRight: "1px solid var(--line)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
@@ -54,9 +60,38 @@ function FramePane({ defect }: { defect: DefectRead }) {
 
 // FrameCanvas — reusable in inspector, drawer, cards
 export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { defect: DefectRead; cornerLabels?: boolean; aspect?: string }) {
+  // Preload: keep showing old image until new image loads
+  const [displayed, setDisplayed] = useState<DefectRead>(defect);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  useEffect(() => {
+    if (defect.id === displayed.id) return;
+    const resolved = resolveImageUrl(defect.image_url);
+    if (!resolved) { setDisplayed(defect); return; }
+    const img = new Image();
+    img.onload = () => setDisplayed(defect);
+    img.onerror = () => setDisplayed(defect);
+    img.src = resolved;
+    imgRef.current = img;
+    return () => { img.onload = null; img.onerror = null; };
+  }, [defect, displayed.id]);
+
+  // v1.3: source-aware tooltip and label
+  const isYoloLocalizer = !!(defect.localization_source && defect.localization_source.includes("yolo"));
+  // Detect fallback placeholder: confidence=0, defect_type="anomaly", bbox={0.3,0.3,0.4,0.4}
+  const isFallback = isYoloLocalizer && defect.confidence === 0 && defect.defect_type === "anomaly"
+    && defect.bboxes.length === 1
+    && defect.bboxes[0].x === 0.3 && defect.bboxes[0].y === 0.3
+    && defect.bboxes[0].w === 0.4 && defect.bboxes[0].h === 0.4;
+  const bboxTooltip = isFallback
+    ? "Fallback bbox / unsupported category — no YOLO detection / 回退框 / 不支持的类别"
+    : isYoloLocalizer
+    ? "Model bbox from YOLOv8n localizer / YOLOv8n 定位器输出"
+    : "Proposal bbox from FastSAM/VLM. Not verified ground-truth localization. / FastSAM/VLM 候选框，非可靠定位。";
+  const labelSource = isFallback ? "Fallback" : defect.label_source === "yolo_class_head" ? "YOLO" : "VLM";
+
   return (
     <div style={{ position: "relative", width: "100%", aspectRatio: aspect, background: "var(--bg)", border: "1px solid var(--line)", overflow: "hidden" }}>
-      <RealImageWithFallback imageUrl={defect.image_url} category={defect.category} showBadge={cornerLabels} />
+      <RealImageWithFallback imageUrl={displayed.image_url} category={displayed.category} showBadge={cornerLabels} />
       <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 2, background: "linear-gradient(90deg, transparent, var(--acc), transparent)", opacity: 0.5, animation: "scan-line 4s linear infinite" }} />
       {cornerLabels && (
         <>
@@ -78,12 +113,17 @@ export function FrameCanvas({ defect, cornerLabels = false, aspect = "4/3" }: { 
           const isClamped = b.x + b.w > 1 || b.y + b.h > 1 || b.x < 0 || b.y < 0;
           return (
             <g key={i}>
-              <rect x={x} y={y} width={w} height={h} fill="color-mix(in srgb, var(--acc) 8%, transparent)" stroke="var(--acc)" strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
+              <rect x={x} y={y} width={w} height={h}
+                fill={isFallback ? "color-mix(in srgb, var(--warn) 8%, transparent)" : "color-mix(in srgb, var(--acc) 8%, transparent)"}
+                stroke={isFallback ? "var(--warn)" : "var(--acc)"}
+                strokeDasharray={isFallback ? "2 2" : "none"}
+                strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
               {cornerLabels && (
                 <foreignObject x={x} y={Math.max(0, y - 4)} width={Math.max(w, 20)} height="4">
-                  <div style={{ display: "inline-block", fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--bg)", background: "var(--acc)", padding: "1px 4px", letterSpacing: "0.06em", fontWeight: 700 } as React.CSSProperties}>
-                    <span title="Proposal bbox from FastSAM/VLM. Not verified ground-truth localization. / FastSAM/VLM 候选框，非可靠定位。" style={{ cursor: "help" }}>
-                      {defect.defect_type}<span style={{ opacity: 0.6, marginLeft: 4 }}>{(defect.confidence * 100).toFixed(0)}</span>
+                  <div style={{ display: "inline-block", fontFamily: "var(--font-mono)", fontSize: 8, color: "var(--bg)", background: isFallback ? "var(--warn)" : isYoloLocalizer ? "var(--acc)" : "var(--warn)", padding: "1px 4px", letterSpacing: "0.06em", fontWeight: 700 } as React.CSSProperties}>
+                    <span title={bboxTooltip} style={{ cursor: "help" }}>
+                      {isFallback ? "unsupported" : defect.defect_type}<span style={{ opacity: 0.6, marginLeft: 4 }}>{isFallback ? "—" : (defect.confidence * 100).toFixed(0)}</span>
+                      <span style={{ opacity: 0.5, marginLeft: 3, fontSize: 7 }}>({labelSource})</span>
                     </span>
                   </div>
                 </foreignObject>

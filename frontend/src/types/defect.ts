@@ -1,6 +1,7 @@
 export type VariantKey =
   | "2B_base" | "2B_lora" | "4B_base" | "4B_lora"
-  | "A" | "B";
+  | "A" | "B"
+  | "ort_2B" | "ort_4B";
 
 export type MvtecCategory =
   | "bottle" | "cable" | "capsule" | "carpet" | "grid"
@@ -57,11 +58,24 @@ export interface DefectRead {
   edge_ts: string;
   pipeline_ms: {
     efficientad: number;
-    fastsam: number;
-    qwen3vl: number;
+    fastsam?: number;       // v1.2 legacy
+    qwen3vl?: number;       // v1.2 legacy
+    localizer?: number;     // v1.3 new
+    upload?: number;        // v1.3 new
+    enrichment?: number;    // v1.3 new
   };
   vlm_metrics?: VlmMetrics;
   trace_events?: TraceEvent[];
   schema_version: "v1";
   server_ts: string;
+
+  // v1.3: Phase 10 source fields
+  localization_source?: string;
+  label_source?: string;
+  observation_source?: string;
+  defect_family?: string;
+  observation?: string;
+  severity_reason?: string;
+  object_proposals?: BBox[];
+  gt_reference_bboxes?: BBox[];
 }

@@ -99,6 +99,16 @@ struct Config {
   std::string fastsam_model_path;
   int32_t     fastsam_input_size{640};
   float       fastsam_conf{0.5f};
+  bool        fastsam_enabled{true};    // false when localizer replaces FastSAM
+
+  // -- Phase 10: Localizer (ORT / RKNN) --
+  std::string localizer_backend{"disabled"};   // "ort" | "rknn" | "disabled"
+  std::string localizer_model_path;
+  std::string localizer_classes_path;
+  float       localizer_conf_thresh{0.25f};
+  float       localizer_iou_thresh{0.45f};
+  std::string localizer_script_path;           // Python script for ORT backend
+  int32_t     localizer_img_size{640};
 
   // -- Stage 3: Qwen3-VL --
   // Base model paths (vlm_variant == "base")

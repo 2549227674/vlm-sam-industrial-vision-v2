@@ -5,8 +5,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Severity = Literal["low", "medium", "high"]
 # v1.1: 新增 4 变体，保留 A/B 向下兼容
-VALID_VARIANTS = {"2B_base", "2B_lora", "4B_base", "4B_lora", "A", "B"}
-Stage = Literal["efficientad", "fastsam", "qwen3vl"]
+VALID_VARIANTS = {"2B_base", "2B_lora", "4B_base", "4B_lora", "A", "B", "ort_2B", "ort_4B"}
+
+# v1.3: accept both old stage keys (fastsam/qwen3vl) and new ones (localizer/enrichment)
+Stage = Literal["efficientad", "fastsam", "qwen3vl", "localizer", "upload", "enrichment"]
 
 
 class BBox(BaseModel):
@@ -68,6 +70,14 @@ class DefectCreate(BaseModel):
     trace_events: Optional[list[TraceEvent]] = Field(default=None, max_length=64)
     schema_version: Literal["v1"] = "v1"
 
+    # v1.3: source fields (all optional for backward compat)
+    localization_source: Optional[str] = Field(default=None, max_length=64)
+    label_source: Optional[str] = Field(default=None, max_length=64)
+    observation_source: Optional[str] = Field(default=None, max_length=64)
+    defect_family: Optional[str] = Field(default=None, max_length=64)
+    observation: Optional[str] = Field(default=None, max_length=1024)
+    severity_reason: Optional[str] = Field(default=None, max_length=512)
+
     @field_validator("edge_ts")
     @classmethod
     def must_be_aware(cls, v: datetime) -> datetime:
@@ -87,10 +97,19 @@ class DefectCreate(BaseModel):
     @field_validator("pipeline_ms")
     @classmethod
     def all_stages_required(cls, v: dict) -> dict:
-        required = {"efficientad", "fastsam", "qwen3vl"}
-        if missing := required - v.keys():
-            raise ValueError(f"pipeline_ms missing stages: {missing}")
-        return v
+        # v1.3: accept either old (fastsam/qwen3vl) or new (localizer) stage keys
+        old_required = {"efficientad", "fastsam", "qwen3vl"}
+        new_required = {"efficientad", "localizer", "upload"}
+        if old_required <= v.keys():
+            return v
+        if new_required <= v.keys():
+            return v
+        # Backward compat: if fastsam present but localizer not, accept (deprecated)
+        if "efficientad" in v and "fastsam" in v:
+            return v
+        # Fall through: report what's missing from the new scheme
+        missing = new_required - v.keys()
+        raise ValueError(f"pipeline_ms missing stages: {missing}")
 
 
 class DefectRead(DefectCreate):

@@ -45,7 +45,7 @@ export const DEFECT_TYPES: Record<string, string[]> = {
 export const SEVERITIES = ["low", "medium", "high"] as const;
 const SEVERITY_WEIGHTS = [0.55, 0.30, 0.15];
 
-export const VARIANTS = ["2B_base", "2B_lora", "4B_base", "4B_lora"] as const;
+export const VARIANTS = ["2B_base", "2B_lora", "4B_base", "4B_lora", "ort_2B"] as const;
 const VARIANT_WEIGHTS = [0.20, 0.45, 0.10, 0.25];
 export const LINES = ["L1", "L2", "L3", "L4"];
 
@@ -54,6 +54,7 @@ export const VARIANT_LABEL: Record<string, string> = {
   "2B_lora": "2B · LoRA",
   "4B_base": "4B · Base",
   "4B_lora": "4B · LoRA",
+  "ort_2B": "ORT · 2B",
   A: "A (legacy)", B: "B (legacy)",
 };
 
@@ -65,6 +66,7 @@ export const VARIANT_PROFILE: Record<string, {
   "2B_lora": { ttftRange: [900, 1350], tpsRange: [11.4, 12.6], promptTok: [60, 96], outTok: [38, 76], rssRange: [3020, 3140], jsonOk: 0.95, color: "var(--acc)" },
   "4B_base": { ttftRange: [3200, 4100], tpsRange: [7.4, 8.6], promptTok: [780, 1480], outTok: [48, 96], rssRange: [8600, 8950], jsonOk: 0.88, color: "#ff9f6c" },
   "4B_lora": { ttftRange: [1900, 2400], tpsRange: [8.2, 9.0], promptTok: [60, 96], outTok: [44, 92], rssRange: [8550, 8820], jsonOk: 0.97, color: "#7cdcff" },
+  "ort_2B": { ttftRange: [0, 0], tpsRange: [0, 0], promptTok: [0, 0], outTok: [0, 0], rssRange: [0, 0], jsonOk: 1.0, color: "#5ce0d8" },
 };
 
 // ── Variant helpers ─────────────────────────────────────────────────────────
@@ -190,7 +192,7 @@ export function makeTraceEvents(pipeline_ms: { efficientad: number; fastsam: num
   cur += eff + 200;
 
   // T2 → NPU.1 FastSAM
-  const fs = ms(pipeline_ms.fastsam);
+  const fs = ms(pipeline_ms.fastsam ?? 0);
   events.push({ name: "rknn_run · FastSAM-s", tid: "T2.pipeline", ph: "X", ts: cur, dur: fs, cat: "infer" });
   events.push({ name: "FastSAM-s [FP16]", tid: "NPU.core1", ph: "X", ts: cur, dur: fs, cat: "npu" });
   events.push({ name: "bbox.nms+filter", tid: "CPU.A76_1", ph: "X", ts: cur + fs - ms(4), dur: ms(rand(1.8, 3.6)), cat: "cpu" });
@@ -342,9 +344,9 @@ export function buildStats(defects: DefectRead[]): MockStats {
 
   const avg_pipeline_ms = defects.length
     ? {
-        efficientad: defects.reduce((s, d) => s + d.pipeline_ms.efficientad, 0) / defects.length,
-        fastsam: defects.reduce((s, d) => s + d.pipeline_ms.fastsam, 0) / defects.length,
-        qwen3vl: defects.reduce((s, d) => s + d.pipeline_ms.qwen3vl, 0) / defects.length,
+        efficientad: defects.reduce((s, d) => s + (d.pipeline_ms.efficientad ?? 0), 0) / defects.length,
+        fastsam: defects.reduce((s, d) => s + (d.pipeline_ms.fastsam ?? 0), 0) / defects.length,
+        qwen3vl: defects.reduce((s, d) => s + (d.pipeline_ms.qwen3vl ?? 0), 0) / defects.length,
       }
     : undefined;
 

@@ -34,8 +34,10 @@ export interface DashboardStatsLike {
   timeline?: Array<{ ts: string; count: number }>;
   avg_pipeline_ms?: {
     efficientad: number;
-    fastsam: number;
-    qwen3vl: number;
+    fastsam?: number;
+    qwen3vl?: number;
+    localizer?: number;
+    upload?: number;
   };
   category_severity_matrix?: Record<string, Record<string, number>>;
 }
@@ -46,8 +48,10 @@ export interface StatsResponse extends DashboardStatsLike {
   timeline: Array<{ ts: string; count: number }>;
   avg_pipeline_ms: {
     efficientad: number;
-    fastsam: number;
-    qwen3vl: number;
+    fastsam?: number;
+    qwen3vl?: number;
+    localizer?: number;
+    upload?: number;
   };
   category_severity_matrix: Record<string, Record<string, number>>;
   ab_compare: Record<string, AbMetrics>;

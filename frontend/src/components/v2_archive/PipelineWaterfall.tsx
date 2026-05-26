@@ -29,7 +29,7 @@ export function PipelineWaterfall({
   const rowH = Math.max(8, Math.min(14, innerH / Math.max(1, samples.length)));
   const rows = samples.slice(0, Math.floor(innerH / rowH));
 
-  const totals = rows.map(r => r.pipeline_ms.efficientad + r.pipeline_ms.fastsam + r.pipeline_ms.qwen3vl);
+  const totals = rows.map(r => (r.pipeline_ms.efficientad ?? 0) + (r.pipeline_ms.fastsam ?? 0) + (r.pipeline_ms.qwen3vl ?? 0));
   const maxTotal = Math.max(...totals, 2800);
   const ticks: number[] = [];
   for (let t = 0; t <= maxTotal; t += 500) ticks.push(t);
@@ -40,7 +40,7 @@ export function PipelineWaterfall({
   const avgs = useMemo(() => {
     const keys: Array<'efficientad' | 'fastsam' | 'qwen3vl'> = ['efficientad', 'fastsam', 'qwen3vl'];
     return keys.map(k => {
-      const sum = rows.reduce((s, r) => s + r.pipeline_ms[k], 0);
+      const sum = rows.reduce((s, r) => s + (r.pipeline_ms[k] ?? 0), 0);
       return sum / Math.max(1, rows.length);
     });
   }, [rows]);
@@ -78,9 +78,9 @@ export function PipelineWaterfall({
           const y = padT + i * rowH;
           let acc = 0;
           const segs = [
-            { ms: r.pipeline_ms.efficientad, color: 'var(--color-stage-1)' },
-            { ms: r.pipeline_ms.fastsam, color: 'var(--color-stage-2)' },
-            { ms: r.pipeline_ms.qwen3vl, color: 'var(--color-stage-3)' },
+            { ms: r.pipeline_ms.efficientad ?? 0, color: 'var(--color-stage-1)' },
+            { ms: r.pipeline_ms.fastsam ?? 0, color: 'var(--color-stage-2)' },
+            { ms: r.pipeline_ms.qwen3vl ?? 0, color: 'var(--color-stage-3)' },
           ];
           return (
             <g key={r.id ?? i}>

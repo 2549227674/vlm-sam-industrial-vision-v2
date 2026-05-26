@@ -173,6 +173,24 @@ Result<Config> load_config(std::string_view path) {
       cfg.fastsam_input_size = std::stoi(val);
     else if (full_key == "fastsam_conf")
       cfg.fastsam_conf = std::stof(val);
+    else if (full_key == "fastsam_enabled")
+      cfg.fastsam_enabled = (val == "true" || val == "1");
+
+    // -- Phase 10: Localizer --
+    else if (full_key == "localizer_backend")
+      cfg.localizer_backend = val;
+    else if (full_key == "localizer_model_path")
+      cfg.localizer_model_path = val;
+    else if (full_key == "localizer_classes_path")
+      cfg.localizer_classes_path = val;
+    else if (full_key == "localizer_conf_thresh")
+      cfg.localizer_conf_thresh = std::stof(val);
+    else if (full_key == "localizer_iou_thresh")
+      cfg.localizer_iou_thresh = std::stof(val);
+    else if (full_key == "localizer_script_path")
+      cfg.localizer_script_path = val;
+    else if (full_key == "localizer_img_size")
+      cfg.localizer_img_size = std::stoi(val);
 
     // -- Qwen3-VL --
     else if (full_key == "vlm_model_path")

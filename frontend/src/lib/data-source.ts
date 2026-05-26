@@ -157,31 +157,40 @@ export function useDataSource(): UseDataSourceResult {
       // Live API unreachable — fall through to snapshot
     }
 
-    // ── Try 2: Real RK3588 Snapshot ────────────────────────────────────────
-    try {
-      const [manifestResp, defectsResp, statsResp] = await Promise.all([
-        fetch("/demo-data/real_run_latest/manifest.json", { signal: AbortSignal.timeout(3000) }),
-        fetch("/demo-data/real_run_latest/defects_snapshot.json", { signal: AbortSignal.timeout(3000) }),
-        fetch("/demo-data/real_run_latest/stats_snapshot.json", { signal: AbortSignal.timeout(3000) }),
-      ]);
+    // ── Try 2: Snapshot (Phase 10 ORT > real_run_latest) ──────────────────
+    const snapshotPaths = [
+      "/demo-data/phase10_ort_latest",
+      "/demo-data/real_run_latest",
+    ];
 
-      if (manifestResp.ok && defectsResp.ok && statsResp.ok) {
-        if (runId !== refreshRef.current) return;
-        const manifestData: SnapshotManifest = await manifestResp.json();
-        const defectsData = await defectsResp.json();
-        const statsData = await statsResp.json();
+    for (const basePath of snapshotPaths) {
+      try {
+        const [manifestResp, defectsResp, statsResp] = await Promise.all([
+          fetch(`${basePath}/manifest.json`, { signal: AbortSignal.timeout(3000) }),
+          fetch(`${basePath}/defects_snapshot.json`, { signal: AbortSignal.timeout(3000) }),
+          fetch(`${basePath}/stats_snapshot.json`, { signal: AbortSignal.timeout(3000) }),
+        ]);
 
-        setDefects(normaliseSnapshotDefects(defectsData.items ?? []));
-        setStats(normaliseSnapshotStats(statsData));
-        setStatus({
-          ...DATA_SOURCE_PRESETS.snapshot,
-          lastEventAt: manifestData.created_at,
-        });
-        setManifest(manifestData);
-        return;
+        if (manifestResp.ok && defectsResp.ok && statsResp.ok) {
+          if (runId !== refreshRef.current) return;
+          const manifestData: SnapshotManifest = await manifestResp.json();
+          const defectsData = await defectsResp.json();
+          const statsData = await statsResp.json();
+
+          setDefects(normaliseSnapshotDefects(defectsData.items ?? []));
+          setStats(normaliseSnapshotStats(statsData));
+          setStatus({
+            ...DATA_SOURCE_PRESETS.snapshot,
+            lastEventAt: manifestData.created_at,
+            label: manifestData.data_source_label || DATA_SOURCE_PRESETS.snapshot.label,
+            labelEn: manifestData.data_source_label || DATA_SOURCE_PRESETS.snapshot.labelEn,
+          });
+          setManifest(manifestData);
+          return;
+        }
+      } catch {
+        // This snapshot path missing — try next
       }
-    } catch {
-      // Snapshot files missing — fall through to mock
     }
 
     // ── Try 3: Mock Fallback ───────────────────────────────────────────────

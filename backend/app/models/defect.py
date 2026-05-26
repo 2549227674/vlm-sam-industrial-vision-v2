@@ -1,4 +1,5 @@
 # v1.1 schema: trace_events column added for frontend v4 ProfilePage tracing.
+# v1.3 schema: source fields for Phase 10 localization refactor.
 
 from datetime import datetime, timezone
 
@@ -12,7 +13,7 @@ class Defect(Base):
     __tablename__ = "defects"
     __table_args__ = (
         UniqueConstraint("line_id", "edge_ts", name="uq_line_edge_ts"),
-        CheckConstraint("variant IN ('2B_base', '2B_lora', '4B_base', '4B_lora', 'A', 'B')", name="ck_variant"),
+        CheckConstraint("variant IN ('2B_base', '2B_lora', '4B_base', '4B_lora', 'A', 'B', 'ort_2B', 'ort_4B')", name="ck_variant"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -40,3 +41,11 @@ class Defect(Base):
     vlm_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     trace_events: Mapped[list | None] = mapped_column(JSON, nullable=True, default=None)
     schema_version: Mapped[str] = mapped_column(String(8), default="v1")
+
+    # v1.3: Phase 10 source fields (all nullable for backward compat)
+    localization_source: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    label_source: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    observation_source: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    defect_family: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    observation: Mapped[str | None] = mapped_column(String(1024), nullable=True, default=None)
+    severity_reason: Mapped[str | None] = mapped_column(String(512), nullable=True, default=None)

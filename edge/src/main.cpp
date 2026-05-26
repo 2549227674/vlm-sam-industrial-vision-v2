@@ -18,6 +18,7 @@
 #include "edge/common/types.hpp"
 #include "edge/pipeline/ead_worker.hpp"
 #include "edge/pipeline/fastsam_worker.hpp"   // Prompt 2C: real FastSAM T3
+#include "edge/pipeline/localizer_worker.hpp" // Phase 10: ORT localizer T3
 #include "edge/upload/upload_worker.hpp"
 
 namespace {
@@ -65,6 +66,19 @@ void print_config(const vlm_industrial::edge::common::Config& cfg) {
                cfg.fastsam_model_path.c_str());
   std::fprintf(stderr, "fastsam_input_sz:  %d\n", cfg.fastsam_input_size);
   std::fprintf(stderr, "fastsam_conf:      %.2f\n", cfg.fastsam_conf);
+  std::fprintf(stderr, "fastsam_enabled:   %s\n",
+               cfg.fastsam_enabled ? "true" : "false");
+  std::fprintf(stderr, "localizer_backend: %s\n",
+               cfg.localizer_backend.c_str());
+  if (cfg.localizer_backend != "disabled") {
+    std::fprintf(stderr, "localizer_model:   %s\n",
+                 cfg.localizer_model_path.c_str());
+    std::fprintf(stderr, "localizer_classes: %s\n",
+                 cfg.localizer_classes_path.c_str());
+    std::fprintf(stderr, "localizer_conf:    %.2f\n", cfg.localizer_conf_thresh);
+    std::fprintf(stderr, "localizer_script:  %s\n",
+                 cfg.localizer_script_path.c_str());
+  }
   std::fprintf(stderr, "model_variant:     %s_%s\n",
                cfg.vlm_model_size.c_str(), cfg.vlm_variant.c_str());
   std::fprintf(stderr, "vlm_watchdog:      %s (max_decode_ms=%d "
@@ -148,31 +162,60 @@ int main(int argc, char* argv[]) {
   BoundedQueue<EadResult>    q2(2, &q2_stats);
   BoundedQueue<VlmReport>    q3(4, &q3_stats);
 
-  std::fprintf(stderr, "\n--- Starting pipeline (Prompt 2C: EfficientAD + FastSAM) ---\n");
+  std::fprintf(stderr, "\n--- Starting pipeline ---\n");
 
   {
     vlm_industrial::edge::CaptureWorker  t1(cfg, q1, metrics);
     vlm_industrial::edge::EadWorker      t2(cfg, q1, q2, metrics);
-    vlm_industrial::edge::FastSamWorker  t3(cfg, q2, q3, metrics);  // Prompt 2C
     vlm_industrial::edge::UploadWorker   t4(cfg, q3, metrics);
 
-    std::jthread t1_th{std::move(t1)};
-    std::jthread t2_th{std::move(t2)};
-    std::jthread t3_th{std::move(t3)};
-    std::jthread t4_th{std::move(t4)};
+    // T3: config-driven worker selection.
+    if (cfg.localizer_backend == "ort") {
+      std::fprintf(stderr, "[T3] using LocalizerWorker (ORT CPU fallback)\n");
+      vlm_industrial::edge::LocalizerWorker t3(cfg, q2, q3, metrics);
+      std::jthread t1_th{std::move(t1)};
+      std::jthread t2_th{std::move(t2)};
+      std::jthread t3_th{std::move(t3)};
+      std::jthread t4_th{std::move(t4)};
 
-    // Periodic metrics dump every ~10 seconds.
-    int tick = 0;
-    while (!g_shutdown_requested.load(std::memory_order_acquire)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(200));
-      if (++tick >= 50) {  // 50 * 200ms = 10s
-        tick = 0;
-        std::fprintf(stderr, "\n--- Periodic Metrics (10s) ---\n");
-        print_metrics(metrics, q1_stats, q2_stats, q3_stats);
+      // Periodic metrics dump every ~10 seconds.
+      int tick = 0;
+      while (!g_shutdown_requested.load(std::memory_order_acquire)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        if (++tick >= 50) {
+          tick = 0;
+          std::fprintf(stderr, "\n--- Periodic Metrics (10s) ---\n");
+          print_metrics(metrics, q1_stats, q2_stats, q3_stats);
+        }
       }
-    }
+      std::fprintf(stderr, "\n--- Shutdown requested ---\n");
 
-    std::fprintf(stderr, "\n--- Shutdown requested ---\n");
+    } else {
+      // Legacy path: FastSamWorker (FastSAM + VLM).
+      if (cfg.localizer_backend != "disabled") {
+        std::fprintf(stderr, "[T3] WARNING: unknown localizer_backend='%s', "
+                     "falling back to FastSamWorker\n",
+                     cfg.localizer_backend.c_str());
+      }
+      std::fprintf(stderr, "[T3] using FastSamWorker (FastSAM + VLM)\n");
+      vlm_industrial::edge::FastSamWorker t3(cfg, q2, q3, metrics);
+      std::jthread t1_th{std::move(t1)};
+      std::jthread t2_th{std::move(t2)};
+      std::jthread t3_th{std::move(t3)};
+      std::jthread t4_th{std::move(t4)};
+
+      // Periodic metrics dump every ~10 seconds.
+      int tick = 0;
+      while (!g_shutdown_requested.load(std::memory_order_acquire)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        if (++tick >= 50) {
+          tick = 0;
+          std::fprintf(stderr, "\n--- Periodic Metrics (10s) ---\n");
+          print_metrics(metrics, q1_stats, q2_stats, q3_stats);
+        }
+      }
+      std::fprintf(stderr, "\n--- Shutdown requested ---\n");
+    }
   }  // jthreads join here via RAII
 
   // Collect queue drop counts from BoundedQueues (after jthreads join).

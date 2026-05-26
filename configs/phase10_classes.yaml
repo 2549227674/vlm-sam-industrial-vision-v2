@@ -1,0 +1,21 @@
+# Phase 10 v1 — YOLOv8n-detect class map for metal_nut + cable (12 classes).
+# Flat class scheme: category/defect_type. Category derivable by string prefix.
+#
+# Usage:
+#   - Training: ultralytics YOLO data config references this as 'names'
+#   - Inference: C++ localizer_worker maps class_id -> class_label via this file
+#   - API: defect_type field uses these strings directly
+
+names:
+  0: metal_nut/bent
+  1: metal_nut/color
+  2: metal_nut/flip
+  3: metal_nut/scratch
+  4: cable/bent_wire
+  5: cable/cable_swap
+  6: cable/combined
+  7: cable/cut_inner_insulation
+  8: cable/cut_outer_insulation
+  9: cable/missing_cable
+  10: cable/missing_wire
+  11: cable/poke_insulation

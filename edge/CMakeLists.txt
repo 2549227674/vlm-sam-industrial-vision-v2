@@ -57,6 +57,7 @@ set(WORKER_SOURCES
     src/capture/capture_worker.cpp
     src/pipeline/ead_worker.cpp
     src/pipeline/fastsam_worker.cpp       # Prompt 2D: real FastSAM + VLM T3
+    src/pipeline/localizer_worker.cpp     # Phase 10: ORT CPU localizer T3
     src/pipeline/mock_vlm_worker.cpp      # kept for reference; not used in main
     src/upload/upload_worker.cpp
     src/vlm/qwen3vl_runner.cpp            # Prompt 2D: Qwen3-VL RKLLM runner

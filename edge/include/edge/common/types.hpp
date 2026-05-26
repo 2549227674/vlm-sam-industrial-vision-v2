@@ -42,11 +42,18 @@ struct VlmReport {
 
   std::string variant;           // "2B_base", "4B_lora", etc.
 
+  // v1.3 source tracking.
+  std::string localization_source;  // "ort_yolov8n_cpu", "yolov8n_detect_rknn", etc.
+  std::string label_source;         // "yolo_class_head", "vlm", "template"
+  std::string observation_source;   // "template", "edge_vlm", "cloud_vlm"
+
   // Per-stage timing (milliseconds).
   struct PipelineMs {
     float efficientad{0.0f};
-    float fastsam{0.0f};
-    float qwen3vl{0.0f};
+    float fastsam{0.0f};       // 0.0 when localizer replaces FastSAM
+    float qwen3vl{0.0f};       // 0.0 when VLM not called
+    float localizer{0.0f};     // v1.3: ORT/RKNN localizer time
+    float upload{0.0f};        // v1.3: T4 upload time
   } pipeline_ms;
 
   // VLM performance metrics (see API_CONTRACT.md VlmMetrics).
