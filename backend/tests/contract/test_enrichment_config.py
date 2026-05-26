@@ -172,3 +172,24 @@ class TestWorkerEnabledParsed:
         monkeypatch.setenv("ENRICHMENT_WORKER_ENABLED", "false")
         cfg = load_enrichment_config()
         assert cfg.worker_enabled is False
+
+
+# ── Invalid provider stored in config (validation is in enqueue helper) ───────
+
+class TestInvalidProviderParsing:
+    """Config parses any string for provider; validation happens in enqueue helper.
+
+    This ensures load_enrichment_config does not crash on unknown provider values,
+    and the invalid value is preserved for downstream validation.
+    """
+
+    def test_bad_provider_stored_in_config(self, monkeypatch):
+        monkeypatch.setenv("ENRICHMENT_PROVIDER", "bad_provider")
+        cfg = load_enrichment_config()
+        # Config stores the normalized value; enqueue helper validates against DB constraint
+        assert cfg.provider == "bad_provider"
+
+    def test_empty_provider_stored(self, monkeypatch):
+        monkeypatch.setenv("ENRICHMENT_PROVIDER", "   ")
+        cfg = load_enrichment_config()
+        assert cfg.provider == ""

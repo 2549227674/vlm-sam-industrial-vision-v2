@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.defect import Defect
-from backend.app.models.enrichment import DefectEnrichment
+from backend.app.models.enrichment import DefectEnrichment, VALID_PROVIDERS
 from backend.app.services.enrichment_config import EnrichmentConfig, load_enrichment_config
 
 logger = logging.getLogger(__name__)
@@ -81,11 +81,19 @@ async def maybe_auto_enqueue_enrichment(
     if not config.auto_enqueue:
         return None
 
-    # Gate 3: defect must be eligible
+    # Gate 3: provider must be valid (DB CheckConstraint allows only VALID_PROVIDERS)
+    if config.provider not in VALID_PROVIDERS:
+        logger.warning(
+            "Invalid enrichment provider %r, skipping auto-enqueue for defect %d",
+            config.provider, defect.id,
+        )
+        return None
+
+    # Gate 4: defect must be eligible
     if not _is_eligible_for_enrichment(defect):
         return None
 
-    # Gate 4: duplicate prevention — any existing row for same defect+provider+prompt
+    # Gate 5: duplicate prevention — any existing row for same defect+provider+prompt
     dup_q = select(DefectEnrichment).where(
         DefectEnrichment.defect_id == defect.id,
         DefectEnrichment.provider == config.provider,

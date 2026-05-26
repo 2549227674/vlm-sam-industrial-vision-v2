@@ -188,3 +188,19 @@ async def test_manual_enrich_after_auto_enqueue(async_client, dummy_jpeg, monkey
     manual_resp = await async_client.post(f"/api/defects/{defect_id}/enrich")
     assert manual_resp.status_code == 409
     assert manual_resp.json()["error"]["code"] == "DUPLICATE_ENRICHMENT"
+
+
+async def test_invalid_provider_no_enrichment_no_crash(async_client, dummy_jpeg, monkeypatch):
+    """bad_provider -> report succeeds, no enrichment row, no DB session corruption."""
+    monkeypatch.setenv("ENRICHMENT_ENABLED", "true")
+    monkeypatch.setenv("ENRICHMENT_AUTO_ENQUEUE", "true")
+    monkeypatch.setenv("ENRICHMENT_PROVIDER", "bad_provider")
+
+    resp = await _post_report(async_client, dummy_jpeg)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert set(body.keys()) == {"id", "image_url", "server_ts"}
+
+    defect_id = body["id"]
+    enrich_resp = await async_client.get(f"/api/defects/{defect_id}/enrichment")
+    assert enrich_resp.status_code == 404

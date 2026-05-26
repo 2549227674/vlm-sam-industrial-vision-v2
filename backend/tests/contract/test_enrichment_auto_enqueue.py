@@ -257,6 +257,28 @@ async def test_custom_provider_and_prompt(db):
     assert result.prompt_version == "v2_custom"
 
 
+async def test_invalid_provider_returns_none(db):
+    """Provider not in VALID_PROVIDERS -> returns None, no row, no DB error."""
+    defect = await _insert_defect(db)
+    cfg = EnrichmentConfig(enabled=True, auto_enqueue=True, provider="bad_provider")
+    result = await maybe_auto_enqueue_enrichment(db, defect, config=cfg)
+
+    assert result is None
+    rows = (await db.execute(select(DefectEnrichment))).scalars().all()
+    assert len(rows) == 0
+
+
+async def test_empty_provider_returns_none(db):
+    """Empty provider string -> returns None, no row."""
+    defect = await _insert_defect(db)
+    cfg = EnrichmentConfig(enabled=True, auto_enqueue=True, provider="")
+    result = await maybe_auto_enqueue_enrichment(db, defect, config=cfg)
+
+    assert result is None
+    rows = (await db.execute(select(DefectEnrichment))).scalars().all()
+    assert len(rows) == 0
+
+
 async def test_config_none_loads_from_env(monkeypatch, db):
     """When config=None, loads from environment."""
     monkeypatch.setenv("ENRICHMENT_ENABLED", "true")
