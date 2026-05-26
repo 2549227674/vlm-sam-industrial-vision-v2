@@ -751,6 +751,69 @@ If enrichment causes problems after merge:
 
 ---
 
+## 13a. Implementation Status (Phase 10.1a)
+
+> Last updated: 2026-05-26. Branch: `phase10.1/vlm-async-enrichment-impl`
+
+### Completed Steps
+
+| Step | Commit | Scope |
+|---|---|---|
+| Step 1 | `8c5046f` | Enrichment job API skeleton — `defect_enrichments` table, schemas, `POST /api/defects/{id}/enrich`, `GET /api/defects/{id}/enrichment`, 9 contract tests |
+| Step 2a | `40b6c45` | Hallucination guard + `VlmProvider` ABC + `TemplateProvider` + `EdgeVlmProvider` stub + `CloudVlmProvider` stub + prompt file, 35 guard + 25 provider tests |
+| Step 2b | `b35ba80` | `EdgeVlmProvider` safe shell (disabled/subprocess/http) + `provider_factory`, 13 factory tests. TemplateProvider.raw_response is valid JSON. |
+| Step 2c | `8f174b6` | Enrichment worker service — `process_enrichment_job()`, `process_next_pending_enrichment()`, status transitions pending→running→complete/failed/rejected, 23 worker tests |
+| Step 2d | `f348d96` | Manual process routes — `POST /api/enrich/{id}/process?provider=`, `POST /api/enrich/process-next?provider=`, provider=template success, 14 process API tests |
+| Step 3a | `cf12ef0` | Frontend enrichment state display — source-aware header, observation panel, provenance labels, safety caveat, `ObsSourcePill`, API helper |
+| Step 3b | (this commit) | Documentation sync — API contract §14, execution plan status update |
+
+**Test count:** 202/202 backend contract tests pass. Frontend: `tsc --noEmit` 0 errors, `npm run build` succeeds.
+
+### Current Manual Backend-Only Loop
+
+```
+POST /api/edge/report
+  → creates defect only (no enrichment job, no VLM call)
+
+POST /api/defects/{id}/enrich
+  → creates pending enrichment job only (no provider call)
+
+POST /api/enrich/{id}/process?provider=template
+  → processes pending job deterministically (TemplateProvider)
+  → updates defects.observation / severity_reason / observation_source
+  → never updates bboxes / defect_type / confidence / anomaly_score
+
+GET /api/defects/{id}/enrichment
+  → returns latest enrichment status
+
+GET /api/defects/{id}
+  → shows denormalized observation fields after successful process
+```
+
+### Still Not Implemented
+
+| Item | Status | Target |
+|---|---|---|
+| Real EdgeVlmProvider subprocess/http execution | NOT DONE | Phase 10.1a later / 10.1b |
+| Worker auto-start in lifespan loop | NOT DONE | Phase 10.1a later / 10.1b |
+| Auto-enqueue after defect insert (`ENRICHMENT_AUTO_ENQUEUE`) | NOT DONE | Phase 10.1b |
+| Cloud VLM provider | NOT DONE | Phase 10.1c (optional) |
+| LoRA retraining | NOT DONE | Not required for Phase 10.1 |
+| Segmentation / mask | NOT DONE | Out of scope |
+| RKNN integration | NOT DONE | Out of scope (Phase 8/9 blocked) |
+| Category expansion | NOT DONE | Out of scope |
+
+### Frontend Display Behavior (Step 3a)
+
+- FrameInspector no longer labels template/ORT records as "VLM 输出"
+- Source-aware labels: "检测输出 · Template" / "边缘 VLM 增强 · Edge VLM" / "检测输出 · Detector"
+- Observation / severity_reason panel always visible (null → template fallback)
+- Provenance tab shows BBox source, label source, observation source
+- VLM safety caveat: "VLM enrichment is narrative-only. It does not modify bbox, defect_type, category, confidence, or anomaly_score."
+- Phase 10 v1 snapshot (`frontend/public/demo-data/phase10_ort_latest/`) untouched
+
+---
+
 ## 14. Open Questions for Review
 
 1. **Edge VLM subprocess protocol:** Should the edge_vlm subprocess use stdin/stdout JSON (same as `ort_localizer.py`) or a different protocol? Recommend stdin/stdout for consistency.
