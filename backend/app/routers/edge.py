@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -13,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.db import get_db
 from backend.app.models.defect import Defect
 from backend.app.schemas.defect import DefectCreatedResponse, DefectCreate
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/edge", tags=["edge"])
 
@@ -142,6 +145,18 @@ async def report_defect(
         if filepath.exists():
             filepath.unlink()
         return _error(409, "DUPLICATE_REPORT", "Same line_id + edge_ts already exists")
+
+    # --- optional auto-enqueue enrichment (Phase 10.1b) ---
+    # Best-effort: enqueue failure must NOT break defect creation.
+    # Defaults off (ENRICHMENT_ENABLED=false, ENRICHMENT_AUTO_ENQUEUE=false).
+    try:
+        from backend.app.services.enrichment_config import load_enrichment_config
+        from backend.app.services.enrichment_enqueue import maybe_auto_enqueue_enrichment
+
+        enrichment_cfg = load_enrichment_config()
+        await maybe_auto_enqueue_enrichment(db, db_defect, config=enrichment_cfg)
+    except Exception:
+        logger.warning("Auto-enqueue enrichment failed for defect %d", db_defect.id, exc_info=True)
 
     # --- build 3-field response ---
     resp = DefectCreatedResponse.model_validate(db_defect)
