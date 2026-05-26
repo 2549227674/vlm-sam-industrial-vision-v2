@@ -7,6 +7,25 @@ Covers: success, no-pending, provider selection, error handling, YOLO protection
 import copy
 import json
 from datetime import datetime, timezone
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+
+def _passthrough_resolve(image_url: str) -> Path:
+    """Mock resolver: return path without checking file existence."""
+    return Path("/fake") / image_url.lstrip("/")
+
+
+@pytest.fixture(autouse=True)
+def _mock_image_resolver():
+    """Patch image resolver so tests don't need real files on disk."""
+    with patch(
+        "backend.app.services.enrichment_worker.resolve_image_path",
+        side_effect=_passthrough_resolve,
+    ):
+        yield
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

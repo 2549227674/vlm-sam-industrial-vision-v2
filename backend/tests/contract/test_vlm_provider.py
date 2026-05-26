@@ -17,6 +17,7 @@ from backend.app.services.vlm_provider import (
     VlmEnrichmentInput,
     VlmEnrichmentOutput,
     VlmProvider,
+    VlmProviderError,
 )
 
 
@@ -205,10 +206,10 @@ def test_edge_vlm_unsupported_mode_raises_config():
 
 
 @pytest.mark.asyncio
-async def test_edge_vlm_subprocess_raises_not_wired():
-    """EdgeVlmProvider subprocess mode raises ProviderUnavailableError (not yet wired)."""
+async def test_edge_vlm_subprocess_empty_stdout_raises():
+    """EdgeVlmProvider subprocess with empty stdout raises VlmProviderError."""
     provider = EdgeVlmProvider(mode="subprocess", command="/usr/bin/echo")
-    with pytest.raises(ProviderUnavailableError, match="not yet wired"):
+    with pytest.raises(VlmProviderError, match="empty stdout"):
         await provider.enrich(_make_input())
 
 
