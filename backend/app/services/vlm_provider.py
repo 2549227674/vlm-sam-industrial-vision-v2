@@ -5,9 +5,35 @@
 
 from __future__ import annotations
 
+import json
+import shlex
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
+
+# ── Provider exceptions ──────────────────────────────────────────────────────
+
+class VlmProviderError(Exception):
+    """Base exception for VLM provider errors."""
+    pass
+
+
+class ProviderUnavailableError(VlmProviderError):
+    """Provider is not available (disabled, not configured, or offline)."""
+    pass
+
+
+class ProviderConfigError(VlmProviderError):
+    """Provider configuration is invalid or incomplete."""
+    pass
+
+
+class ProviderTimeoutError(VlmProviderError):
+    """Provider call exceeded timeout. Future use."""
+    pass
+
+
+# ── Data classes ─────────────────────────────────────────────────────────────
 
 @dataclass
 class VlmEnrichmentInput:
@@ -39,6 +65,8 @@ class VlmEnrichmentOutput:
     provider_model: str
 
 
+# ── Abstract base ────────────────────────────────────────────────────────────
+
 class VlmProvider(ABC):
     """Abstract base for enrichment providers."""
 
@@ -50,6 +78,8 @@ class VlmProvider(ABC):
         """Run enrichment and return validated output. Raises on error."""
         ...
 
+
+# ── TemplateProvider ─────────────────────────────────────────────────────────
 
 class TemplateProvider(VlmProvider):
     """Deterministic template fallback — always available, no external calls."""
@@ -69,35 +99,84 @@ class TemplateProvider(VlmProvider):
             "[Template] Severity assigned by default rule. "
             "No VLM-based severity analysis available."
         )
+        accepted_box_ids = inp.box_ids
+        raw_response = json.dumps(
+            {
+                "observation": observation,
+                "severity_reason": severity_reason,
+                "accepted_box_ids": accepted_box_ids,
+            },
+            ensure_ascii=False,
+        )
         return VlmEnrichmentOutput(
             observation=observation,
             severity_reason=severity_reason,
-            accepted_box_ids=inp.box_ids,
-            raw_response="template",
+            accepted_box_ids=accepted_box_ids,
+            raw_response=raw_response,
             provider="template",
             provider_model="template",
         )
 
 
+# ── EdgeVlmProvider ──────────────────────────────────────────────────────────
+
 class EdgeVlmProvider(VlmProvider):
     """Edge VLM provider — primary Phase 10.1 provider.
 
-    Supports subprocess / http / disabled modes via config.
-    NOT implemented in Step 2a — raises NotImplementedError.
+    Supports subprocess / http / disabled modes.
+    Subprocess and HTTP execution will be wired in later steps.
     """
 
     provider_name: str = "edge_vlm"
-    provider_model: str = "qwen3-vl-2b-base"
 
-    def __init__(self, mode: str = "disabled"):
+    def __init__(
+        self,
+        mode: str = "disabled",
+        command: str | None = None,
+        endpoint: str | None = None,
+        model_name: str = "qwen3-vl-2b-base",
+        timeout_s: int = 30,
+    ):
         self._mode = mode
+        self._command = command
+        self._endpoint = endpoint
+        self.provider_model = model_name
+        self._timeout_s = timeout_s
+
+        if mode not in ("disabled", "subprocess", "http"):
+            raise ProviderConfigError(
+                f"Unsupported EdgeVlmProvider mode: {mode!r}. "
+                f"Must be 'disabled', 'subprocess', or 'http'."
+            )
+        if mode == "subprocess" and not command:
+            raise ProviderConfigError(
+                "EdgeVlmProvider mode='subprocess' requires a command string."
+            )
+        if mode == "http" and not endpoint:
+            raise ProviderConfigError(
+                "EdgeVlmProvider mode='http' requires an endpoint URL."
+            )
 
     async def enrich(self, inp: VlmEnrichmentInput) -> VlmEnrichmentOutput:
-        raise NotImplementedError(
-            "EdgeVlmProvider.enrich() is not yet implemented. "
-            "Use TemplateProvider as fallback."
-        )
+        if self._mode == "disabled":
+            raise ProviderUnavailableError(
+                "EdgeVlmProvider is disabled. Set EDGE_VLM_MODE=subprocess or http to enable."
+            )
+        if self._mode == "subprocess":
+            raise ProviderUnavailableError(
+                "EdgeVlmProvider subprocess execution is not yet wired. "
+                "Will be implemented in a later step."
+            )
+        if self._mode == "http":
+            raise ProviderUnavailableError(
+                "EdgeVlmProvider HTTP execution is not yet wired. "
+                "Will be implemented in a later step."
+            )
+        # Unreachable due to __init__ validation, but defensive
+        raise ProviderConfigError(f"Unknown mode: {self._mode!r}")
 
+
+# ── CloudVlmProvider ─────────────────────────────────────────────────────────
 
 class CloudVlmProvider(VlmProvider):
     """Cloud VLM provider — optional future comparison/fallback.
@@ -109,8 +188,12 @@ class CloudVlmProvider(VlmProvider):
     provider_name: str = "cloud_vlm"
     provider_model: str = ""
 
+    def __init__(self, model_name: str = ""):
+        self.provider_model = model_name
+
     async def enrich(self, inp: VlmEnrichmentInput) -> VlmEnrichmentOutput:
-        raise NotImplementedError(
+        raise ProviderUnavailableError(
             "CloudVlmProvider is not implemented. "
-            "No vendor or credentials are configured."
+            "No vendor or credentials are configured. "
+            "To use cloud VLM, provide provider choice and credentials."
         )

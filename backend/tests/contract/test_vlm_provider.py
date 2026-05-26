@@ -1,7 +1,9 @@
-"""Phase 10.1: VLM provider interface + TemplateProvider tests.
+"""Phase 10.1: VLM provider interface + TemplateProvider + EdgeVlmProvider tests.
 
-Tests for backend/app/services/vlm_provider.py — provider contract and TemplateProvider behavior.
+Tests for backend/app/services/vlm_provider.py — provider contract and behavior.
 """
+
+import json
 
 import pytest
 
@@ -9,6 +11,8 @@ from backend.app.services.enrichment_guard import validate_vlm_output
 from backend.app.services.vlm_provider import (
     CloudVlmProvider,
     EdgeVlmProvider,
+    ProviderConfigError,
+    ProviderUnavailableError,
     TemplateProvider,
     VlmEnrichmentInput,
     VlmEnrichmentOutput,
@@ -88,20 +92,34 @@ async def test_template_provider_observation_contains_category():
 
 
 @pytest.mark.asyncio
-async def test_template_provider_raw_response_is_template():
-    """TemplateProvider raw_response is 'template' (not JSON from VLM)."""
+async def test_template_provider_raw_response_is_valid_json():
+    """TemplateProvider raw_response is valid JSON."""
     provider = TemplateProvider()
     out = await provider.enrich(_make_input())
-    assert out.raw_response == "template"
+    data = json.loads(out.raw_response)
+    assert "observation" in data
+    assert "severity_reason" in data
+    assert "accepted_box_ids" in data
+
+
+@pytest.mark.asyncio
+async def test_template_provider_raw_response_passes_guard():
+    """TemplateProvider raw_response passes hallucination guard."""
+    provider = TemplateProvider()
+    inp = _make_input()
+    out = await provider.enrich(inp)
+    validated = validate_vlm_output(out.raw_response, input_box_ids=inp.box_ids)
+    assert validated["observation"] == out.observation
+    assert validated["severity_reason"] == out.severity_reason
+    assert validated["accepted_box_ids"] == out.accepted_box_ids
 
 
 @pytest.mark.asyncio
 async def test_template_provider_output_passes_guard():
-    """TemplateProvider output passes hallucination guard."""
+    """TemplateProvider output dict passes hallucination guard."""
     provider = TemplateProvider()
     inp = _make_input()
     out = await provider.enrich(inp)
-    # Guard accepts dict with observation, severity_reason, accepted_box_ids
     validated = validate_vlm_output(
         {"observation": out.observation, "severity_reason": out.severity_reason, "accepted_box_ids": out.accepted_box_ids},
         input_box_ids=inp.box_ids,
@@ -126,15 +144,19 @@ async def test_template_provider_no_forbidden_keys_in_output():
         assert key not in output_dict, f"forbidden key '{key}' found in TemplateProvider output"
 
 
-# ── EdgeVlmProvider (stub) ───────────────────────────────────────────────────
-
 @pytest.mark.asyncio
-async def test_edge_vlm_provider_not_implemented():
-    """EdgeVlmProvider raises NotImplementedError."""
-    provider = EdgeVlmProvider(mode="disabled")
-    with pytest.raises(NotImplementedError, match="not yet implemented"):
-        await provider.enrich(_make_input())
+async def test_template_provider_deterministic():
+    """TemplateProvider returns identical output for same input."""
+    provider = TemplateProvider()
+    inp = _make_input()
+    out1 = await provider.enrich(inp)
+    out2 = await provider.enrich(inp)
+    assert out1.observation == out2.observation
+    assert out1.severity_reason == out2.severity_reason
+    assert out1.accepted_box_ids == out2.accepted_box_ids
 
+
+# ── EdgeVlmProvider ──────────────────────────────────────────────────────────
 
 def test_edge_vlm_provider_name():
     """EdgeVlmProvider has provider_name='edge_vlm'."""
@@ -142,13 +164,69 @@ def test_edge_vlm_provider_name():
     assert provider.provider_name == "edge_vlm"
 
 
+def test_edge_vlm_provider_default_model():
+    """EdgeVlmProvider default model is 'qwen3-vl-2b-base'."""
+    provider = EdgeVlmProvider()
+    assert provider.provider_model == "qwen3-vl-2b-base"
+
+
+def test_edge_vlm_provider_custom_model():
+    """EdgeVlmProvider accepts custom model_name."""
+    provider = EdgeVlmProvider(model_name="qwen3-vl-4b-base")
+    assert provider.provider_model == "qwen3-vl-4b-base"
+
+
+@pytest.mark.asyncio
+async def test_edge_vlm_disabled_raises_unavailable():
+    """EdgeVlmProvider disabled mode raises ProviderUnavailableError."""
+    provider = EdgeVlmProvider(mode="disabled")
+    with pytest.raises(ProviderUnavailableError, match="disabled"):
+        await provider.enrich(_make_input())
+
+
+@pytest.mark.asyncio
+async def test_edge_vlm_subprocess_without_command_raises_config():
+    """EdgeVlmProvider subprocess mode without command raises ProviderConfigError."""
+    with pytest.raises(ProviderConfigError, match="requires a command"):
+        EdgeVlmProvider(mode="subprocess", command=None)
+
+
+@pytest.mark.asyncio
+async def test_edge_vlm_http_without_endpoint_raises_config():
+    """EdgeVlmProvider http mode without endpoint raises ProviderConfigError."""
+    with pytest.raises(ProviderConfigError, match="requires an endpoint"):
+        EdgeVlmProvider(mode="http", endpoint=None)
+
+
+def test_edge_vlm_unsupported_mode_raises_config():
+    """EdgeVlmProvider with unsupported mode raises ProviderConfigError."""
+    with pytest.raises(ProviderConfigError, match="Unsupported"):
+        EdgeVlmProvider(mode="cuda")
+
+
+@pytest.mark.asyncio
+async def test_edge_vlm_subprocess_raises_not_wired():
+    """EdgeVlmProvider subprocess mode raises ProviderUnavailableError (not yet wired)."""
+    provider = EdgeVlmProvider(mode="subprocess", command="/usr/bin/echo")
+    with pytest.raises(ProviderUnavailableError, match="not yet wired"):
+        await provider.enrich(_make_input())
+
+
+@pytest.mark.asyncio
+async def test_edge_vlm_http_raises_not_wired():
+    """EdgeVlmProvider http mode raises ProviderUnavailableError (not yet wired)."""
+    provider = EdgeVlmProvider(mode="http", endpoint="http://localhost:8001/vlm")
+    with pytest.raises(ProviderUnavailableError, match="not yet wired"):
+        await provider.enrich(_make_input())
+
+
 # ── CloudVlmProvider (stub) ─────────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_cloud_vlm_provider_not_implemented():
-    """CloudVlmProvider raises NotImplementedError."""
+async def test_cloud_vlm_provider_raises_unavailable():
+    """CloudVlmProvider raises ProviderUnavailableError."""
     provider = CloudVlmProvider()
-    with pytest.raises(NotImplementedError, match="not implemented"):
+    with pytest.raises(ProviderUnavailableError, match="not implemented"):
         await provider.enrich(_make_input())
 
 
@@ -156,6 +234,12 @@ def test_cloud_vlm_provider_name():
     """CloudVlmProvider has provider_name='cloud_vlm'."""
     provider = CloudVlmProvider()
     assert provider.provider_name == "cloud_vlm"
+
+
+def test_cloud_vlm_provider_default_model_empty():
+    """CloudVlmProvider default model is empty (no vendor hardcoded)."""
+    provider = CloudVlmProvider()
+    assert provider.provider_model == ""
 
 
 # ── VlmEnrichmentInput ──────────────────────────────────────────────────────
