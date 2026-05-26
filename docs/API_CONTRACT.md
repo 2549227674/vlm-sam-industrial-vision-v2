@@ -8,6 +8,7 @@
 > - `bboxes` 语义从 FastSAM/VLM proposal 改为 primary localizer output（YOLOv8n-detect）
 > - `defect_type` 语义从 VLM 输出改为 YOLO class head 输出
 > - `confidence` 语义从 VLM confidence 改为 YOLO detection score
+> - **Phase 10.1a**（v1.3 enrichment addendum）: 新增 enrichment API 路由 + `defect_enrichments` 表；`schema_version` 保持 `"v1"`
 
 > **v1.2 变更摘要**（2026-05-19）：
 > - 新增 `TraceEvent` schema，`DefectCreate` / `DefectRead` 增加可选 `trace_events` 字段
@@ -32,6 +33,10 @@
 | GET | `/api/health` | 全部 | 存活探针 |
 | WS | `/ws/dashboard` | 前端 | 实时事件流 |
 | GET | `/static/defects/{date}/{file}` | 前端 | 图片静态文件 |
+| POST | `/api/defects/{id}/enrich` | 前端 / 手动 | 创建 pending enrichment job（不调用 VLM） |
+| GET | `/api/defects/{id}/enrichment` | 前端 | 获取最新 enrichment 记录 |
+| POST | `/api/enrich/{id}/process?provider=` | 手动 / 测试 | 手动处理单个 pending job |
+| POST | `/api/enrich/process-next?provider=` | 手动 / 测试 | 处理最早的 pending job |
 
 Base URL：开发 `http://localhost:8000`，生产 `https://vision.example.com`。所有请求/响应 JSON 字段统一 `snake_case`。
 
@@ -323,12 +328,21 @@ CORSMiddleware 必须最早注册以处理 OPTIONS 预检。
 |---|---|---|
 | 400 | `VALIDATION_ERROR` | Pydantic 字段校验失败 |
 | 400 | `INVALID_IMAGE` | 图片解码失败 / 超过 2 MB |
+| 400 | `EMPTY_BBOXES` | bboxes 为空，无法 enrichment |
+| 400 | `ZERO_CONFIDENCE` | confidence=0（回退占位），无法 enrichment |
+| 400 | `FALLBACK_PLACEHOLDER` | 回退占位 defect，无法 enrichment |
+| 400 | `INVALID_PROVIDER` | 未知 provider 名称 |
+| 400 | `PROVIDER_CONFIG_ERROR` | provider 配置无效 |
 | 404 | `NOT_FOUND` | 资源不存在 |
+| 404 | `NO_PENDING_ENRICHMENT` | process-next 无 pending job |
 | 409 | `DUPLICATE_REPORT` | `(line_id, edge_ts)` 重复（幂等） |
+| 409 | `DUPLICATE_ENRICHMENT` | 同一 defect + provider + prompt_version 已有 pending/running job |
+| 409 | `ENRICHMENT_NOT_PENDING` | enrichment 不在 pending 状态，无法处理 |
 | 413 | `PAYLOAD_TOO_LARGE` | multipart 总大小超限 |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Content-Type 不是 multipart |
 | 422 | `SCHEMA_MISMATCH` | `schema_version` 不被支持 |
 | 500 | `INTERNAL_ERROR` | 服务端异常（落库失败等） |
+| 501 | `PROVIDER_NOT_IMPLEMENTED` | provider 尚未实现（如 cloud_vlm） |
 | 503 | `SERVICE_UNAVAILABLE` | DB / 磁盘探针失败 |
 
 边缘端针对 408 / 429 / 5xx / 网络超时执行指数退避重试（500 ms × 2ⁿ + jitter，最多 5 次）。
@@ -354,3 +368,199 @@ CORSMiddleware 必须最早注册以处理 OPTIONS 预检。
 6. `test_ws_dashboard_broadcast.py`
 
 CI 中跑 `pytest backend/tests/contract/` 必须全绿才允许 merge。轨道 B 上板时，C++ 客户端通过同一组测试即视为契约合规。
+
+---
+
+## 14. Phase 10.1 Enrichment API（v1.3 addendum）
+
+> **`schema_version` 保持 `"v1"`** — enrichment 路由不改变 payload schema 版本号。
+
+### 14.1 Non-blocking Rule
+
+- `POST /api/edge/report` **不调用 VLM**，不启动 enrichment 处理。
+- `POST /api/edge/report` **不自动创建 enrichment job**（无 auto-enqueue）。
+- enrichment 处理完全由手动路由触发（Phase 10.1a）。
+- auto-enqueue 将在 Phase 10.1b 实现，受 `ENRICHMENT_ENABLED` / `ENRICHMENT_AUTO_ENQUEUE` 环境变量控制。
+
+### 14.2 `defect_enrichments` Table
+
+| 列 | 类型 | 说明 |
+|---|---|---|
+| `id` | INTEGER PK | 自增 |
+| `defect_id` | INTEGER FK → defects.id | 索引 |
+| `provider` | VARCHAR(32) | `"edge_vlm"` / `"template"` / `"cloud_vlm"` |
+| `provider_model` | VARCHAR(128) | 如 `"qwen3-vl-2b-base"` / `"template"` |
+| `prompt_version` | VARCHAR(64) | 如 `"phase10_1_obs_v1"` |
+| `status` | VARCHAR(16) | 状态机，见 §14.3 |
+| `observation` | TEXT | VLM 输出观察描述 |
+| `severity_reason` | TEXT | VLM 输出严重性依据 |
+| `accepted_box_ids` | JSON | VLM 确认的 box ID 列表 |
+| `input_digest` | VARCHAR(128) | 输入摘要（sha256） |
+| `raw_response` | TEXT | VLM 原始 JSON 响应（调试用） |
+| `error_message` | VARCHAR(512) | 错误信息 |
+| `created_at` | DATETIME | 创建时间 |
+| `updated_at` | DATETIME | 最后更新时间 |
+| `completed_at` | DATETIME | 完成时间（终态） |
+
+唯一约束：`(defect_id, provider, prompt_version)`
+
+### 14.3 Enrichment Status Machine
+
+```
+pending → running → complete
+                  → failed
+                  → rejected
+```
+
+| 状态 | 含义 |
+|---|---|
+| `pending` | 等待处理 |
+| `running` | 正在调用 provider |
+| `complete` | 成功，observation 已更新到 defects 表 |
+| `failed` | provider 错误 / 超时 / 异常 |
+| `rejected` | hallucination guard 拒绝（禁止键或格式错误） |
+| `skipped` | 预留（Phase 10.1b 跳过逻辑） |
+
+### 14.4 Providers
+
+| provider | 说明 | 可用性 |
+|---|---|---|
+| `template` | 确定性模板，无外部调用 | 始终可用 |
+| `edge_vlm` | RK3588 VLM（subprocess/http） | Phase 10.1a 为 disabled shell |
+| `cloud_vlm` | 云端 VLM（provider-neutral） | 未实现，返回 501 |
+
+### 14.5 Hallucination Guard
+
+enrichment worker 在写入 defects 表前，通过 `validate_vlm_output()` 校验 provider 原始响应。
+
+**允许输出键（ALLOWED_KEYS）**：
+
+| 键 | 说明 |
+|---|---|
+| `observation` | 短观察描述（≤ 1024 字符） |
+| `severity_reason` | 严重性依据（≤ 512 字符） |
+| `accepted_box_ids` | VLM 确认的 box ID 列表（可选） |
+
+**禁止输出键（FORBIDDEN_KEYS）** — 出现任一即拒绝：
+
+| 键 | 所有者 |
+|---|---|
+| `bbox` / `bboxes` | YOLO/ORT localizer |
+| `mask` | 未使用 |
+| `category` | YOLO class head |
+| `defect_type` | YOLO class head |
+| `confidence` | YOLO detection score |
+| `anomaly_score` | EfficientAD |
+| `geometry_correction` | 不适用 |
+| `localization_source` | YOLO/ORT localizer |
+| `label_source` | YOLO class head |
+
+### 14.6 Immutable Field Protection
+
+enrichment 成功时，**只更新** defects 表的以下三个字段：
+
+- `observation`
+- `severity_reason`
+- `observation_source`（设为 provider 名称）
+
+**永远不更新**的 YOLO/ORT 拥有字段：
+
+- `bboxes`
+- `defect_type`
+- `category`
+- `confidence`
+- `anomaly_score`
+- `localization_source`
+- `label_source`
+
+### 14.7 POST `/api/defects/{id}/enrich`
+
+创建 pending enrichment job。**不调用 VLM，不处理 job。**
+
+**响应 202**：
+```json
+{ "enrichment_id": 42, "defect_id": 123, "status": "pending" }
+```
+
+**错误**：
+
+| HTTP | code | 条件 |
+|---|---|---|
+| 404 | `NOT_FOUND` | defect 不存在 |
+| 400 | `EMPTY_BBOXES` | bboxes 为空 |
+| 400 | `ZERO_CONFIDENCE` | confidence=0 |
+| 400 | `FALLBACK_PLACEHOLDER` | 回退占位 defect |
+| 409 | `DUPLICATE_ENRICHMENT` | 同 defect + provider + prompt 已有 pending/running |
+
+### 14.8 GET `/api/defects/{id}/enrichment`
+
+返回最新 enrichment 记录。
+
+**响应 200**：
+```json
+{
+  "id": 42,
+  "defect_id": 123,
+  "provider": "template",
+  "provider_model": "template",
+  "prompt_version": "phase10_1_obs_v1",
+  "status": "complete",
+  "observation": "[Template] metal_nut: scratch detected...",
+  "severity_reason": "[Template] Severity assigned by default rule.",
+  "accepted_box_ids": [0],
+  "error_message": null,
+  "created_at": "2026-05-26T10:00:00Z",
+  "updated_at": "2026-05-26T10:00:01Z",
+  "completed_at": "2026-05-26T10:00:01Z"
+}
+```
+
+**错误**：404 `NOT_FOUND` — 无 enrichment 记录。
+
+### 14.9 POST `/api/enrich/{enrichment_id}/process?provider=`
+
+手动处理单个 pending enrichment job。
+
+**Query 参数 `provider`**：
+
+| 值 | 行为 |
+|---|---|
+| 省略 / 空 | 使用环境变量默认（默认 `edge_vlm disabled`） |
+| `template` | 确定性 TemplateProvider |
+| `edge_vlm` | 使用环境变量配置的 EdgeVlmProvider |
+| `cloud_vlm` | 501 `PROVIDER_NOT_IMPLEMENTED` |
+| 其他 | 400 `INVALID_PROVIDER` |
+
+**不接受**：command、endpoint、token、credentials、model path 等 query 参数。
+
+**成功响应 200**：`DefectEnrichmentRead`（含更新后的 status / observation / severity_reason）。
+
+**错误**：
+
+| HTTP | code | 条件 |
+|---|---|---|
+| 404 | `NOT_FOUND` | enrichment 不存在 |
+| 409 | `ENRICHMENT_NOT_PENDING` | enrichment 不在 pending 状态 |
+| 400 | `INVALID_PROVIDER` | 未知 provider |
+| 400 | `PROVIDER_CONFIG_ERROR` | provider 配置错误 |
+| 501 | `PROVIDER_NOT_IMPLEMENTED` | cloud_vlm 未实现 |
+
+### 14.10 POST `/api/enrich/process-next?provider=`
+
+手动处理最早的 pending enrichment job。
+
+**响应 200**：`DefectEnrichmentRead`。
+**错误 404**：`NO_PENDING_ENRICHMENT` — 无 pending job。
+
+provider query 参数行为同 §14.9。
+
+### 14.11 Frontend Display Behavior
+
+- `observation_source` 控制右侧面板标题：
+  - `"template"` → "检测输出 · Template"
+  - `"edge_vlm"` → "边缘 VLM 增强 · Edge VLM"
+  - `"cloud_vlm"` → "云端 VLM 增强 · Cloud VLM"
+  - null / 缺失 → "检测输出 · Detector"
+- observation / severity_reason 面板始终可见（null 时显示模板 fallback 文案）
+- 溯源 tab 显示 BBox 来源、标签来源、观察来源 + VLM safety caveat
+- JSON tab 文件名按 observation_source 变化（`template_output.json` / `edge_vlm_enrichment.json` / `detector_output.json`）
