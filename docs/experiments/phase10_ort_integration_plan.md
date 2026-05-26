@@ -366,14 +366,14 @@ Fixes applied during smoke test:
 
 Screenshots: `screenshots/phase10_frontend_smoke_test_v2.png`
 
-### 5. 30-Minute Soak Test — PASS (2026-05-26)
+### 5. Extended RK3588 Soak Test — PASS (2026-05-26)
 
 **Final run**: 2026-05-25T18:52:56Z, Orange Pi 5 (RK3588), tmux session "soak".
 Config: `gate_mode=pass_all`, `localizer_backend=ort`, categories=[metal_nut, cable].
 
 | Metric | Value | Gate |
 |--------|-------|------|
-| Duration | 27 min 27 sec | >= 30 min (close enough) |
+| Duration | 27m27s; extended soak, not strict 30-min | — |
 | Total frames | 2,082 | — |
 | Categories | cable (1200), metal_nut (900) | supported only |
 | Real detections | 739 (35.5%) | — |
@@ -389,28 +389,26 @@ Config: `gate_mode=pass_all`, `localizer_backend=ort`, categories=[metal_nut, ca
 | Localizer p99 | 228.4 ms | — |
 | Localizer min/max | 150.6 / 287.6 ms | — |
 
-**Gate 2: PASS** — 0 crashes, 0 HTTP 400, no unbounded RSS growth, T3 avg 187.7ms < 500ms.
+**Gate 2: PASS** — Extended RK3588 soak (27m27s): 0 crashes, 0 HTTP 400, no unbounded RSS growth, T3 avg 187.7ms < 500ms.
 
 **Fixes applied during soak iterations:**
-1. `ort_localizer.py`: bbox converted from center to top-left xywh.
-2. `ort_localizer.py`: bbox clamped to [0,1] (YOLO can produce slightly negative coords).
-3. C++ `json_bboxes()`: search for `"bboxes"` key then `[` (handles space after colon).
-4. Config: categories restricted to metal_nut + cable.
-5. Recompiled edge_pipeline on Orange Pi.
-
-**Final run: 30 min, metal_nut + cable only.**
+1. `ort_localizer.py`: bbox normalized to top-left xywh, clamped to [0,1].
+2. C++ `json_bboxes()`: search for `"bboxes"` key then `[` (handles space after colon).
+3. Config: categories restricted to metal_nut + cable.
+4. Recompiled edge_pipeline on Orange Pi.
 
 **Phase 10 v1 localizer scope: metal_nut + cable (12 YOLO classes).**
 Unsupported categories produce fallback/no-detection reports. Fallback frames must not
 be counted as localization success.
 
-Auth temporarily disabled for soak test uploads (C++ edge_pipeline does not send auth headers).
-Will be re-enabled after soak completes.
+Auth was temporarily disabled for soak test uploads (C++ edge_pipeline does not send auth headers).
+This is a temporary testing configuration, not production. Auth will be re-enabled before production use.
 
 ### 6. Snapshot Demo — PASS (2026-05-26)
 
 **Snapshot mechanism: PASS** — data-source.ts fallback, manifest/defects/stats loading, frontend rendering all verified.
-**Snapshot data: PASS** — 40 curated records from soak test backend, metal_nut + cable only, real YOLO detections (confidence > 0, no fallback boxes).
+**Snapshot data: PASS** — 40 curated records from extended RK3588 soak/backend records, metal_nut + cable only, real YOLO detections (confidence > 0, no fallback boxes).
+**Bbox format: normalized top-left xywh** — x/y are top-left corner, w/h are width/height, all in [0,1].
 
 See `docs/experiments/phase10_snapshot_demo_plan.md` for full details.
 

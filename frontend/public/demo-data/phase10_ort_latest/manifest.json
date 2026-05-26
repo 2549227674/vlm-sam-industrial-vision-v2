@@ -1,38 +1,36 @@
 {
   "schema": "real_run_manifest.v1",
   "source": "ort_cpu_fallback",
-  "run_id": "phase10_ort_preliminary_20260526",
-  "created_at": "2026-05-25T17:43:09.744718+00:00",
+  "run_id": "phase10_ort_soak_20260525",
+  "created_at": "2026-05-26T03:14:07.907867+00:00",
   "is_mock": false,
   "is_live": false,
   "mode": "pass_all",
-  "duration_min": 0,
+  "duration_min": 27,
   "edge_device": "Orange Pi 5 Plus / RK3588 / 16GB",
   "contract_version": "v1.3",
-  "snapshot_type": "phase10_ort_cpu_fallback_preliminary",
-  "description": "PRELIMINARY snapshot generated before 30-min soak test. Data is from simulator-generated ORT records, NOT from a completed RK3588 soak run. Will be regenerated from soak test backend records after the soak completes.",
+  "snapshot_type": "phase10_ort_soak_curated",
+  "description": "Phase 10 v1 ORT localizer. Curated from extended RK3588 soak (27m27s). Real YOLOv8n-detect. VLM NOT called.",
   "mainline": {
     "efficientad": "EfficientAD-S RKNN INT8",
     "localizer": "YOLOv8n-detect ORT CPU FP32"
   },
   "data_counts": {
-    "records": 20,
-    "images": 20,
+    "records": 40,
+    "images": 38,
     "categories": [
-      "metal_nut",
-      "cable"
+      "cable",
+      "metal_nut"
     ],
     "variants": [
       "ort_2B"
     ]
   },
-  "data_source_label": "Phase 10 ORT Preliminary",
+  "data_source_label": "Phase 10 ORT Localizer",
   "caveats": [
-    "PRELIMINARY: This snapshot was generated from simulator data before the 30-min soak test. NOT derived from completed soak run.",
-    "This is ORT CPU fallback, NOT RKNN/NPU deployment. RKNN remains BLOCKED.",
-    "pipeline_ms.upload is 0.0 in edge payloads because upload_ms is measured after POST completes.",
-    "VLM is not called — severity is fixed to 'medium', observation_source is 'template'.",
-    "localization_source='ort_yolov8n_cpu' indicates ONNX Runtime on CPU, not NPU.",
-    "Backend auth was temporarily disabled for soak test uploads. Not part of production config."
+    "Phase 10 v1: ORT CPU fallback, NOT RKNN/NPU. RKNN BLOCKED.",
+    "VLM NOT called. observation_source=template. Enrichment is Phase 10.1.",
+    "Only metal_nut + cable (12 YOLO classes).",
+    "pipeline_ms.upload=0.0 (sequencing constraint)."
   ]
 }

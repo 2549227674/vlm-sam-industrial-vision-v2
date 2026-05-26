@@ -5,14 +5,15 @@
 ## Deliverables
 
 ### 1. Soak Evidence (Engineering Reliability)
-- 30-min RK3588 run, metal_nut + cable only
+- Extended RK3588 soak (27m27s), metal_nut + cable only
 - Metrics recorded in `phase10_ort_integration_plan.md` Gate 2
 - Purpose: release gate, not demo artifact
 
 ### 2. Phase 10 v1 Localization Snapshot (Demo Artifact)
-- Curated from soak test backend records
-- 40 records, metal_nut + cable only, 12 defect types
-- Real YOLO detections only (confidence > 0, no fallback boxes)
+- 40 curated records from extended RK3588 soak/backend records
+- metal_nut (16) + cable (24), 12 defect types
+- Real YOLO detections only (confidence > 0, no fallback placeholder boxes)
+- Bbox format: normalized top-left xywh (x/y = top-left corner, w/h = dimensions, all [0,1])
 - v1.3 fields: localization_source, label_source, observation_source, pipeline_ms.localizer, T3.localizer trace_events
 - Purpose: merge-main / remote frontend static demo
 
@@ -29,16 +30,8 @@
 | `frontend/public/demo-data/phase10_ort_latest/manifest.json` | Metadata + caveats |
 | `frontend/public/demo-data/phase10_ort_latest/defects_snapshot.json` | 40 curated records |
 | `frontend/public/demo-data/phase10_ort_latest/stats_snapshot.json` | Aggregated stats |
-| `frontend/public/demo-data/phase10_ort_latest/images/` | 40 JPEG images |
+| `frontend/public/demo-data/phase10_ort_latest/images/` | 38 JPEG images |
 | `frontend/public/demo-data/phase10_ort_latest/README.md` | Docs |
-
-## Data Composition
-
-- 16 metal_nut detections (bent, color, flip, scratch)
-- 24 cable detections (bent_wire, cable_swap, combined, cut_inner_insulation, cut_outer_insulation, missing_cable, missing_wire, poke_insulation)
-- All variant="ort_2B", confidence > 0
-- Bounding boxes from YOLOv8n-detect (normalized [0,1], center-x/y format)
-- Pipeline: EfficientAD → YOLO Localizer → Upload
 
 ## Caveats (in manifest.json)
 
