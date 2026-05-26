@@ -5,6 +5,10 @@
 > Recommended branch: `phase10.1/vlm-async-enrichment`  
 > Document purpose: planning / control document for Claude Code and reviewer workflow  
 > Status: plan only — do not write implementation code until reviewed
+>
+> **Primary route:** edge_vlm async observation on RK3588.  
+> **Fallback:** template observation.  
+> **Optional:** cloud_vlm comparison / fallback only (provider-neutral, not default).
 
 ---
 
@@ -96,23 +100,26 @@ Phase 10.1 must not do the following:
 
 ## 3. Edge-side, Backend-side Cloud, or Both?
 
-Recommendation: **support both in the data model and source labels, but implement backend-side cloud enrichment first.**
+Recommendation: **edge_vlm async enrichment as primary path, with template as fallback.**
 
 Reasoning:
 
-- Backend-side cloud enrichment can run after upload and does not block the RK3588 edge path.
-- Existing backend records already contain image URL, bbox, category, defect type, confidence, and source fields.
-- Cloud worker can enrich historical records and failed/pending records.
-- Edge VLM can be added later as another provider without changing the main schema.
-- Keeping provider names generic allows future `edge_vlm` without making it part of the first implementation.
+- Edge VLM runs on RK3588 alongside the existing pipeline — no external API dependency.
+- The same hardware already runs Qwen3-VL-2B base (W8A8) for Phase 7/8/9 experiments.
+- Edge VLM processes observation/severity_reason only — a much simpler task than full defect JSON.
+- No cloud API latency, no credential management, no vendor lock-in.
+- Template fallback is always available when edge VLM is disabled or fails.
+- Cloud VLM can be added later as an optional comparison/fallback provider without changing the schema.
 
 Recommended staging:
 
 ```text
-10.1a: backend cloud worker + manual/admin trigger + frontend pending/enriched display
-10.1b: auto-enqueue on new defect insert, behind config flag and rate limit
-10.1c: optional edge_vlm provider adapter, still async, still forbidden to modify YOLO outputs
+10.1a: edge_vlm async provider + manual trigger + template fallback + frontend display
+10.1b: auto-enqueue / auto-run edge_vlm enrichment after defect insert, behind config flags and rate limit
+10.1c: optional cloud_vlm comparison/fallback provider, provider-neutral and not enabled by default
 ```
+
+Cloud VLM is provider-neutral: no specific vendor (DashScope, OpenAI, Claude, Gemini, etc.) is assumed or hardcoded. If cloud VLM implementation is requested, the developer must ask the user for provider choice and credentials before proceeding.
 
 ---
 
@@ -170,9 +177,9 @@ Recommended table:
 defect_enrichments
 - id
 - defect_id
-- provider                 # cloud_vlm | edge_vlm
-- provider_model           # e.g. cloud model identifier or edge model name
-- prompt_version           # e.g. phase10.1_obs_v1
+- provider                 # edge_vlm (primary) | template (fallback) | cloud_vlm (optional future)
+- provider_model           # e.g. "qwen3-vl-2b" for edge, "template" for template
+- prompt_version           # e.g. phase10_1_obs_v1
 - status                   # pending | running | complete | failed | rejected | skipped
 - observation
 - severity_reason
@@ -235,7 +242,7 @@ Suggested config:
 
 ```yaml
 enrichment_enabled: false
-enrichment_provider: cloud_vlm
+enrichment_provider: edge_vlm
 enrichment_auto_enqueue: false
 enrichment_max_per_minute: 10
 ```
@@ -394,7 +401,7 @@ Recommended WebSocket event:
 {
   "type": "defect_enriched",
   "defect_id": 123,
-  "observation_source": "cloud_vlm",
+  "observation_source": "edge_vlm",
   "enrichment_status": "complete"
 }
 ```
@@ -456,14 +463,20 @@ if observation_source == "template":
 if enrichment_status == "pending" or "running":
     show "VLM enrichment pending..." but keep template observation visible
 
-if observation_source == "cloud_vlm":
-    show enriched note and badge "cloud VLM"
-
-if observation_source == "edge_vlm":
+if observation_source == "edge_vlm" and enrichment_status == "complete":
     show enriched note and badge "edge VLM"
 
-if enrichment_status == "failed":
+if observation_source == "cloud_vlm" and enrichment_status == "complete":
+    show enriched note and badge "cloud VLM"  (optional cloud comparison)
+
+if enrichment_status == "failed" or "rejected":
     show template note plus small warning "enrichment failed, using template"
+
+Source labels always visible:
+  BBox source: YOLO/ORT localizer
+  Label source: YOLO class head
+  Observation source: template / edge_vlm / cloud_vlm
+  VLM does not modify geometry or canonical label
 ```
 
 Important frontend cleanup:
@@ -553,7 +566,7 @@ backend/app/models/enrichment.py
 backend/app/schemas/enrichment.py
 backend/app/routers/enrichment.py
 backend/app/services/enrichment_worker.py
-backend/app/services/vlm_providers.py
+backend/app/services/vlm_provider.py        # VlmProvider ABC + EdgeVlmProvider (primary) + TemplateProvider (fallback)
 backend/tests/contract/test_enrichment_contract.py
 backend/tests/unit/test_enrichment_parser.py
 ```
@@ -608,8 +621,11 @@ Before Claude Code writes implementation code, reviewer should verify:
 - The plan preserves Phase 10 v1 snapshot.
 - The plan includes tests for forbidden VLM fields.
 - The plan includes frontend source/caveat display.
-- The plan has rollback config.
+- The plan has rollback config (template fallback).
 - The plan contains no secrets or credential-specific commands.
+- The plan uses edge_vlm as primary provider, not cloud_vlm.
+- The plan does not hardcode any cloud vendor (DashScope, OpenAI, etc.).
+- The plan does not require LoRA for Phase 10.1 delivery.
 
 ---
 
@@ -617,18 +633,26 @@ Before Claude Code writes implementation code, reviewer should verify:
 
 Phase 10.1 should be treated as a controlled asynchronous enrichment layer, not a new localization phase.
 
+**Primary route:** edge_vlm async observation on RK3588.
+**Fallback:** template observation.
+**Optional:** cloud_vlm comparison/fallback (provider-neutral, not default).
+
+**Base / LoRA policy:** Phase 10.1 uses edge_vlm_base (Qwen3-VL-2B base W8A8). No LoRA required. edge_vlm_lora is optional research only — not a merge gate. If LoRA is evaluated later, its target must be observation/severity_reason only, and must pass the same hallucination guard.
+
 The correct responsibility split remains:
 
 | Field | Source |
 |---|---|
-| bbox | YOLO/ORT detector output |
-| defect_type | YOLO class head |
-| confidence | YOLO detection score |
-| anomaly_score | EfficientAD |
-| observation | template / edge VLM / cloud VLM |
-| severity_reason | template / edge VLM / cloud VLM |
-| localization_source | `ort_yolov8n_cpu` |
-| label_source | `yolo_class_head` |
-| observation_source | `template` / `edge_vlm` / `cloud_vlm` |
+| bbox | YOLO/ORT detector output (immutable) |
+| defect_type | YOLO class head (immutable) |
+| confidence | YOLO detection score (immutable) |
+| anomaly_score | EfficientAD (immutable) |
+| observation | **edge_vlm** (primary) / template (fallback) / cloud_vlm (optional) |
+| severity_reason | **edge_vlm** (primary) / template (fallback) / cloud_vlm (optional) |
+| localization_source | `ort_yolov8n_cpu` (immutable) |
+| label_source | `yolo_class_head` (immutable) |
+| observation_source | `edge_vlm` / `template` / `cloud_vlm` |
+
+Rollback path: set `ENRICHMENT_ENABLED=false` → system falls back to template observation. Phase 10 v1 ORT localizer path is untouched.
 
 The safest next step is for Claude Code to generate `docs/experiments/phase10_1_execution_plan.md` from this planning document, then wait for review before implementation.

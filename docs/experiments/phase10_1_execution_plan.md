@@ -1,10 +1,14 @@
-# Phase 10.1 — Execution Plan: VLM Async Enrichment
+# Phase 10.1 — Execution Plan: Edge VLM Async Enrichment
 
 > Plan only — no implementation code until reviewed.
 >
 > Baseline: `main` after Phase 10 v1 merge (commit `9dc8afe`)
 > Branch: `phase10.1/vlm-async-enrichment`
 > Reference: `docs/experiments/phase10_1_vlm_async_enrichment_plan.md`
+>
+> **Primary route:** edge_vlm async observation on RK3588.
+> **Fallback:** template observation.
+> **Optional:** cloud_vlm comparison / fallback only (not default, provider-neutral).
 
 ---
 
@@ -25,7 +29,21 @@ The PR #2 merge commit (`9dc8afe`) is the new main baseline. No rebase onto old 
 
 ### Goal
 
-Async cloud VLM enrichment of `observation` + `severity_reason` for defects already localized by YOLO/ORT.
+Async edge VLM enrichment of `observation` + `severity_reason` for defects already localized by YOLO/ORT on RK3588. Cloud VLM is optional and provider-neutral (not the default path).
+
+**Responsibility split:**
+
+| Field | Source |
+|---|---|
+| `bbox` | YOLO/ORT detector output |
+| `defect_type` | YOLO class head |
+| `confidence` | YOLO detection score |
+| `anomaly_score` | EfficientAD |
+| `observation` | template (fallback) / edge_vlm (primary) / cloud_vlm (optional) |
+| `severity_reason` | template (fallback) / edge_vlm (primary) / cloud_vlm (optional) |
+| `localization_source` | `ort_yolov8n_cpu` (immutable) |
+| `label_source` | `yolo_class_head` (immutable) |
+| `observation_source` | `template` / `edge_vlm` / `cloud_vlm` |
 
 ### Allowed VLM Outputs
 
@@ -53,40 +71,45 @@ Async cloud VLM enrichment of `observation` + `severity_reason` for defects alre
 ## 3. Architecture — Async Flow
 
 ```
-Edge T1/T2/T3/T4 upload
+Edge T1/T2/T3/T4 upload (YOLO/ORT localizer)
   → POST /api/edge/report
   → Backend writes defects row (200 to edge immediately)
+  → YOLO/ORT upload path remains unchanged
   → If enrichment_enabled AND enrichment_auto_enqueue:
       → Background enqueue: create defect_enrichments row (status=pending)
-  → [No VLM call in upload path]
+  → [No VLM call in upload path — VLM runs asynchronously]
 
 Worker loop (separate asyncio task, started in lifespan):
   → SELECT pending defect_enrichments row (ORDER BY created_at LIMIT 1)
   → UPDATE status=running
   → Load defect row + image from disk
   → Build VLM prompt (full image + crop + metadata)
-  → Call cloud VLM provider (HTTP API)
+  → Call edge VLM provider (subprocess or HTTP to RK3588 VLM)
   → Parse strict JSON response
   → Hallucination guard: reject forbidden keys
   → Validate accepted_box_ids
   → If valid:
       → UPDATE enrichment status=complete, store observation/severity_reason
-      → UPDATE defects.observation, defects.severity_reason, defects.observation_source
+      → UPDATE defects.observation, defects.severity_reason, defects.observation_source="edge_vlm"
       → Broadcast WebSocket defect_enriched event
-  → If invalid:
+  → If invalid or provider unavailable:
       → UPDATE enrichment status=failed/rejected, store error_message
+      → defects.observation_source remains "template" (fail-closed to template)
       → Broadcast WebSocket defect_enrichment_failed event
 ```
 
-**Hard rule:** `POST /api/edge/report` never calls VLM and never blocks on enrichment.
+**Hard rules:**
+- `POST /api/edge/report` never calls VLM and never blocks on enrichment.
+- YOLO/ORT upload path is unchanged — VLM enrichment is purely additive.
+- If edge_vlm is unavailable, the system keeps template observation (fail-closed).
 
 ### Staging
 
 | Stage | Scope |
 |---|---|
-| **10.1a** | Manual trigger (`POST /api/defects/{id}/enrich`) + worker + frontend display |
-| **10.1b** | Auto-enqueue on new defect insert, behind `enrichment_auto_enqueue` config flag |
-| **10.1c** (future) | `edge_vlm` provider adapter, still async, still no YOLO output modification |
+| **10.1a** | edge_vlm async provider + manual trigger + template fallback + frontend display |
+| **10.1b** | Auto-enqueue / auto-run edge_vlm enrichment after defect insert, behind config flags and rate limit |
+| **10.1c** (optional future) | cloud_vlm comparison/fallback provider, provider-neutral, not enabled by default |
 
 ---
 
@@ -102,8 +125,8 @@ class DefectEnrichment(Base):
 
     id: int                  # PK, autoincrement
     defect_id: int           # FK → defects.id, indexed
-    provider: str            # "cloud_vlm" | "edge_vlm"  (future)
-    provider_model: str      # e.g. "qwen-vl-plus" or "qwen3-vl-2b"
+    provider: str            # "edge_vlm" (primary) | "template" (fallback) | "cloud_vlm" (optional future)
+    provider_model: str      # e.g. "qwen3-vl-2b" for edge, "template" for template
     prompt_version: str      # e.g. "phase10_1_obs_v1"
     status: str              # "pending" | "running" | "complete" | "failed" | "rejected" | "skipped"
     observation: str | None  # VLM output
@@ -161,8 +184,8 @@ On successful enrichment, the worker updates these three fields on the `defects`
 {
     "id": 42,
     "defect_id": 123,
-    "provider": "cloud_vlm",
-    "provider_model": "qwen-vl-plus",
+    "provider": "edge_vlm",
+    "provider_model": "qwen3-vl-2b",
     "prompt_version": "phase10_1_obs_v1",
     "status": "complete",
     "observation": "线缆外层绝缘区域可见局部切伤...",
@@ -187,8 +210,8 @@ On successful enrichment, the worker updates these three fields on the `defects`
 
 ```yaml
 enrichment_enabled: false          # master switch
-enrichment_auto_enqueue: false     # auto-enqueue on new defect
-enrichment_provider: cloud_vlm     # "cloud_vlm" | "edge_vlm" (future)
+enrichment_auto_enqueue: false     # auto-enqueue on new defect (10.1b)
+enrichment_provider: edge_vlm      # "edge_vlm" (primary) | "cloud_vlm" (optional, provider-neutral)
 enrichment_max_per_minute: 10      # rate limit
 enrichment_timeout_s: 30           # per-call timeout
 enrichment_max_retries: 2          # retry count
@@ -200,15 +223,25 @@ enrichment_prompt_version: phase10_1_obs_v1
 ```
 ENRICHMENT_ENABLED=false
 ENRICHMENT_AUTO_ENQUEUE=false
-ENRICHMENT_PROVIDER=cloud_vlm
+ENRICHMENT_PROVIDER=edge_vlm
 ENRICHMENT_MAX_PER_MINUTE=10
 ENRICHMENT_TIMEOUT_S=30
 ENRICHMENT_MAX_RETRIES=2
 ENRICHMENT_PROMPT_VERSION=phase10_1_obs_v1
-CLOUD_VLM_API_KEY=           # required when provider=cloud_vlm
-CLOUD_VLM_MODEL=             # e.g. qwen-vl-plus
-CLOUD_VLM_BASE_URL=          # API endpoint
+
+# Edge VLM (primary provider)
+EDGE_VLM_MODE=subprocess           # "subprocess" | "http" | "disabled"
+EDGE_VLM_COMMAND=                  # e.g. /path/to/vlm_subprocess.py
+EDGE_VLM_ENDPOINT=                 # e.g. http://localhost:8001/vlm (if mode=http)
+EDGE_VLM_MODEL_NAME=qwen3-vl-2b   # model identifier for logging
+
+# Cloud VLM (optional, provider-neutral — not enabled by default)
+# CLOUD_VLM_API_KEY=               # must be provided by user, never guessed
+# CLOUD_VLM_MODEL=                 # must be provided by user
+# CLOUD_VLM_BASE_URL=              # must be provided by user
 ```
+
+**Important:** No cloud vendor is hardcoded. If cloud_vlm provider is requested later, implementation must stop and ask the user for provider choice and credentials. Credentials must never be committed.
 
 **Duplicate prevention:** Unique constraint `(defect_id, provider, prompt_version)` + check before insert.
 
@@ -251,31 +284,67 @@ class VlmProvider(ABC):
         ...
 ```
 
-### 5.2 Cloud VLM Provider (first implementation)
+### 5.2 Edge VLM Provider (primary — first implementation)
 
-Uses DashScope / Alibaba Cloud VLM API (compatible with Qwen-VL models). The exact API endpoint and model are configured via environment variables.
+Runs on RK3588 as the primary Phase 10.1 enrichment provider. Two modes:
 
-**Required credentials (from user, not guessed):**
+**Subprocess mode (`EDGE_VLM_MODE=subprocess`):**
+- Backend spawns a child process via `EDGE_VLM_COMMAND` (stdin/stdout JSON protocol).
+- Same pattern as Phase 10 `ort_localizer.py` subprocess.
+- The subprocess loads the RK3588 VLM model (Qwen3-VL-2B base W8A8 via RKLLM) and processes images.
+- Returns strict JSON per the prompt schema.
 
-- `CLOUD_VLM_API_KEY` — DashScope API key
-- `CLOUD_VLM_MODEL` — model identifier (e.g. `qwen-vl-plus`, `qwen2.5-vl-7b-instruct`)
-- `CLOUD_VLM_BASE_URL` — API base URL
+**HTTP mode (`EDGE_VLM_MODE=http`):**
+- Backend sends HTTP request to `EDGE_VLM_ENDPOINT`.
+- For future use if the edge VLM runs as a separate HTTP service.
 
-**Important:** If these credentials are not configured, the provider raises at startup and enrichment is effectively disabled (even if `enrichment_enabled=true`). No fallback to guessing endpoints.
+**Edge VLM constraints:**
+- Must run asynchronously — never inside `POST /api/edge/report`.
+- Must not block YOLO/ORT localizer or upload path.
+- Must use the Phase 10.1 prompt (observation / severity_reason / accepted_box_ids only).
+- Must NOT reuse the old Phase 8/9 VLM prompt that asked for bbox / defect_type / confidence.
+- Must return strict JSON only.
+- Must fail-closed to template if JSON parse fails or hallucination guard rejects output.
 
-**Request format:** The provider sends the full image as base64 (API-side only, not edge transmission) plus the structured prompt from Section 6.
+**Default model:** `qwen3-vl-2b` base (W8A8 on RK3588). No LoRA required for Phase 10.1.
 
-**Do NOT commit credentials.** Use `.env` / environment variables only. Add `backend/.env` to `.gitignore` if not already present.
+### 5.3 Template Provider (fallback)
 
-### 5.3 Edge VLM Provider (future, not implemented now)
+Always available. Returns a fixed template observation based on `category` + `defect_type`:
 
-Stub only. Same `VlmProvider` interface, but would read from RK3588 VLM subprocess or HTTP endpoint. Deferred to Phase 10.1c.
+```python
+class TemplateProvider(VlmProvider):
+    async def enrich(self, inp: VlmEnrichmentInput) -> VlmEnrichmentOutput:
+        return VlmEnrichmentOutput(
+            observation=f"[Template] {inp.category}: {inp.defect_type} detected.",
+            severity_reason="[Template] Severity assigned by default rule.",
+            accepted_box_ids=list(range(len(inp.bboxes))),
+            raw_response="template",
+        )
+```
+
+Used when edge_vlm is disabled, timed out, failed, rejected, or unavailable.
+
+### 5.4 Cloud VLM Provider (optional future — provider-neutral)
+
+Same `VlmProvider` interface, but for cloud API calls. **Not implemented in Phase 10.1a.**
+
+- No cloud vendor or API is hardcoded anywhere in the planning docs or implementation.
+- If cloud_vlm is requested later, implementation must stop and ask the user for:
+  - Provider choice (no default assumed)
+  - API endpoint
+  - API key / credentials
+- Credentials must never be committed to the repository.
+- Cloud VLM can reuse the same prompt schema and hallucination guard as edge_vlm.
+- `observation_source="cloud_vlm"` is the label when cloud VLM is used.
 
 ---
 
 ## 6. Prompt Design
 
 ### Prompt Version: `phase10_1_obs_v1`
+
+This prompt is designed for edge_vlm (primary). Cloud VLM can reuse the same schema if enabled later.
 
 **System prompt:**
 
@@ -368,7 +437,7 @@ Only these are updated on success:
 
 - `defects.observation`
 - `defects.severity_reason`
-- `defects.observation_source` (set to `"cloud_vlm"` or `"edge_vlm"`)
+- `defects.observation_source` (set to `"edge_vlm"` for primary, `"cloud_vlm"` for optional cloud)
 
 ---
 
@@ -383,8 +452,8 @@ Current `FrameInspector.tsx:146` shows `"VLM 输出"` as the right pane header. 
 | `observation_source` | Right pane header |
 |---|---|
 | `"template"` | `"检测输出 · Template"` |
-| `"cloud_vlm"` | `"云端 VLM 增强 · Cloud VLM"` |
 | `"edge_vlm"` | `"边缘 VLM 增强 · Edge VLM"` |
+| `"cloud_vlm"` | `"云端 VLM 增强 · Cloud VLM"` (optional) |
 | `null` / undefined | `"检测输出 · Detector"` (fallback) |
 
 The tab labels "JSON", "指标", "溯源" remain unchanged.
@@ -405,12 +474,20 @@ Enrichment status: none / pending / running / complete / failed
 if (enrichment_status === "pending" || enrichment_status === "running") {
   show template observation + small badge "VLM 增强处理中..."
 }
-if (observation_source === "cloud_vlm" && enrichment_status === "complete") {
-  show enriched observation + badge "云端 VLM"
+if (observation_source === "edge_vlm" && enrichment_status === "complete") {
+  show enriched observation + badge "边缘 VLM"
 }
-if (enrichment_status === "failed") {
+if (observation_source === "cloud_vlm" && enrichment_status === "complete") {
+  show enriched observation + badge "云端 VLM"  // optional cloud comparison
+}
+if (enrichment_status === "failed" || enrichment_status === "rejected") {
   show template observation + warning "VLM 增强失败，使用模板描述"
 }
+// Source labels always visible:
+// BBox source: YOLO/ORT localizer
+// Label source: YOLO class head
+// Observation source: template / edge_vlm / cloud_vlm
+// VLM does not modify geometry or canonical label
 ```
 
 ### 8.4 WebSocket Update
@@ -452,7 +529,9 @@ enriched_at?: string;
 `DataSourceBadge.tsx:104-113`: The `VlmDefectTooltip` says "VLM 生成的结构化描述". For ORT records, this should be conditional:
 
 - If `label_source === "yolo_class_head"`: "YOLO 分类头输出 / YOLO class head output"
+- If `observation_source === "edge_vlm"`: "边缘 VLM 生成的检查描述 / Edge VLM inspection note"
 - If `observation_source === "cloud_vlm"`: "云端 VLM 生成的检查描述 / Cloud VLM inspection note"
+- If `observation_source === "template"`: "模板描述 / Template observation"
 - Fallback: current text
 
 ---
@@ -497,13 +576,14 @@ enriched_at?: string;
 
 | Test | What it verifies |
 |---|---|
-| `test_pending_to_running_to_complete` | Happy path lifecycle |
-| `test_pending_to_failed_on_provider_error` | Provider raises → status=failed |
-| `test_pending_to_rejected_on_hallucination` | Forbidden keys → status=rejected |
+| `test_edge_vlm_pending_to_running_to_complete` | Happy path: edge_vlm lifecycle |
+| `test_edge_vlm_timeout_falls_back_to_template` | Edge VLM timeout → template fallback |
+| `test_edge_vlm_invalid_json_rejected` | Edge VLM returns non-JSON → rejected + template fallback |
+| `test_edge_vlm_forbidden_keys_rejected` | Forbidden keys → rejected + template fallback |
+| `test_edge_vlm_provider_error_falls_back_to_template` | Provider raises → failed + template fallback |
 | `test_retry_failed_job` | failed → pending on retry |
 | `test_duplicate_job_prevented` | Same defect_id + provider + prompt_version → 409 |
-| `test_provider_timeout` | Provider hangs → timeout → failed |
-| `test_display_fields_updated_on_complete` | defects.observation etc. updated |
+| `test_display_fields_updated_on_complete` | defects.observation etc. updated with edge_vlm source |
 
 ### 9.4 Non-blocking Upload Tests
 
@@ -528,8 +608,9 @@ All existing contract tests must continue to pass:
 |---|---|
 | Template record renders | Right pane says "检测输出 · Template" |
 | Pending enrichment record | "VLM 增强处理中..." badge visible |
-| Enriched record | Enriched observation shown, "云端 VLM" badge |
-| Failed enrichment | Template observation + warning |
+| Enriched edge_vlm record | Enriched observation shown, "边缘 VLM" badge |
+| Enriched cloud_vlm record (optional) | Enriched observation shown, "云端 VLM" badge |
+| Failed enrichment | Template observation + warning "使用模板描述" |
 | YOLO bbox labels unchanged | BBox overlay still shows "Model bbox from YOLOv8n localizer" |
 | Phase 10 ORT snapshot still loads | `phase10_ort_latest` snapshot renders correctly |
 
@@ -546,7 +627,7 @@ All existing contract tests must continue to pass:
 | `backend/app/routers/enrichment.py` | FastAPI router: `POST /api/defects/{id}/enrich`, `GET /api/defects/{id}/enrichment`, `POST /api/enrich/retry-failed` |
 | `backend/app/services/__init__.py` | Package init |
 | `backend/app/services/enrichment_worker.py` | Async worker loop: poll pending → call provider → validate → update |
-| `backend/app/services/vlm_provider.py` | `VlmProvider` ABC + `CloudVlmProvider` implementation |
+| `backend/app/services/vlm_provider.py` | `VlmProvider` ABC + `EdgeVlmProvider` (primary) + `TemplateProvider` (fallback); `CloudVlmProvider` stub only |
 | `backend/app/services/enrichment_guard.py` | Hallucination guard: `validate_vlm_output()` with forbidden key check |
 | `backend/prompts/phase10_1_obs_v1_system.txt` | System prompt text |
 | `backend/prompts/phase10_1_obs_v1_user.json` | User payload template with placeholders |
@@ -595,7 +676,7 @@ All existing contract tests must continue to pass:
 | **G1: Existing tests** | All 83/83 existing contract tests pass unchanged |
 | **G2: New contract tests** | 8/8 new enrichment contract tests pass |
 | **G3: Hallucination guard** | 10/10 guard tests pass (all forbidden keys rejected) |
-| **G4: Worker tests** | 7/7 worker lifecycle tests pass |
+| **G4: Worker tests** | 8/8 worker lifecycle tests pass (edge_vlm + template fallback) |
 | **G5: Non-blocking upload** | POST /api/edge/report returns 200 in same time regardless of enrichment config |
 | **G6: Manual trigger** | POST /api/defects/{id}/enrich returns 202, worker processes to complete |
 | **G7: Display field update** | After enrichment complete, GET /api/defects/{id} returns updated observation/severity_reason/observation_source |
@@ -605,6 +686,10 @@ All existing contract tests must continue to pass:
 | **G11: schema_version** | Payload `schema_version` remains `"v1"` — no bump to v2 |
 | **G12: No secrets** | `git diff` contains no API keys, passwords, raw IPs, sshpass commands, tokens, or private keys |
 | **G13: Rollback config** | With `ENRICHMENT_ENABLED=false`, all existing behavior is identical to Phase 10 v1 |
+| **G14: Edge VLM primary** | Docs and code reflect edge_vlm as primary provider; cloud_vlm is optional and provider-neutral |
+| **G15: No hardcoded cloud vendor** | No DashScope / Alibaba Cloud / specific vendor references in implementation code |
+| **G16: Template fallback** | When edge_vlm fails or is disabled, observation_source remains "template" (fail-closed) |
+| **G17: LoRA not required** | Phase 10.1 base provider works without LoRA; edge_vlm_lora is optional research only |
 
 ### CI Expectations
 
@@ -644,9 +729,11 @@ Explicitly **NOT** in Phase 10.1:
 | VLM geometry correction | Forbidden |
 | Phase 10 v1 snapshot overwrite | `phase10_ort_latest/` untouched |
 | Credential commits | All credentials via env vars only |
-| Edge VLM provider | Stub only, not implemented |
+| Hardcoded cloud vendor | No DashScope / Alibaba Cloud / specific vendor references |
+| Cloud VLM provider implementation | Provider-neutral stub only; if requested, stop and ask user for vendor/credentials |
 | `schema_version` bump to v2 | Stays `"v1"` |
-| New edge-side code changes | Enrichment is backend-only |
+| Edge VLM LoRA retraining | Not in scope; edge_vlm_base only |
+| Old Phase 8/9 VLM prompt reuse | Must use new observation-only prompt |
 | Frontend unit test framework setup | Manual frontend checks only (no Jest/Vitest setup in this phase) |
 
 ---
@@ -666,16 +753,53 @@ If enrichment causes problems after merge:
 
 ## 14. Open Questions for Review
 
-1. **Cloud VLM provider choice:** DashScope Qwen-VL API? OpenAI-compatible endpoint? Other? Need API key + endpoint from user before implementation.
+1. **Edge VLM subprocess protocol:** Should the edge_vlm subprocess use stdin/stdout JSON (same as `ort_localizer.py`) or a different protocol? Recommend stdin/stdout for consistency.
 
-2. **Crop strategy:** Send full image + per-box crop (with 15% padding) as separate images? Or send full image + overlay with numbered boxes? The plan text suggests both; recommend **full image + per-box crops** for simplicity.
+2. **Edge VLM model selection:** Primary is `qwen3-vl-2b` base (W8A8). Should we also test with `qwen3-vl-4b` base, or is 2B sufficient for observation-only enrichment?
 
-3. **Rate limiting:** `enrichment_max_per_minute: 10` — is this sufficient? Or should we use token-budget-based limiting?
+3. **Crop strategy:** Send full image + per-box crop (with 15% padding) as separate images? Or send full image + overlay with numbered boxes? Recommend **full image + per-box crops** for simplicity.
 
-4. **Auto-enqueue default:** Should `enrichment_auto_enqueue` be enabled by default in 10.1b, or require explicit opt-in? Recommend opt-in (default false).
+4. **Rate limiting:** `enrichment_max_per_minute: 10` — is this sufficient? Or should we use token-budget-based limiting?
 
-5. **Enrichment for historical records:** Should `POST /api/enrich/retry-failed` also support enriching pre-Phase 10.1 records (those with `observation_source="template"`)? Recommend yes, with batch limit.
+5. **Auto-enqueue default:** Should `enrichment_auto_enqueue` be enabled by default in 10.1b, or require explicit opt-in? Recommend opt-in (default false).
 
-6. **Frontend test framework:** Currently no Jest/Vitest setup. Should we add one in this phase, or rely on manual checks + contract tests? Recommend manual checks for now, test framework in a separate cleanup phase.
+6. **Enrichment for historical records:** Should `POST /api/enrich/retry-failed` also support enriching pre-Phase 10.1 records (those with `observation_source="template"`)? Recommend yes, with batch limit.
 
-7. **Prompt language:** Current prompt defaults to `zh-CN` for observation output. Should we support English as well, or is Chinese-only acceptable for the portfolio?
+7. **Frontend test framework:** Currently no Jest/Vitest setup. Should we add one in this phase, or rely on manual checks + contract tests? Recommend manual checks for now, test framework in a separate cleanup phase.
+
+8. **Prompt language:** Current prompt defaults to `zh-CN` for observation output. Should we support English as well, or is Chinese-only acceptable for the portfolio?
+
+---
+
+## 15. Base / LoRA Policy
+
+### Primary: edge_vlm_base
+
+Phase 10.1 primary provider is **edge_vlm_base** — the Qwen3-VL-2B base model (W8A8) running on RK3588. No LoRA adapter is required for Phase 10.1.
+
+### Template Fallback
+
+When edge_vlm_base is unavailable (disabled, timed out, failed, rejected), the system falls back to template observation. Template is always available and requires no VLM.
+
+### edge_vlm_lora: Optional Research Only
+
+- `edge_vlm_lora` is **not required** for Phase 10.1 implementation.
+- `edge_vlm_lora` is **not a merge gate** for Phase 10.1.
+- **Do not retrain LoRA** in the initial Phase 10.1 implementation.
+- **Do not reuse** the old Phase 8/9 LoRA objective that asked VLM to output bbox, defect_type, category, confidence, or full defect JSON.
+- If LoRA is evaluated later, its training target must be **observation / severity_reason style only** — the same restricted output schema as the base model prompt.
+- LoRA output must pass the **same hallucination guard** as base:
+  - No bbox, bboxes, mask, category, defect_type, confidence, anomaly_score, geometry correction.
+
+### Variant Labels
+
+The implementation may use provider_model or variant labels for tracking:
+
+- `edge_vlm_base` — default Phase 10.1 provider
+- `edge_vlm_lora` — optional future research variant
+
+But `edge_vlm_lora` must remain optional and must not block Phase 10.1 delivery.
+
+### Acceptance Criteria
+
+Phase 10.1 acceptance criteria **do not depend on LoRA**. All gates must pass with edge_vlm_base alone.
