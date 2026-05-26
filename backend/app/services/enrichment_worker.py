@@ -17,6 +17,7 @@ from backend.app.services.enrichment_guard import (
     EnrichmentValidationError,
     validate_vlm_output,
 )
+from backend.app.services.image_resolver import resolve_image_path
 from backend.app.services.provider_factory import get_provider_from_env
 from backend.app.services.vlm_provider import (
     ProviderConfigError,
@@ -32,10 +33,18 @@ logger = logging.getLogger(__name__)
 def build_enrichment_input(
     defect: Defect,
     prompt_version: str = "phase10_1_obs_v1",
+    resolved_image_path: str | None = None,
 ) -> VlmEnrichmentInput:
-    """Build VlmEnrichmentInput from a Defect row."""
+    """Build VlmEnrichmentInput from a Defect row.
+
+    Args:
+        defect: The Defect database row.
+        prompt_version: The enrichment prompt version.
+        resolved_image_path: Optional resolved absolute image path.
+            If None, uses defect.image_url (may be relative URL).
+    """
     return VlmEnrichmentInput(
-        image_path=defect.image_url,
+        image_path=resolved_image_path or defect.image_url,
         category=defect.category,
         defect_type=defect.defect_type,
         confidence=defect.confidence,
@@ -94,8 +103,21 @@ async def process_enrichment_job(
     enrichment.provider = provider.provider_name
     enrichment.provider_model = provider.provider_model
 
-    # Build input
-    inp = build_enrichment_input(defect, enrichment.prompt_version)
+    # Resolve image path for subprocess providers
+    resolved_path: str | None = None
+    try:
+        if defect.image_url:
+            resolved = resolve_image_path(defect.image_url)
+            resolved_path = str(resolved)
+    except ValueError as exc:
+        enrichment.status = "failed"
+        enrichment.error_message = f"Image resolution failed: {exc}"
+        enrichment.completed_at = datetime.now(timezone.utc)
+        await db.flush()
+        return enrichment
+
+    # Build input with resolved path
+    inp = build_enrichment_input(defect, enrichment.prompt_version, resolved_path)
 
     try:
         # Call provider

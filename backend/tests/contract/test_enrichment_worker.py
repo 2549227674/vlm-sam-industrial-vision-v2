@@ -11,6 +11,8 @@ Tests for backend/app/services/enrichment_worker.py:
 
 import json
 from datetime import datetime, timezone
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
@@ -32,6 +34,21 @@ from backend.app.services.vlm_provider import (
     VlmEnrichmentOutput,
     VlmProvider,
 )
+
+
+def _passthrough_resolve(image_url: str) -> Path:
+    """Mock resolver: return path without checking file existence."""
+    return Path("/fake") / image_url.lstrip("/")
+
+
+@pytest.fixture(autouse=True)
+def _mock_image_resolver():
+    """Patch image resolver so tests don't need real files on disk."""
+    with patch(
+        "backend.app.services.enrichment_worker.resolve_image_path",
+        side_effect=_passthrough_resolve,
+    ):
+        yield
 
 # ── Test DB engine ─────────────────────────────────────────────────────────
 _worker_engine = create_async_engine("sqlite+aiosqlite://", echo=False)
@@ -620,3 +637,31 @@ async def test_enrichment_observation_matches_guard_output(db):
     # Guard strips whitespace — verify the stored value matches
     assert result.observation == result.observation.strip()
     assert result.severity_reason == result.severity_reason.strip()
+
+
+# ── Missing image fails enrichment cleanly ──────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_missing_image_fails_enrichment(db):
+    """If image resolution fails, enrichment status becomes failed."""
+    defect = await _create_defect_row(db)
+    orig_obs_source = defect.observation_source
+    enrichment = await _create_pending_enrichment(db, defect.id, provider="template")
+
+    # Override the autouse mock: make resolver raise ValueError
+    with patch(
+        "backend.app.services.enrichment_worker.resolve_image_path",
+        side_effect=ValueError("Image file not found: /fake/path"),
+    ):
+        from backend.app.services.vlm_provider import TemplateProvider
+        result = await process_enrichment_job(
+            db, enrichment.id, provider=TemplateProvider(),
+        )
+
+    assert result.status == "failed"
+    assert "Image resolution failed" in result.error_message
+    assert result.completed_at is not None
+
+    # Defect NOT mutated
+    await db.refresh(defect)
+    assert defect.observation_source == orig_obs_source
