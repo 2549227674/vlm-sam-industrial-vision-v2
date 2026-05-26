@@ -643,19 +643,18 @@ async def test_enrichment_observation_matches_guard_output(db):
 
 @pytest.mark.asyncio
 async def test_missing_image_fails_enrichment(db):
-    """If image resolution fails, enrichment status becomes failed."""
+    """If image resolution fails for edge_vlm, enrichment status becomes failed."""
     defect = await _create_defect_row(db)
     orig_obs_source = defect.observation_source
-    enrichment = await _create_pending_enrichment(db, defect.id, provider="template")
+    enrichment = await _create_pending_enrichment(db, defect.id, provider="edge_vlm")
 
     # Override the autouse mock: make resolver raise ValueError
     with patch(
         "backend.app.services.enrichment_worker.resolve_image_path",
         side_effect=ValueError("Image file not found: /fake/path"),
     ):
-        from backend.app.services.vlm_provider import TemplateProvider
         result = await process_enrichment_job(
-            db, enrichment.id, provider=TemplateProvider(),
+            db, enrichment.id, provider=FakeEdgeVlmProvider(),
         )
 
     assert result.status == "failed"
@@ -665,3 +664,24 @@ async def test_missing_image_fails_enrichment(db):
     # Defect NOT mutated
     await db.refresh(defect)
     assert defect.observation_source == orig_obs_source
+
+
+@pytest.mark.asyncio
+async def test_template_provider_skips_image_resolution(db):
+    """TemplateProvider succeeds even when image_url cannot resolve."""
+    defect = await _create_defect_row(db)
+    enrichment = await _create_pending_enrichment(db, defect.id, provider="template")
+
+    # Override the autouse mock: make resolver raise
+    with patch(
+        "backend.app.services.enrichment_worker.resolve_image_path",
+        side_effect=ValueError("Image file not found"),
+    ):
+        from backend.app.services.vlm_provider import TemplateProvider
+        result = await process_enrichment_job(
+            db, enrichment.id, provider=TemplateProvider(),
+        )
+
+    # TemplateProvider does not need image resolution — should succeed
+    assert result.status == "complete"
+    assert "[Template]" in result.observation

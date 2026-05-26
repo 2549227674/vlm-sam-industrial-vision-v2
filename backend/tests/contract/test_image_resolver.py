@@ -130,3 +130,17 @@ def test_encoded_traversal_rejected(tmp_path):
         # This should fail because the resolved path won't be under tmp_path
         with pytest.raises(ValueError):
             resolve_image_path(f"/static/defects/../../../{outside.name}")
+
+
+# ── Default root consistency ───────────────────────────────────────────────
+
+def test_default_root_matches_edge_router():
+    """Default root must match backend/app/routers/edge.py _STATIC_DEFECTS."""
+    from backend.app.services.image_resolver import get_static_defects_root
+    from backend.app.routers.edge import _STATIC_DEFECTS
+
+    default_root = get_static_defects_root()
+    assert default_root == _STATIC_DEFECTS.resolve(), (
+        f"image_resolver default root {default_root} != "
+        f"edge.py _STATIC_DEFECTS {_STATIC_DEFECTS.resolve()}"
+    )

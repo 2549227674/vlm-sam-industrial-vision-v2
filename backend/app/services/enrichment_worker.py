@@ -103,18 +103,19 @@ async def process_enrichment_job(
     enrichment.provider = provider.provider_name
     enrichment.provider_model = provider.provider_model
 
-    # Resolve image path for subprocess providers
+    # Resolve image path only for providers that need local files (edge_vlm)
     resolved_path: str | None = None
-    try:
-        if defect.image_url:
-            resolved = resolve_image_path(defect.image_url)
-            resolved_path = str(resolved)
-    except ValueError as exc:
-        enrichment.status = "failed"
-        enrichment.error_message = f"Image resolution failed: {exc}"
-        enrichment.completed_at = datetime.now(timezone.utc)
-        await db.flush()
-        return enrichment
+    if provider.provider_name == "edge_vlm":
+        try:
+            if defect.image_url:
+                resolved = resolve_image_path(defect.image_url)
+                resolved_path = str(resolved)
+        except ValueError as exc:
+            enrichment.status = "failed"
+            enrichment.error_message = f"Image resolution failed: {exc}"
+            enrichment.completed_at = datetime.now(timezone.utc)
+            await db.flush()
+            return enrichment
 
     # Build input with resolved path
     inp = build_enrichment_input(defect, enrichment.prompt_version, resolved_path)

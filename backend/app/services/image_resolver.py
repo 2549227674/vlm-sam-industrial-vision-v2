@@ -19,7 +19,7 @@ def get_static_defects_root() -> Path:
     env = os.environ.get("DEFECT_STORAGE_DIR")
     if env:
         return Path(env).resolve()
-    return Path(__file__).resolve().parent.parent / "static" / "defects"
+    return Path(__file__).resolve().parent.parent.parent / "static" / "defects"
 
 
 def resolve_image_path(image_url: str) -> Path:
