@@ -89,10 +89,11 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=_auth_middleware)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 # Routers
-from backend.app.routers import defects, edge, health, stats, ws  # noqa: E402
+from backend.app.routers import defects, edge, enrichment, health, stats, ws  # noqa: E402
 
 app.include_router(edge.router)
 app.include_router(defects.router)
+app.include_router(enrichment.router)
 app.include_router(stats.router)
 app.include_router(health.router)
 app.include_router(ws.router)
