@@ -1,58 +1,78 @@
-# Phase 10 v2 Session Handoff Prompt
+# Phase 10 v1 Session Handoff Prompt
 
 复制以下内容到新 Claude Code 会话：
 
 ---
 
-你好，我正在继续 vlm-sam-industrial-vision-v2 项目的 Phase 10 工作。
+你好，我正在继续 vlm-sam-industrial-vision-v2 项目的 Phase 10 v1 工作。
 
 ## 当前分支
 branch: phase10/localization-refactor-v1（已推送到 origin）
 
-## Phase 10 目标
-为 metal_nut + cable（2 类 12 个 defect type）引入有监督 YOLOv8n-detect localizer，替代 FastSAM/VLM bbox 作为主定位方案。
+## Phase 10 v1 目标
+为 metal_nut + cable（2 类 12 个 defect type）引入有监督 YOLOv8n-detect localizer（ORT CPU fallback），替代 FastSAM/VLM bbox 作为主定位方案。
 
-## 已完成的工作
+## 所有 Gate 已 PASS
 
-### Track A — ORT CPU Fallback: PASS
-- ORT smoke test 在 RK3588 通过：2/2 图像，class correctness，bbox validity，IoU gate
-- 延迟：pre=44ms, infer=156ms, post=1ms, total=201ms
-- `smoke_test_ort.py` 和 `ort_localizer.py` 已验证
-
-### Track B — RKNN Issue Reproduction: Prepared
-- `docs/experiments/phase10_rknn_issue_repro.md` 已完成，可直接用于 GitHub issue
-- rknn-toolkit2 2.3.2 BLOCKED（class score r≈0）
-
-### ORT Edge Demo Integration: IMPLEMENTED + TESTED
-已实现并验证的文件：
-
-| 文件 | 状态 |
+| Gate | 状态 |
 |------|------|
-| `scripts/phase10/ort_localizer.py` | Python subprocess 推理引擎 |
-| `edge/src/pipeline/localizer_worker.hpp` | C++ T3 worker 头文件 |
-| `edge/src/pipeline/localizer_worker.cpp` | C++ T3 worker 实现 |
-| `edge/include/edge/common/types.hpp` | VlmReport 新增 v1.3 字段 |
-| `edge/include/edge/common/config.hpp` | 新增 localizer_* 配置键 |
-| `edge/src/common/config_loader.cpp` | 解析 localizer 配置 |
-| `edge/src/upload/upload_worker.cpp` | 发射 v1.3 字段 |
-| `edge/src/main.cpp` | 配置驱动 T3 选择 |
-| `edge/config.yaml` | 新增 localizer 段，fastsam_enabled=false |
-| `edge/CMakeLists.txt` | 新增 localizer_worker.cpp |
+| Python subprocess smoke | **PASS** |
+| C++ ORT integration | **PASS** |
+| API contract (83/83) | **PASS** |
+| Frontend smoke | **PASS** |
+| Extended RK3588 soak (27m27s) | **PASS** — 2082 frames, 0 crashes, 0 HTTP 400, RSS=34MB, T3 avg=187.7ms |
+| Snapshot demo | **PASS** — 40 curated records, 0 fallback, stats/manifest match |
+| RKNN numeric consistency | **BLOCKED** (rknn-toolkit2 2.3.2) |
+| VLM enrichment | **Phase 10.1** (not called in v1) |
 
-### 测试结果
+## 关键架构决策
 
-| 测试 | 状态 |
-|------|------|
-| Python subprocess smoke test | **PASS** |
-| C++ integration (RK3588 build+run) | **PASS** |
-| API contract (83/83 tests) | **PASS** |
-| Performance (T3=172ms < 500ms) | **PASS** |
-| Frontend smoke test | **PASS** |
-| Extended RK3588 soak | **PASS** (27m27s) |
-| Snapshot demo | **PASS** |
+1. **Python subprocess 策略**：C++ LocalizerWorker 通过 stdin/stdout 与 `ort_localizer.py` 通信
+2. **配置驱动 T3 选择**：`localizer_backend: "ort"` → LocalizerWorker
+3. **schema_version 保持 "v1"**：v1.3 字段是可选附加字段
+4. **FastSAM 默认禁用**：`fastsam_enabled: false`
+5. **VLM 不调用**：`observation_source: "template"`，severity 固定 "medium"
+6. **Bbox 格式**：normalized top-left xywh（x/y = 左上角，w/h = 宽高，[0,1]）
+7. **C++ JSON 解析**：`json_bboxes()` 搜索 `"bboxes"` key 后找 `[`（处理冒号后空格）
 
-### Commit 历史（最新在前）
+## Bbox 坐标说明
+
+- API/前端 bbox 使用 normalized top-left xywh
+- YOLO 内部 decode 使用 center-xywh，但 `ort_localizer.py` 导出时已转换为 top-left
+- bbox 坐标 clamp 到 [0,1] 防止 API 校验错误
+- 前端 FrameInspector.tsx 有 fallback 检测（conf=0 + anomaly + center-box → 虚线边框 + "unsupported" 标签）
+
+## 部署状态
+
+- **远程前端**：https://vision.hanlab.app（API_BASE=https://vision.hanlab.app）
+- **Orange Pi soak test**：已停止（tmux session "soak" 已结束）
+- **Droplet 后端 auth**：临时禁用（测试用），生产环境需重新启用
+- **Snapshot**：40 curated records from extended soak backend，已部署到 droplet 前端
+
+## Phase 10.1 路线图
+
+Phase 10 v1 范围：ORT localizer 做 bbox + defect_type + confidence。VLM 未调用。
+- observation_source="template"，severity 固定 "medium"
+- observation / severity_reason / defect_family enrichment 属于 Phase 10.1 范围
+
+## 最近 Commit（最新在前）
+
 ```
+b01929c docs: fix snapshot README — extended soak wording, 38 images
+9b0dd9d docs/data: final Phase 10 v1 consistency cleanup — extended soak, snapshot, README
+68ebbf0 docs: finalize Phase 10 v1 deliverables — soak PASS, snapshot PASS, roadmap note
+482c714 fix: preload new image before swapping — no placeholder flash
+66f7289 fix: top-left bbox + revert image key (no placeholder flash)
+f57c07b revert: restore center-x/cy bbox format — top-left was less accurate
+f710da9 docs: Gate 2 PASS — 30-min soak test results
+1d76333 fix: unpad letterbox coordinates in ort_localizer.py
+8a53e0c fix: image/bbox sync in latest frame — key image container to defect.id
+ac28f0e docs: add bbox clamping fix to soak test notes
+ac270bb fix: clamp bbox coordinates to [0,1] in ort_localizer.py
+ce914f1 fix: fallback bbox detection + bbox convention fix + soak restart
+08fce41 docs: mark snapshot as preliminary; distinguish soak test status
+e9c5154 feat: Phase 10 ORT snapshot demo for static frontend export
+7747ea7 docs: update session handoff — Gate 1 PASS, Gate 3 documented
 7a8543d docs: Gate 3 — document pipeline_ms.upload sequencing constraint
 ebd29d2 feat: Phase 10 frontend smoke test — ORT variant support + trace viewer localizer lane
 1e2b647 docs: Phase 10 v2 session handoff prompt
@@ -62,74 +82,42 @@ e8f59e7 fix: JSON parser whitespace handling + subprocess error logging
 1635378 feat: upload_worker emits v1.3 optional fields
 4f3651a feat: Phase 10 C++ LocalizerWorker + config-driven T3 selection
 81b5006 feat: Phase 10 ort_localizer.py — ORT CPU subprocess engine
-c4833b3 docs: plan corrections — schema_version stays v1, frame handoff spec
-8393ae3 docs: Phase 10 ORT fallback edge demo integration plan
 ```
-
-## 关键架构决策
-
-1. **Python subprocess 策略**：C++ LocalizerWorker 通过 stdin/stdout 与 `ort_localizer.py` 通信，不链接 C++ ORT 库
-2. **配置驱动 T3 选择**：`localizer_backend: "ort"` → LocalizerWorker，否则 → FastSamWorker
-3. **schema_version 保持 "v1"**：v1.3 字段是可选附加字段
-4. **FastSAM 默认禁用**：`fastsam_enabled: false`
-5. **VLM 不调用**：`observation_source: "template"`，severity 固定 "medium"
-6. **JSON 解析器**：处理冒号后有无空格两种格式（`"key":"val"` 和 `"key": "val"`）
-
-## 待完成
-
-1. ~~**Frontend smoke test**~~：**PASS** (2026-05-26)
-2. ~~**Extended RK3588 soak**~~：**PASS** (2026-05-26) — 27m27s, 2082 frames, 0 crashes, 0 HTTP 400, RSS=34MB, T3 avg=187.7ms
-3. ~~**pipeline_ms.upload**~~：已文档化 — JSON 在 POST 前序列化，upload_ms 始终为 0.0
-4. ~~**Snapshot demo**~~：**PASS** (2026-05-26) — 40 curated records, metal_nut + cable, real detections only
-5. **RKNN 方向**：Track B issue repro 已准备好，等用户决策是否提交 GitHub issue
-
-## Phase 10.1 路线图
-
-Phase 10 v1 范围：ORT localizer 做 bbox + defect_type + confidence。VLM 未调用。
-- observation_source="template"，severity 固定 "medium"
-- observation / severity_reason / defect_family enrichment 属于 Phase 10.1 范围
-- 不要把 v1 snapshot 当作完整的 VLM enriched inspection pipeline 展示
 
 ## 关键文件位置
 
 | 文件 | 路径 |
 |------|------|
 | 集成计划 | `docs/experiments/phase10_ort_integration_plan.md` |
-| ORT 验证结果 | `docs/experiments/phase10_onnxruntime_fallback_plan.md` |
-| RKNN 诊断 | `docs/experiments/phase10_rknn_fp16_diagnostic.md` |
-| RKNN issue repro | `docs/experiments/phase10_rknn_issue_repro.md` |
-| 训练结果 | `docs/experiments/phase10_training_run_1.md` |
-| API 契约 | `docs/API_CONTRACT.md`（v1.3） |
+| Snapshot 计划 | `docs/experiments/phase10_snapshot_demo_plan.md` |
 | ORT 推理脚本 | `scripts/phase10/ort_localizer.py` |
-| ORT smoke test | `scripts/phase10/smoke_test_ort.py` |
 | C++ LocalizerWorker | `edge/src/pipeline/localizer_worker.cpp` |
 | Edge config | `edge/config.yaml` |
-| Frontend smoke test screenshot | `screenshots/phase10_frontend_smoke_test_v2.png` |
-
-## SSH 环境
-
-- **Orange Pi 5**（RK3588 推理）：配置在 `~/.ssh/config`，密码在本地 memory 文件
-- **AutoDL**（RTX 4090 训练）：配置在 `~/.ssh/config`
-- 详细凭据在 `~/.claude/projects/.../memory/reference_ssh_credentials_phase10.md`
-- **不要在代码或文档中提交密码/IP/sshpass 命令**
-- 板上代理已配置在 `~/.bashrc` 和 `~/.profile`（`http_proxy=http://192.168.137.1:7890`，`no_proxy` 覆盖本地网段）
+| Snapshot 数据 | `frontend/public/demo-data/phase10_ort_latest/` |
+| 前端 FrameInspector | `frontend/src/components/v4/FrameInspector.tsx` |
+| 前端 ProfilePage | `frontend/src/components/v4/ProfilePage.tsx` |
+| API 契约 | `docs/API_CONTRACT.md`（v1.3） |
 
 ## 约束
 
-- 不做 RKNN localizer_worker（RKNN BLOCKED）
-- 不做 RKNN threshold tuning
-- 不做 INT8 作为主路径
+- 不做 RKNN localizer（RKNN BLOCKED）
+- 不做 RKNN threshold tuning / INT8 主路径
 - 不重训 YOLOv8s
 - VLM 不调用
-- FastSAM 代码保留但通过 config 禁用
 - schema_version 保持 "v1"
 - 代码注释用英文
+- 不提交密码/IP/sshpass 命令到仓库
 
-## Memory 条目
+## SSH 环境
 
-- `feedback_english_comments.md` — 代码注释用英文
-- `feedback_autodl_ssh_reminder.md` — 训练前询问 SSH 信息
-- `feedback_visual_agent_switch.md` — 视觉任务切换 agent
-- `reference_ssh_credentials_phase10.md` — SSH 凭据（Phase 10 结束后删除）
+- Orange Pi 5 和凭据在 `~/.claude/projects/.../memory/reference_ssh_credentials_phase10.md`
+- **不要在代码或文档中提交密码/IP/sshpass 命令**
 
-请先确认你了解当前状态，然后我们可以继续 frontend smoke test 或 30-min soak test。
+## 可能的下一步
+
+1. merge-main：将 phase10/localization-refactor-v1 合并到 main
+2. Phase 10.1：VLM enrichment（observation/severity_reason）
+3. RKNN 方向：提交 GitHub issue 或等待 toolkit 更新
+4. 生产准备：re-enable droplet auth，清理测试数据
+
+请先确认你了解当前状态，然后我们可以继续。
