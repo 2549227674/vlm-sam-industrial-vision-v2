@@ -39,7 +39,7 @@ This report validates with **real Qwen3-VL-2B W8A8 inference on RK3588 NPU**.
 | Python (board) | 3.10.12 |
 | Python (backend) | 3.12.3 |
 
-**All paths and host identifiers sanitized. No real IPs, credentials, or private paths in this document.**
+**No external/private IPs, credentials, or private paths in this document. Local loopback endpoints are represented as `localhost` or placeholders only.**
 
 ---
 
@@ -78,7 +78,7 @@ The wrapper script (`/tmp/edge_vlm_wrapper.py` on board) is a thin stdin/stdout 
 EDGE_VLM_COMMAND="python3 /tmp/edge_vlm_wrapper.py"
 ```
 
-The wrapper calls `http://127.0.0.1:8080/v1/chat/completions` with:
+The wrapper calls `<LOCAL_RKLLM_API_URL>` (e.g. `http://localhost:8080/v1/chat/completions` on the board) with:
 - Model: `qwen3-vl-2b-smoke`
 - Max tokens: 500
 - Temperature: 0.1
@@ -104,6 +104,8 @@ The wrapper calls `http://127.0.0.1:8080/v1/chat/completions` with:
 | Inference time | Record | 11.9s (pill), 11.4s (screw) | Baseline |
 
 **Two images tested (pill/faulty_imprint, screw/scratch). Both returned valid JSON with visual descriptions.**
+
+> **Note on sample categories:** Non-Phase-10 sample categories (pill, screw, zipper) were used only for hardware and protocol smoke validation. This does not expand the production category set (metal_nut + cable). No YOLO/ORT label-space, schema, frontend snapshot, or category expansion is included.
 
 ### R2 — Backend worker + real edge_vlm happy path
 
@@ -278,7 +280,7 @@ grep -RInE "sshpass|password|token|api[_-]?key|secret|BEGIN .*PRIVATE KEY|([0-9]
   docs/experiments/phase10_1b_real_rk3588_edge_vlm_smoke_report.md
 ```
 
-Result: **No secrets, raw IPs, credentials, or private paths found.** All host/path references use placeholders (`<RK3588_HOST>`, `<MODEL_NAME_LABEL>`, etc.).
+Result: **No external/private IPs, credentials, or private paths found.** Local loopback endpoints are represented as `localhost` or placeholders (`<RK3588_HOST>`, `<MODEL_NAME_LABEL>`, `<LOCAL_RKLLM_API_URL>`) only.
 
 ---
 
