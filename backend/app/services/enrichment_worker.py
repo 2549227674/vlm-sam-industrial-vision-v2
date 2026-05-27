@@ -172,6 +172,49 @@ async def process_enrichment_job(
         defect.severity_reason = validated["severity_reason"]
         defect.observation_source = provider.provider_name
 
+        # Backfill enrichment latency into defect.pipeline_ms.qwen3vl
+        # so the frontend Profile page shows non-zero VLM timing.
+        # Must reassign the whole dict to trigger SQLAlchemy JSON dirty flag.
+        enrich_ms = 0.0
+        if enrichment.created_at and enrichment.completed_at:
+            delta = enrichment.completed_at - enrichment.created_at
+            enrich_ms = round(delta.total_seconds() * 1000, 1)
+        pm = dict(defect.pipeline_ms or {})
+        pm["qwen3vl"] = enrich_ms
+        defect.pipeline_ms = pm
+
+        # Generate runner-compatible trace_events for frontend display.
+        eff_ms = pm.get("efficientad", 0) or 0
+        fs_ms = pm.get("fastsam", 0) or 0
+        loc_ms = pm.get("localizer", 0) or 0
+        up_ms = pm.get("upload", 0) or 0
+        trace = []
+        ts = 0
+        if loc_ms > 0:
+            trace.append({"name": "YOLO localizer", "cat": "localizer",
+                          "ph": "X", "ts": ts, "dur": int(loc_ms * 1000),
+                          "tid": "T3.localizer"})
+            ts += int(loc_ms * 1000)
+        if eff_ms > 0:
+            trace.append({"name": "EfficientAD", "cat": "ead",
+                          "ph": "X", "ts": ts, "dur": int(eff_ms * 1000),
+                          "tid": "T2.pipeline"})
+            ts += int(eff_ms * 1000)
+        if fs_ms > 0:
+            trace.append({"name": "FastSAM", "cat": "fastsam",
+                          "ph": "X", "ts": ts, "dur": int(fs_ms * 1000),
+                          "tid": "T2.pipeline"})
+            ts += int(fs_ms * 1000)
+        if up_ms > 0:
+            trace.append({"name": "upload POST", "cat": "upload",
+                          "ph": "X", "ts": ts, "dur": int(up_ms * 1000),
+                          "tid": "T4.upload"})
+            ts += int(up_ms * 1000)
+        trace.append({"name": "EdgeVLM enrichment", "cat": "vlm",
+                      "ph": "X", "ts": ts, "dur": int(enrich_ms * 1000),
+                      "tid": "T3.vlm"})
+        defect.trace_events = trace
+
     except EnrichmentValidationError as exc:
         enrichment.status = "rejected"
         enrichment.error_message = str(exc)[:512]

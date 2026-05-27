@@ -153,13 +153,13 @@ export function DetailDrawer({ defect, onClose, onOpenProfile, enrichment }: Dra
         <div>
           <div className="eyebrow" style={{ marginBottom: 8 }}>JSON</div>
           <pre style={{ margin: 0, padding: "12px 14px", background: "#08080c", border: "1px solid var(--line)", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-1)", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word", maxHeight: 220, overflow: "auto" }}
-            dangerouslySetInnerHTML={{ __html: JSON.stringify({ category: defect.category, defect_type: defect.defect_type, severity: defect.severity, confidence: defect.confidence, bboxes: defect.bboxes, description: defect.description }, null, 2).split("\n").map(l => highlightJson(l)).join("\n") }}
+            dangerouslySetInnerHTML={{ __html: JSON.stringify({ category: defect.category, defect_type: defect.defect_type, severity: defect.severity, confidence: defect.confidence, bboxes: defect.bboxes, description: defect.description, observation: defect.observation, severity_reason: defect.severity_reason, observation_source: defect.observation_source }, null, 2).split("\n").map(l => highlightJson(l)).join("\n") }}
           />
         </div>
         <div>
           <div className="eyebrow" style={{ marginBottom: 8 }}>溯源</div>
           <div style={{ border: "1px solid var(--line)", padding: "4px 0" }}>
-            {[["边缘时间戳", fmtDateTime(defect.edge_ts)], ["服务器时间戳", fmtDateTime(defect.server_ts)], ["图像路径", defect.image_url], ["版本", defect.schema_version]].map(([k, v]) => (
+            {[["边缘时间戳", fmtDateTime(defect.edge_ts)], ["服务器时间戳", fmtDateTime(defect.server_ts)], ["图像路径", defect.image_url], ["定位来源", defect.localization_source ?? "—"], ["标注来源", defect.label_source ?? "—"], ["版本", defect.schema_version]].map(([k, v]) => (
               <div key={k} style={{ display: "grid", gridTemplateColumns: "100px 1fr", padding: "5px 12px" }}>
                 <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)" }}>{k}</span>
                 <span className="mono" style={{ fontSize: 10, color: "var(--fg-1)", wordBreak: "break-all" }}>{v}</span>
