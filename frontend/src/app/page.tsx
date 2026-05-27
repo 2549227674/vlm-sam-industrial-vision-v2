@@ -5,6 +5,7 @@ import { buildStats, makeDefect } from "@/lib/mock-data";
 import type { DefectRead, ActiveConfig } from "@/types/defect";
 import type { DashboardStatsLike } from "@/types/stats";
 import { useDefectWebSocket, type EnrichmentUpdate } from "@/lib/ws";
+import { getDefectEnrichment } from "@/lib/api";
 import { useDataSource, type DataSourceStatus } from "@/lib/data-source";
 
 import { TopBar } from "@/components/v4/TopBar";
@@ -114,17 +115,33 @@ export default function Dashboard() {
         return next;
       });
 
-      // On complete: update the defect's observation fields in local state
-      if (update.status === "complete" && update.updated_fields?.length) {
-        // Re-fetch enrichment to get observation/severity_reason is not available via WS event,
-        // but the defect record has been updated server-side. We mark the enrichment complete
-        // and the user can see it when the defect is re-fetched or next defect_created arrives.
-        // For real-time UX, we optimistically update observation_source on the defect.
-        setDefects(prev => prev.map(d =>
-          d.id === update.defect_id
-            ? { ...d, observation_source: update.observation_source ?? d.observation_source }
-            : d,
-        ));
+      // On terminal states: fetch enrichment to get observation/severity_reason
+      if (update.status === "complete" || update.status === "rejected" || update.status === "failed") {
+        getDefectEnrichment(update.defect_id).then((enr) => {
+          if (!enr) return;
+          setDefects((prev) =>
+            prev.map((d) => {
+              if (d.id !== update.defect_id) return d;
+              const patch: Partial<DefectRead> = {};
+              // On complete: update observation fields from enrichment
+              if (update.status === "complete") {
+                if (enr.observation) patch.observation = enr.observation;
+                if (enr.severity_reason) patch.severity_reason = enr.severity_reason;
+                patch.observation_source = update.observation_source ?? enr.provider ?? d.observation_source;
+              }
+              // On rejected/failed: keep fallback observation if API returns one
+              if (update.status === "rejected" || update.status === "failed") {
+                if (enr.observation && enr.observation !== d.observation) {
+                  patch.observation = enr.observation;
+                }
+                if (enr.severity_reason && enr.severity_reason !== d.severity_reason) {
+                  patch.severity_reason = enr.severity_reason;
+                }
+              }
+              return Object.keys(patch).length > 0 ? { ...d, ...patch } : d;
+            }),
+          );
+        });
       }
       setEverHadLive(true);
     },

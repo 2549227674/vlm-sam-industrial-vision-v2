@@ -35,6 +35,13 @@ canonical label, confidence, and anomaly score are never modified.
 Events are broadcast on the existing `dashboard` WebSocket room alongside
 `defect_created`, `metrics_tick`, and `ping` messages.
 
+**Design note:** The WS event is a lightweight lifecycle signal. It does NOT
+embed `observation` or `severity_reason` in the payload. On terminal states
+(`complete`, `rejected`, `failed`), the frontend re-fetches enrichment content
+via `GET /api/defects/{id}/enrichment` and updates the local defect state with
+the returned `observation`, `severity_reason`, and `observation_source`. This
+keeps the WS payload small and avoids duplicating enrichment data in the event.
+
 ---
 
 ## Backend Event Emission Points
