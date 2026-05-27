@@ -12,10 +12,10 @@
 
 | Item | Value |
 |---|---|
-| Server path | `/opt/vision-demo/` |
+| Server path | `<REMOTE_PROJECT_DIR>` (redacted) |
 | Git repo | No (deployed via prior rsync/manual copy) |
-| Backend PID | 49342 |
-| Health before sync | `{"status":"ok","version":"v1","uptime_s":130352}` |
+| Backend PID | recorded locally, redacted |
+| Health before sync | `{"status":"ok","version":"v1","uptime_s":"<redacted>"}` |
 | Enrichment files present | No (`backend/app/services/` missing, `routers/enrichment.py` missing) |
 | Enrichment env vars | None |
 | `.env` backup | Created on server (timestamped) |
@@ -247,7 +247,7 @@ grep -RInE "sshpass|password|token|api[_-]?key|secret|BEGIN .*PRIVATE KEY|([0-9]
   docs/experiments/phase10_1b_public_server_sync_preflight_report.md || true
 ```
 
-**Result**: No secrets, no raw private IPs, no credentials committed. All server paths use the documented `/opt/vision-demo/` prefix only. The `EDGE_UPLOAD_TOKEN` value is NOT included in this report.
+**Result**: No secrets, no raw private IPs, no credentials committed. Server filesystem paths, process IDs, env values, and command values are redacted with placeholders. The `EDGE_UPLOAD_TOKEN` value is NOT included in this report.
 
 ---
 
