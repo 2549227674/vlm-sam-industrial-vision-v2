@@ -72,6 +72,7 @@ async def enrichment_worker_loop(
     *,
     create_session_factory,
     provider: VlmProvider | None = None,
+    ws_manager: object | None = None,
 ) -> None:
     """Main worker loop. Runs until cancelled.
 
@@ -117,7 +118,7 @@ async def enrichment_worker_loop(
                     continue
 
             # Poll for oldest pending job
-            processed = await _poll_once(config, create_session_factory, provider)
+            processed = await _poll_once(config, create_session_factory, provider, ws_manager)
 
             if processed:
                 limiter.record()
@@ -140,11 +141,12 @@ async def _poll_once(
     config: EnrichmentConfig,
     create_session_factory,
     provider: VlmProvider,
+    ws_manager: object | None = None,
 ):
     """Process one pending job (if any). Returns the enrichment or None."""
     async with create_session_factory() as db:
         try:
-            result = await process_next_pending_enrichment(db, provider=provider)
+            result = await process_next_pending_enrichment(db, provider=provider, ws_manager=ws_manager)
             await db.commit()
             return result
         except Exception:

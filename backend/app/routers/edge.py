@@ -149,12 +149,13 @@ async def report_defect(
     # --- optional auto-enqueue enrichment (Phase 10.1b) ---
     # Best-effort: enqueue failure must NOT break defect creation.
     # Defaults off (ENRICHMENT_ENABLED=false, ENRICHMENT_AUTO_ENQUEUE=false).
+    ws_manager = getattr(request.app.state, "ws_manager", None)
     try:
         from backend.app.services.enrichment_config import load_enrichment_config
         from backend.app.services.enrichment_enqueue import maybe_auto_enqueue_enrichment
 
         enrichment_cfg = load_enrichment_config()
-        await maybe_auto_enqueue_enrichment(db, db_defect, config=enrichment_cfg)
+        await maybe_auto_enqueue_enrichment(db, db_defect, config=enrichment_cfg, ws_manager=ws_manager)
     except Exception:
         logger.warning("Auto-enqueue enrichment failed for defect %d", db_defect.id, exc_info=True)
 
@@ -162,7 +163,6 @@ async def report_defect(
     resp = DefectCreatedResponse.model_validate(db_defect)
 
     # --- WebSocket broadcast ---
-    ws_manager = getattr(request.app.state, "ws_manager", None)
     if ws_manager:
         from backend.app.schemas.defect import DefectRead
         read_data = DefectRead.model_validate(db_defect)

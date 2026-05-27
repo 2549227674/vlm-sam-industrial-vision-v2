@@ -3,17 +3,26 @@
 import React, { useEffect } from "react";
 import type { DefectRead } from "@/types/defect";
 import { fmtTime, fmtDateTime, variantLabel, variantColor } from "@/lib/mock-data";
-import { SevPill, CatPill, VariantPill, FrameGantt, highlightJson } from "./primitives";
+import { SevPill, CatPill, VariantPill, FrameGantt, highlightJson, EnrichmentStatusBadge } from "./primitives";
 import { FrameCanvas } from "./FrameInspector";
 import { VlmDefectTooltip } from "./DataSourceBadge";
+
+export interface EnrichmentState {
+  status: "pending" | "running" | "complete" | "rejected" | "failed";
+  provider?: string;
+  observation_source?: string | null;
+  error_message?: string | null;
+  updated_at?: string;
+}
 
 interface DrawerProps {
   defect: DefectRead | null;
   onClose: () => void;
   onOpenProfile: (d: DefectRead) => void;
+  enrichment?: EnrichmentState | null;
 }
 
-export function DetailDrawer({ defect, onClose, onOpenProfile }: DrawerProps) {
+export function DetailDrawer({ defect, onClose, onOpenProfile, enrichment }: DrawerProps) {
   useEffect(() => {
     if (!defect) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -86,6 +95,58 @@ export function DetailDrawer({ defect, onClose, onOpenProfile }: DrawerProps) {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {/* Enrichment state section */}
+        {(enrichment || defect.observation_source) && (
+          <div>
+            <div className="eyebrow" style={{ marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+              VLM Enrichment
+              {enrichment && <EnrichmentStatusBadge status={enrichment.status} provider={enrichment.provider} />}
+              {!enrichment && defect.observation_source && <EnrichmentStatusBadge status="complete" provider={defect.observation_source} />}
+            </div>
+            <div style={{ border: "1px solid var(--line)", padding: "4px 0" }}>
+              {enrichment?.status === "complete" || (!enrichment && defect.observation_source) ? (
+                <>
+                  <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--line)" }}>
+                    <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)", display: "block", marginBottom: 4 }}>Observation</span>
+                    <span style={{ fontSize: 11, color: "var(--fg-1)", lineHeight: 1.5 }}>{defect.observation || defect.description}</span>
+                  </div>
+                  {defect.severity_reason && (
+                    <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--line)" }}>
+                      <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)", display: "block", marginBottom: 4 }}>Severity Reason</span>
+                      <span style={{ fontSize: 11, color: "var(--fg-2)", lineHeight: 1.5 }}>{defect.severity_reason}</span>
+                    </div>
+                  )}
+                </>
+              ) : enrichment?.status === "pending" || enrichment?.status === "running" ? (
+                <div style={{ padding: "10px 12px" }}>
+                  <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)" }}>
+                    {enrichment.status === "pending" ? "Queued for enrichment…" : "Processing…"}
+                  </span>
+                  <div style={{ marginTop: 6, fontSize: 10, color: "var(--fg-4)", lineHeight: 1.5 }}>
+                    Current observation is template/detector output. EdgeVLM result will replace observation and severity_reason only.
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: "10px 12px" }}>
+                  <span className="mono" style={{ fontSize: 10, color: enrichment?.status === "rejected" ? "var(--warn)" : "var(--crit)" }}>
+                    {enrichment?.status === "rejected" ? "Enrichment rejected — guard validation failed" : "Enrichment failed"}
+                  </span>
+                  {enrichment?.error_message && (
+                    <div style={{ marginTop: 4, fontSize: 10, color: "var(--fg-3)" }}>{enrichment.error_message}</div>
+                  )}
+                  <div style={{ marginTop: 6, fontSize: 10, color: "var(--fg-4)", lineHeight: 1.5 }}>
+                    Falling back to template observation. EdgeVLM does not modify geometry or canonical label.
+                  </div>
+                </div>
+              )}
+              <div style={{ padding: "6px 12px", borderTop: "1px dashed var(--line-soft)" }}>
+                <span className="mono" style={{ fontSize: 9, color: "var(--fg-4)", lineHeight: 1.4 }}>
+                  VLM enrichment is narrative-only: observation / severity_reason / observation_source. BBox, category, defect_type, confidence, anomaly_score are unchanged.
+                </span>
+              </div>
             </div>
           </div>
         )}

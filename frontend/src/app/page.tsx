@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { buildStats, makeDefect } from "@/lib/mock-data";
 import type { DefectRead, ActiveConfig } from "@/types/defect";
 import type { DashboardStatsLike } from "@/types/stats";
-import { useDefectWebSocket } from "@/lib/ws";
+import { useDefectWebSocket, type EnrichmentUpdate } from "@/lib/ws";
 import { useDataSource, type DataSourceStatus } from "@/lib/data-source";
 
 import { TopBar } from "@/components/v4/TopBar";
@@ -15,6 +15,7 @@ import { ABMatrix } from "@/components/v4/ABMatrix";
 import { ModelsPage } from "@/components/v4/ModelsPage";
 import { LogsPage } from "@/components/v4/LogsPage";
 import { DetailDrawer } from "@/components/v4/DetailDrawer";
+import type { EnrichmentState } from "@/components/v4/DetailDrawer";
 import { useFrameSimulator, useCpuLoads, useNpuLoads } from "@/components/v4/RK3588Twin";
 
 export default function Dashboard() {
@@ -42,6 +43,9 @@ export default function Dashboard() {
   const [profileSeedIdx, setProfileSeedIdx] = useState(0);
   const [activeConfig, setActiveConfig] = useState<ActiveConfig>({ model_size: "2B", variant: "lora" });
   const [twinMode, setTwinMode] = useState("xray");
+
+  // Enrichment state — keyed by defect_id
+  const [enrichmentMap, setEnrichmentMap] = useState<Map<number, EnrichmentState>>(new Map());
 
   // Sync data source defects into local state
   useEffect(() => {
@@ -89,12 +93,42 @@ export default function Dashboard() {
   const cpuLoads = useCpuLoads(phase);
 
   // WebSocket — real-time defects from backend
-  useDefectWebSocket((newDefect) => {
-    setWsDefects(prev => [newDefect, ...prev].slice(0, 50));
-    setDefects(prev => [newDefect, ...prev].slice(0, 100));
-    // When WS delivers, we know live is working
-    setEverHadLive(true);
-  });
+  useDefectWebSocket(
+    (newDefect) => {
+      setWsDefects(prev => [newDefect, ...prev].slice(0, 50));
+      setDefects(prev => [newDefect, ...prev].slice(0, 100));
+      // When WS delivers, we know live is working
+      setEverHadLive(true);
+    },
+    (update: EnrichmentUpdate) => {
+      // Track enrichment state
+      setEnrichmentMap(prev => {
+        const next = new Map(prev);
+        next.set(update.defect_id, {
+          status: update.status,
+          provider: update.provider,
+          observation_source: update.observation_source,
+          error_message: update.error_message,
+          updated_at: update.ts,
+        });
+        return next;
+      });
+
+      // On complete: update the defect's observation fields in local state
+      if (update.status === "complete" && update.updated_fields?.length) {
+        // Re-fetch enrichment to get observation/severity_reason is not available via WS event,
+        // but the defect record has been updated server-side. We mark the enrichment complete
+        // and the user can see it when the defect is re-fetched or next defect_created arrives.
+        // For real-time UX, we optimistically update observation_source on the defect.
+        setDefects(prev => prev.map(d =>
+          d.id === update.defect_id
+            ? { ...d, observation_source: update.observation_source ?? d.observation_source }
+            : d,
+        ));
+      }
+      setEverHadLive(true);
+    },
+  );
 
   // Unified stats: prefer data source stats, fallback to client-side computed
   const mockStats = useMemo(() => buildStats(defects), [defects]);
@@ -188,6 +222,7 @@ export default function Dashboard() {
         defect={selectedDefect}
         onClose={() => setSelectedDefect(null)}
         onOpenProfile={openProfileForDefect}
+        enrichment={selectedDefect ? enrichmentMap.get(selectedDefect.id) ?? null : null}
       />
     </div>
   );

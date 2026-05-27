@@ -249,8 +249,8 @@ async def _run_worker_until_done(config, sf, provider, timeout=5.0):
         fromlist=["_poll_once"],
     )._poll_once
 
-    async def tracking_poll(cfg, factory, prov):
-        result = await original_poll(cfg, factory, prov)
+    async def tracking_poll(cfg, factory, prov, ws_mgr=None):
+        result = await original_poll(cfg, factory, prov, ws_mgr)
         if result:
             processed.set()
         return result
@@ -449,8 +449,8 @@ async def test_worker_processes_multiple_jobs(db, _loop_db):
         "backend.app.services.enrichment_worker_loop", fromlist=["_poll_once"],
     )._poll_once
 
-    async def tracking_poll(cfg, factory, prov):
-        result = await original_poll(cfg, factory, prov)
+    async def tracking_poll(cfg, factory, prov, ws_mgr=None):
+        result = await original_poll(cfg, factory, prov, ws_mgr)
         if result and prov.call_count >= 2:
             count_event.set()
         return result

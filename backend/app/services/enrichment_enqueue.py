@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.models.defect import Defect
 from backend.app.models.enrichment import DefectEnrichment, VALID_PROVIDERS
 from backend.app.services.enrichment_config import EnrichmentConfig, load_enrichment_config
+from backend.app.services.enrichment_ws_events import build_enrichment_event
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ async def maybe_auto_enqueue_enrichment(
     db: AsyncSession,
     defect: Defect,
     config: EnrichmentConfig | None = None,
+    ws_manager: object | None = None,
 ) -> DefectEnrichment | None:
     """Create a pending enrichment job if auto-enqueue is enabled and defect is eligible.
 
@@ -119,4 +121,18 @@ async def maybe_auto_enqueue_enrichment(
         "Auto-enqueued enrichment %d for defect %d (provider=%s, prompt=%s)",
         enrichment.id, defect.id, config.provider, config.prompt_version,
     )
+
+    # Emit WS event for pending enrichment
+    if ws_manager is not None:
+        try:
+            event = build_enrichment_event(
+                defect_id=defect.id,
+                enrichment_id=enrichment.id,
+                status="pending",
+                provider=config.provider,
+            )
+            await ws_manager.broadcast("dashboard", event)  # type: ignore[union-attr]
+        except Exception:
+            logger.debug("Failed to emit pending enrichment event for defect %d", defect.id, exc_info=True)
+
     return enrichment
