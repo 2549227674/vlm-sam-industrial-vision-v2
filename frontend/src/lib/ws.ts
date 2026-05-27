@@ -6,9 +6,25 @@ import { API_BASE } from '@/lib/api';
 
 const WS_RETRY_DELAYS = [1000, 2000, 4000, 8000, 15000];
 
-export function useDefectWebSocket(onDefect: (defect: DefectRead) => void) {
+export interface EnrichmentUpdate {
+  defect_id: number;
+  enrichment_id: number;
+  status: 'pending' | 'running' | 'complete' | 'rejected' | 'failed';
+  provider: string;
+  observation_source?: string | null;
+  updated_fields: string[];
+  error_message?: string | null;
+  ts: string;
+}
+
+export function useDefectWebSocket(
+  onDefect: (defect: DefectRead) => void,
+  onEnrichment?: (update: EnrichmentUpdate) => void,
+) {
   const onDefectRef = useRef(onDefect);
   onDefectRef.current = onDefect;
+  const onEnrichmentRef = useRef(onEnrichment);
+  onEnrichmentRef.current = onEnrichment;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -31,6 +47,9 @@ export function useDefectWebSocket(onDefect: (defect: DefectRead) => void) {
           const msg = JSON.parse(event.data);
           if (msg.type === 'defect_created') {
             onDefectRef.current(msg.data as DefectRead);
+          }
+          if (msg.type === 'defect_enrichment_updated' && onEnrichmentRef.current) {
+            onEnrichmentRef.current(msg as EnrichmentUpdate);
           }
           if (msg.type === 'ping') {
             ws?.send(JSON.stringify({ type: 'pong' }));

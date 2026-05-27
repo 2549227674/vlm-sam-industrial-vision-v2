@@ -413,3 +413,64 @@ export function highlightJson(line: string): string {
     .replace(/: (-?\d+\.?\d*)/g, ': <span style="color: var(--core-1);">$1</span>')
     .replace(/: (true|false|null)/g, ': <span style="color: #ff9f6c;">$1</span>');
 }
+
+// ── Enrichment status badge ──────────────────────────────────────────────
+
+const ENRICH_STATUS_CONFIG: Record<string, { color: string; label: string; animate?: boolean }> = {
+  pending:  { color: "var(--fg-3)", label: "PENDING",  animate: true },
+  running:  { color: "var(--acc)",  label: "RUNNING",  animate: true },
+  complete: { color: "var(--ok)",   label: "ENRICHED" },
+  rejected: { color: "var(--warn)", label: "REJECTED" },
+  failed:   { color: "var(--crit)", label: "FAILED" },
+};
+
+export function EnrichmentStatusBadge({ status, provider }: { status: string; provider?: string }) {
+  const cfg = ENRICH_STATUS_CONFIG[status];
+  if (!cfg) return null;
+
+  const providerLabel = provider === "edge_vlm" ? "Edge VLM"
+    : provider === "cloud_vlm" ? "Cloud VLM"
+    : provider === "template" ? "Template"
+    : null;
+
+  return (
+    <span
+      className="mono"
+      style={{
+        fontSize: 9,
+        padding: "2px 7px",
+        border: `1px solid ${cfg.color}`,
+        color: cfg.color,
+        letterSpacing: "0.1em",
+        fontWeight: 700,
+        background: `color-mix(in srgb, ${cfg.color} 12%, transparent)`,
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+      }}
+    >
+      {cfg.animate && (
+        <span
+          style={{
+            width: 5, height: 5, borderRadius: "50%",
+            background: cfg.color,
+            animation: "pulse-dot 1.4s infinite",
+          }}
+        />
+      )}
+      {cfg.label}
+      {providerLabel && (
+        <span style={{ opacity: 0.6, fontWeight: 400 }}>/ {providerLabel}</span>
+      )}
+    </span>
+  );
+}
+
+export function EnrichmentInfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", padding: "5px 12px" }}>
+      <span className="mono" style={{ fontSize: 10, color: "var(--fg-3)" }}>{label}</span>
+      <span className="mono" style={{ fontSize: 10, color: "var(--fg-1)", wordBreak: "break-word" }}>{value}</span>
+    </div>
+  );
+}

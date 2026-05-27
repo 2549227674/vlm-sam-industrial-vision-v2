@@ -17,6 +17,7 @@ from backend.app.services.enrichment_guard import (
     EnrichmentValidationError,
     validate_vlm_output,
 )
+from backend.app.services.enrichment_ws_events import build_enrichment_event
 from backend.app.services.image_resolver import resolve_image_path
 from backend.app.services.provider_factory import get_provider_from_env
 from backend.app.services.vlm_provider import (
@@ -28,6 +29,28 @@ from backend.app.services.vlm_provider import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+async def _emit(ws_manager: object | None, enrichment: DefectEnrichment, status: str) -> None:
+    """Best-effort broadcast of enrichment lifecycle event.
+
+    Awaits the broadcast directly for reliable delivery in test and production.
+    Silently skips if ws_manager is None or broadcast fails.
+    """
+    if ws_manager is None:
+        return
+    try:
+        event = build_enrichment_event(
+            defect_id=enrichment.defect_id,
+            enrichment_id=enrichment.id,
+            status=status,  # type: ignore[arg-type]
+            provider=enrichment.provider or "unknown",
+            observation_source=enrichment.provider if status == "complete" else None,
+            error_message=enrichment.error_message,
+        )
+        await ws_manager.broadcast("dashboard", event)  # type: ignore[union-attr]
+    except Exception:
+        logger.debug("Failed to emit enrichment event for %d", enrichment.id, exc_info=True)
 
 
 def build_enrichment_input(
@@ -59,6 +82,7 @@ async def process_enrichment_job(
     db: AsyncSession,
     enrichment_id: int,
     provider: VlmProvider | None = None,
+    ws_manager: object | None = None,
 ) -> DefectEnrichment:
     """Process a single enrichment job through the provider + guard pipeline.
 
@@ -90,6 +114,7 @@ async def process_enrichment_job(
         enrichment.error_message = f"Defect {enrichment.defect_id} not found"
         enrichment.completed_at = datetime.now(timezone.utc)
         await db.flush()
+        await _emit(ws_manager, enrichment, "failed")
         return enrichment
 
     # Mark running
@@ -103,6 +128,8 @@ async def process_enrichment_job(
     enrichment.provider = provider.provider_name
     enrichment.provider_model = provider.provider_model
 
+    await _emit(ws_manager, enrichment, "running")
+
     # Resolve image path only for providers that need local files (edge_vlm)
     resolved_path: str | None = None
     if provider.provider_name == "edge_vlm":
@@ -115,6 +142,7 @@ async def process_enrichment_job(
             enrichment.error_message = f"Image resolution failed: {exc}"
             enrichment.completed_at = datetime.now(timezone.utc)
             await db.flush()
+            await _emit(ws_manager, enrichment, "failed")
             return enrichment
 
     # Build input with resolved path
@@ -169,12 +197,14 @@ async def process_enrichment_job(
         )
 
     await db.flush()
+    await _emit(ws_manager, enrichment, enrichment.status)
     return enrichment
 
 
 async def process_next_pending_enrichment(
     db: AsyncSession,
     provider: VlmProvider | None = None,
+    ws_manager: object | None = None,
 ) -> DefectEnrichment | None:
     """Pick the oldest pending enrichment and process it.
 
@@ -191,4 +221,4 @@ async def process_next_pending_enrichment(
     if result is None:
         return None
 
-    return await process_enrichment_job(db, result.id, provider=provider)
+    return await process_enrichment_job(db, result.id, provider=provider, ws_manager=ws_manager)

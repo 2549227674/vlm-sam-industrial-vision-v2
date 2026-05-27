@@ -18,6 +18,7 @@ from backend.app.services.enrichment_worker import (
     process_enrichment_job,
     process_next_pending_enrichment,
 )
+from backend.app.services.enrichment_ws_events import build_enrichment_event
 from backend.app.services.provider_factory import get_provider, get_provider_from_env
 from backend.app.services.vlm_provider import (
     ProviderConfigError,
@@ -143,6 +144,20 @@ async def trigger_enrichment(
     await db.flush()
     await db.refresh(enrichment)
 
+    # Emit WS event for manually triggered pending enrichment
+    ws_manager = getattr(request.app.state, "ws_manager", None)
+    if ws_manager:
+        try:
+            event = build_enrichment_event(
+                defect_id=defect_id,
+                enrichment_id=enrichment.id,
+                status="pending",
+                provider=_DEFAULT_PROVIDER,
+            )
+            await ws_manager.broadcast("dashboard", event)
+        except Exception:
+            pass  # best-effort
+
     return EnrichmentCreatedResponse(
         enrichment_id=enrichment.id,
         defect_id=defect_id,
@@ -175,6 +190,7 @@ async def get_enrichment(
 )
 async def process_enrichment_by_id(
     enrichment_id: int,
+    request: Request,
     db: AsyncSession = Depends(get_db),
     provider: str | None = Query(None, description="Provider: template, edge_vlm"),
 ):
@@ -197,7 +213,10 @@ async def process_enrichment_by_id(
         return _error(400, "PROVIDER_CONFIG_ERROR", str(exc))
 
     try:
-        enrichment = await process_enrichment_job(db, enrichment_id, provider=vlm_provider)
+        enrichment = await process_enrichment_job(
+            db, enrichment_id, provider=vlm_provider,
+            ws_manager=getattr(request.app.state, "ws_manager", None),
+        )
     except ValueError as exc:
         msg = str(exc)
         if "not found" in msg.lower():
@@ -215,6 +234,7 @@ async def process_enrichment_by_id(
     status_code=200,
 )
 async def process_next_enrichment(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     provider: str | None = Query(None, description="Provider: template, edge_vlm"),
 ):
@@ -232,7 +252,10 @@ async def process_next_enrichment(
     except ProviderConfigError as exc:
         return _error(400, "PROVIDER_CONFIG_ERROR", str(exc))
 
-    enrichment = await process_next_pending_enrichment(db, provider=vlm_provider)
+    enrichment = await process_next_pending_enrichment(
+        db, provider=vlm_provider,
+        ws_manager=getattr(request.app.state, "ws_manager", None),
+    )
     if enrichment is None:
         return _error(404, "NO_PENDING_ENRICHMENT", "No pending enrichment jobs to process")
 

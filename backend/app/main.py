@@ -64,6 +64,7 @@ async def lifespan(app: FastAPI):
             enrichment_worker_loop(
                 enrichment_cfg,
                 create_session_factory=async_session,
+                ws_manager=app.state.ws_manager,
             ),
         )
         logger.info(
