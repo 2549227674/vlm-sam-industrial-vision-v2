@@ -1,0 +1,518 @@
+{
+  "items": [
+    {
+      "id": 4154,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/2b5cfdcc25a544048b754b341d9b596f.jpg",
+      "line_id": "L1",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 18:00:00.000000",
+      "pipeline_ms": {
+        "efficientad": 350.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "Surface scratch detected on metal nut coating. Area appears localized.",
+      "severity_reason": "Scratch depth suggests coating breach — may expose base metal.",
+      "observation_source": "edge_vlm",
+      "enrichment_status": "complete",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 10:34:32.196183"
+    },
+    {
+      "id": 4155,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/a71054306c524d39a7bb6fa41f439c82.jpg",
+      "line_id": "L1",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 18:01:00.000000",
+      "pipeline_ms": {
+        "efficientad": 350.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Enrichment rejected] Invalid JSON: Expecting value: line 1 column 1 (char 0)",
+      "severity_reason": "[Fallback] Using template default severity assessment.",
+      "observation_source": "template",
+      "enrichment_status": "rejected",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 10:35:47.310347"
+    },
+    {
+      "id": 4156,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/f9db360af389433a95f95b66c4d4573e.jpg",
+      "line_id": "L1",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 18:02:00.000000",
+      "pipeline_ms": {
+        "efficientad": 350.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Enrichment rejected] Forbidden keys present: ['bbox', 'defect_type']",
+      "severity_reason": "[Fallback] Using template default severity assessment.",
+      "observation_source": "template",
+      "enrichment_status": "rejected",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 10:37:20.411278"
+    },
+    {
+      "id": 4157,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/1e728b6a1a914584b384bae5cd9d6625.jpg",
+      "line_id": "L1",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 18:03:00.000000",
+      "pipeline_ms": {
+        "efficientad": 350.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Enrichment failed] EdgeVlmProvider subprocess timed out after 2s.",
+      "severity_reason": "[Fallback] Using template default severity assessment.",
+      "observation_source": "template",
+      "enrichment_status": "failed",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 10:41:30.605844"
+    },
+    {
+      "id": 4161,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/53c114f28fc445a9846f5b0c2ee261c3.jpg",
+      "line_id": "val_L3",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 12:14:12.993000",
+      "pipeline_ms": {
+        "efficientad": 12.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "Surface scratch detected on metal nut",
+      "severity_reason": "Visible scratch defect confirmed by VLM validation",
+      "observation_source": "edge_vlm",
+      "enrichment_status": "complete",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 12:14:40.899246"
+    },
+    {
+      "id": 4166,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/0be33d14d5724c3c82a7ba512899ef05.jpg",
+      "line_id": "val_L11",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 12:24:26.997000",
+      "pipeline_ms": {
+        "efficientad": 12.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Template] metal_nut: scratch detected (confidence=0.95). Automated template observation — no VLM enrichment applied.",
+      "severity_reason": "[Template] Severity assigned by default rule. No VLM-based severity analysis available.",
+      "observation_source": "template",
+      "enrichment_status": "complete",
+      "enrichment_provider": "template",
+      "enriched_at": "2026-05-26 13:20:19.531534"
+    },
+    {
+      "id": 4168,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/8b16580b9eaa49b4a411e004b8b43e0e.jpg",
+      "line_id": "smoke_L2",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 13:20:03.106000",
+      "pipeline_ms": {
+        "efficientad": 12.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Template] metal_nut: scratch detected (confidence=0.95). Automated template observation — no VLM enrichment applied.",
+      "severity_reason": "[Template] Severity assigned by default rule. No VLM-based severity analysis available.",
+      "observation_source": "template",
+      "enrichment_status": "complete",
+      "enrichment_provider": "template",
+      "enriched_at": "2026-05-26 13:20:21.536336"
+    },
+    {
+      "id": 4169,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/8e180b0d8de24f629b58d594ff5c365f.jpg",
+      "line_id": "smoke_L3",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 13:20:41.704000",
+      "pipeline_ms": {
+        "efficientad": 12.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Template] metal_nut: scratch detected (confidence=0.95). Automated template observation — no VLM enrichment applied.",
+      "severity_reason": "[Template] Severity assigned by default rule. No VLM-based severity analysis available.",
+      "observation_source": "template",
+      "enrichment_status": "complete",
+      "enrichment_provider": "template",
+      "enriched_at": "2026-05-26 13:20:42.586907"
+    },
+    {
+      "id": 4170,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/2bc893c3933e4a7aa7a4dc102dbf20c2.jpg",
+      "line_id": "smoke_L4a",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 13:21:50.681000",
+      "pipeline_ms": {
+        "efficientad": 12.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "Surface scratch detected on metal nut",
+      "severity_reason": "Visible scratch defect confirmed by VLM",
+      "observation_source": "edge_vlm",
+      "enrichment_status": "complete",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 13:21:51.417942"
+    },
+    {
+      "id": 4171,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/562559701dd6463f8fe2ad1faf7802dc.jpg",
+      "line_id": "smoke_L4b",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 13:23:25.833000",
+      "pipeline_ms": {
+        "efficientad": 12.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Enrichment rejected] Forbidden keys present: ['bbox', 'defect_type']",
+      "severity_reason": "[Fallback] Using template default severity assessment.",
+      "observation_source": "template",
+      "enrichment_status": "rejected",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 13:23:26.440983"
+    },
+    {
+      "id": 4172,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/f83e63b2e2e1499e8a23ab00e981437c.jpg",
+      "line_id": "smoke_L4c",
+      "category": "metal_nut",
+      "defect_type": "scratch",
+      "severity": "high",
+      "confidence": 0.95,
+      "anomaly_score": 12.5,
+      "bboxes": [
+        {
+          "x": 0.1,
+          "y": 0.1,
+          "w": 0.2,
+          "h": 0.2
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-26 13:24:45.829000",
+      "pipeline_ms": {
+        "efficientad": 12.0,
+        "localizer": 25.0,
+        "upload": 5.0
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "[Enrichment failed] EdgeVlmProvider subprocess timed out after 3s.",
+      "severity_reason": "[Fallback] Using template default severity assessment.",
+      "observation_source": "template",
+      "enrichment_status": "failed",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-26 13:24:49.361663"
+    },
+    {
+      "id": 9000,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/1999255071e649ca9c71a4a23134986f.jpg",
+      "line_id": "rk3588-L1",
+      "category": "zipper",
+      "defect_type": "broken_teeth",
+      "severity": "medium",
+      "confidence": 0.91,
+      "anomaly_score": 0.55,
+      "bboxes": [
+        {
+          "x": 0.3,
+          "y": 0.4,
+          "w": 0.2,
+          "h": 0.1
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-27T01:44:00+00:00",
+      "pipeline_ms": {
+        "efficientad": 350.0,
+        "localizer": 120.0,
+        "upload": 50.0
+      },
+      "vlm_metrics": {
+        "ttft_ms": 3200.0,
+        "decode_tps": 9.5,
+        "prompt_tokens": 175,
+        "output_tokens": 84,
+        "rss_mb": 3300.0,
+        "json_parse_ok": true
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "A close-up of a black zipper on fabric material showing a broken tooth.",
+      "severity_reason": "The zipper has a clear defect where one of its teeth is missing or damaged. This damage appears as a break in the chain-like structure, indicating a manufacturing or wear issue that affects functionality.",
+      "observation_source": "edge_vlm",
+      "enrichment_status": "complete",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-27T01:45:00+00:00"
+    },
+    {
+      "id": 9001,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/228aaaa7c00548a19d9f7cbd27b086f1.jpg",
+      "line_id": "rk3588-L2",
+      "category": "zipper",
+      "defect_type": "broken_teeth",
+      "severity": "medium",
+      "confidence": 0.91,
+      "anomaly_score": 0.55,
+      "bboxes": [
+        {
+          "x": 0.3,
+          "y": 0.4,
+          "w": 0.2,
+          "h": 0.1
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-27T01:44:00+00:00",
+      "pipeline_ms": {
+        "efficientad": 350.0,
+        "localizer": 120.0,
+        "upload": 50.0
+      },
+      "vlm_metrics": {
+        "ttft_ms": 3200.0,
+        "decode_tps": 9.5,
+        "prompt_tokens": 175,
+        "output_tokens": 84,
+        "rss_mb": 3300.0,
+        "json_parse_ok": true
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "A zipper with visible damage to its teeth mechanism on a black fabric surface.",
+      "severity_reason": "The broken tooth compromises the zipper fastening function. The defect is clearly visible and located on a structural component critical to the product usability.",
+      "observation_source": "edge_vlm",
+      "enrichment_status": "complete",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-27T01:45:00+00:00"
+    },
+    {
+      "id": 9002,
+      "image_url": "/demo-data/phase10_1b_edge_vlm_latest/images/a4f534dc095540b8940550630b566f4a.jpg",
+      "line_id": "rk3588-L3",
+      "category": "zipper",
+      "defect_type": "broken_teeth",
+      "severity": "medium",
+      "confidence": 0.91,
+      "anomaly_score": 0.55,
+      "bboxes": [
+        {
+          "x": 0.3,
+          "y": 0.4,
+          "w": 0.2,
+          "h": 0.1
+        }
+      ],
+      "description": "",
+      "variant": "ort_2B",
+      "edge_ts": "2026-05-27T01:44:00+00:00",
+      "pipeline_ms": {
+        "efficientad": 350.0,
+        "localizer": 120.0,
+        "upload": 50.0
+      },
+      "vlm_metrics": {
+        "ttft_ms": 3200.0,
+        "decode_tps": 9.5,
+        "prompt_tokens": 175,
+        "output_tokens": 84,
+        "rss_mb": 3300.0,
+        "json_parse_ok": true
+      },
+      "schema_version": "v1",
+      "localization_source": "ort_yolov8n_cpu",
+      "label_source": "yolo_class_head",
+      "observation": "A black zipper track with a damaged tooth showing visible breakage in the interlocking mechanism.",
+      "severity_reason": "The damaged tooth prevents proper zipper closure, rendering the product non-functional for its intended use. This is a significant quality defect.",
+      "observation_source": "edge_vlm",
+      "enrichment_status": "complete",
+      "enrichment_provider": "edge_vlm",
+      "enriched_at": "2026-05-27T01:45:00+00:00"
+    }
+  ]
+}

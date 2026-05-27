@@ -1,0 +1,44 @@
+{
+  "total": 14,
+  "today_defects": 14,
+  "today_high": 11,
+  "by_category": {
+    "metal_nut": 11,
+    "zipper": 3
+  },
+  "by_severity": {
+    "high": 11,
+    "medium": 3
+  },
+  "timeline": [],
+  "ab_compare": {
+    "ort_2B": {
+      "count": 14,
+      "json_ok_rate": 100.0
+    }
+  },
+  "avg_pipeline_ms": {
+    "efficientad": 350.0,
+    "localizer": 120.0,
+    "upload": 50.0,
+    "fastsam": 0.0,
+    "qwen3vl": 0.0
+  },
+  "category_severity_matrix": {
+    "metal_nut": {
+      "high": 11
+    },
+    "zipper": {
+      "medium": 3
+    }
+  },
+  "enrichment_status_counts": {
+    "complete": 9,
+    "rejected": 3,
+    "failed": 2
+  },
+  "observation_source_counts": {
+    "edge_vlm": 6,
+    "template": 8
+  }
+}

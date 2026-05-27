@@ -1,0 +1,23 @@
+{
+  "snapshot_name": "phase10_1b_edge_vlm_latest",
+  "source_phase": "Phase 10.1b",
+  "source_type": "real_rk3588_edge_vlm_smoke",
+  "generated_at": "2026-05-27T05:10:05.689922+00:00",
+  "model_label": "qwen3-vl-2b-smoke",
+  "schema_version": "v1",
+  "categories_present": [
+    "metal_nut",
+    "zipper"
+  ],
+  "defect_count": 14,
+  "enrichment_status_counts": {
+    "complete": 9,
+    "rejected": 3,
+    "failed": 2
+  },
+  "observation_source_counts": {
+    "edge_vlm": 6,
+    "template": 8
+  },
+  "safety_note": "VLM narrative only; does not modify bbox/category/defect_type/confidence/anomaly_score"
+}
