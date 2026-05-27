@@ -17,16 +17,17 @@
 
 ---
 
-## 2. Dry-Run Result
+## 2. Candidate Scan Result (dry-run mode)
 
-**Total candidates**: 59
-**Valid**: 52
-**Blocked**: 7
+**Mode**: `--dry-run --allow-ineligible`
+**Total images scanned**: 59
+**Valid candidates**: 52
+**Ineligible (blocked)**: 7
 
-All 7 blocked images had YOLO no-detection (confidence=0, no bboxes). This is expected — the YOLO model at conf=0.25 does not detect defects in all val images.
+All 7 ineligible images had YOLO no-detection (confidence=0, no bboxes). This is expected — the YOLO model at conf=0.25 does not detect defects in all val images. The runner reports these as ineligible, not as failures.
 
-| Blocked Image | Reason |
-|---------------|--------|
+| Ineligible Image | Reason |
+|------------------|--------|
 | cable_bent_wire_003.png | no_bboxes, confidence_zero |
 | cable_cable_swap_009.png | no_bboxes, confidence_zero |
 | cable_cut_outer_insulation_004.png | no_bboxes, confidence_zero |
@@ -39,13 +40,15 @@ All 7 blocked images had YOLO no-detection (confidence=0, no bboxes). This is ex
 - cable: 25
 - metal_nut: 27
 
-**Dry-run gate**: PASS — all 52 valid candidates have:
+**Candidate scan gate**: all 52 valid candidates pass:
 - source_category in {metal_nut, cable}
 - YOLO category matches source category
 - bboxes non-empty
 - confidence > 0
 - localization_source = "ort_yolov8n_cpu"
 - label_source = "yolo_class_head"
+
+Note: The strict `--dry-run` (without `--allow-ineligible`) exits 1 if any candidate is ineligible. This is by design — strict mode requires zero blocked candidates for a clean pass. The candidate scan with `--allow-ineligible` is used here to enumerate valid candidates for the soak.
 
 ---
 
@@ -55,6 +58,8 @@ All 7 blocked images had YOLO no-detection (confidence=0, no bboxes). This is ex
 **409 Conflict**: 7 (from previous soak attempts using same images)
 **Failed**: 0
 **Error**: 0 (excluding 409)
+
+**Known issue**: 7/10 uploads returned 409 Conflict. Root cause: `edge_ts` was generated at meta-build time with second-precision, so multiple images processed within the same second received identical `line_id` + `edge_ts` pairs, violating the UNIQUE constraint. Fix: `edge_ts` is now generated at upload time with microsecond precision and a `run_id` (uuid4 hex[:8]) is injected per-run. Re-run `pre-soak --limit 10` after this fix to verify 10/10 successful uploads.
 
 ### Defect IDs Created
 
@@ -98,6 +103,15 @@ All 7 blocked images had YOLO no-detection (confidence=0, no bboxes). This is ex
 | observation non-empty | PASS (3/3) |
 | severity_reason non-empty | PASS (3/3) |
 
+### VLM Output vs. Detection Description
+
+The `description` field in the upload meta is the runner's detection summary (e.g., "production_yolo_soak cable/bent_wire"), not VLM output. The actual VLM enrichment output fields are:
+- `observation` — VLM-generated defect observation text
+- `severity_reason` — VLM-generated severity justification
+- `observation_source` — provenance tag ("edge_vlm")
+
+These three fields are populated by the enrichment pipeline after upload. The frontend JSON panel may show the `description` field; this should not be confused with VLM output.
+
 ### WebSocket Payload Observed
 
 **Status**: NOT CAPTURED — the runner does not have a WebSocket client. WebSocket events were emitted by the backend (confirmed by ws_clients=1 at time of check), but the actual payload was not captured by the runner.
@@ -105,6 +119,14 @@ All 7 blocked images had YOLO no-detection (confidence=0, no bboxes). This is ex
 ### Frontend Terminal Re-fetch Observed
 
 **Status**: NOT OBSERVED — the runner runs headless without browser access. Frontend re-fetch would need to be verified manually in a browser session.
+
+### Profile / Trace Note
+
+Runner uploads have `pipeline_ms: {efficientad: 0, fastsam: 0, qwen3vl: 0}` and no `trace_events`. This is expected — the runner uses ort_localizer.py for YOLO inference, not the full RK3588 pipeline. The frontend Profile/Trace page will be empty for runner-uploaded defects. This does not indicate RK3588 or VLM performance issues.
+
+Full soak telemetry should either:
+- Add real `trace_events` / `pipeline_ms` from the runner's YOLO + enrichment timing, or
+- Explicitly document that the Profile page is unsupported for runner uploads.
 
 ---
 

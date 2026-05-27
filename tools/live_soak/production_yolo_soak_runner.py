@@ -95,6 +95,9 @@ def parse_args() -> argparse.Namespace:
                    help="Max wait for enrichment completion (seconds)")
     p.add_argument("--output", default=None,
                    help="Path to save audit JSON (default: stdout only)")
+    p.add_argument("--allow-ineligible", action="store_true",
+                   help="In dry-run mode: exit 0 even if some candidates are "
+                        "blocked. Default (strict) exits 1 if any blocked.")
     return p.parse_args()
 
 
@@ -240,6 +243,7 @@ def validate_detection(image_path: str, source_category: str,
         gate.block("category_not_allowed: %s" % source_category)
 
     # Build upload meta (always, even if blocked, for audit).
+    # edge_ts and run_id are injected later at upload time for uniqueness.
     meta = {
         "line_id": "L1",
         "category": source_category,
@@ -250,7 +254,6 @@ def validate_detection(image_path: str, source_category: str,
         "bboxes": bboxes,
         "description": "production_yolo_soak %s/%s" % (source_category, defect_type),
         "variant": VARIANT,
-        "edge_ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "pipeline_ms": {
             "efficientad": 0.0,
             "fastsam": 0.0,
@@ -476,15 +479,18 @@ def main() -> None:
             json.dump(audit_rows, f, indent=2)
         print("  Audit saved to %s" % args.output)
 
-    # Dry-run: fail if any invalid.
+    # Dry-run: report candidate scan results.
     if args.mode == "dry-run":
         blocked = len(images) - len(valid_candidates)
-        if blocked > 0:
-            print("\nDRY-RUN FAILED: %d candidates blocked." % blocked)
+        if blocked > 0 and not args.allow_ineligible:
+            print("\nDRY-RUN FAILED: %d candidates blocked (use --allow-ineligible to override)." % blocked)
             sys.exit(1)
+        elif blocked > 0:
+            print("\nDRY-RUN PASSED (with %d ineligible): %d candidates valid." % (
+                blocked, len(valid_candidates)))
         else:
             print("\nDRY-RUN PASSED: all %d candidates valid." % len(valid_candidates))
-            return
+        return
 
     # Pre-soak: limit uploads.
     if args.mode == "pre-soak":
@@ -495,9 +501,15 @@ def main() -> None:
         print("\n=== FULL SOAK: uploading %d images ===" % len(candidates))
 
     # Upload and verify.
+    run_id = uuid.uuid4().hex[:8]
     results = []
     for i, (img_path, src_cat, meta) in enumerate(candidates):
         try:
+            # Inject per-upload unique fields at upload time.
+            meta["run_id"] = run_id
+            meta["edge_ts"] = time.strftime(
+                "%Y-%m-%dT%H:%M:%S.", time.gmtime()) + "%06dZ" % (
+                    time.time() % 1 * 1000000)
             upload = upload_defect(args.api, token, meta, img_path, args.timeout)
             defect_id = upload["id"]
 
