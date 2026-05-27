@@ -52,35 +52,45 @@ Note: The strict `--dry-run` (without `--allow-ineligible`) exits 1 if any candi
 
 ---
 
-## 3. Pre-Soak Result
+## 3. Pre-Soak Result (clean re-run)
 
-**Uploaded**: 3 (of 10 attempted)
-**409 Conflict**: 7 (from previous soak attempts using same images)
+**Mode**: `pre-soak --limit 10`
+**Uploaded**: 10/10
+**409 Conflict**: 0
 **Failed**: 0
-**Error**: 0 (excluding 409)
+**Error**: 0
 
-**Known issue**: 7/10 uploads returned 409 Conflict. Root cause: `edge_ts` was generated at meta-build time with second-precision, so multiple images processed within the same second received identical `line_id` + `edge_ts` pairs, violating the UNIQUE constraint. Fix: `edge_ts` is now generated at upload time with microsecond precision and a `run_id` (uuid4 hex[:8]) is injected per-run. Re-run `pre-soak --limit 10` after this fix to verify 10/10 successful uploads.
+### Historical Bug Note
+
+The first pre-soak attempt (ids 4157-4159) had 7/10 409 Conflicts. Root cause: `edge_ts` was generated at meta-build time with second-precision, so multiple images processed within the same second received identical `line_id` + `edge_ts` pairs, violating the UNIQUE constraint. Fix: `edge_ts` is now generated at upload time with microsecond precision. This re-run verifies the fix.
 
 ### Defect IDs Created
 
 | ID | Image | Category | Defect Type | Confidence | BBoxes | Loc Source | Label Source |
 |----|-------|----------|-------------|------------|--------|------------|-------------|
-| 4157 | cable_bent_wire_001.png | cable | bent_wire | 0.270 | 1 | ort_yolov8n_cpu | yolo_class_head |
-| 4158 | cable_bent_wire_004.png | cable | bent_wire | 0.719 | 1 | ort_yolov8n_cpu | yolo_class_head |
-| 4159 | cable_combined_001.png | cable | bent_wire | 0.486 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4161 | cable_bent_wire_001.png | cable | bent_wire | 0.270 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4162 | cable_bent_wire_004.png | cable | bent_wire | 0.719 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4163 | cable_bent_wire_009.png | cable | bent_wire | 0.802 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4164 | cable_cable_swap_002.png | cable | cable_swap | 0.392 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4165 | cable_cable_swap_003.png | cable | cable_swap | 0.399 | 2 | ort_yolov8n_cpu | yolo_class_head |
+| 4166 | cable_cable_swap_008.png | cable | cable_swap | 0.872 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4167 | cable_combined_001.png | cable | bent_wire | 0.485 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4168 | cable_combined_002.png | cable | combined | 0.325 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4169 | cable_combined_007.png | cable | missing_wire | 0.954 | 1 | ort_yolov8n_cpu | yolo_class_head |
+| 4170 | cable_combined_008.png | cable | bent_wire | 0.928 | 2 | ort_yolov8n_cpu | yolo_class_head |
 
 ### Upload Latency
 
 | Metric | Value |
 |--------|-------|
 | p50 | 1.6s |
-| p95 | 1.7s |
+| p95 | 1.9s |
 
 ### Enrichment Terminal States
 
 | Status | Count |
 |--------|-------|
-| complete | 3 |
+| complete | 10 |
 | failed | 0 |
 | rejected | 0 |
 | timeout | 0 |
@@ -88,20 +98,20 @@ Note: The strict `--dry-run` (without `--allow-ineligible`) exits 1 if any candi
 | Metric | Value |
 |--------|-------|
 | p50 enrichment latency | 15.8s |
-| p95 enrichment latency | 16.1s |
+| p95 enrichment latency | 18.8s |
 
 ### Canonical Provenance Checks
 
 | Check | Result |
 |-------|--------|
-| category matches source | PASS (3/3) |
-| defect_type from YOLO | PASS (3/3) |
-| localization_source = ort_yolov8n_cpu | PASS (3/3) |
-| label_source = yolo_class_head | PASS (3/3) |
-| bboxes non-empty | PASS (3/3) |
-| observation_source = edge_vlm | PASS (3/3) |
-| observation non-empty | PASS (3/3) |
-| severity_reason non-empty | PASS (3/3) |
+| category matches source | PASS (10/10) |
+| defect_type from YOLO | PASS (10/10) |
+| localization_source = ort_yolov8n_cpu | PASS (10/10) |
+| label_source = yolo_class_head | PASS (10/10) |
+| bboxes non-empty | PASS (10/10) |
+| observation_source = edge_vlm | PASS (10/10) |
+| observation non-empty | PASS (10/10) |
+| severity_reason non-empty | PASS (10/10) |
 
 ### VLM Output vs. Detection Description
 
@@ -162,11 +172,12 @@ Defect ids 4113-4150 from the failed 5d soak are excluded from all metrics and f
 **Status: PASS — ready to plan separate 200/500 full soak**
 
 All validation gates passed:
-- Dry-run: 52/59 valid, 7 blocked (expected YOLO no-detection)
-- Pre-soak: 3/3 uploads have production YOLO provenance
-- All canonical fields verified
-- Enrichment completes successfully via EdgeVLM subprocess
+- Candidate scan: 52/59 valid, 7 ineligible (expected YOLO no-detection)
+- Pre-soak: 10/10 uploads successful, 0 conflicts, 0 errors
+- All canonical fields verified (10/10)
+- Enrichment completes successfully via EdgeVLM subprocess (10/10 complete)
 - No random/fabricated canonical fields
+- Upload uniqueness fix verified (microsecond edge_ts)
 - No mixed categories
 - Multipart encoding bug fixed
 

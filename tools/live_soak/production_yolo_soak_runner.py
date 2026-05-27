@@ -501,15 +501,14 @@ def main() -> None:
         print("\n=== FULL SOAK: uploading %d images ===" % len(candidates))
 
     # Upload and verify.
-    run_id = uuid.uuid4().hex[:8]
     results = []
     for i, (img_path, src_cat, meta) in enumerate(candidates):
         try:
-            # Inject per-upload unique fields at upload time.
-            meta["run_id"] = run_id
+            # Inject edge_ts at upload time with microsecond precision
+            # to avoid UNIQUE constraint violations from same-second uploads.
             meta["edge_ts"] = time.strftime(
                 "%Y-%m-%dT%H:%M:%S.", time.gmtime()) + "%06dZ" % (
-                    time.time() % 1 * 1000000)
+                    int(time.time() * 1000000) % 1000000)
             upload = upload_defect(args.api, token, meta, img_path, args.timeout)
             defect_id = upload["id"]
 
