@@ -95,6 +95,12 @@ def parse_args() -> argparse.Namespace:
                    help="Max wait for enrichment completion (seconds)")
     p.add_argument("--output", default=None,
                    help="Path to save audit JSON (default: stdout only)")
+    p.add_argument("--snapshot-output", default=None,
+                   help="Path to save snapshot overlay JSON with telemetry "
+                        "and VLM enrichment data for frontend display.")
+    p.add_argument("--allow-ineligible", action="store_true",
+                   help="In dry-run mode: exit 0 even if some candidates are "
+                        "blocked. Default (strict) exits 1 if any blocked.")
     return p.parse_args()
 
 
@@ -240,6 +246,7 @@ def validate_detection(image_path: str, source_category: str,
         gate.block("category_not_allowed: %s" % source_category)
 
     # Build upload meta (always, even if blocked, for audit).
+    # edge_ts and run_id are injected later at upload time for uniqueness.
     meta = {
         "line_id": "L1",
         "category": source_category,
@@ -250,7 +257,6 @@ def validate_detection(image_path: str, source_category: str,
         "bboxes": bboxes,
         "description": "production_yolo_soak %s/%s" % (source_category, defect_type),
         "variant": VARIANT,
-        "edge_ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "pipeline_ms": {
             "efficientad": 0.0,
             "fastsam": 0.0,
@@ -306,17 +312,14 @@ def upload_defect(api: str, token: str, meta: dict, image_path: str,
         with open(jpeg_path, "rb") as f:
             img_data = f.read()
 
-        body = b"\r\n".join([
+        body = (
             ("--%s\r\nContent-Disposition: form-data; name=\"meta\"\r\n"
-             "Content-Type: application/json\r\n\r\n%s" % (boundary, meta_json)).encode(),
-            b"\r\n",
-            ("--%s\r\nContent-Disposition: form-data; name=\"image\"; "
-             "filename=\"soak.jpg\"\r\nContent-Type: image/jpeg\r\n" % boundary).encode(),
-            b"\r\n",
-            img_data,
-            b"\r\n",
-            ("--%s--\r\n" % boundary).encode(),
-        ])
+             "Content-Type: application/json\r\n\r\n%s\r\n" % (boundary, meta_json)).encode()
+            + ("--%s\r\nContent-Disposition: form-data; name=\"image\"; "
+               "filename=\"soak.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n" % boundary).encode()
+            + img_data
+            + ("\r\n--%s--\r\n" % boundary).encode()
+        )
 
         req = urllib.request.Request(
             "%s/api/edge/report" % api,
@@ -464,7 +467,14 @@ def main() -> None:
         }
         audit_rows.append(row)
         if gate.will_upload:
-            valid_candidates.append((img_path, src_cat, meta))
+            # Store YOLO timing for telemetry.
+            yolo_timing = {
+                "total_ms": yolo_result.get("total_ms", 0),
+                "preprocess_ms": yolo_result.get("preprocess_ms", 0),
+                "inference_ms": yolo_result.get("inference_ms", 0),
+                "postprocess_ms": yolo_result.get("postprocess_ms", 0),
+            }
+            valid_candidates.append((img_path, src_cat, meta, yolo_timing))
 
     localizer.close()
 
@@ -479,15 +489,18 @@ def main() -> None:
             json.dump(audit_rows, f, indent=2)
         print("  Audit saved to %s" % args.output)
 
-    # Dry-run: fail if any invalid.
+    # Dry-run: report candidate scan results.
     if args.mode == "dry-run":
         blocked = len(images) - len(valid_candidates)
-        if blocked > 0:
-            print("\nDRY-RUN FAILED: %d candidates blocked." % blocked)
+        if blocked > 0 and not args.allow_ineligible:
+            print("\nDRY-RUN FAILED: %d candidates blocked (use --allow-ineligible to override)." % blocked)
             sys.exit(1)
+        elif blocked > 0:
+            print("\nDRY-RUN PASSED (with %d ineligible): %d candidates valid." % (
+                blocked, len(valid_candidates)))
         else:
             print("\nDRY-RUN PASSED: all %d candidates valid." % len(valid_candidates))
-            return
+        return
 
     # Pre-soak: limit uploads.
     if args.mode == "pre-soak":
@@ -499,10 +512,17 @@ def main() -> None:
 
     # Upload and verify.
     results = []
-    for i, (img_path, src_cat, meta) in enumerate(candidates):
+    snapshot_records = []
+    for i, (img_path, src_cat, meta, yolo_timing) in enumerate(candidates):
         try:
+            # Inject edge_ts at upload time with microsecond precision
+            # to avoid UNIQUE constraint violations from same-second uploads.
+            meta["edge_ts"] = time.strftime(
+                "%Y-%m-%dT%H:%M:%S.", time.gmtime()) + "%06dZ" % (
+                    int(time.time() * 1000000) % 1000000)
             upload = upload_defect(args.api, token, meta, img_path, args.timeout)
             defect_id = upload["id"]
+            upload_lat = upload.get("_upload_latency", 0)
 
             # Check enrichment lifecycle.
             enrich = check_enrichment(args.api, defect_id, args.enrich_timeout)
@@ -520,23 +540,94 @@ def main() -> None:
             ok = all([cat_ok, dt_ok, loc_ok, lbl_ok, bbox_ok,
                       enrich_status == "complete"])
 
+            # Build runner-derived telemetry.
+            yolo_total_ms = yolo_timing.get("total_ms", 0)
+            upload_ms = round(upload_lat * 1000, 1)
+            enrich_ms = round(enrich_lat * 1000, 1)
+
+            pipeline_ms = {
+                "efficientad": 0,
+                "fastsam": 0,
+                "localizer": yolo_total_ms,
+                "upload": upload_ms,
+                "enrichment": enrich_ms,
+                "qwen3vl": enrich_ms,
+            }
+
+            # Build trace_events (ts/dur in microseconds).
+            yolo_dur_us = int(yolo_total_ms * 1000)
+            upload_dur_us = int(upload_ms * 1000)
+            enrich_dur_us = int(enrich_ms * 1000)
+
+            trace_events = [
+                {
+                    "name": "YOLO localizer",
+                    "cat": "localizer",
+                    "ph": "X",
+                    "ts": 0,
+                    "dur": yolo_dur_us,
+                    "tid": "T3.localizer",
+                },
+                {
+                    "name": "upload POST",
+                    "cat": "upload",
+                    "ph": "X",
+                    "ts": yolo_dur_us,
+                    "dur": upload_dur_us,
+                    "tid": "T4.upload",
+                },
+                {
+                    "name": "EdgeVLM enrichment",
+                    "cat": "vlm",
+                    "ph": "X",
+                    "ts": yolo_dur_us + upload_dur_us,
+                    "dur": enrich_dur_us,
+                    "tid": "T3.vlm",
+                },
+            ]
+
             results.append({
                 "i": i, "defect_id": defect_id,
                 "image": os.path.basename(img_path),
                 "source_category": src_cat,
-                "upload_latency": upload.get("_upload_latency", 0),
+                "upload_latency": upload_lat,
                 "enrich_status": enrich_status,
                 "enrich_latency": enrich_lat,
                 "cat_ok": cat_ok, "dt_ok": dt_ok,
                 "loc_ok": loc_ok, "lbl_ok": lbl_ok, "bbox_ok": bbox_ok,
                 "observation_source": canonical.get("observation_source"),
+                "pipeline_ms": pipeline_ms,
+                "trace_events": trace_events,
+            })
+
+            # Collect snapshot overlay record.
+            snapshot_records.append({
+                "defect_id": defect_id,
+                "image": os.path.basename(img_path),
+                "category": canonical.get("category"),
+                "defect_type": canonical.get("defect_type"),
+                "confidence": canonical.get("confidence"),
+                "bboxes": canonical.get("bboxes", []),
+                "localization_source": canonical.get("localization_source"),
+                "label_source": canonical.get("label_source"),
+                "observation": canonical.get("observation", ""),
+                "severity_reason": canonical.get("severity_reason", ""),
+                "observation_source": canonical.get("observation_source", ""),
+                "pipeline_ms": pipeline_ms,
+                "trace_events": trace_events,
+                "upload_latency": upload_lat,
+                "enrichment_latency": enrich_lat,
+                "trace_source": "runner_derived",
+                "trace_caveat": (
+                    "Runner-derived localizer/upload/enrichment wall-clock "
+                    "trace; not hardware-level RK3588 NPU trace."
+                ),
             })
 
             status = "OK" if ok else "FAIL"
             print("  [%d/%d] id=%d %s/%s upload=%.1fs enrich=%.1fs %s" % (
                 i + 1, len(candidates), defect_id, src_cat,
-                meta["defect_type"], upload.get("_upload_latency", 0),
-                enrich_lat, status))
+                meta["defect_type"], upload_lat, enrich_lat, status))
 
         except Exception as e:
             results.append({"i": i, "error": str(e)[:200], "status": "error"})
@@ -576,6 +667,12 @@ def main() -> None:
         with open(args.output, "w") as f:
             json.dump({"audit": audit_rows, "results": results}, f, indent=2)
         print("  Results saved to %s" % args.output)
+
+    if args.snapshot_output and snapshot_records:
+        with open(args.snapshot_output, "w") as f:
+            json.dump(snapshot_records, f, indent=2)
+        print("  Snapshot overlay saved to %s (%d records)" % (
+            args.snapshot_output, len(snapshot_records)))
 
 
 if __name__ == "__main__":
