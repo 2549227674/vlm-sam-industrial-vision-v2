@@ -17,12 +17,12 @@ Modes:
   (default)   Dry-run then pre-soak.
 
 Usage:
+  export EDGE_UPLOAD_TOKEN=<your_token>
   python3 production_yolo_soak_runner.py \\
     --model <path/to/yolov8n.onnx> \\
     --classes <path/to/phase10_classes.yaml> \\
     --val-dir <path/to/datasets/phase10/images/val> \\
     --api <http://HOST:PORT> \\
-    --token <EDGE_UPLOAD_TOKEN> \\
     --mode dry-run|pre-soak|full \\
     --limit 10 \\
     --conf 0.25 \\
@@ -36,6 +36,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 import uuid
@@ -70,7 +71,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--val-dir", required=True,
                    help="Path to val images directory (datasets/phase10/images/val)")
     p.add_argument("--api", required=True, help="Backend API base URL (http://HOST:PORT)")
-    p.add_argument("--token", required=True, help="EDGE_UPLOAD_TOKEN for /api/edge/report")
+    p.add_argument("--token-env", default="EDGE_UPLOAD_TOKEN",
+                   help="Environment variable name for upload token (default: EDGE_UPLOAD_TOKEN)")
+    p.add_argument("--token", default=None,
+                   help="Upload token directly. DEPRECATED: prefer --token-env for operational safety. "
+                        "If both --token and --token-env are set, --token takes precedence.")
     p.add_argument("--mode", choices=["dry-run", "pre-soak", "full"],
                    default="dry-run", help="Run mode (default: dry-run)")
     p.add_argument("--limit", type=int, default=20,
@@ -263,44 +268,72 @@ def validate_detection(image_path: str, source_category: str,
 # Upload
 # ---------------------------------------------------------------------------
 
+def convert_to_jpeg(image_path: str) -> str:
+    """Convert image to temporary JPEG file. Returns temp file path.
+
+    The backend /api/edge/report accepts JPEG only. This function reads
+    the source image (PNG or JPEG) and writes a temporary JPEG copy.
+    Caller is responsible for cleaning up the temp file.
+    """
+    import cv2
+    img = cv2.imread(image_path)
+    if img is None:
+        raise ValueError("cannot read image: %s" % image_path)
+    fd, tmp_path = tempfile.mkstemp(suffix=".jpg", prefix="soak_tmp_")
+    os.close(fd)
+    cv2.imwrite(tmp_path, img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+    return tmp_path
+
+
 def upload_defect(api: str, token: str, meta: dict, image_path: str,
                   timeout: int) -> dict:
-    """POST /api/edge/report with multipart form data."""
-    boundary = "----SoakRunner" + uuid.uuid4().hex[:12]
-    parts = []
-    meta_json = json.dumps(meta)
-    parts.append(
-        ("--%s\r\nContent-Disposition: form-data; name=\"meta\"\r\n"
-         "Content-Type: application/json\r\n\r\n%s") % (boundary, meta_json)
-    )
-    with open(image_path, "rb") as f:
-        img_data = f.read()
-    ext = os.path.splitext(image_path)[1].lstrip(".")
-    mime = "image/png" if ext == "png" else "image/jpeg"
-    parts.append(
-        ("--%s\r\nContent-Disposition: form-data; name=\"image\"; "
-         "filename=\"soak.%s\"\r\nContent-Type: %s\r\n") % (boundary, ext, mime)
-    )
-    # Join with binary boundary.
-    body = b"\r\n".join([
-        parts[0].encode(), b"\r\n",
-        parts[1].encode(), b"\r\n", img_data, b"\r\n",
-        ("--%s--\r\n" % boundary).encode(),
-    ])
+    """POST /api/edge/report with multipart form data.
 
-    req = urllib.request.Request(
-        "%s/api/edge/report" % api,
-        data=body, method="POST",
-        headers={
-            "Content-Type": "multipart/form-data; boundary=%s" % boundary,
-            "Authorization": "Bearer %s" % token,
-        },
-    )
-    t0 = time.time()
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        result = json.loads(resp.read().decode())
-    result["_upload_latency"] = round(time.time() - t0, 3)
-    return result
+    Converts image to JPEG before upload (backend accepts JPEG only).
+    Temporary JPEG is cleaned up after upload.
+    """
+    tmp_jpeg = None
+    try:
+        ext = os.path.splitext(image_path)[1].lower()
+        if ext in (".jpg", ".jpeg"):
+            jpeg_path = image_path
+        else:
+            jpeg_path = convert_to_jpeg(image_path)
+            tmp_jpeg = jpeg_path
+
+        boundary = "----SoakRunner" + uuid.uuid4().hex[:12]
+        meta_json = json.dumps(meta)
+        with open(jpeg_path, "rb") as f:
+            img_data = f.read()
+
+        body = b"\r\n".join([
+            ("--%s\r\nContent-Disposition: form-data; name=\"meta\"\r\n"
+             "Content-Type: application/json\r\n\r\n%s" % (boundary, meta_json)).encode(),
+            b"\r\n",
+            ("--%s\r\nContent-Disposition: form-data; name=\"image\"; "
+             "filename=\"soak.jpg\"\r\nContent-Type: image/jpeg\r\n" % boundary).encode(),
+            b"\r\n",
+            img_data,
+            b"\r\n",
+            ("--%s--\r\n" % boundary).encode(),
+        ])
+
+        req = urllib.request.Request(
+            "%s/api/edge/report" % api,
+            data=body, method="POST",
+            headers={
+                "Content-Type": "multipart/form-data; boundary=%s" % boundary,
+                "Authorization": "Bearer %s" % token,
+            },
+        )
+        t0 = time.time()
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            result = json.loads(resp.read().decode())
+        result["_upload_latency"] = round(time.time() - t0, 3)
+        return result
+    finally:
+        if tmp_jpeg and os.path.exists(tmp_jpeg):
+            os.unlink(tmp_jpeg)
 
 
 def check_enrichment(api: str, defect_id: int, timeout: int) -> dict | None:
@@ -365,6 +398,18 @@ def print_audit_row(i: int, image_path: str, source_cat: str,
 
 def main() -> None:
     args = parse_args()
+
+    # Resolve token: --token overrides --token-env.
+    if args.token:
+        print("WARNING: --token is deprecated. Use --token-env or set the "
+              "environment variable directly.", file=sys.stderr)
+        token = args.token
+    else:
+        token = os.environ.get(args.token_env, "")
+        if not token:
+            print("ERROR: token not found. Set %s or use --token." % args.token_env,
+                  file=sys.stderr)
+            sys.exit(1)
 
     # Discover images.
     images = discover_val_images(args.val_dir)
@@ -456,7 +501,7 @@ def main() -> None:
     results = []
     for i, (img_path, src_cat, meta) in enumerate(candidates):
         try:
-            upload = upload_defect(args.api, args.token, meta, img_path, args.timeout)
+            upload = upload_defect(args.api, token, meta, img_path, args.timeout)
             defect_id = upload["id"]
 
             # Check enrichment lifecycle.

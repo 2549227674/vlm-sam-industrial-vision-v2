@@ -108,6 +108,29 @@ All canonical fields come from `ort_localizer.py` — the production ONNX Runtim
 
 `tools/live_soak/production_yolo_soak_runner.py` — generic, no secrets, no private paths.
 
+### 5.1a PNG-to-JPEG upload conversion
+
+The backend `/api/edge/report` accepts JPEG only (`Content-Type: image/jpeg`). The curated Phase 10 val dataset images are PNG. The runner converts each image to a temporary JPEG before upload:
+
+- Source images are read via OpenCV (`cv2.imread`).
+- Written to a temporary file (`tempfile.mkstemp`) as JPEG quality 90.
+- Uploaded with `Content-Type: image/jpeg` and filename `soak.jpg`.
+- Temporary JPEG is deleted after upload (`os.unlink` in `finally` block).
+- Source dataset files are never modified.
+- Audit `image_basename` preserves the original filename (not the temp file).
+
+### 5.1b Token loading from environment
+
+The upload token is loaded from the environment variable named by `--token-env` (default: `EDGE_UPLOAD_TOKEN`). This avoids passing secrets via CLI arguments (visible in `ps`, shell history, logs).
+
+- `--token-env NAME` — read token from `$NAME` env var (default: `EDGE_UPLOAD_TOKEN`).
+- `--token VALUE` — deprecated, for local testing only. Prints a warning to stderr. Overrides `--token-env`.
+- Token is never printed, never written to audit output, never included in logs.
+
+### 5.1c Filename-prefix category inference
+
+Category is inferred from the curated val image filename prefix (`metal_nut_*` or `cable_*`). This is accepted **only** for the curated Phase 10 val dataset where filenames are guaranteed to match content. Future full soak with arbitrary image sources should use an explicit manifest (CSV/JSON) mapping image paths to trusted categories.
+
 ### 5.2 Modes
 
 | Mode | Description | POST? | Limit |
