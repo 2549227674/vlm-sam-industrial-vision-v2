@@ -37,12 +37,18 @@ It must **never** modify:
 
 ## Enrichment States in This Snapshot
 
-| State | Count | Meaning |
+| enrichment_status | Count | Meaning |
 |---|---|---|
-| complete (edge_vlm) | 5 | Real VLM produced valid JSON → guard accepted |
-| complete (template) | 4 | Template fallback observation (no VLM call) |
+| complete | 9 | Job processed to completion (6 via edge_vlm, 3 via template provider) |
 | rejected | 3 | VLM output contained forbidden keys or invalid JSON → guard rejected |
 | failed | 2 | Subprocess timeout or image resolution error |
+
+| observation_source | Count | Meaning |
+|---|---|---|
+| edge_vlm | 6 | Real VLM produced valid observation → denormalized to defect |
+| template | 8 | 3 template provider + 3 rejected fallback + 2 failed fallback |
+
+`observation_source` and `enrichment_status` are different metrics: `enrichment_status` tracks job outcome, while `observation_source` tracks which source actually wrote the observation text. Rejected/failed jobs fall back to template observation.
 
 ## Contents
 
@@ -55,6 +61,10 @@ It must **never** modify:
 
 - Median VLM inference: ~12s per job (Qwen3-VL-2B W8A8, including HTTP overhead)
 - Median upload POST: <50ms (non-blocking, VLM never called during upload)
+
+## Deployment Note
+
+This snapshot is packaged data only. It does not change the public demo default at https://vision.hanlab.app/ and does not deploy or switch frontend runtime data sources.
 
 ## Safety
 
