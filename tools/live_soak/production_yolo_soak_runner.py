@@ -306,17 +306,14 @@ def upload_defect(api: str, token: str, meta: dict, image_path: str,
         with open(jpeg_path, "rb") as f:
             img_data = f.read()
 
-        body = b"\r\n".join([
+        body = (
             ("--%s\r\nContent-Disposition: form-data; name=\"meta\"\r\n"
-             "Content-Type: application/json\r\n\r\n%s" % (boundary, meta_json)).encode(),
-            b"\r\n",
-            ("--%s\r\nContent-Disposition: form-data; name=\"image\"; "
-             "filename=\"soak.jpg\"\r\nContent-Type: image/jpeg\r\n" % boundary).encode(),
-            b"\r\n",
-            img_data,
-            b"\r\n",
-            ("--%s--\r\n" % boundary).encode(),
-        ])
+             "Content-Type: application/json\r\n\r\n%s\r\n" % (boundary, meta_json)).encode()
+            + ("--%s\r\nContent-Disposition: form-data; name=\"image\"; "
+               "filename=\"soak.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n" % boundary).encode()
+            + img_data
+            + ("\r\n--%s--\r\n" % boundary).encode()
+        )
 
         req = urllib.request.Request(
             "%s/api/edge/report" % api,
