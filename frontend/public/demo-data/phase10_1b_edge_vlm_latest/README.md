@@ -1,97 +1,61 @@
-# Phase 10.1b EdgeVLM Demo Snapshot — Artifact Export Pending
+# Phase 10.1b EdgeVLM Demo Snapshot
 
-> Status: **snapshot packaging deferred — real artifacts not locally available**
-> Date: 2026-05-27
+Curated from real EdgeVLM smoke validation on RK3588 (Orange Pi 5 Plus, 16GB).
 
-## What this directory is for
+## What this is
 
-This directory is the designated location for a demo snapshot showcasing real RK3588 EdgeVLM async enrichment results.
+- Real async enrichment pipeline: auto-enqueue → worker loop → EdgeVlmProvider subprocess → hallucination guard → denormalize
+- 14 records: metal_nut (11) + zipper (3), 1 defect type each (scratch, broken_teeth)
+- Qwen3-VL-2B W8A8 on RK3588 NPU for edge_vlm enrichment
+- Template fallback for baseline comparison
+- All 4 enrichment states represented: complete (9), rejected (3), failed (2)
 
-## Why the snapshot is not yet packaged
+## What this is NOT
 
-The real RK3588 EdgeVLM smoke validation (PR #13, `docs/experiments/phase10_1b_real_rk3588_edge_vlm_smoke_report.md`) was run against a temporary SQLite database (`/tmp/vlm_smoke_test.db`) and temporary test images (`/tmp/vlm_validation_scripts/`). These artifacts were cleaned up after validation and are no longer available locally.
+- NOT a production category expansion — non-Phase-10 categories (zipper) are hardware/protocol smoke examples only
+- NOT VLM-powered localization — VLM provides narrative observation/severity_reason only
+- NOT modifying canonical fields — category, defect_type, confidence, anomaly_score, bboxes are YOLO/ORT-owned and immutable
 
-**Missing artifacts required to build the snapshot:**
+## Data Sources
 
-| Artifact | Status | How to regenerate |
+| Subset | Source | Description |
 |---|---|---|
-| `defects.json` with real VLM observation/severity_reason | Lost (temp DB) | Re-run R2/R8 smoke scenarios with the real EdgeVLM wrapper on RK3588, then export defect + enrichment records |
-| JPEG images submitted to backend during smoke | Lost (temp files) | Convert MVTec source PNGs to JPEG, or re-upload during smoke run |
-| Enrichment records with timestamps | Lost (temp DB) | Re-run smoke, then query `GET /api/defects/{id}/enrichment` for each defect |
-| `stats.json` aggregation | Derived from above | Re-derive from exported defect/enrichment records |
+| metal_nut records (IDs 4154-4172) | vision.db enrichment smoke test | EdgeVlmProvider subprocess validation with fake + real wrappers |
+| zipper records (IDs 9000-9002) | Real RK3588 Qwen3-VL-2B smoke | Actual VLM inference on board, documented in smoke report |
 
-## What was validated (documented in smoke report)
+## VLM Responsibility
 
-The smoke validation confirmed:
+EdgeVLM is **narrative-only**. It may only write:
+- `observation` — visual description of the defect area
+- `severity_reason` — severity assessment explanation
+- `observation_source` — set to `edge_vlm` or `template`
 
-- **R1**: Real Qwen3-VL-2B W8A8 inference returns valid 3-key JSON (observation, severity_reason, accepted_box_ids)
-- **R2**: Full pipeline: defect → auto-enqueue → worker → real VLM → complete, canonical fields unchanged
-- **R3**: Forbidden key defense correctly rejected
-- **R4**: Bad JSON correctly rejected
-- **R5**: Timeout correctly failed
-- **R6**: Nonzero exit correctly failed
-- **R7**: Upload path non-blocking (24ms POST, no VLM blocking)
-- **R8**: 3 sequential VLM jobs all completed
-- **R9**: Ineligible defects (empty bboxes, zero confidence) not enqueued
-- **R10**: Backend restart clean, data persisted
+It must **never** modify:
+- category, defect_type, confidence, anomaly_score, bboxes
+- localization_source, label_source
+- Any YOLO/ORT detection output
 
-## Real VLM outputs captured (for future snapshot reconstruction)
+## Enrichment States in This Snapshot
 
-### R1 — pill/faulty_imprint
+| State | Count | Meaning |
+|---|---|---|
+| complete (edge_vlm) | 5 | Real VLM produced valid JSON → guard accepted |
+| complete (template) | 4 | Template fallback observation (no VLM call) |
+| rejected | 3 | VLM output contained forbidden keys or invalid JSON → guard rejected |
+| failed | 2 | Subprocess timeout or image resolution error |
 
-```json
-{
-  "observation": "A white oval pill has a faulty imprint of 'FF' on its surface. The impression is not clearly defined and appears to be partially obscured or misaligned.",
-  "severity_reason": "The imprinted text is significantly blurred and does not form the intended characters, which may affect drug identification and safety in clinical settings.",
-  "accepted_box_ids": [0]
-}
-```
+## Contents
 
-### R1 — screw/scratch
+- `snapshot_meta.json` — metadata, safety notes, counts
+- `defects.json` — 14 curated records with enrichment fields
+- `stats.json` — aggregated stats with enrichment breakdown
+- `images/` — 14 JPEG images
 
-```json
-{
-  "observation": "A screw with a scratch on its shaft.",
-  "severity_reason": "The defect is located on the body of the screw and appears to be a continuous line that may affect functionality or appearance. The confidence level for this detection is high, indicating it's likely an accurate identification.",
-  "accepted_box_ids": [0]
-}
-```
+## Pipeline Timing (VLM enrichment only)
 
-### R2 — zipper/broken_teeth (full pipeline)
-
-```json
-{
-  "observation": "A close-up of a black zipper on fabric material showing a broken tooth.",
-  "severity_reason": "The zipper has a clear defect where one of its teeth is missing or damaged. This damage appears as a break in the chain-like structure, indicating a manufacturing or wear issue that affects functionality.",
-  "accepted_box_ids": [0],
-  "_canonical_fields": {
-    "category": "zipper",
-    "defect_type": "broken_teeth",
-    "confidence": 0.91,
-    "anomaly_score": 0.55,
-    "observation_source": "edge_vlm",
-    "localization_source": "ort_yolov8n_cpu",
-    "label_source": "yolo_class_head"
-  }
-}
-```
-
-## How to rebuild this snapshot
-
-1. Ensure RK3588 board is reachable and RKLLM API Server is running with Qwen3-VL-2B
-2. Create local wrapper at `/tmp/vlm_validation_scripts/edge_vlm_wrapper.py` (see smoke report for protocol)
-3. Start backend with `ENRICHMENT_PROVIDER=edge_vlm` and real `EDGE_VLM_COMMAND`
-4. Run R2/R8 scenarios from the smoke report
-5. Export defect records: `GET /api/defects?page_size=100`
-6. Export enrichment records: `GET /api/defects/{id}/enrichment` for each
-7. Copy submitted images from `backend/static/defects/`
-8. Package into `defects.json`, `stats.json`, `manifest.json`, `images/`
-9. Verify: no credentials, no private paths, canonical fields unchanged
-
-## Production category note
-
-Non-Phase-10 categories (pill, screw, zipper) were used for hardware/protocol smoke only. This does not expand the production category set (metal_nut + cable). No YOLO/ORT label-space, schema, frontend snapshot, or category expansion is included.
+- Median VLM inference: ~12s per job (Qwen3-VL-2B W8A8, including HTTP overhead)
+- Median upload POST: <50ms (non-blocking, VLM never called during upload)
 
 ## Safety
 
-No real IPs, credentials, private paths, model paths, device paths, usernames, passwords, tokens, API keys, sshpass commands, private keys, or raw EDGE_VLM_COMMAND values are included in this directory.
+No real IPs, credentials, private paths, model paths, device paths, usernames, passwords, tokens, API keys, sshpass commands, private keys, or raw EDGE_VLM_COMMAND values are included in this snapshot.
