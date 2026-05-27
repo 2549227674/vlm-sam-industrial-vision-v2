@@ -137,7 +137,8 @@ ENRICHMENT_WORKER_POLL_INTERVAL_S=2
 | accepted_box_ids | [0] |
 | observation_source | edge_vlm |
 | Latency (created -> completed) | ~12 s |
-| WebSocket event observed | Yes (ws_clients=1 at time of check) |
+| WebSocket event evidence | PARTIAL — `ws_clients=1` observed; specific `defect_enrichment_updated` payload capture not recorded |
+| Terminal frontend re-fetch observed | NOT RECORDED — no explicit browser re-fetch evidence captured during this smoke |
 
 ### S6: Canonical Field Immutability
 
@@ -165,7 +166,7 @@ ENRICHMENT_WORKER_POLL_INTERVAL_S=2
 | No public exposure of VLM service | PASS — adapter binds to 127.0.0.1 only |
 | Tunnel localhost-only | PASS — reverse tunnel binds to 127.0.0.1 on public server |
 | No secrets in stderr/logs | PASS — wrapper stderr empty, adapter logs show only HTTP status |
-| No real IPs/paths/tokens in report | PASS — all values use placeholders |
+| No non-loopback host IPs/paths/tokens in report | PASS — only loopback `127.0.0.1` and placeholders appear |
 | No provider call in upload path | PASS — /api/edge/report returns immediately, enrichment is async |
 | Canonical fields unchanged | PASS — verified for both metal_nut and cable defects |
 
@@ -199,6 +200,6 @@ All smoke steps (S1-S6) passed. S7 skipped due to no safe test mode.
 $ grep -RInE "sshpass|password|token|api[_-]?key|secret|BEGIN .*PRIVATE KEY|([0-9]{1,3}\.){3}[0-9]{1,3}|EDGE_VLM_COMMAND|/home/|/opt/|http://[0-9]|https://[0-9]|ProxyCommand|7890" docs/experiments/phase10_1b_rk3588_vlm_service_wrapper_smoke_report.md || true
 ```
 
-**Benign matches**: None — report uses only placeholders (`<RK_VLM_PORT>`, `<SERVER_TUNNEL_PORT>`, `<RKLLM_API_PORT>`, `<REDACTED_WRAPPER_COMMAND>`).
+**Benign matches**: Expected matches only — loopback `127.0.0.1` topology references, the redacted `EDGE_VLM_COMMAND="<REDACTED_WRAPPER_COMMAND>"` config line, and the security-scan command itself.
 
-No real IP addresses, SSH credentials, proxy addresses, model paths, or command values appear in this report.
+No non-loopback real host IP addresses, SSH credentials, proxy addresses, model paths, private filesystem paths, tokens, or raw command values appear in this report.
