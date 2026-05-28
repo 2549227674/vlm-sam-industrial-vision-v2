@@ -54,222 +54,29 @@ Phase 10 v1 不调用 VLM。`observation_source="template"`，severity 固定 "m
 
 ## 系统架构
 
-```mermaid
-flowchart TB
-    subgraph EDGE["RK3588 16GB Edge Pipeline"]
-        CAP["T1 Capture<br/>V4L2 / 图片集"]
-        GATE["T2 EfficientAD-S<br/>FP16 RKNN<br/>异常门控"]
-        LOC["T3 定位<br/>Phase 7/9: FastSAM+VLM<br/>Phase 10: YOLOv8n ORT"]
-        UPL["T4 Upload<br/>libcurl multipart"]
-        CAP --> GATE --> LOC --> UPL
-    end
-
-    subgraph BACKEND["FastAPI Backend"]
-        RPT["POST /api/edge/report<br/>meta JSON + JPEG"]
-        DB[("SQLite WAL<br/>defects + traces")]
-        IMG["static/defects/<br/>JPEG 落盘"]
-        WS["WebSocket<br/>/ws/dashboard"]
-        STATS["GET /api/stats<br/>聚合指标"]
-        DEFS["GET /api/defects<br/>分页查询"]
-        ENQ["enrichment queue"]
-        RPT --> DB & IMG
-        RPT --> WS
-        RPT -.-> ENQ
-        DEFS --> DB
-        STATS --> DB
-    end
-
-    subgraph VLM_E["Phase 10.1 VLM Enrichment"]
-        PROV["Provider<br/>Template / EdgeVLM"]
-        GUARD["Guard<br/>禁止改 bbox/category/conf"]
-        ENQ --> PROV --> GUARD --> DB
-    end
-
-    subgraph FRONTEND["Next.js 15 Dashboard"]
-        DASH["仪表盘主页"]
-        TBL["DataTable<br/>TanStack v8 / 9 列"]
-        CHT["图表<br/>KPI / 瀑布 / 矩阵"]
-        DET["DetailDrawer<br/>BBox Overlay<br/>Chrome Trace"]
-        DEMO["demo-data<br/>fallback"]
-        DASH --> TBL & CHT & DET
-        DEMO -.-> DASH
-    end
-
-    UPL -->|"HTTP POST"| RPT
-    WS -->|"JSON push"| DASH
-    DEFS -->|"REST"| DASH
-    STATS -->|"REST"| DASH
-
-    classDef edge fill:#E0F2FE,stroke:#0284C7,color:#0F172A
-    classDef be fill:#DCFCE7,stroke:#16A34A,color:#0F172A
-    classDef vlm fill:#FEF3C7,stroke:#D97706,color:#0F172A
-    classDef fe fill:#F5E8FF,stroke:#9333EA,color:#0F172A
-    class CAP,GATE,LOC,UPL edge
-    class RPT,DB,IMG,WS,STATS,DEFS,ENQ be
-    class PROV,GUARD vlm
-    class DASH,TBL,CHT,DET,DEMO fe
-```
+![系统架构](docs/figures/架构/1.png)
 
 端云分离架构：边缘端负责采集和推理，通过 HTTP multipart 上报到后端，后端落盘入库并通过 WebSocket 实时推送到前端仪表盘。WebSocket 仅存在于 Backend↔Frontend 一段，Edge 只做 HTTP POST 客户端。
 
 ## 项目演进
 
-```mermaid
-stateDiagram-v2
-    [*] --> PaDiM_Explore : 早期探索
-    PaDiM_Explore --> EfficientAD_Replace : PaDiM 位置敏感性问题
-    EfficientAD_Replace --> Phase5_Train : 训练 15 类 EfficientAD-S
-    Phase5_Train --> Phase5_LoRA : LoRA 微调 2B/4B
-    Phase5_LoRA --> Phase5_Benchmark : 4 变体 15 类评估
-    Phase5_Benchmark --> Phase6_Convert : 模型转换全链路
-    Phase6_Convert --> Phase7_VLM : C++ VLM 四线程管线
-
-    Phase7_VLM --> Phase9_Soak : Phase 9 soak 30.2 min 通过
-    Phase9_Soak --> Phase10_ORT : 引入 YOLOv8n ORT localizer
-
-    Phase6_Convert --> Phase10_ORT : YOLO RKNN BLOCKED → ORT fallback
-    Phase10_ORT --> Phase10_Soak : Phase 10 soak 27m27s 通过
-    Phase10_Soak --> Phase10_1 : 异步 VLM enrichment
-
-    state Phase7_VLM {
-        P2B : Prompt 2B EfficientAD RKNN
-        P2C : Prompt 2C FastSAM RKNN
-        P2D : Prompt 2D Qwen3VL RKLLM
-        P2E : Prompt 2E E2E 验收
-        P2F : Prompt 2F Threshold 验证
-        P2B --> P2C --> P2D --> P2E --> P2F
-    }
-```
+![项目演进](docs/figures/架构/2.png)
 
 项目经历了从 PaDiM 到 EfficientAD 的算法替换、15 类训练评估、模型转换、C++ VLM 管线部署，最后引入 YOLO ORT 作为工程化简化方案。
 
 ## Edge Pipeline 机制
 
-```mermaid
-flowchart LR
-    subgraph T1["T1 Capture Thread"]
-        V4L2["V4L2 / 图片集"]
-        Q1["BoundedQueue Q1<br/>capacity=2"]
-        V4L2 --> Q1
-    end
-
-    subgraph T2["T2 Pipeline Thread"]
-        EAD["EfficientAD-S<br/>FP16 RKNN<br/>~350ms"]
-        GATE{"gate_mode<br/>threshold?"}
-        Q2["BoundedQueue Q2<br/>capacity=2"]
-        EAD --> GATE
-        GATE -->|pass| Q2
-        GATE -->|drop| CNT["gate_drop++"]
-    end
-
-    subgraph T3["T3 VLM Thread"]
-        FSAM["FastSAM-s<br/>FP16 RKNN<br/>~250ms"]
-        BBOX["5 级 bbox 净化"]
-        QWEN["Qwen3-VL-2B<br/>W8A8 RKLLM<br/>~11s"]
-        JSON["结构化 JSON"]
-        Q3["BoundedQueue Q3"]
-        FSAM --> BBOX --> QWEN --> JSON --> Q3
-    end
-
-    subgraph T4["T4 Upload Thread"]
-        CURL["libcurl<br/>multipart POST"]
-        CURL --> OK["upload_ok++"]
-    end
-
-    Q1 --> EAD
-    Q2 --> FSAM
-    Q3 --> CURL
-
-    classDef t1 fill:#DBEAFE,stroke:#3B82F6
-    classDef t2 fill:#D1FAE5,stroke:#10B981
-    classDef t3 fill:#FEF3C7,stroke:#F59E0B
-    classDef t4 fill:#FCE7F3,stroke:#EC4899
-    class V4L2,Q1 t1
-    class EAD,GATE,Q2,CNT t2
-    class FSAM,BBOX,QWEN,JSON,Q3 t3
-    class CURL,OK t4
-```
+![Edge Pipeline 机制](docs/figures/架构/3.png)
 
 四线程通过 BoundedQueue 解耦——T1 采集、T2 异常门控减少 T3 负载、T3 做 FastSAM bbox 提案和 VLM JSON 描述、T4 上传。drop-oldest 策略防止背压传播。Q2 容量只有 2，是有意设计的保护性瓶颈。
 
 ## 后端数据流
 
-```mermaid
-flowchart TB
-    EDGE["Edge T4 Upload"] -->|"multipart/form-data"| RPT
-
-    subgraph API["FastAPI Routes"]
-        RPT["POST /api/edge/report"]
-        DEF["GET /api/defects?page=&size="]
-        STS["GET /api/stats"]
-        HLT["GET /api/health"]
-    end
-
-    subgraph STORE["Storage Layer"]
-        DB[("SQLite WAL<br/>defects table<br/>trace_events JSON")]
-        IMG["static/defects/<br/>{YYYYMMDD}/{uuid}.jpg"]
-    end
-
-    subgraph PUSH["Push Layer"]
-        WS["WebSocket /ws/dashboard<br/>ConnectionManager<br/>心跳 metrics_tick/ping"]
-    end
-
-    subgraph ENR["Enrichment (Phase 10.1)"]
-        Q["enrichment queue"]
-        W["async worker"]
-        G["guard: 禁止改<br/>bbox/category/conf"]
-    end
-
-    RPT --> DB & IMG & WS
-    RPT -.-> Q --> W --> G --> DB
-    DEF & STS --> DB
-    WS --> FE["Frontend"]
-
-    classDef api fill:#DCFCE7,stroke:#16A34A
-    classDef store fill:#E0E7FF,stroke:#6366F1
-    classDef push fill:#FEF3C7,stroke:#D97706
-    classDef enr fill:#FEE2E2,stroke:#EF4444
-    class RPT,DEF,STS,HLT api
-    class DB,IMG store
-    class WS push
-    class Q,W,G enr
-```
+![后端数据流](docs/figures/架构/4.png)
 
 ## 实验与证据闭环
 
-```mermaid
-flowchart LR
-    subgraph TRAIN["训练 & 转换"]
-        T5["Phase 5<br/>EfficientAD 训练<br/>LoRA 微调<br/>4 变体评估"]
-        T6["Phase 6<br/>ONNX→RKNN/RKLLM<br/>15 类全量转换"]
-    end
-
-    subgraph DEPLOY["部署 & 验证"]
-        T7["Phase 7<br/>C++ VLM 管线<br/>6 个 Prompt"]
-        T10["Phase 10<br/>ORT localizer<br/>soak 2082 frames"]
-    end
-
-    subgraph EVIDENCE["证据体系"]
-        LOGS["logs/<br/>训练/转换日志"]
-        RESULTS["results/<br/>AB 评估报告"]
-        SCREENS["screenshots/<br/>前端截图"]
-        EXPS["docs/experiments/<br/>65 份阶段报告"]
-        ARCHIVE["_local_archive/<br/>封存索引"]
-    end
-
-    T5 --> LOGS & RESULTS
-    T6 --> LOGS
-    T7 --> EXPS
-    T10 --> EXPS & SCREENS
-    EXPS --> ARCHIVE
-
-    classDef train fill:#DCFCE7,stroke:#16A34A
-    classDef deploy fill:#E0F2FE,stroke:#0284C7
-    classDef evidence fill:#FEF3C7,stroke:#D97706
-    class T5,T6 train
-    class T7,T10 deploy
-    class LOGS,RESULTS,SCREENS,EXPS,ARCHIVE evidence
-```
+![实验与证据闭环](docs/figures/架构/5.png)
 
 ## 技术栈
 
@@ -347,6 +154,18 @@ flowchart LR
 | trace_events | 6 项完整 |
 | demo-data fallback | 后端不可达时不白屏 |
 
+## 前端展示
+
+![概览仪表盘 — KPI、缺陷分类分布、实时流水表](docs/figures/前端/1.png)
+
+![最新帧详情 — BBox 叠加、JSON 预览、Trace 面板](docs/figures/前端/2.png)
+
+![检测结果网格 — 多缺陷类型缩略图总览](docs/figures/前端/3.png)
+
+![RK3588 Pipeline 面板 — 三阶段模型性能实时监控](docs/figures/前端/4.png)
+
+![三模型共享一块 RK3588 — 资源分配与利用率](docs/figures/前端/5.png)
+
 ## Technical Highlights
 
 1. **RK3588 端侧 VLM 部署**：在 16GB 内存约束下完成 EfficientAD-S → FastSAM → Qwen3-VL 三阶段 C++ 推理流水线，含 RKNN/RKLLM 真实推理
@@ -364,8 +183,7 @@ flowchart LR
 
 > 边界说明：以下图来自 Phase 8 / Phase 8C / VLM AB / 板端验证的历史工程证据。它们不是 Phase 10 ORT localizer 的指标，不是真实工厂生产数据，也不是 VLM 已在 Phase 10 v1 主链路启用的证据。
 
-<details>
-<summary><strong>T2 门控证据 — EfficientAD 适合负载削减，不适合作最终定位</strong></summary>
+### T2 门控证据 — EfficientAD 适合负载削减，不适合作最终定位
 
 ![EfficientAD score mode AUROC](docs/figures/report_charts/existing/fig_existing_efficientad_score_mode_auroc.png)
 
@@ -375,10 +193,7 @@ Score-mode AUROC 在 15 类上区分度不稳定（mean 0.510）。5 种 score m
 
 Per-category 最优阈值跨度 36 倍（12~447）。13/15 类 AUROC < 0.8。单一全局阈值脆弱，即使 per-category 阈值也留下多类不可分。因此项目避免使用 T2 作为 defect_type 或 bbox 的 canonical source。
 
-</details>
-
-<details>
-<summary><strong>RK3588 VLM 瓶颈证据 — 同步 VLM 在主循环中代价过高</strong></summary>
+### RK3588 VLM 瓶颈证据 — 同步 VLM 在主循环中代价过高
 
 ![RK3588 Qwen3-VL board performance](docs/figures/report_charts/existing/fig_existing_rk3588_qwen3vl_board_perf.png)
 
@@ -388,10 +203,7 @@ Per-category 最优阈值跨度 36 倍（12~447）。13/15 类 AUROC < 0.8。单
 
 pass_all 最坏情况下，queue drops 随 capture interval 减小而增加。>=13000ms 时稳定（0 drops），11000ms 时首次出现 drop，5000ms 时 23 drops。VLM utilization 在 9000-8000ms 之间越过 1.0 瓶颈线。这支持将确定性定位保持在主路径，VLM 移向异步 enrichment。
 
-</details>
-
-<details>
-<summary><strong>W8A8 量化证据 — 细粒度 VLM 输出在板端退化</strong></summary>
+### W8A8 量化证据 — 细粒度 VLM 输出在板端退化
 
 ![PC vs RK3588 LoRA metrics](docs/figures/report_charts/existing/fig_existing_pc_vs_rk3588_lora_metrics.png)
 
@@ -401,15 +213,13 @@ pass_all 最坏情况下，queue drops 随 capture interval 减小而增加。>=
 
 PC bf16 LoRA 收益不能直接迁移到板端 W8A8。category_exact 大致保留（~93% vs ~95%），但 defect_type_exact 和 bbox_iou 在板端归零。这支持使用 YOLO class head 和 bbox decode 作为 Phase 10 的 canonical source。
 
-</details>
-
 ## Phase 9/10+ 定量工程证据图
 
 以下 8 张图从仓库已有的实验报告、CSV/JSON 快照和 demo manifest 中生成，将 Phase 9/10 演进转化为可审查的工程证据：YOLO localizer 质量、RK3588 smoke 延迟、ORT snapshot 分布、管线延迟、系统演进、VLM 压力边界、EfficientAD gate 限制、W8A8 量化行为。
 
 > 边界说明：这些图是工程证据，不是生产工厂指标。Phase 10 v1 使用 ORT CPU fallback，不在同步主路径中调用 VLM。Phase 10.1b 相关内容仅描述 runner safety gates 和 readiness，不是已完成的 full soak。
 
-早期历史证据图保留在上方折叠区作为工程上下文。以下 8 张图来自可追溯的 Phase 9/10+ 源，提供更结构化的报告图表层。
+以下 8 张图来自可追溯的 Phase 9/10+ 源，提供更结构化的报告图表层。
 
 ### Chart 1 — Phase 10 YOLO localizer 质量
 
