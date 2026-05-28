@@ -28,3 +28,31 @@ imagenette/
 debug/
 temp_docs/
 *:Zone.Identifier
+
+# Local sealed archive
+_local_archive/
+
+# Local agent/tool workspaces
+.playwright-mcp/
+.codex/
+.agents/
+
+# Python package metadata
+*.egg-info/
+vlm_sam_industrial_vision_v2.egg-info/
+
+# Local scratch
+tmp/
+
+# Local archive bundles / one-off snapshots
+*.zip
+*.tgz
+*.tar
+*.tar.gz
+
+# Local repo snapshots / screenshots
+tree.log
+snapshot-check.png
+
+# Local database backup
+backend/vision.db.bak
