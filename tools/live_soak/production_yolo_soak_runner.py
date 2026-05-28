@@ -101,6 +101,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--allow-ineligible", action="store_true",
                    help="In dry-run mode: exit 0 even if some candidates are "
                         "blocked. Default (strict) exits 1 if any blocked.")
+    p.add_argument("--repeat", type=int, default=1,
+                   help="Repeat the candidate list N times to reach target "
+                        "upload count (default: 1). Combined with --limit.")
     return p.parse_args()
 
 
@@ -482,6 +485,12 @@ def main() -> None:
     print("  Total: %d  Valid: %d  Blocked: %d" % (
         len(images), len(valid_candidates),
         len(images) - len(valid_candidates)))
+
+    # Repeat candidates if requested.
+    if args.repeat > 1:
+        valid_candidates = valid_candidates * args.repeat
+        print("  Repeated x%d -> %d total candidates" % (
+            args.repeat, len(valid_candidates)))
 
     # Save audit.
     if args.output:
