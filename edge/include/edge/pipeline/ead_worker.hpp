@@ -29,8 +29,8 @@ class EadWorker {
   void release_model();
 
   // Decode + resize image to model input size; returns RGB uint8 buffer.
-  std::unique_ptr<uint8_t[]> preprocess(const std::string& image_path,
-                                        int& out_w, int& out_h);
+  PixelBuffer preprocess(const std::string& image_path,
+                         int& out_w, int& out_h);
 
   const common::Config& cfg_;
   common::BoundedQueue<CaptureFrame>& in_;

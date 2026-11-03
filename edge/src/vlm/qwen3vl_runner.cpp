@@ -397,7 +397,7 @@ bool Qwen3VLRunner::init() {
 // Decode image → RGB → expand-to-square (grey 127.5 padding) → resize to 448x448.
 // This matches the official multimodal_model_demo preprocessing.
 
-std::unique_ptr<uint8_t[]> Qwen3VLRunner::preprocess_image(
+PixelBuffer Qwen3VLRunner::preprocess_image(
     const std::string& path, int& out_w, int& out_h) {
   std::unique_ptr<Image> img(Image::load(path));
   if (!img) return nullptr;

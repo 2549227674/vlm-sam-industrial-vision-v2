@@ -2,6 +2,7 @@
 // Phase 10: T3 ORT CPU localizer via Python subprocess.
 
 #include "edge/pipeline/localizer_worker.hpp"
+#include "edge/common/unique_fd.hpp"
 
 #include <chrono>
 #include <cstdio>
@@ -162,10 +163,17 @@ bool LocalizerWorker::spawn_subprocess() {
   int stdin_pipe[2];   // parent writes to stdin_pipe[1], child reads from stdin_pipe[0]
   int stdout_pipe[2];  // child writes to stdout_pipe[1], parent reads from stdout_pipe[0]
 
-  if (pipe(stdin_pipe) != 0 || pipe(stdout_pipe) != 0) {
+  // Parent-side owners: any early return below closes all four ends.
+  if (pipe(stdin_pipe) != 0) {
     std::fprintf(stderr, "[T3-ort] pipe() failed: %s\n", strerror(errno));
     return false;
   }
+  common::UniqueFd stdin_rd(stdin_pipe[0]), stdin_wr(stdin_pipe[1]);
+  if (pipe(stdout_pipe) != 0) {
+    std::fprintf(stderr, "[T3-ort] pipe() failed: %s\n", strerror(errno));
+    return false;
+  }
+  common::UniqueFd stdout_rd(stdout_pipe[0]), stdout_wr(stdout_pipe[1]);
 
   pid_t pid = fork();
   if (pid < 0) {
@@ -202,12 +210,12 @@ bool LocalizerWorker::spawn_subprocess() {
     _exit(1);
   }
 
-  // Parent: close child ends.
-  ::close(stdin_pipe[0]);
-  ::close(stdout_pipe[1]);
+  // Parent: close child ends, keep ours.
+  stdin_rd.reset();
+  stdout_wr.reset();
 
-  proc_stdin_fd_ = stdin_pipe[1];
-  proc_stdout_fd_ = stdout_pipe[0];
+  proc_stdin_fd_ = stdin_wr.release();
+  proc_stdout_fd_ = stdout_rd.release();
   proc_pid_ = pid;
 
   // Read the "ready" line from Python.

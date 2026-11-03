@@ -34,8 +34,8 @@ class FastSamWorker {
   // so letterbox == simple resize. TODO(Prompt-2C-Fix): add letterbox for
   // non-square inputs, and pass scale/pad to decode_bboxes for coord recovery).
   // Returns RGB uint8 buffer or nullptr on failure.
-  std::unique_ptr<uint8_t[]> preprocess(const std::string& image_path,
-                                        int& out_orig_w, int& out_orig_h);
+  PixelBuffer preprocess(const std::string& image_path,
+                         int& out_orig_w, int& out_orig_h);
 
   // Decode detection output (output0, shape [1,37,8400]):
   //   ch 0-3 : cx,cy,w,h  in 640-pixel space

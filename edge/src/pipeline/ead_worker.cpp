@@ -115,8 +115,8 @@ bool EadWorker::load_model(const std::string& category) {
   return true;
 }
 
-std::unique_ptr<uint8_t[]> EadWorker::preprocess(const std::string& image_path,
-                                                 int& out_w, int& out_h) {
+PixelBuffer EadWorker::preprocess(const std::string& image_path,
+                                  int& out_w, int& out_h) {
   // Decode image to RGB.
   std::unique_ptr<Image> img(Image::load(image_path));
   if (!img) return nullptr;

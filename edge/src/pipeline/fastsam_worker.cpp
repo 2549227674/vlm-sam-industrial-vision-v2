@@ -176,9 +176,9 @@ bool FastSamWorker::load_model() {
 
 // ── preprocess ────────────────────────────────────────────────────────────────
 
-std::unique_ptr<uint8_t[]> FastSamWorker::preprocess(const std::string& image_path,
-                                                      int& out_orig_w,
-                                                      int& out_orig_h) {
+PixelBuffer FastSamWorker::preprocess(const std::string& image_path,
+                                      int& out_orig_w,
+                                      int& out_orig_h) {
   std::unique_ptr<Image> img(Image::load(image_path));
   if (!img) return nullptr;
 

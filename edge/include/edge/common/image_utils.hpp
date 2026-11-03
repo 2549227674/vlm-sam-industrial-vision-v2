@@ -6,6 +6,14 @@
 
 namespace vlm_industrial::edge {
 
+// Pixel buffers come from two allocators: stbi_load (malloc) and new[].
+// The deleter remembers which one, so each is released by its own free.
+struct PixelDeleter {
+  bool from_stb{false};
+  void operator()(uint8_t* p) const noexcept;
+};
+using PixelBuffer = std::unique_ptr<uint8_t[], PixelDeleter>;
+
 // Decoded image in RGB8 format.
 struct Image {
   // Loads and decodes a JPEG/PNG file to 3-channel RGB.
@@ -17,7 +25,7 @@ struct Image {
   int width{0};
   int height{0};
   int channels{0};  // always 3 (RGB)
-  std::unique_ptr<uint8_t[]> data;
+  PixelBuffer data;
 };
 
 // CPU bilinear resize (stb_image_resize2 fallback).

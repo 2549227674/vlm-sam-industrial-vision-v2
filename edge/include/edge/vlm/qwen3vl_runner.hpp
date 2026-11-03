@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "edge/common/config.hpp"
+#include "edge/common/image_utils.hpp"
 #include "edge/common/unique_rknn.hpp"
 
 namespace vlm_industrial::edge {
@@ -101,8 +102,8 @@ class Qwen3VLRunner {
  private:
   // Preprocess image: decode + expand-to-square + resize to 448x448.
   // Returns RGB uint8 buffer or nullptr on failure.
-  std::unique_ptr<uint8_t[]> preprocess_image(const std::string& path,
-                                               int& out_w, int& out_h);
+  PixelBuffer preprocess_image(const std::string& path,
+                               int& out_w, int& out_h);
 
   // Run vision encoder, return concatenated image embeddings.
   // Output size = n_image_tokens * n_outputs * embed_dim floats.

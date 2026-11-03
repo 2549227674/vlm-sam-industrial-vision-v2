@@ -36,6 +36,14 @@ void install_signal_handlers() {
   sa.sa_flags = 0;
   sigaction(SIGINT, &sa, nullptr);
   sigaction(SIGTERM, &sa, nullptr);
+
+  // T3 writes to the localizer subprocess through a pipe. If the child dies,
+  // write() must fail with EPIPE (handled by restart + fallback) instead of
+  // SIGPIPE killing the whole pipeline.
+  struct sigaction ign{};
+  ign.sa_handler = SIG_IGN;
+  sigemptyset(&ign.sa_mask);
+  sigaction(SIGPIPE, &ign, nullptr);
 }
 
 void print_config(const vlm_industrial::edge::common::Config& cfg) {

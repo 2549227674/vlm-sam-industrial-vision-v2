@@ -12,6 +12,14 @@
 
 namespace vlm_industrial::edge {
 
+void PixelDeleter::operator()(uint8_t* p) const noexcept {
+  if (from_stb) {
+    stbi_image_free(p);
+  } else {
+    delete[] p;
+  }
+}
+
 Image::~Image() = default;
 
 Image* Image::load(const std::string& path) {
@@ -26,7 +34,7 @@ Image* Image::load(const std::string& path) {
   img->width = w;
   img->height = h;
   img->channels = 3;
-  img->data.reset(pixels);
+  img->data = PixelBuffer(pixels, PixelDeleter{.from_stb = true});
   return img;
 }
 
@@ -37,7 +45,7 @@ Image* resize_bilinear(const Image& src, int dst_w, int dst_h) {
   dst->width = dst_w;
   dst->height = dst_h;
   dst->channels = 3;
-  dst->data = std::make_unique<uint8_t[]>(dst_w * dst_h * 3);
+  dst->data = PixelBuffer(new uint8_t[dst_w * dst_h * 3]());
 
   const float sx = static_cast<float>(src.width) / dst_w;
   const float sy = static_cast<float>(src.height) / dst_h;
