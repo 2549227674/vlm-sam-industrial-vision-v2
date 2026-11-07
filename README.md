@@ -1,397 +1,200 @@
-# vlm-sam-industrial-vision-v2
+# 基于 RK3588 的工业缺陷视觉检测系统
 
-端云分离架构的工业视觉 AI 检测流水线：**RK3588 16GB 边缘端**（三阶段异步推理）→ **FastAPI 后端** → **Next.js 仪表盘**（实时可观测性）。
+在 MVTec AD 公开数据集上做的端云分离缺陷检测：RK3588 上跑一条 C++20 写的四线程流水线（采集、门控、定位、上传），FastAPI 后端校验入库、用 WebSocket 推送，Next.js 看板展示。板子上没接相机，按节拍循环读测试集图片模拟采集，下面的数字都是这个条件下测的，不是产线指标。项目的第一版是 i.MX6ULL 上的 V4L2 采集端，推理放在 PC 上，不在这个仓库里。
 
-## 项目定位
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/architecture_dark.png">
+  <img alt="系统架构：RK3588 上四个线程，结果用 HTTP 传给 FastAPI 后端，看板经 WebSocket 接收；VLM 补充走旁路" src="docs/figures/architecture_light.png">
+</picture>
 
-面向**端侧 AI 部署推理优化**方向的工程验证项目。以 MVTec AD 15 类工业缺陷数据为基础，构建从 PC 训练/评估到 RK3588 真机部署、再到后端/前端联调的完整闭环。项目基于 MVTec AD 公开数据集，非真实产线部署。
+| 部分 | 结果 | 条件 | 记录 |
+|---|---|---|---|
+| [C++ 流水线](#1-c-边缘推理引擎) | 连续运行 **30 分钟 0 崩溃、0 丢帧** | 节拍 5 秒，按类别阈值门控；采集 366 帧，37 帧过门控，VLM 36 次；常驻内存稳定在 3,322 MB | [报告](docs/experiments/phase9_experiment_validation_release_gates.md) · [日志](results/phase9_threshold_soak/raw/edge_run.log) |
+| [FastSAM 量化排障](#2-模型转换与精度排障) | INT8 下每帧 **0 个**候选框；改 FP16 后最高置信度 **0.879**，走兜底的帧 30/30 → 0/31 | output0 整个张量共用一个 scale（2.82），置信度被舍成 0 | [报告](docs/experiments/phase7_prompt2c_fastsam_edge_report.md) |
+| [节拍压测](#3-压测与架构调整) | 13 秒不丢，**10 秒开始丢**，5 秒丢 23/41；临界点约 11 秒 | 每帧都进 VLM，14 张固定图；11 秒是 VLM 的平均耗时，推算的，没跑这一档 | [汇总](results/phase8c_beat_sweep/phase8c_beat_sweep_summary.md) · [CSV](results/phase8c_beat_sweep/phase8c_beat_sweep_results.csv) |
+| [主链路换 YOLOv8n](#3-压测与架构调整) | 定位一帧 **187.7 ms**（p95 215.0）；27 分 27 秒、2,082 帧 0 崩溃 | ONNX Runtime，CPU FP32；只训了 metal_nut、cable 两类 | [记录](docs/experiments/phase10_session_handoff_v2.md) |
 
-## 当前状态
+目录：[1. C++ 边缘推理引擎](#1-c-边缘推理引擎) · [2. 模型转换与精度排障](#2-模型转换与精度排障) · [3. 压测与架构调整](#3-压测与架构调整) · [4. 两条部署路径](#4-两条部署路径) · [5. 后端和看板](#5-后端和看板) · [6. 局限与回头看](#6-局限与回头看) · [7. 仓库结构和运行](#7-仓库结构和运行)
 
-项目存在两条已验证的 RK3588 部署主线：
+## 1. C++ 边缘推理引擎
 
-### 路径 A：Phase 7/9 三阶段 VLM 管线（已验证）
+代码在 [edge/](edge/)，C++20，CMake 构建，在板子上编译。按耗时拆成四个线程，几段耗时差了几个数量级，串在一个线程里，VLM 一卡，采集和上传全停：
+
+- **T1 采集**：按节拍从 MVTec 测试集里取一张图的路径，几乎不花时间；
+- **T2 门控**：EfficientAD-S 在 NPU 上算异常分，过了这一类的阈值才往后送，长跑里只放过一成；
+- **T3 定位**：原来是 FastSAM 出候选框、Qwen3-VL 出结构化报告，一帧十秒以上；后来换成 YOLOv8n，两百毫秒左右（[第 3 节](#3-压测与架构调整)）。用哪个由配置里的 `localizer_backend` 决定（[main.cpp](edge/src/main.cpp#L172-L205)）；
+- **T4 上传**：libcurl 把图片和 JSON 元数据用 multipart 传给后端；超时、连不上、408、429、5xx 时退避重试，最多 5 次。
+
+**有界队列**（[bounded_queue.hpp](edge/include/edge/common/bounded_queue.hpp)）：deque 加 mutex 和 `condition_variable_any`。push 时满了先丢队头最旧的一帧、丢帧计数加一；push 从不阻塞，背压不会传回采集，检测场景要的是新画面。pop 的等待带上 `stop_token`，叫停时直接返回空的 `optional`，线程看到空就退出。队列里传的是图片路径和元数据，不传像素。
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/pipeline_queues_dark.png">
+  <img alt="四个线程、三个有界队列：Q2 容量 2，长跑里到过满，没有溢出" src="docs/figures/pipeline_queues_light.png">
+</picture>
+
+容量按位置定：Q1、Q3 给 4 格，吸收解码、上传的短时抖动；Q2 后面是最慢的 T3，排得越长，轮到时画面越旧，所以只给 2 格。这几个数是经验值，没有扫过。
+
+**退出**：Ctrl+C 的信号处理函数里只写一个原子标志，加锁、打印这些都不是异步信号安全的；主线程每 200 ms 看一眼，看到就走出作用域，四个 `std::jthread` 按声明的逆序析构，每个先 `request_stop` 再 `join`，提前返回也不会漏掉 join。采集线程的节拍睡眠切成 50 ms 一段，每段查一次 `stop_token`。
+
+**NPU 调用**：RKNN C API 加载时 `rknn_init`、`rknn_query` 查输入输出的形状、类型和量化参数，每帧 `rknn_inputs_set`、`rknn_run`、`rknn_outputs_get`、`rknn_outputs_release`。`rknn_context` 包在一个只能移动的 RAII 类里（[unique_rknn.hpp](edge/include/edge/common/unique_rknn.hpp)），析构时 `rknn_destroy`。EfficientAD 一类一个模型，共 15 个，换类别时先销毁旧的再加载新的，同一类连续来就复用。全局统计计数用 relaxed 原子操作，各占一个 64 字节的 cache line。
+
+**30 分钟长跑**（[报告](docs/experiments/phase9_experiment_validation_release_gates.md)、[日志](results/phase9_threshold_soak/raw/edge_run.log)）：节拍 5 秒，T3 走 FastSAM 加 2B 的 Qwen3-VL（W8A8），一共 30.2 分钟。采集 366 帧，37 帧过门控，VLM 36 次、输出的 JSON 全部能解析，上传成功 33 次、失败 2 次（HTTP 400，不在重试范围内）；三个队列丢帧都是 0，Q2 最高水位 2；VLM 单次平均 15,419 ms；进程常驻内存稳定在 3,322 MB，最后打出 `clean exit`。两点限制：
+
+- 采集按类别顺序走，30 分钟只走完 bottle、cable、capsule 三类，carpet 只到第 1 帧；
+- 0 丢帧只统计“队列满了丢最旧”；停机时 Q2 剩 1 帧、Q3 剩 1 条结果没处理就丢了，没有算进去。
+
+## 2. 模型转换与精度排障
+
+| 模型 | 来源 | 转换 | 板上精度 | 大小 |
+|---|---|---|---|---|
+| EfficientAD-S × 15 | Anomalib 训练 20 轮，一类一个 | ONNX（截掉后处理）→ RKNN | FP16 | — |
+| FastSAM-s | 官方 COCO 预训练权重 | ONNX → RKNN；INT8 失败后改 FP16 | FP16 | 26 MB（INT8 版 14 MB） |
+| Qwen3-VL-2B 语言模型 | 基座和 LoRA 微调合并后的各一份 | rkllm-toolkit 1.2.3 | W8A8 | 2.3 GB |
+| Qwen3-VL-2B 视觉编码器 | 同上 | ONNX → RKNN | FP16 | 812 MB |
+
+RKNN 模型用 rknn-toolkit2 2.3.2 转换（[转换报告](docs/experiments/phase6_track_b_model_conversion_report.md)）。4B 也转了，只做了冒烟，主线用 2B。两个视觉模型的 INT8 都试过、都不能用，FP16 是退回来的结果；FastSAM 整段才 250 ms 左右，瓶颈在 VLM，先保正确。
+
+**FastSAM 转 INT8 后检不出框**（[报告](docs/experiments/phase7_prompt2c_fastsam_edge_report.md)）
+
+- **现象**：板上每一帧，8,400 个 anchor 里没有一个置信度过 0.25，全部走 top-5 兜底。
+- **定位**：打出输出属性，output0（`[1, 37, 8400]`）是 INT8，zero point −119、scale 2.82，整个张量共用。反量化是 scale ×（q − zp），相邻两个值差 2.82；这个张量里装着几百像素的框坐标，范围被撑到 −25 到 694，0 到 1 的置信度不到半格，全被舍成 0。换校准集也没用，范围是坐标决定的，后来换成 15 类约 300 张的校准集重转，结果一样。
+- **工具为什么没报警**：rknn-toolkit2 的精度分析按整个张量算余弦相似度，output0 是 0.99875。坐标占了绝大部分数值，置信度那个通道全毁了，对余弦几乎没有影响；同一行的欧氏距离其实有 2526.9（这份转换日志没有提交）。所以精度对齐要按通道看，最后还要看任务指标，比如过阈值的框有几个。
+- **修复**：这个模型不量化，改 FP16。同一套 4 个类别的小样本跑两遍，INT8 版 30 帧全部走兜底，FP16 版 31 帧一帧都没有；置信度最高 0.879，过阈值的候选 24 个。30 分钟长跑里 FastSAM 一直是 FP16，36 帧兜底 0 次。
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/fastsam_int8_dark.png">
+  <img alt="INT8 一格 2.82，置信度 0 到 1 不到半格，全被舍入到 0" src="docs/figures/fastsam_int8_light.png">
+</picture>
+
+**EfficientAD**
+
+- Anomalib 导出的 ONNX 带着后处理：一个 Greater 节点拿 INT8 张量和 FLOAT 阈值比，RKNN 运行时不支持；后处理里的 Clip 还把好图坏图的分数都挤到 0.9 到 1 之间。导出脚本把后处理整个截掉，只留原始异常图和它的最大值（[export_efficientad_raw_onnx.py](scripts/export_efficientad_raw_onnx.py)），阈值在 C++ 里按类别比。
+- INT8 以后异常图的分布饱和，好图坏图分不开，改 FP16。FP16 版和 PC 上的 ONNX 比，15 类 AUROC 最大差 0.024，转换这一步对上了（[标定汇总](results/phase8_threshold_calibration/summary.md)）。
+- 板上用 1,725 张测试图标定，15 类 AUROC 平均只有 0.53，只有 tile 过 0.8（[各类对比](results/phase8_threshold_calibration/score_mode_comparison.md)）。所以它只当门控，阈值取每类正常图分数的第 95 百分位，用来减少往后送的帧。为什么这么低，见[第 6 节](#6-局限与回头看)。
+
+**Qwen3-VL 上板**（[报告](docs/experiments/phase7_prompt2d_qwen3vl_edge_report.md)）
+
+- 板上的 RKLLM 运行库是 1.2.1，模型是 1.2.3 的工具转的，旧版拒绝加载，升级了运行库。
+- 视觉编码器输入 448 × 448，4 个输出各是 196 × 2048。图像 token 数是 196，不是 196 × 4，4 是多层特征的份数，对照官方多模态示例的源码改对。
+- JSON 写不完：最早让它输出嵌套的框对象，在 token 上限内写不完；框改成二维数组、整段压成一行，报告估计省六成左右的 token，上限调到 500。
+- 4B 的视觉输出是 28 × 28 的网格，要把相邻 2 × 2 的四格合成一个 token。原来直接 reshape，拼进去的是同一行连续的 4 格；改成先 reshape 成 (14, 2, 14, 2, 1024) 再 permute，补了 5 个单元测试（[修复记录](docs/experiments/phase9_edge_runtime_model_fixes.md)）。
+
+## 3. 压测与架构调整
+
+**节拍压测**（[汇总](results/phase8c_beat_sweep/phase8c_beat_sweep_summary.md)）：24 帧端到端验收里，VLM 一帧平均 11,350 ms，EfficientAD 350.8 ms，FastSAM 250.1 ms（[验收报告](docs/experiments/phase7_prompt2e_e2e_acceptance_report.md)）。为了知道 VLM 能扛多快的节拍，把门控设成全放行，每一帧都进 VLM，测最坏情况；门控正常工作时放过多少由来的图决定，控制不了。14 张固定图（7 类各 2 张），抖动设成 0，只改采集间隔，六档每档跑 2 到 4 分钟：
+
+| 节拍 | 15 秒 | 13 秒 | 10 秒 | 8 秒 | 6 秒 | 5 秒 |
+|---|---|---|---|---|---|---|
+| 采集帧数 | 16 | 17 | 19 | 24 | 33 | 41 |
+| 丢帧 | 0 | 0 | 1 | 6 | 14 | 23 |
+| VLM 均值 ÷ 节拍 | 0.71 | 0.83 | 1.10 | 1.42 | 1.96 | 2.62 |
+
+丢帧全在 Q2。比值超过 1 开始丢，超过 1.5 丢得很多。没积压的三档里 VLM 平均 10.7 到 11.0 秒，间隔比它短就会积压，所以临界点约 11 秒，这一档没有跑过。节拍越短 VLM 越慢（平均 10,735 → 13,083 ms）：按 CSV 拆，5 秒那档输出 token 平均多了约 13%（69 → 78），decode 慢了约 6%（9.8 → 9.2 token/s），大半是回答变长；剩下的可能是 EfficientAD 和 VLM 同时用 NPU，没有单独验证。每档只有十几次 VLM，没有重复跑。
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/figures/drop_vs_interval_dark.png">
+  <img alt="丢帧比例随 VLM 收帧间隔变化：间隔短于约 11 秒开始丢帧；长跑里约 49 秒一帧，不丢" src="docs/figures/drop_vs_interval_light.png">
+</picture>
+
+30 分钟长跑不丢帧，是因为门控筛掉了九成，VLM 平均约 49 秒才收到一帧，比它处理一帧的时间长得多。
+
+**VLM 在板上也分不清细分的缺陷类型**：固定 14 张图（7 类各一张正常、一张缺陷），板上 W8A8 的 2B 在 7 张缺陷图上缺陷类型一张都没对，6 张只回了笼统的 anomaly（[对照重跑](results/phase8_vlm_ab/board_2b_lora_controlled_rerun_summary.md)）；基座模型在同一批图上也是 0/7（[A/B](results/phase8_vlm_ab/board_2b_base_vs_lora_ab_v2.md)）。PC 上 LoRA 微调后，409 条测试样本的缺陷类型准确率是 53.1%，同一个 prompt 下基座是 0（[对照](docs/experiments/phase5_7_method_control_benchmark_report.md)），上板以后没了。原因只能当判断：怀疑 8 bit 量化抹掉了 LoRA 的增量，但板上只有 7 张缺陷图，板上的 prompt 写了类别名、和 PC 上的也不一样，这些因素没有排除。另外，FastSAM 给的是物体的候选框，不是缺陷框。
+
+**调整**：慢、又不准，于是把定位交给专门训的检测模型，VLM 移出主链路。
+
+- **YOLOv8n**：有监督，框和缺陷类型一起出。训练数据用 MVTec 自带的缺陷 mask 转成框，先只做了 metal_nut、cable 两类 12 种缺陷，185 张图（训练 126、验证 59），验证集 mAP50 0.593、mAP50-95 0.432（[训练记录](docs/experiments/phase10_training_run_1.md)）。这是有监督的结果，不能和 MVTec 上无监督方法的指标比。
+- **为什么跑在 CPU 上**（[诊断](docs/experiments/phase10_rknn_fp16_diagnostic.md)）：转成 RKNN FP16 后，同一张图的 8,400 个 anchor 逐通道和 ONNX 比相关系数：框中心 0.995、0.996，宽高 0.699、0.651，12 个类别通道在 −0.001 到 0.81 之间，类别基本是乱的。换 opset（20 被拒，19 和 12 能转但一样错）、换 airockchip 的多输出导出，都是同一类错误。正确性优先，先用 ONNX Runtime 在 CPU 上跑 FP32。
+- **C++ 怎么调**：没接 ONNX Runtime 的 C++ 接口，T3 起一个常驻的 Python 子进程（[localizer_worker.cpp](edge/src/pipeline/localizer_worker.cpp)、[ort_localizer.py](scripts/phase10/ort_localizer.py)）：两根管道接它的 stdin、stdout，每帧写一行图片路径、读回一行 JSON；读带 5 秒超时，超时就杀掉子进程、给这一帧出兜底结果、再重启。这个脚本在板上验证过，不用为 ONNX Runtime 重新链库，代价是多一次管道往返（当时估计 10 ms 左右，没单独测）。
+- **VLM 异步补充**：上传接口先写库、马上返回，不调 VLM；补充 worker 轮询待补充的任务，经一个包装脚本请求板上的 RKLLM 服务（视觉编码器和语言模型都在 NPU 上）。VLM 只准返回观察描述和严重程度理由两段文字，回来先过校验，框、类别、置信度它返回了也不收。功能由环境变量打开，默认关（[配置](backend/app/services/enrichment_config.py)）。真机冒烟（[报告](docs/experiments/phase10_1b_real_rk3588_edge_vlm_smoke_report.md)）：5 次真推理，有效调用 4/4 输出合法 JSON，VLM 中位约 12 秒，上传接口中位 24 ms；VLM 返回了不该改的字段的那一次被校验拦下。200 次上传的长跑跑到第 38 次叫停，原因是压测脚本随机挑图、乱填类别和框，不是被测系统的问题，修好脚本以后没有重跑（[说明](docs/experiments/phase10_1b_5d_soak_blocker_note.md)）。这部分只做到冒烟。
+
+## 4. 两条部署路径
+
+| | 原来：FastSAM ＋ Qwen3-VL | 现在：YOLOv8n |
+|---|---|---|
+| T3 做什么 | FastSAM（NPU，FP16）出物体候选框，VLM（RKLLM，W8A8）出 JSON：类别、缺陷类型、严重程度、框 | 直接出框、缺陷类型、置信度 |
+| T3 一帧 | FastSAM 250.1 ms ＋ VLM 11,350 ms（24 帧验收）；长跑里 VLM 平均 15,419 ms | 187.7 ms（p95 215.0，p99 228.4），只算子进程里的预处理、推理、后处理 |
+| 内存 | 3,322 MB（整个进程） | C++ 主进程 34 MB；ONNX Runtime 在子进程里，那部分没记 |
+| 长跑 | 30.2 分钟，366 帧，0 崩溃、0 丢帧，上传 2 次 HTTP 400 | 27 分 27 秒，2,082 帧，0 崩溃，0 次 HTTP 400 |
+| 覆盖的类别 | 配置了 15 类，实际走到前 3 类 | metal_nut、cable |
+| 记录 | [长跑报告](docs/experiments/phase9_experiment_validation_release_gates.md) | [交接记录](docs/experiments/phase10_session_handoff_v2.md)，原始日志和那次的配置不在仓库里 |
+
+两次长跑的类别、时长、配置都不一样，只能各自说明稳不稳，不能当同条件对比。YOLOv8n 用的 185 张图就是这两类测试集里的全部缺陷图（按 MVTec 官方划分推算），长跑又循环读这些图，所以只能说明稳和快，不能说明准。
+
+## 5. 后端和看板
+
+后端是 FastAPI（[backend/](backend/)）：`POST /api/edge/report` 收 multipart（图片加一段 JSON 元数据），校验字段和框的范围，存进 SQLite、图片落盘，再通过 WebSocket `/ws/dashboard` 推给看板。接口定义在 [API_CONTRACT.md](docs/API_CONTRACT.md)，有一套契约测试，CI 里和前端类型检查一起跑（[contract.yml](.github/workflows/contract.yml)）。看板是 Next.js（[frontend/](frontend/)），显示缺陷列表、单帧详情和各段耗时，框是 YOLOv8n 出的、FastSAM 的候选框还是兜底占位，分开标出来。[simulator/](simulator/line_runner.py) 是一个代替板子往后端发数据的 Python 模拟器，联调用。
+
+<img src="docs/figures/dashboard_frame.jpg" width="760" alt="看板的单帧详情：cable 的 bent_wire，YOLOv8n 出的框和 JSON">
+
+单帧详情：一张 cable 的缺陷图，YOLOv8n 出的框、类别和置信度，下面是门控和定位的耗时；JSON 里 `observation` 是空的，这条记录没经过 VLM 补充。上传耗时显示 0，因为这一项要等发出去以后才知道，填不进这次上报。
+
+## 6. 局限与回头看
+
+**局限**
+
+- 公开数据集，板子上循环读测试集图片，没接相机。`CaptureFrame` 给 dma-buf 留了 fd、宽高、格式几个字段，还没实现；RGA 的库链接了，代码里没调用，解码和缩放都在 CPU 上。
+- YOLOv8n 转 RKNN 数值不对，现在跑在 CPU 上，只训了两类。
+- 板上 VLM 的结论只有 7 张缺陷图，prompt 和 PC 上不一致。
+- EfficientAD 在板上区分度低，只当门控。
+- 30 分钟长跑只走到前三类；VLM 异步补充只做到冒烟。
+
+**回头看会怎么改**（方案，都没做）
+
+| 问题 | 改法 |
+|---|---|
+| EfficientAD 训练完在 PC 上用 Anomalib 自己评测，bottle 1.0，15 类里 10 类在 0.9 以上；导出以后 ONNX 和板上一样低。Anomalib 的 EfficientAD 在网络里自己做 ImageNet 归一化，[评测脚本](scripts/evaluate_efficientad_raw_scores.py#L52-L53)和[转换配置](scripts/convert_efficientad_rknn.py#L53-L54)在外面又做了一次，很可能归一化做了两遍 | 预处理只除以 255，先在 PC 上重跑 ONNX 评测，确认以后重新转换、重新标定阈值 |
+| FastSAM 只能用 FP16 | 混合量化：置信度分支、框解码这几层留 FP16，其余 INT8；不行就把 output0 拆成框、置信度、掩码系数三个输出，各自量化 |
+| YOLOv8n 上不了 NPU | 先核转换配置的预处理；再用 rknn-toolkit2 的逐层精度分析，找第一层对不上的算子；在 neck 和检测头之间切开，前半段放 NPU，检测头留在 CPU |
+| 一帧过了门控，同一张 PNG 要完整解码 4 次；输出属性每帧都 query 一次；预处理没有分段计时 | 解码一次，后面传 buffer，拿尺寸只读文件头；属性在加载模型时查一次；解码和缩放分开计时，再决定值不值得换 RGA |
+| 退出时按逆序析构，T4 先停，Q2、Q3 里剩的直接丢掉 | 排空式关闭：从 T1 起一级一级关，每级处理完自己的队列再退，配一个总的截止时间 |
+| T3 的 Python 子进程：管道一次读一个字节，fork 之后在子进程里构造 `std::string`，杀子进程用阻塞的 `waitpid` | 换成 ONNX Runtime 的 C++ 接口，在进程里直接跑 |
+| 接真相机 | V4L2 用 MMAP 采集并导出 dma-buf，RGA 缩放和 NPU 输入都按 fd 传，省掉 CPU 拷贝 |
+
+复盘代码时还查出三处小缺陷：stb 解码出的像素 buffer 是 `malloc` 分配的，交给 `unique_ptr<uint8_t[]>` 以后用 `delete[]` 释放（ASan 查出）；Python 子进程崩掉后再写管道，SIGPIPE 会把整个程序杀掉；起子进程的出错分支漏关管道 fd。修复在提交 eeb0525（不在 main 上），只在 x86 上用 ASan 对比过、aarch64 交叉编译通过，没上板。上面的长跑数字都是修之前的代码测的。
+
+## 7. 仓库结构和运行
 
 ```text
-T1: V4L2 图片采集
-T2: EfficientAD-S (FP16 raw RKNN) → 异常门控
-T3: FastSAM-s (FP16 no-quant RKNN) bbox + Qwen3-VL-2B (W8A8 RKLLM) 结构化 JSON
-T4: libcurl multipart 上传
+vlm-sam-industrial-vision-v2/
+├── edge/           板端 C++20 流水线（src/、include/、configs/）
+├── backend/        FastAPI 后端，tests/contract/ 是契约测试
+├── frontend/       Next.js 看板
+├── simulator/      代替板子发数据的 Python 模拟器
+├── scripts/        训练、导出、转换、评测脚本
+│   └── phase10/    YOLOv8n 的数据转换、RKNN 转换、ORT 定位
+├── docs/
+│   ├── API_CONTRACT.md   后端接口契约
+│   ├── experiments/      实验报告（phase 是开发时的阶段编号）
+│   └── figures/          README 的图和生成脚本
+└── results/        扫频 CSV、长跑日志、阈值标定、VLM 对照
 ```
 
-- Phase 9 soak：30.2 分钟，0 崩溃、0 队列丢帧、100% json_parse_ok
-- VLM 性能：TTFT ~2174ms, decode 9.97 tok/s, RSS 3324MB
-- 证据：`docs/experiments/phase7_edge_pipeline_report.md`
-
-### 路径 B：Phase 10 v1 ORT Localizer（当前活跃）
-
-```text
-T1: V4L2 图片采集
-T2: EfficientAD-S (FP16 raw RKNN) → 异常门控
-T3: YOLOv8n-detect (ORT CPU FP32) → defect_type + confidence + bbox
-T4: libcurl multipart 上传
-```
-
-- Extended soak：27m27s, 2082 frames, 0 crash, RSS=34MB, T3 avg=187.7ms
-- Scope：metal_nut + cable（2 类 12 defect type）
-- RKNN 状态：BLOCKED（rknn-toolkit2 2.3.2 numeric consistency issue），当前使用 ORT CPU fallback
-- 证据：`docs/experiments/phase10_session_handoff_v2.md`
-
-### VLM 状态
-
-Phase 10 v1 不调用 VLM。`observation_source="template"`，severity 固定 "medium"。异步 VLM enrichment 属于 Phase 10.1 范围，当前有 smoke test / dry-run / precheck 材料。
-
-## Deployment Tracks 对比
-
-| 维度 | 路径 A（Phase 7/9 VLM） | 路径 B（Phase 10 ORT） |
-|------|------------------------|----------------------|
-| T3 方案 | FastSAM bbox + Qwen3-VL JSON | YOLOv8n ORT CPU |
-| T3 延迟 | ~11s（VLM 主导） | ~188ms |
-| RSS | ~3324MB | ~34MB |
-| 输出 | 结构化 JSON（defect_type/severity/confidence/bbox） | defect_type + confidence + bbox |
-| 定位 | 端侧 VLM 部署可行性验证 | 工程化低延迟方案 |
-| RKNN 验证 | EfficientAD/FastSAM/Qwen3VL vision 均已验证 | YOLO RKNN BLOCKED |
-
-## 系统架构
-
-![系统架构](docs/figures/架构/1.png)
-
-端云分离架构：边缘端负责采集和推理，通过 HTTP multipart 上报到后端，后端落盘入库并通过 WebSocket 实时推送到前端仪表盘。WebSocket 仅存在于 Backend↔Frontend 一段，Edge 只做 HTTP POST 客户端。
-
-## 项目演进
-
-![项目演进](docs/figures/架构/2.png)
-
-项目经历了从 PaDiM 到 EfficientAD 的算法替换、15 类训练评估、模型转换、C++ VLM 管线部署，最后引入 YOLO ORT 作为工程化简化方案。
-
-## Edge Pipeline 机制
-
-![Edge Pipeline 机制](docs/figures/架构/3.png)
-
-四线程通过 BoundedQueue 解耦——T1 采集、T2 异常门控减少 T3 负载、T3 做 FastSAM bbox 提案和 VLM JSON 描述、T4 上传。drop-oldest 策略防止背压传播。Q2 容量只有 2，是有意设计的保护性瓶颈。
-
-## 后端数据流
-
-![后端数据流](docs/figures/架构/4.png)
-
-## 实验与证据闭环
-
-![实验与证据闭环](docs/figures/架构/5.png)
-
-## 技术栈
-
-| 分层 | 技术 | 备注 |
-|------|------|------|
-| 边缘硬件 | Orange Pi 5 16GB（RK3588, 6 TOPS NPU (3 cores)） | |
-| 边缘运行时 | C++17/20, librknnrt, librkllmrt, librga, libcurl, V4L2 | 四线程 jthread + BoundedQueue |
-| Stage 1 | EfficientAD-S（PDN, 256x256, FP16 RKNN） | Anomalib 2.x 训练 |
-| Stage 2 | FastSAM-s（640x640, FP16 no-quant RKNN） | Phase 7/9 |
-| Stage 2 备选 | YOLOv8n-detect（ORT CPU FP32） | Phase 10 |
-| Stage 3 | Qwen3-VL-2B/4B W8A8 RKLLM | Phase 7/9 |
-| 后端 | Python 3.12, FastAPI, SQLAlchemy 2.0 async, Pydantic v2 | SQLite WAL |
-| 前端 | Next.js 15, React 19, Tailwind v4, shadcn/ui | V4 设计体系, 纯静态导出 |
-| 数据集 | MVTec AD 全 15 类 | CC BY-NC-SA 4.0 |
-
-## Evidence Snapshot
-
-### Soak 验证
-
-| 项目 | 路径 A（Phase 9 VLM） | 路径 B（Phase 10 ORT） |
-|------|----------------------|----------------------|
-| 时长 | 30.2 分钟 | 27m27s |
-| 帧数 | 366 capture / 37 gate pass / 36 VLM | 2082 frames |
-| 崩溃 | 0 | 0 |
-| 队列丢帧 | 0 | — |
-| json_parse_ok | 100% | — |
-| RSS | ~3322 MB 稳定 | 34MB 稳定 |
-| T3 延迟 | ~11s（VLM 主导） | avg 187.7ms, p95 215ms |
-
-### Phase 7 六个 Prompt
-
-| Prompt | 成果 | 关键数据 |
-|--------|------|---------|
-| 2B | EfficientAD-S FP16 RKNN 真实推理 | avg=350.8ms |
-| 2C | FastSAM FP16 RKNN 真实推理 | avg=250.1ms, INT8→FP16 修复 |
-| 2D | Qwen3-VL 2B RKLLM 接入 | TTFT ~2500ms, decode 9.3 tok/s |
-| 2D-Fix | VLM bbox 融合 + severity 白名单 | 23/23 json_ok=100% |
-| 2E | 四线程 E2E 验收 | 8 图 4 类 24 帧, upload_ok=24/24 |
-| 2F | Threshold 模式验证 | pass_all 100% vs threshold 38% |
-
-### 模型转换矩阵（Phase 6）
-
-| 模型 | 源格式 | 目标格式 | 数量 |
-|------|--------|----------|------|
-| EfficientAD-S | ONNX | RKNN INT8/FP16 | 15 类 |
-| FastSAM-s | ONNX | RKNN FP16 no-quant | 15 类 |
-| Qwen3-VL-2B base | HuggingFace | RKLLM W8A8 | 1 (2.3G) |
-| Qwen3-VL-2B LoRA | Merged | RKLLM W8A8 | 1 (2.3G) |
-| Qwen3-VL-2B vision | HuggingFace | RKNN | 1 (812M) |
-| Qwen3-VL-4B base | HuggingFace | RKLLM W8A8 | 1 (4.6G) |
-| Qwen3-VL-4B LoRA | Merged | RKLLM W8A8 | 1 (4.6G) |
-| Qwen3-VL-4B vision | ONNX | RKNN | 1 (843M) |
-
-### VLM 评估体系（Phase 5）
-
-4 变体 2x2 矩阵（模型尺寸 x 微调模式），三基准评估：
-
-| 变体 | JSON OK | Cat Exact | DefType Exact | BBox IoU>=0.5 |
-|------|---------|-----------|---------------|---------------|
-| 2B_base | 96.1% | 53.1% | 11.2% | 1.5% |
-| 2B_lora | 95.6% | 94.4% | 53.1% | 48.9% |
-| 4B_base | 98.0% | 59.2% | 10.5% | 0.0% |
-| 4B_lora | 95.8% | 95.8% | 64.8% | 64.5% |
-
-> 409 samples, 15 类 MVTec AD, PC fp16 评估。详见 `docs/experiments/phase5_6_deployment_benchmark_report.md`
-
-### 联调验收
-
-| 模块 | 结果 |
-|------|------|
-| 契约测试 | 34/34 通过 |
-| 前端 typecheck | 0 errors |
-| 前端 build | 成功 |
-| WebSocket 推送 | defect_created / metrics_tick 正常 |
-| trace_events | 6 项完整 |
-| demo-data fallback | 后端不可达时不白屏 |
-
-## 前端展示
-
-![概览仪表盘 — KPI、缺陷分类分布、实时流水表](docs/figures/前端/1.png)
-
-![最新帧详情 — BBox 叠加、JSON 预览、Trace 面板](docs/figures/前端/2.png)
-
-![检测结果网格 — 多缺陷类型缩略图总览](docs/figures/前端/3.png)
-
-![RK3588 Pipeline 面板 — 三阶段模型性能实时监控](docs/figures/前端/4.png)
-
-![三模型共享一块 RK3588 — 资源分配与利用率](docs/figures/前端/5.png)
-
-## Technical Highlights
-
-1. **RK3588 端侧 VLM 部署**：在 16GB 内存约束下完成 EfficientAD-S → FastSAM → Qwen3-VL 三阶段 C++ 推理流水线，含 RKNN/RKLLM 真实推理
-2. **量化诊断**：定位并解决 FastSAM INT8 per-tensor 量化失真（scale=2.82→confidence 近零）、EfficientAD ONNX post_processor 算子不兼容
-3. **LoRA W8A8 坍塌分析**：PC bf16 有效但 RK3588 W8A8 细粒度能力坍塌——定位到 delta 权重量化精度不足
-4. **RKNN fallback 工程决策**：YOLO RKNN numeric consistency BLOCKED → ORT CPU fallback
-5. **背压管理**：BoundedQueue drop-oldest + threshold 门控 + beat_ms 节拍控制
-6. **模型转换全链路**：PyTorch → ONNX → RKNN/RKLLM 覆盖 15 类 EfficientAD + FastSAM + Qwen3-VL 2B/4B
-7. **4 变体评估体系**：Deployment Benchmark + Method Control Benchmark + OPRO Baseline 三基准系统性验证
-8. **端云闭环**：FastAPI + WebSocket + Next.js 实时可观测仪表盘，34/34 契约测试通过
-
-## 工程证据：为什么管线演进到 ORT YOLO + 异步 VLM
-
-早期阶段探索了 EfficientAD、FastSAM、Qwen3-VL、LoRA 和 RKLLM 端侧推理。以下证据解释了为什么当前 Phase 10 路径使用确定性 YOLOv8n / ORT 定位作为 bbox 和 defect_type 的 canonical source，而 VLM 作为后置异步 enrichment 路径。
-
-> 边界说明：以下图来自 Phase 8 / Phase 8C / VLM AB / 板端验证的历史工程证据。它们不是 Phase 10 ORT localizer 的指标，不是真实工厂生产数据，也不是 VLM 已在 Phase 10 v1 主链路启用的证据。
-
-### T2 门控证据 — EfficientAD 适合负载削减，不适合作最终定位
-
-![EfficientAD score mode AUROC](docs/figures/report_charts/existing/fig_existing_efficientad_score_mode_auroc.png)
-
-Score-mode AUROC 在 15 类上区分度不稳定（mean 0.510）。5 种 score mode 结果几乎相同——瓶颈在 RKNN FP16 模型的 raw anomaly map 质量，不在聚合方法。这支持将 EfficientAD 作为异常/负载削减门控，而非最终检测器。
-
-![EfficientAD threshold AUROC](docs/figures/report_charts/existing/fig_existing_efficientad_threshold_auroc.png)
-
-Per-category 最优阈值跨度 36 倍（12~447）。13/15 类 AUROC < 0.8。单一全局阈值脆弱，即使 per-category 阈值也留下多类不可分。因此项目避免使用 T2 作为 defect_type 或 bbox 的 canonical source。
-
-### RK3588 VLM 瓶颈证据 — 同步 VLM 在主循环中代价过高
-
-![RK3588 Qwen3-VL board performance](docs/figures/report_charts/existing/fig_existing_rk3588_qwen3vl_board_perf.png)
-
-板端 Qwen3-VL 推理有显著的 TTFT、decode 和 RSS 开销。2B base：TTFT 1822ms, decode 9.7 tok/s, RSS 3285MB。4B base：TTFT 4860ms, decode 4.9 tok/s, RSS 5688MB。JSON parse success 随模型复杂度下降（2B base 92.9% → 4B base 65.0%）。这使同步 VLM 对高频检测循环代价过高。
-
-![Phase8C beat sweep pressure](docs/figures/report_charts/existing/fig_existing_phase8c_beat_sweep_pressure.png)
-
-pass_all 最坏情况下，queue drops 随 capture interval 减小而增加。>=13000ms 时稳定（0 drops），11000ms 时首次出现 drop，5000ms 时 23 drops。VLM utilization 在 9000-8000ms 之间越过 1.0 瓶颈线。这支持将确定性定位保持在主路径，VLM 移向异步 enrichment。
-
-### W8A8 量化证据 — 细粒度 VLM 输出在板端退化
-
-![PC vs RK3588 LoRA metrics](docs/figures/report_charts/existing/fig_existing_pc_vs_rk3588_lora_metrics.png)
-
-板端保留粗粒度 JSON/schema/category 行为（与 PC 差距 3-7pp），但 W8A8 下细粒度 defect_type 和 bbox 指标坍塌：defect_type_exact 从 51.8% 降至 0%，bbox_iou 从 47.7% 降至 0%。
-
-![LoRA bf16 gain vs W8A8 board collapse](docs/figures/report_charts/existing/fig_existing_vlm_lora_w8a8_collapse.png)
-
-PC bf16 LoRA 收益不能直接迁移到板端 W8A8。category_exact 大致保留（~93% vs ~95%），但 defect_type_exact 和 bbox_iou 在板端归零。这支持使用 YOLO class head 和 bbox decode 作为 Phase 10 的 canonical source。
-
-## Phase 9/10+ 定量工程证据图
-
-以下 8 张图从仓库已有的实验报告、CSV/JSON 快照和 demo manifest 中生成，将 Phase 9/10 演进转化为可审查的工程证据：YOLO localizer 质量、RK3588 smoke 延迟、ORT snapshot 分布、管线延迟、系统演进、VLM 压力边界、EfficientAD gate 限制、W8A8 量化行为。
-
-> 边界说明：这些图是工程证据，不是生产工厂指标。Phase 10 v1 使用 ORT CPU fallback，不在同步主路径中调用 VLM。Phase 10.1b 相关内容仅描述 runner safety gates 和 readiness，不是已完成的 full soak。
-
-以下 8 张图来自可追溯的 Phase 9/10+ 源，提供更结构化的报告图表层。
-
-### Chart 1 — Phase 10 YOLO localizer 质量
-
-![Phase10 YOLO per-class mAP](docs/figures/report_charts/fig01_phase10_yolo_per_class_map.png)
-
-Phase 10 使用的有监督 YOLOv8n localizer 在 metal_nut + cable 12 类上的 per-class 验证质量。strong classes：flip (0.995)、missing_cable (0.995)、color (0.830)。weak classes：cut_outer_insulation (0.239)、poke_insulation (0.287)、combined (0.338)。
-
-**支撑**：Phase 10 有真实的有监督 localizer，而非伪造的 bbox / defect_type。
-**不支撑**：真实产线 mAP 或全量 MVTec 15 类性能。
-
-### Chart 2 — RK3588 RKNN FP16 smoke 延迟
-
-![Phase10 RKNN smoke latency](docs/figures/report_charts/fig02_phase10_rknn_smoke_latency.png)
-
-RK3588 上 RKNN FP16 延迟栈：preprocess 37.8ms + inference 95.2ms + postprocess 3.7ms = 136.7ms。仅 2 张图 smoke test。
-
-**支撑**：RKNN artifact 在 RK3588 上能以 smoke 模式运行。
-**不支撑**：full deployment benchmark 或生产稳定性声明。
-
-### Chart 3 — Phase 10 ORT snapshot 分布
-
-![Phase10 ORT snapshot distribution](docs/figures/report_charts/fig03_phase10_ort_snapshot_distribution.png)
-
-Phase 10 ORT snapshot 的 40 条 curated records 在 category、defect_type、severity 上的分布。来源为 ORT CPU fallback。
-
-**支撑**：Phase 10 snapshot 结构化且可追溯。
-**不支撑**：VLM-enriched 检测或全 15 类生产覆盖。
-
-### Chart 4 — Phase 10 ORT 管线延迟
-
-![Phase10 ORT pipeline latency](docs/figures/report_charts/fig04_phase10_ort_pipeline_latency.png)
-
-EfficientAD 和 ORT localizer 的延迟分布，含 localizer preprocess / inference / postprocess trace events。
-
-**支撑**：Phase 10 v1 通过确定性 ORT localizer 降低 T3 延迟。
-**不支撑**：RKNN/NPU localizer 部署；当前 Phase 10 localizer 是 ORT CPU fallback。
-
-### Chart 5 — Phase 9 vs Phase 10 系统演进
-
-![Phase9 vs Phase10 snapshot comparison](docs/figures/report_charts/fig05_phase9_vs_phase10_snapshot_compare.png)
-
-Phase 9 VLM snapshot 与 Phase 10 ORT snapshot 的系统演进对比。Phase 9 侧重端侧 VLM 可行性，Phase 10 侧重确定性低延迟定位。
-
-**支撑**：项目有两条已验证的部署路径，各有不同的工程目标。
-**不支撑**：将 VLM 和 ORT 作为同类型模型 benchmark 排名。
-
-### Chart 6 — VLM 压力边界（pass_all 流量）
-
-![Phase8C beat sweep pressure](docs/figures/report_charts/fig06_phase8c_beat_sweep_pressure.png)
-
-pass_all 最坏情况下，同步 VLM 在 capture interval 减小时成为瓶颈。queue drops 在 VLM utilization 越过 1.0 时快速上升。
-
-**支撑**：将 VLM 移出高频同步路径。
-**不支撑**：正式 threshold 模式部署吞吐量；这是最坏情况压力证据。
-
-### Chart 7 — EfficientAD gate 边界
-
-![EfficientAD score mode AUROC](docs/figures/report_charts/fig07_efficientad_score_mode_auroc.png)
-
-EfficientAD score-mode AUROC 在多类上不足以作为最终检测器。T2 的工程角色是 load-shedding / anomaly gating，而非 canonical defect_type 或 bbox 生成。
-
-**支撑**：T2 应减少 T3 负载。
-**不支撑**：EfficientAD 作为可靠的最终检测器。
-
-### Chart 8 — VLM W8A8 量化 cliff
-
-![VLM W8A8 quantization cliff](docs/figures/report_charts/fig08_vlm_quantization_cliff.png)
-
-板端 W8A8 结果显示粗粒度 category 行为可以存活，但细粒度 defect_type 和 bbox 质量坍塌。这解释了为什么 Phase 10 使用 YOLO class head 和 bbox decode 作为 canonical localization source。
-
-**支撑**：VLM 在当前约束下更适合做 enrichment / explanation。
-**不支撑**：VLM 已在 Phase 10 v1 同步主链路启用。
-
-## 快速启动
-
-### 后端
+**后端和契约测试**（Python 3.12，在仓库根目录）：
 
 ```bash
-cd backend && uvicorn app.main:app --reload --port 8000
-pytest backend/tests/contract/ -v
+pip install -e ".[dev]"
+uvicorn backend.app.main:app --port 8000
+make contract-test
 ```
 
-### 前端
+**看板**：
 
 ```bash
 cd frontend && npm install && npm run dev
-npm run build  # 静态导出到 out/
 ```
 
-### 模拟器
+**板端**：板子是 Orange Pi 5（16 GB），Ubuntu 22.04，在板上用 GCC 11.4 编译。CMake 在 `/usr/lib` 找 librknnrt、librkllmrt、librga，还要装 libcurl。模型、数据集不在仓库里，[edge/config.yaml](edge/config.yaml) 里的模型路径、图片目录和 `backend_url` 要按自己的环境改。
 
 ```bash
-cd simulator && python line_runner.py
+cmake -S edge -B edge/build
+cmake --build edge/build -j4
+./edge/build/edge_pipeline edge/config.yaml
 ```
 
-### 边缘端（RK3588 真机）
+README 的图用 `python3 docs/figures/make_figures.py` 重新生成，每张图的数据出处写在脚本里。
 
-```bash
-cd edge
-cmake -DCMAKE_TOOLCHAIN_FILE=<your-aarch64-toolchain.cmake> -B build
-cmake --build build -j$(nproc)
-scp build/edge_pipeline ubuntu@<rk3588-ip>:/home/ubuntu/
-ssh ubuntu@<rk3588-ip> './edge_pipeline --config config.yaml'
-```
+**主要实验记录**：[30 分钟长跑](docs/experiments/phase9_experiment_validation_release_gates.md) · [四线程端到端验收](docs/experiments/phase7_prompt2e_e2e_acceptance_report.md) · [模型转换](docs/experiments/phase6_track_b_model_conversion_report.md) · [FastSAM INT8 排障](docs/experiments/phase7_prompt2c_fastsam_edge_report.md) · [节拍扫频](results/phase8c_beat_sweep/phase8c_beat_sweep_summary.md) · [板上 VLM 对照](results/phase8_vlm_ab/board_2b_lora_controlled_rerun_summary.md) · [YOLOv8n 转 RKNN 的数值诊断](docs/experiments/phase10_rknn_fp16_diagnostic.md) · [VLM 异步补充的真机冒烟](docs/experiments/phase10_1b_real_rk3588_edge_vlm_smoke_report.md)
 
-## 目录结构
+## 数据
 
-```
-edge/                     C++17/20 四线程推理流水线
-  src/capture/            T1 V4L2 / 图片集采集
-  src/pipeline/           T2 EfficientAD + T3 FastSAM/Localizer
-  src/vlm/                T3 Qwen3-VL RKLLM
-  src/upload/             T4 libcurl multipart 上传
-  src/common/             BoundedQueue / config_loader
-backend/                  FastAPI 后端（REST + WebSocket + SQLAlchemy 2.0）
-frontend/                 Next.js 15 前端（App Router + shadcn/ui + Tailwind v4）
-simulator/                Python 多线程模拟器（RK3588 替身，契约测试）
-scripts/                  训练 / 转换 / 评估脚本
-docs/
-  architecture/           Mermaid 架构图集
-  experiments/            60+ 份阶段实验报告
-  reports/                部署总结报告
-  API_CONTRACT.md         REST/WebSocket 接口契约
-  ARCHITECTURE.md         系统架构设计
-  PROJECT_TIMELINE.md     项目时间线
-models/                   模型权重（gitignored）
-datasets/                 MVTec AD（gitignored）
-```
-
-## 公网 Demo
-
-- **前端**：https://vision.hanlab.app/
-- **API**：https://api.vision.hanlab.app/api/health
-- **数据来源**：Phase 10 ORT snapshot（40 条 curated 记录，metal_nut + cable）
-- Demo 可用性以当前部署状态为准
-
-## 限制与路线图
-
-| 限制 | 当前影响 | 后续方向 |
-|------|---------|---------|
-| YOLO RKNN BLOCKED | 当前使用 ORT CPU fallback | 等待 rknn-toolkit2 修复 |
-| LoRA W8A8 细粒度坍塌 | 板端不部署 LoRA | 等待更高精度量化或改 PC 离线推理 |
-| EfficientAD AUROC 低 | T2 只能做负载控制 | 实现 C++ post-processor 重新校准 |
-| FastSAM mask decode 未实现 | 只输出 bbox | 补 prototype mask decode |
-| MVTec AD 局限性 | 公开数据集 | 外部数据集或真实产线验证 |
-| Phase 10.1 enrichment 未完成 | 仅有 smoke/dry-run | 完成正式长稳 soak 验证 |
-
-## 文档导航
-
-| 文档 | 用途 |
-|------|------|
-| `CLAUDE.md` | 项目总入口与全局约束 |
-| `docs/ARCHITECTURE.md` | 系统架构设计 |
-| `docs/API_CONTRACT.md` | REST/WebSocket 接口契约 |
-| `docs/PROJECT_TIMELINE.md` | 项目时间线 |
-| `docs/ENGINEERING_FINDINGS.md` | 工程发现与排障记录 |
-| `docs/architecture/MERMAID_ARCHITECTURE_ATLAS.md` | Mermaid 架构图集（6 张） |
-| `docs/reports/edge_deployment_summary.md` | 端侧部署总结报告（双主线） |
-| `docs/experiments/` | 60+ 份阶段实验报告 |
-
-## 实验报告索引
-
-| 报告 | 内容 |
-|------|------|
-| `phase5_6_deployment_benchmark_report.md` | 4 变体 15 类 409 samples 评估 |
-| `phase5_7_method_control_benchmark_report.md` | LoRA 净贡献隔离评估 |
-| `phase5_8_opro_baseline_report.md` | OPRO prompt-only baseline |
-| `phase6_track_b_model_conversion_report.md` | 全量模型转换报告 |
-| `phase7_edge_pipeline_report.md` | C++ VLM 管线 6 Prompt 验证 |
-| `phase8_execution_report.md` | Phase 8A/8B/8C 综合实验 |
-| `phase10_session_handoff_v2.md` | ORT localizer 验证 |
-
-## 许可
-
-本项目用于课程设计与工程验证。数据集使用 MVTec AD（CC BY-NC-SA 4.0）。
+MVTec AD，许可 CC BY-NC-SA 4.0，仅限非商业用途。仓库不含数据集和模型权重。
