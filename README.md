@@ -122,7 +122,7 @@ RKNN 模型用 rknn-toolkit2 2.3.2 转换（[转换报告](docs/experiments/phas
 
 ## 5. 后端和看板
 
-后端是 FastAPI（[backend/](backend/)）：`POST /api/edge/report` 收 multipart（图片加一段 JSON 元数据），校验字段和框的范围，存进 SQLite、图片落盘，再通过 WebSocket `/ws/dashboard` 推给看板。接口定义在 [API_CONTRACT.md](docs/API_CONTRACT.md)，有一套契约测试，CI 里和前端类型检查一起跑（[contract.yml](.github/workflows/contract.yml)）。看板是 Next.js（[frontend/](frontend/)），显示缺陷列表、单帧详情和各段耗时，框是 YOLOv8n 出的、FastSAM 的候选框还是兜底占位，分开标出来。[simulator/](simulator/line_runner.py) 是一个代替板子往后端发数据的 Python 模拟器，联调用。
+后端是 FastAPI（[backend/](backend/)）：`POST /api/edge/report` 收 multipart（图片加一段 JSON 元数据），校验字段和框的范围，存进 SQLite、图片落盘，再通过 WebSocket `/ws/dashboard` 推给看板。接口定义在 [API_CONTRACT.md](docs/API_CONTRACT.md)，有一套契约测试（[backend/tests/contract/](backend/tests/contract/)，运行方法见[第 7 节](#7-仓库结构和运行)）。看板是 Next.js（[frontend/](frontend/)），显示缺陷列表、单帧详情和各段耗时，框是 YOLOv8n 出的、FastSAM 的候选框还是兜底占位，分开标出来。[simulator/](simulator/line_runner.py) 是一个代替板子往后端发数据的 Python 模拟器，联调用。
 
 <img src="docs/figures/dashboard_frame.jpg" width="760" alt="看板的单帧详情：cable 的 bent_wire，YOLOv8n 出的框和 JSON">
 
